@@ -1,6 +1,8 @@
-#include "bhttp.h"
+#include "bnetheaders.h"
+#include "bhttpio.h"
+#include "bhttptls.h"
 
-#if HTTP_SUPPORT_TLS
+#if IOSTREAM_SUPPORT_TLS
 
 #include "mbedtls/config.h"
 #include "mbedtls/ssl.h"
@@ -68,14 +70,31 @@ tlsctx_t;
 ///
 #define TLS_DEBUG_LEVEL 5
 
+static void tls_log(int level, const char *fmt, ...)
+{
+    va_list args;
+
+    if (level > TLS_DEBUG_LEVEL)
+    {
+        return;
+    }
+    va_start(args, fmt);
+    vprintf(fmt, args);
+}
+
 static void iostream_tls_debug(
                         void *ctx, int level,
                         const char *file, int line,
                         const char *str
                      )
 {
-    http_log(1, "%s:%04d: %s", file, line, str);
+    tls_log(1, "%s:%04d: %s", file, line, str);
 }
+
+#else
+
+#define tls_log
+
 #endif
 
 int http_sha1_hash(uint8_t *result, uint8_t *source, size_t bytes)
@@ -118,15 +137,15 @@ static int iostream_tls_read(iostream_t *stream, uint8_t *buf, int len)
                 break;
 
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-                http_log(5, "ssl closed\n");
+                tls_log(5, "ssl closed\n");
                 return -1;
 
             case MBEDTLS_ERR_NET_CONN_RESET:
-                http_log(5, "ssl reset\n");
+                tls_log(5, "ssl reset\n");
                 return -11;
 
             default:
-                http_log(1, "ssl error %X\n", -result);
+                tls_log(1, "ssl error %X\n", -result);
                 return -1;
             }
         }
@@ -160,15 +179,15 @@ static int iostream_tls_write(iostream_t *stream, uint8_t *buf, int len)
                 break;
 
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-                http_log(5, "ssl closed\n");
+                tls_log(5, "ssl closed\n");
                 return -1;
 
             case MBEDTLS_ERR_NET_CONN_RESET:
-                http_log(5, "ssl reset\n");
+                tls_log(5, "ssl reset\n");
                 return -11;
 
             default:
-                http_log(1, "ssl error %X\n", -result);
+                tls_log(1, "ssl error %X\n", -result);
                 return -1;
             }
         }
@@ -195,7 +214,7 @@ static int iostream_tls_close(iostream_t *stream)
 
     if (! tls)
     {
-        HTTP_ERROR("No ctx");
+        BERROR("No ctx");
         return -1;
     }
     if (tls->stream)
@@ -234,7 +253,7 @@ int iostream_tls_send(void *tlsctx, const unsigned char *buf, size_t len)
             wc = tls->stream->write(tls->stream, (uint8_t*)buf, len);
             if (wc <= 0)
             {
-                http_log(1, "wc=%d after poll\n", wc);
+                tls_log(1, "wc=%d after poll\n", wc);
                 return MBEDTLS_ERR_NET_CONN_RESET;
             }
             wrote += wc;
@@ -292,7 +311,7 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
     tls = (tlsctx_t *)malloc(sizeof(tlsctx_t));
     if (! tls)
     {
-        HTTP_ERROR("Can't alloc TLS ctx");
+        BERROR("Can't alloc TLS ctx");
         instream->close(instream);
         return NULL;
     }
@@ -306,7 +325,7 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
     stream = iostream_alloc();
     if (! stream)
     {
-        HTTP_ERROR("Can't alloc stream");
+        BERROR("Can't alloc stream");
         instream->close(instream);
         free(tls);
         return NULL;
@@ -332,7 +351,7 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
                                    )
     )
     {
-        http_log(2, "SSL config failed");
+        tls_log(2, "SSL config failed");
         iostream_tls_close(stream);
         return NULL;
     }
@@ -355,7 +374,7 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
     result = mbedtls_ssl_conf_own_cert(&tls->conf, &s_tls_our_certificate, &s_tls_private_key);
     if (result)
     {
-        HTTP_ERROR("SSL crt conf failed");
+        BERROR("SSL crt conf failed");
         iostream_tls_close(stream);
     }
     // configure the certificate chain for use by clients
@@ -375,7 +394,7 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
     //
     if (mbedtls_ssl_setup(&tls->ssl, &tls->conf))
     {
-        http_log(2, "SSL setup failed");
+        tls_log(2, "SSL setup failed");
         iostream_tls_close(stream);
         return NULL;
     }
@@ -400,7 +419,7 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
 
     if (result)
     {
-        HTTP_ERROR("SSL handshake failed");
+        BERROR("SSL handshake failed");
         iostream_tls_close(stream);
         return NULL;
     }
@@ -430,7 +449,7 @@ int http_tls_prolog(void)
     if (mbedtls_ctr_drbg_seed(&s_tls_ctr_drbg, mbedtls_entropy_func, &entropy,
                        (const uint8_t*)entropy_string, strlen(entropy_string)))
     {
-        HTTP_ERROR("TLS drbg seed failed");
+        BERROR("TLS drbg seed failed");
         return -1;
     }
     // init and parse the certificate authority chain
@@ -441,8 +460,8 @@ int http_tls_prolog(void)
                 ht_ca_cert_chain, ht_ca_cert_chain_len);
     if (result)
     {
-        http_log(1, "Ca chain load: %X\n", -result);
-        HTTP_ERROR("Certificate chain load failed");
+        tls_log(1, "Ca chain load: %X\n", -result);
+        BERROR("Certificate chain load failed");
         return -1;
     }
     // init and parse our certificate
@@ -451,8 +470,8 @@ int http_tls_prolog(void)
                 ht_domain_crt, ht_domain_crt_len);
     if (result)
     {
-        http_log(1, "CRT load: %X\n", -result);
-        HTTP_ERROR("Certificate load failed");
+        tls_log(1, "CRT load: %X\n", -result);
+        BERROR("Certificate load failed");
         return -1;
     }
     // init and parse the private key
@@ -461,8 +480,8 @@ int http_tls_prolog(void)
                  ht_domain_key, ht_domain_key_len, NULL, 0);
     if (result)
     {
-        http_log(1, "PK load: %X\n", -result);
-        HTTP_ERROR("Private key load failed");
+        tls_log(1, "PK load: %X\n", -result);
+        BERROR("Private key load failed");
         return -1;
     }
     return 0;

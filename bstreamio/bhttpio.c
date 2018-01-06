@@ -1,5 +1,8 @@
-#include "bhttp.h"
+#include "bnetheaders.h"
+#include "bhttpio.h"
+#include "bhttptls.h"
 
+#define STREAM_ERROR
 iostream_t *iostream_alloc(void)
 {
     return (iostream_t *)malloc(sizeof(iostream_t));
@@ -16,13 +19,13 @@ static int iostream_file_read(iostream_t *stream, uint8_t *buf, int len)
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     fileno = (int)(intptr_t)stream->priv;
     if (fileno < 0)
     {
-        HTTP_ERROR("Bad file");
+        BERROR("Bad file");
         return -1;
     }
     return read(fileno, buf, len);
@@ -99,13 +102,13 @@ static int iostream_file_write(iostream_t *stream, uint8_t *buf, int len)
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     fileno = (int)(intptr_t)stream->priv;
     if (fileno < 0)
     {
-        HTTP_ERROR("Bad file");
+        BERROR("Bad file");
         return -1;
     }
     return write(fileno, buf, len);
@@ -121,13 +124,13 @@ int iostream_posix_poll(iostream_t *stream, polldir_t pollfor, int to_secs, int 
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     fileno = (int)(intptr_t)stream->priv;
     if (fileno < 0)
     {
-        HTTP_ERROR("Bad file");
+        BERROR("Bad file");
         return -1;
     }
     FD_ZERO(&fds);
@@ -152,13 +155,13 @@ static int iostream_file_close(iostream_t *stream)
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     fileno = (int)(intptr_t)stream->priv;
     if (fileno < 0)
     {
-        HTTP_ERROR("Bad file");
+        BERROR("Bad file");
         return -1;
     }
     stream->priv = (void*)(intptr_t)-1;
@@ -172,13 +175,13 @@ static int iostream_socket_read(iostream_t *stream, uint8_t *buf, int len)
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     socket = (socket_t)(intptr_t)stream->priv;
     if (socket < 0)
     {
-        HTTP_ERROR("Bad socket");
+        BERROR("Bad socket");
         return -1;
     }
     return recv(socket, buf, len, 0);
@@ -190,13 +193,13 @@ static int iostream_socket_write(iostream_t *stream, uint8_t *buf, int len)
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     socket = (socket_t)(intptr_t)stream->priv;
     if (socket < 0)
     {
-        HTTP_ERROR("Bad socket");
+        BERROR("Bad socket");
         return -1;
     }
     return send(socket, buf, len, 0);
@@ -208,13 +211,13 @@ static int iostream_socket_close(iostream_t *stream)
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     socket = (socket_t)(intptr_t)stream->priv;
     if (socket == INVALID_SOCKET)
     {
-        HTTP_ERROR("Bad socket");
+        BERROR("Bad socket");
         return -1;
     }
     stream->priv = (void*)(intptr_t)INVALID_SOCKET;
@@ -235,13 +238,13 @@ iostream_t *iostream_create_reader_from_file(const char *filename)
     );
     if (fileno < 0)
     {
-        HTTP_ERROR("Can't open file");
+        BERROR("Can't open file");
         return NULL;
     }
     stream = iostream_alloc();
     if (! stream)
     {
-        HTTP_ERROR("Can't alloc stream");
+        BERROR("Can't alloc stream");
         return NULL;
     }
     stream->read    = iostream_file_read;
@@ -265,13 +268,13 @@ iostream_t *iostream_create_writer_from_file(const char *filename)
     );
     if (fileno < 0)
     {
-        HTTP_ERROR("Can't open file");
+        BERROR("Can't open file");
         return NULL;
     }
     stream = iostream_alloc();
     if (! stream)
     {
-        HTTP_ERROR("Can't alloc stream");
+        BERROR("Can't alloc stream");
         return NULL;
     }
     stream->read    = iostream_file_read;
@@ -289,7 +292,7 @@ iostream_t *iostream_create_from_socket(socket_t socket)
     stream = iostream_alloc();
     if (! stream)
     {
-        HTTP_ERROR("Can't alloc stream");
+        BERROR("Can't alloc stream");
         return NULL;
     }
     stream->read    = iostream_socket_read;
@@ -311,13 +314,13 @@ int iostream_socket_sendto(iostream_t *stream, uint8_t *buf, int len, const char
 
     if (! stream)
     {
-        HTTP_ERROR("Bad stream");
+        BERROR("Bad stream");
         return -1;
     }
     socket = (socket_t)(intptr_t)stream->priv;
     if (socket < 0)
     {
-        HTTP_ERROR("Bad socket");
+        BERROR("Bad socket");
         return -1;
     }
     // if host is an IP address, use directly
@@ -337,7 +340,7 @@ int iostream_socket_sendto(iostream_t *stream, uint8_t *buf, int len, const char
         server = gethostbyname(host);
         if (server == NULL)
         {
-            HTTP_ERROR("Can't find host");
+            BERROR("Can't find host");
             return -1;
         }
         memcpy((char *)&server_addr.sin_addr.s_addr, (char *)server->h_addr, server->h_length);
@@ -346,7 +349,7 @@ int iostream_socket_sendto(iostream_t *stream, uint8_t *buf, int len, const char
     {
         if (! inet_aton(host, &server_addr.sin_addr))
         {
-            HTTP_ERROR("Invalid address");
+            BERROR("Invalid address");
             return -1;
         }
     }

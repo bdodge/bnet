@@ -22,11 +22,11 @@ ARFLAGS=-r
 IOLIB_PATH=../bstreamio
 IOLIB=$(IOLIB_PATH)/bstreamio.a
 
-http: $(PROGOBJECTS) $(HTTPLIB) $(IOLIB) $(TLSDEPS)
-	$(CC) $(CFLAGS) -o $@ $? $(LIBS)
+bhttp: $(PROGOBJECTS) $(HTTPLIB) $(IOLIB) $(TLSDEPS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 $(HTTPLIB): $(OBJECTS)
-	$(AR) $(ARFLAGS) $@ $?
+	$(AR) $(ARFLAGS) $@ $^
 
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)

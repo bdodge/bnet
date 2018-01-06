@@ -1,8 +1,7 @@
 #include "bnetheaders.h"
-#include "bhttpio.h"
-#include "bhttptls.h"
+#include "bstreamio.h"
+#include "bstreamtls.h"
 
-#define STREAM_ERROR
 iostream_t *iostream_alloc(void)
 {
     return (iostream_t *)malloc(sizeof(iostream_t));

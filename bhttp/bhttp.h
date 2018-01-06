@@ -1,11 +1,10 @@
 #ifndef HTTP_H
 #define HTTP_H 1
 
-#include "sysheaders.h"
+#include "bnetheaders.h"
 
 #include "bhttpconfig.h"
-#include "bstreamio/bhttpio.h"
-#include "bstreamio/bhttptls.h"
+#include "bstreamio/bstreamio.h"
 #include "bhttpdav.h"
 #include "bhttpws.h"
 #include "bhttpsip.h"
@@ -318,6 +317,8 @@ int http_client_request(
                         const char *localpath,
                         http_resource_t *resource
                        );
+
+socket_t http_create_server_socket(http_transport_t transport, uint16_t port);
 
 int http_server_init(
                         http_server_t *server,

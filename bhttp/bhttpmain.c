@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     http_set_log_level(5);
 
 #if HTTP_SUPPORT_TLS
-    result = http_tls_prolog();
+    result = iostream_tls_prolog();
     if (result)
     {
         HTTP_ERROR("Can't init TLS");

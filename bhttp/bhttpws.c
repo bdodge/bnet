@@ -673,7 +673,7 @@ int http_websocket_upgrade_reply(http_client_t *client)
     }
     // get SHA1 hash of that string into the next buffer
     //
-    result = http_sha1_hash(sha_buffer, key_buffer, key_len);
+    result = iostream_sha1_hash(sha_buffer, key_buffer, key_len);
 
     // base64 encode that 20 byte hash directly into the current output position
     result = http_base64_encode((char *)client->out.data + client->out.head, 64, sha_buffer, 20, false);

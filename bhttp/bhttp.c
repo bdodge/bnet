@@ -1,0 +1,3389 @@
+#include "bhttp.h"
+
+http_client_t *http_client_create(http_resource_t *resources, bool isclient)
+{
+    http_client_t *client;
+    static int s_ids = 0;
+
+    client = (http_client_t *)malloc(sizeof(http_client_t));
+    if (! client)
+    {
+        HTTP_ERROR("Can't alloc http");
+        return NULL;
+    }
+    memset(client, 0, sizeof(http_client_t));
+
+    client->isclient = isclient;
+    client->resources = resources;
+    client->resource = NULL;
+    client->resource_open = false;
+
+    if (! isclient)
+    {
+        // this is a context to serve a client
+        client->state = httpServeInit;
+    }
+    else
+    {
+        // this is a client context
+        client->state = httpClientInit;
+    }
+    client->prev_state = httpDone;
+    client->long_timeout = HTTP_LONG_TIMEOUT;
+    client->in.size = HTTP_IO_SIZE;
+    client->in.data = (uint8_t *)malloc(client->in.size);
+    if (! client->in.data)
+    {
+        HTTP_ERROR("Can't alloc in data");
+        free(client);
+        return NULL;
+    }
+
+    client->out.size = HTTP_IO_SIZE;
+    client->out.data = (uint8_t *)malloc(client->out.size);
+    if (! client->out.data)
+    {
+        HTTP_ERROR("Can't alloc out data");
+        free(client->in.data);
+        free(client);
+        return NULL;
+    }
+
+    http_client_reinit(client, true);
+
+    client->transport = httpTCP;
+    client->keepalive = false;
+    client->use100    = false;
+    client->expect100 = false;
+    client->redirects = 0;
+
+    client->id = s_ids++;
+
+    return client;
+}
+
+void http_client_reinit(http_client_t *client, bool newstream)
+{
+    // init context
+    client->long_timeout = HTTP_LONG_TIMEOUT;
+    client->last_in_time = 0;
+    client->last_out_time = 0;
+    client->in_transfer_type = httpNone;
+    client->in_content_length = 0;
+    client->in_content_type = htmtbin;
+    client->in_transferred = 0;
+    client->ifmodifiedsince = 0;
+    client->modifiedwhen = 0;
+    client->out_transfer_type = httpNone;
+    client->out_content_length = 0;
+    client->out_content_type = htmtbin;
+    client->out_gotten = 0;
+    client->out_transferred = 0;
+    client->start_byte = 0;
+    client->end_byte = 0;
+    client->location[0] = '\0';
+
+    if (client->resource && client->resource_open && client->resource->callback)
+    {
+        client->resource->callback(
+                                    client,
+                                    client->resource,
+                                    httpComplete,
+                                    NULL,
+                                    NULL
+                                  );
+    }
+    client->resource = NULL;
+    client->resource_open = false;
+
+    #if HTTP_SUPPORT_MULTIPART
+    client->boundary[0] = '\0';
+    client->boundary_length = 0;
+    #endif
+    #if HTTP_SUPPORT_AUTH
+    client->auth_type = httpAuthNone;
+    client->auth_creds[0] = '\0';
+    #endif
+    #if HTTP_SUPPORT_WEBDAV
+    client->dav_token[0] = '\0';
+    client->dav_depth_in = 0;
+    client->dav_depth_at = -1;
+    client->dav_no_root = false;
+    http_webdav_findstate_init(client);
+    #endif
+    #if HTTP_SUPPORT_WEBSOCKET
+    client->ws_upgrade = false;
+    client->ws_extensions = 0;
+    client->ws_key[0] = '\0';
+    client->ws_proto[0] = '\0';
+    if (client->ws_stream)
+    {
+        client->ws_stream->close(client->ws_stream);
+        client->ws_stream = NULL;
+    }
+    #endif
+    #if HTTP_SUPPORT_SIP
+    client->sip_via[0] = '\0';
+    client->sip_from[0] = '\0';
+    client->sip_to[0] = '\0';
+    client->sip_contact[0] = '\0';
+    client->sip_callid[0] = '\0';
+    client->sip_depth = 0;
+    client->sip_cseq = 0;
+    #endif
+
+    if (newstream)
+    {
+        if (client->stream)
+        {
+            client->stream->close(client->stream);
+            client->stream = NULL;
+        }
+        client->scheme = httpHTTP;
+        client->host[0] = '\0';
+        client->port = 0;
+        client->path[0] = '\0';
+
+        client->in.tail = 0;
+        client->in.head = 0;
+        client->in.count = 0;
+        client->out.tail = 0;
+        client->out.head = 0;
+        client->out.count = 0;
+    }
+}
+
+void http_client_free(http_client_t *client)
+{
+    if (client)
+    {
+        if (client->resource && client->resource_open && client->resource->callback)
+        {
+            client->resource->callback(
+                                        client,
+                                        client->resource,
+                                        httpComplete,
+                                        NULL,
+                                        NULL
+                                      );
+        }
+        client->resource = NULL;
+        client->resource_open = false;
+
+        if (client->stream)
+        {
+            client->stream->close(client->stream);
+            client->stream = NULL;
+        }
+        #if HTTP_SUPPORT_WEBSOCKET
+        if (client->ws_stream)
+        {
+            client->ws_stream->close(client->ws_stream);
+            client->ws_stream = NULL;
+        }
+        #endif
+        if (client->in.data)
+        {
+            free(client->in.data);
+        }
+        free(client);
+    }
+}
+
+static socket_t http_create_client_socket(http_transport_t transport, const char *host, uint16_t port)
+{
+    struct sockaddr_in serv_addr;
+    socket_t sock;
+    int result;
+    bool isname;
+    int i;
+
+    sock = socket(AF_INET, (transport == httpTCP) ? SOCK_STREAM : SOCK_DGRAM, 0);
+    if (sock < 0)
+    {
+        HTTP_ERROR("Can't create socket");
+        return INVALID_SOCKET;
+    }
+    {
+        #ifdef Windows
+        unsigned long nonblock;
+        #else
+        uint32_t nonblock;
+        #endif
+
+        nonblock = 1;
+        if (ioctl_socket(sock, FIONBIO, &nonblock) < 0)
+        {
+            HTTP_ERROR("Can't make nonblocking");
+            close_socket(sock);
+            return INVALID_SOCKET;
+        }
+    }
+    // if host is an IP address, use directly
+    for (i = 0, isname = false; i < strlen(host); i++)
+    {
+        if ((host[i] < '0' || host[i] > '9') && host[i] != '.')
+        {
+            isname = true;
+            break;
+        }
+    }
+    if (isname)
+    {
+        struct hostent *hostname = gethostbyname(host);
+
+        if (! hostname)
+        {
+            HTTP_ERROR("Can't find address");
+            close_socket(sock);
+            return INVALID_SOCKET;
+        }
+        memcpy(&serv_addr.sin_addr, hostname->h_addr, hostname->h_length);
+    }
+    else
+    {
+        if (! inet_aton(host, &serv_addr.sin_addr))
+        {
+            HTTP_ERROR("Invalid address");
+            close_socket(sock);
+            return INVALID_SOCKET;
+        }
+    }
+    // connect to remote server if tcp socket
+    //
+    if (transport == httpTCP)
+    {
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(port);
+        result = connect(sock, (void*)&serv_addr, sizeof(serv_addr));
+        if (result < 0)
+        {
+            // this is non blocking, so expect error.
+            //
+            #ifdef _WIN32
+            if (WSAGetLastError() == WSAEWOULDBLOCK)
+            #else
+            if (errno == EWOULDBLOCK || errno == EINPROGRESS)
+            #endif
+            {
+                result = 0;
+            }
+            else
+            {
+                http_log(0, "Can't connect to %s:%u\n", inet_ntoa(serv_addr.sin_addr), port);
+                HTTP_ERROR("Can't connect");
+                close_socket(sock);
+                return INVALID_SOCKET;
+            }
+        }
+    }
+    return sock;
+}
+
+int http_client_input(http_client_t *client, int to_secs, int to_usecs)
+{
+    time_t now;
+    int result;
+    int room;
+    int count;
+    int len;
+
+    if (! client || ! client->stream)
+    {
+        return -1;
+    }
+    count = client->in.count;
+
+    if (client->in.count < client->in.size)
+    {
+        if (client->in.count == 0)
+        {
+            // to avoid later renormalizing
+            client->in.head = 0;
+            client->in.tail = 0;
+        }
+        if (client->in.head < client->in.tail)
+        {
+            room = client->in.tail - client->in.head;
+        }
+        else
+        {
+            room = client->in.size - client->in.head;
+        }
+        // if there is a bunch of data in the buffer, don't wait for more
+        //
+        if (room < (client->in.size / 2))
+        {
+            to_secs  = 0;
+            to_usecs = 0;
+        }
+        // don't read if less than N bytes room available.  this is to
+        // ensure TLS read block size can alway fit
+        //
+        if (room >= HTTP_IO_MIN_ROOM)
+        {
+            result = client->stream->poll(client->stream, readable, to_secs, to_usecs);
+            if (result < 0)
+            {
+                return result;
+            }
+            if (result > 0)
+            {
+                len = client->stream->read(client->stream,
+                       client->in.data + client->in.head, room);
+                if (len <= 0)
+                {
+                    if (client->in.count)
+                    {
+                        return 0;
+                    }
+                    // 0 read after ok poll means connection closed
+                    http_log(5, "end of connection %u\n", client->id);
+                    return -1;
+                }
+                client->in.head += len;
+                if (client->in.head >= client->in.size)
+                {
+                    client->in.head = 0;
+                }
+                client->in.count += len;
+                http_log(7, "read %d on id %u\n", len, client->id);
+            }
+        }
+    }
+    time(&now);
+
+    if ((client->in.count == count) && (client->state == client->prev_state))
+    {
+        // check long timeout
+        if (client->last_in_time == 0)
+        {
+            client->last_in_time = now;
+        }
+        if ((now - client->last_in_time) > client->long_timeout)
+        {
+            http_log(3, "cl:%u read timeout\n", client->id);
+            return -1;
+        }
+    }
+    else
+    {
+        // reset long timeout
+        client->last_in_time = now;
+    }
+    return 0;
+}
+
+int http_send_data(http_client_t *client, const uint8_t *data, int count)
+{
+    int wc;
+    time_t now;
+
+    if (! client || ! client->stream)
+    {
+        HTTP_ERROR("Bad client");
+        return -1;
+    }
+    if (client->transport == httpTCP)
+    {
+        wc = client->stream->poll(client->stream, writeable, 0, 1000);
+        if (wc < 0)
+        {
+            HTTP_ERROR("closed on send/p");
+            return -1;
+        }
+        time(&now);
+
+        if (wc == 0)
+        {
+            // check long timeout
+            if (client->last_out_time == 0)
+            {
+                client->last_out_time = now;
+            }
+            if ((now - client->last_out_time) > client->long_timeout)
+            {
+                http_log(3, "client %u write timeout\n", client->id);
+                return -1;
+            }
+            return 0;
+        }
+        else
+        {
+            client->last_out_time = now;
+        }
+        wc = client->stream->write(client->stream, (uint8_t*)data, count);
+        if (wc <= 0)
+        {
+            HTTP_ERROR("closed on send/w");
+            return -1;
+        }
+    }
+    else
+    {
+        wc = iostream_socket_sendto(client->stream, (uint8_t *)data, count,
+                client->out_host, client->out_port);
+    }
+    return wc;
+}
+
+int http_send_out_data(http_client_t *client, http_state_t send_state, http_state_t next_state)
+{
+    int count;
+    int len;
+
+    client->state = send_state;
+    client->next_state = next_state;
+
+    if (client->out.count == 0)
+    {
+        client->last_out_time = 0;
+        return 0;
+    }
+    if (client->out.tail < client->out.head)
+    {
+        count = client->out.head - client->out.tail;
+    }
+    else
+    {
+        count = client->out.size - client->out.tail;
+    }
+    len = http_send_data(client, client->out.data + client->out.tail, count);
+    if (len < 0)
+    {
+        return -1;
+    }
+    client->out.count -= len;
+    client->out.tail += len;
+    if (client->out.tail >= client->out.size)
+    {
+        client->out.tail = 0;
+    }
+    return 0;
+}
+
+int http_begin_reply(http_client_t *client, uint16_t code, const char *message)
+{
+    int len;
+
+    if (! client || ! client->stream)
+    {
+        HTTP_ERROR("Bad client");
+        return -1;
+    }
+    // note the out buffer here is always used as tail == 0
+    // and there is never wrapping in reply buffer
+    //
+    client->out.count = 0;
+    client->out.head = 0;
+    client->out.tail = 0;
+
+    len = snprintf(
+            (char*)client->out.data + client->out.head,
+            client->out.size - client->out.count,
+            "%s/%u.%u %3u %s\r\n",
+            http_scheme_base_name(client->scheme),
+            client->vmaj,
+            HTTP_FORCE_1_0 ? 0 : client->vmin,
+            code, message);
+    if (len >= (client->out.size - client->out.count))
+    {
+        HTTP_ERROR("Reply buffer overflow");
+        return 1;
+    }
+    client->out.count += len;
+    client->out.head += len;
+    return 0;
+}
+
+int http_begin_request(http_client_t *client)
+{
+    int len;
+
+    client->out.count = 0;
+    client->out.head = 0;
+    client->out.tail = 0;
+
+    len = snprintf(
+            (char*)client->out.data + client->out.head,
+            client->out.size - client->out.count,
+            "%s %s %s/%u.%u\r\n",
+            http_method_name(client->method),
+            client->path,
+            http_scheme_base_name(client->scheme),
+            client->vmaj,
+            HTTP_FORCE_1_0 ? 0 : client->vmin
+            );
+    if (len >= (client->out.size - client->out.count))
+    {
+        HTTP_ERROR("Request buffer overflow");
+        return 1;
+    }
+    client->out.count += len;
+    client->out.head += len;
+    return 0;
+}
+
+#define http_append_request http_append_reply
+int http_append_reply(http_client_t *client, const char *content, ...)
+{
+    va_list args;
+    int len;
+
+    va_start(args, content);
+
+    len = vsnprintf(
+            (char*)client->out.data + client->out.head,
+            client->out.size - client->out.count - 2,
+            content,
+            args
+            );
+    if (len >= (client->out.size - client->out.count - 2))
+    {
+        HTTP_ERROR("Reply buffer overflow");
+        return 1;
+    }
+    client->out.data[client->out.head + len] = '\r';
+    client->out.data[client->out.head + len + 1] = '\n';
+    len += 2;
+    client->out.count += len;
+    client->out.head += len;
+    return 0;
+}
+
+int http_append_connection_to_reply(http_client_t *client, bool forceclose)
+{
+    if (forceclose || ! client->keepalive)
+    {
+        client->keepalive = false;
+        return http_append_reply(client, "Connection: Close");
+    }
+    else
+    {
+        return http_append_reply(client, "Connection: Keep-Alive");
+    }
+}
+
+int http_error_reply(http_client_t *client, uint16_t code, const char *msg, bool forceclose)
+{
+    int result;
+
+    result = http_begin_reply(client, code, msg ? msg : "");
+    result |= http_append_connection_to_reply(client, forceclose);
+    result |= http_append_reply(client, "Content-Length: 0");
+    result |= http_append_reply(client, "");
+    //result |= http_append_reply(client, "");
+    result |= http_send_out_data(client, httpSendReply, httpKeepAlive);
+    return result;
+}
+
+int http_client_authorized(http_client_t *client, http_resource_t *resource, bool *isauthorized)
+{
+    if (! client || ! resource || ! isauthorized)
+    {
+        return -1;
+    }
+    *isauthorized = true;
+
+#if HTTP_SUPPORT_AUTH
+    // check resource authorization
+    //
+    if (client->resource->credentials.type != httpAuthNone)
+    {
+        int result = http_check_credentials(
+                                    client->auth_type,
+                                    client->auth_creds,
+                                    &client->resource->credentials
+                                    );
+        if (result)
+        {
+            *isauthorized = false;
+
+            if (client->auth_type != httpAuthNone && client->auth_creds[0])
+            {
+                // credentials were supplied, so really we just say NO
+                //
+                result = http_error_reply(client, 403, "Forbidden", false);
+            }
+            else
+            {
+                // inform client of auth needed
+                //
+                result = http_begin_reply(client, 401, "Unauthorized");
+                result |= http_append_reply(client, "WWW-Authenticate: %s realm=\"%s\"",
+                        http_auth_type_to_string(client->resource->credentials.type),
+                        client->resource->urlbase);
+                result |= http_append_connection_to_reply(client, false);
+                result |= http_append_reply(client, "Content-Length: 0");
+                result |= http_append_reply(client, "");
+                result |= http_send_out_data(client, httpSendReply, httpBodyDownload);
+            }
+            if (result)
+            {
+                return result;
+            }
+        }
+    }
+#endif
+    return 0;
+}
+
+int http_client_blocked(http_client_t *client)
+{
+    switch (client->state)
+    {
+    case httpServeInit:
+    case httpReadline:
+        if (! client->in.count)
+        {
+            // want to poll for readability
+            return 1;
+        }
+        break;
+
+    case httpBodyDownload:
+        if (! client->in.count && client->in_content_length)
+        {
+            // want to poll for readability
+            return 1;
+        }
+        break;
+
+    case httpClientInit:
+        return 1;
+
+    case httpBodyUpload:
+    case httpSendReply:
+        if (client->out.count)
+        {
+            // want to poll for writeability
+            return 1;
+        }
+        break;
+
+    default:
+        break;
+    }
+    // can make progress on this client
+    return 0;
+}
+
+static char *http_skip_white(char *p)
+{
+    while (*(p) && ((*(p) == ' ') || (*(p) == '\t')))
+    {
+        p++;
+    }
+    return p;
+}
+
+static char *http_skip_nonwhite(char *p)
+{
+    while (*(p) && (*(p) != ' ') && (*(p) != '\t'))
+    {
+        p++;
+    }
+    return p;
+}
+
+static int http_process_header(http_client_t *client, char *header)
+{
+    char *value;
+
+    http_log(4, "hdr %s\n", header);
+
+    header = http_skip_white(header);
+    value = http_skip_nonwhite(header);
+    value = http_skip_white(value);
+
+    if (! http_ncasecmp(header, "content-length:"))
+    {
+        client->in_content_length = strtoul(value, NULL, 10);
+    }
+    else if (! http_ncasecmp(header, "transfer-encoding:"))
+    {
+        if (! http_ncasecmp(value, "chunked"))
+        {
+            client->in_transfer_type = httpChunked;
+        }
+    }
+    else if (! http_ncasecmp(header, "connection:"))
+    {
+        if (! http_ncasecmp(value, "keep-alive"))
+        {
+            client->keepalive = true;
+        }
+    }
+    else if (! http_ncasecmp(header, "if-modified-since:"))
+    {
+        client->ifmodifiedsince = http_rfc2616_date_to_time(value);
+    }
+    else if (! http_ncasecmp(header, "content-type:"))
+    {
+        client->in_content_type = http_content_type_for_mime_string(value);
+        if (client->in_content_type == htmtmulti)
+        {
+            #if HTTP_SUPPORT_MULTIPART
+            // get boundary
+            value = strstr(value, "boundary=");
+            if (value)
+            {
+                value += 9;
+                value = http_skip_white(value);
+            }
+            if (! value || ! *value)
+            {
+                HTTP_ERROR("No boundary");
+                return -1;
+            }
+            // reserve bytes in boundary buffer for CRLF--<boundary>
+            if (strlen(value) >= (sizeof(client->boundary) - 5))
+            {
+                HTTP_ERROR("Boundary len");
+                return -1;
+            }
+            http_log(4, "mp boundary=%s\n", value);
+
+            // include the delimiter in the boundary so compares are easier
+            strcpy(client->boundary, "--");
+
+            // save boundary text
+            strcpy(client->boundary + 2, value);
+
+            // save length to avoid constant recalculation
+            client->boundary_length = strlen(client->boundary);
+
+            if (client->boundary_length == 0)
+            {
+                HTTP_ERROR("Boundary short");
+                return -1;
+            }
+            #else
+            HTTP_ERROR("Multipart not supported");
+            return -1;
+            #endif
+        }
+    }
+    else if (! http_ncasecmp(header, "location:"))
+    {
+        if (strlen(value) >= sizeof(client->location))
+        {
+            HTTP_ERROR("Location len");
+            return -1;
+        }
+        strcpy(client->location, value);
+    }
+    else if (! http_ncasecmp(header, "expect:"))
+    {
+        client->expect100 = !strcasecmp(value, "100-continue") ? true : false;
+    }
+    else if (! http_ncasecmp(header, "range:"))
+    {
+        // support bytes, but nothing else
+        if (! http_ncasecmp(value, "bytes="))
+        {
+            value += 6;
+            value = http_skip_white(value);
+            client->start_byte = strtoul(value, &value, 10);
+            if (*value == '-')
+            {
+                if (value[1] >= '0' && value[1] <= '9')
+                {
+                    client->end_byte = strtoul(value + 1, NULL, 10);
+                }
+                else
+                {
+                    client->end_byte = 0;
+                }
+            }
+            else
+            {
+                client->end_byte = 0;
+            }
+            http_log(4, "RANGE: %u-%u\n", client->start_byte, client->end_byte);
+        }
+        else
+        {
+            HTTP_ERROR("Unsupported range type");
+            return -1;
+        }
+    }
+    #if HTTP_SUPPORT_AUTH
+    else if (! http_ncasecmp(header, "authorization:"))
+    {
+        if (http_auth_string_to_type(value, &client->auth_type))
+        {
+            HTTP_ERROR("Unsupported Auth type");
+            return -1;
+        }
+        value = http_skip_nonwhite(value);
+        value = http_skip_white(value);
+        if (*value)
+        {
+            switch (client->auth_type)
+            {
+            case httpAuthBasic:
+                if (http_base64_decode(client->auth_creds, sizeof(client->auth_creds), value) < 0)
+                {
+                    HTTP_ERROR("Authorization encoding");
+                    return -1;
+                }
+                break;
+            default:
+                if (strlen(value) >= sizeof(client->auth_creds))
+                {
+                    HTTP_ERROR("Authorization len");
+                    return -1;
+                }
+                strcpy(client->auth_creds, value);
+                break;
+            }
+        }
+        else
+        {
+            HTTP_ERROR("No Credentials");
+            return -1;
+        }
+    }
+    #endif
+    #if HTTP_SUPPORT_WEBDAV
+    else if (! http_ncasecmp(header, "token:"))
+    {
+        if (strlen(value) >= sizeof(client->dav_token))
+        {
+            HTTP_ERROR("Token len");
+            return -1;
+        }
+        strcpy(client->dav_token, value);
+    }
+    else if (! http_ncasecmp(header, "destination:"))
+    {
+        // use the find-state path to hold this since not propfind
+        if (strlen(value) >= sizeof(client->dav_findpath))
+        {
+            HTTP_ERROR("Destination len");
+            return -1;
+        }
+        #if 1 // assume move on server
+        http_parse_url(value, NULL, NULL, NULL, client->dav_findpath);
+        #else
+        strcpy(client->dav_findpath, value);
+        #endif
+    }
+    #endif
+    #if HTTP_SUPPORT_WEBSOCKET
+    else if (! http_ncasecmp(header, "upgrade:"))
+    {
+        if (! http_ncasecmp(value, "websocket"))
+        {
+            http_log(5, "WebSocket upgrade requested\n");
+            client->ws_upgrade = true;
+        }
+    }
+    else if (! http_ncasecmp(header, "sec-websocket-version:"))
+    {
+        client->ws_version = strtoul(value, NULL, 10);
+    }
+    else if (! http_ncasecmp(header, "sec-websocket-extensions:"))
+    {
+    }
+    else if (! http_ncasecmp(header, "sec-websocket-key:"))
+    {
+        if (strlen(value) >= sizeof(client->ws_key))
+        {
+            HTTP_ERROR("Websocket Key len");
+            return -1;
+        }
+        strcpy(client->ws_key, value);
+    }
+    else if (! http_ncasecmp(header, "sec-websocket-protocol:"))
+    {
+        if (strlen(value) >= sizeof(client->ws_proto))
+        {
+            HTTP_ERROR("Websocket protocol len");
+            return -1;
+        }
+        strcpy(client->ws_proto, value);
+    }
+    #endif
+    #if HTTP_SUPPORT_SIP
+    else if (! http_ncasecmp(header, "via:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_via))
+        {
+            HTTP_ERROR("VIA len");
+            return -1;
+        }
+        strcpy(client->sip_via, value);
+    }
+    else if (! http_ncasecmp(header, "from:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_from))
+        {
+            HTTP_ERROR("from len");
+            return -1;
+        }
+        strcpy(client->sip_from, value);
+    }
+    else if (! http_ncasecmp(header, "to:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_to))
+        {
+            HTTP_ERROR("to len");
+            return -1;
+        }
+        strcpy(client->sip_to, value);
+    }
+    else if (! http_ncasecmp(header, "contact:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_contact))
+        {
+            HTTP_ERROR("contact len");
+            return -1;
+        }
+        strcpy(client->sip_contact, value);
+    }
+    else if (! http_ncasecmp(header, "call-id:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_contact))
+        {
+            HTTP_ERROR("call-id len");
+            return -1;
+        }
+        strcpy(client->sip_callid, value);
+    }
+    else if (! http_ncasecmp(header, "cseq:"))
+    {
+        client->sip_cseq = strtoul(value, NULL, 10);
+    }
+    #endif
+    #if HTTP_SUPPORT_SIP || HTTP_SUPPORT_WEBDAV
+    else if (! http_ncasecmp(header, "depth:"))
+    {
+        if (client->scheme == httpHTTP || client->scheme == httpHTTPS)
+        {
+           client->dav_depth_in = (int)strtol(value, &value, 10);
+           client->dav_no_root = false;
+        }
+        else
+        {
+            client->sip_depth = (int)strtol(value, &value, 10);
+        }
+        if (value[0])
+        {
+            if (value[0] != ',')
+            {
+                if (! http_ncasecmp(value, "infinity"))
+                {
+                    if (client->scheme == httpHTTP || client->scheme == httpHTTPS)
+                    {
+                        client->dav_depth_in = HTTP_MAX_WEBDAV_DEPTH - 1;
+                    }
+                    else
+                    {
+                        client->sip_depth = -2;
+                    }
+                    value += 8;
+                }
+                else
+                {
+                    HTTP_ERROR("Bad depth header");
+                }
+            }
+            #if HTTP_SUPPORT_SIP
+            if (value[0] == ',')
+            {
+                value = http_skip_white(value);
+                if (! http_ncasecmp(value, "noroot"))
+                {
+                    client->dav_no_root = true;
+                }
+            }
+            #endif
+        }
+    }
+    #endif
+    else
+    {
+        http_log(5, "ignore header %s\n", header);
+    }
+    return 0;
+}
+
+#if HTTP_SUPPORT_MULTIPART
+static int http_process_multipart_header(http_client_t *client, char *header)
+{
+    char *value;
+
+    http_log(7, "mphdr %s\n", header);
+
+    header = http_skip_white(header);
+    value = http_skip_nonwhite(header);
+    value = http_skip_white(value);
+
+    if (! http_ncasecmp(header, "content-disposition:"))
+    {
+        // revert method to post until a filename is found
+        //
+        client->method = httpPost;
+
+        // look for "filename=" or "filename*="
+        char *newpath = strstr(value, "filename");
+
+        if (newpath)
+        {
+            while (*newpath && *newpath != '=')
+            {
+                newpath++;
+            }
+            while (*newpath == '=' || *newpath == '\"')
+            {
+                newpath++;
+            }
+            if (*newpath)
+            {
+                value = newpath;
+                while (*newpath && *newpath != '\"')
+                {
+                    newpath++;
+                }
+                *newpath = '\0';
+
+                // got a filename.  the method can be PUT not POST
+                //
+                client->method = httpPut;
+            }
+        }
+        // new path is the filename component, or the whole header value here
+        //
+        strncpy(client->path, value, sizeof(client->path) - 2);
+        client->path[sizeof(client->path) - 1] = '\0';
+    }
+    else if (! http_ncasecmp(header, "content-type:"))
+    {
+        client->in_content_type = http_content_type_for_mime_string(value);
+        if (client->in_content_type == htmtmulti)
+        {
+            // this is legal, but we don't handle it
+            HTTP_ERROR("Multipart recursion");
+            return -1;
+        }
+    }
+    else
+    {
+        http_log(5, "ignore mp header %s\n", header);
+    }
+    return 0;
+}
+#endif
+
+static void http_get_line(http_client_t *client, http_state_t next_state)
+{
+    client->next_state  = next_state;
+    client->state       = httpReadline;
+    client->line_count  = 0;
+    client->reported_line_error = false;
+}
+
+static const char *http_state_name(http_state_t state)
+{
+    switch (state)
+    {
+    case httpServeInit:         return "Init(server)";
+    case httpClientInit:        return "Init(client)";
+    case httpReadline:          return "Readline";
+    case httpReadRequest:       return "Request (read)";
+    case httpReadReply:         return "Reply (read)";
+    case httpSendRequest:       return "Request (send)";
+    case httpHeaders:           return "Headers";
+    case httpMultipartHeaders:  return "Headers (multipart)";
+    case httpWebSocketUpgrade:  return "WebSocket Upgrade";
+    case httpHandleReadRequest: return "Handle Request (read)";
+    case httpHandleSendRequest: return "Handle Request (send)";
+    case httpReadChunkCount:    return "Chunk Count (read)";
+    case httpBodyDownload:      return "Body (read)";
+    case httpBodyUpload:        return "Body (send)";
+    case httpSendReply:         return "Reply (send)";
+    case httpPropFindEnumerate: return "Enumerate (find)";
+    case httpSipSlice:          return "Sip";
+    case httpKeepAlive:         return "KeepAlive";
+    case httpDone:              return "Done";
+    default:                    return "- bad state -";
+    }
+}
+
+static int http_slice_fatal(http_client_t *client, int result)
+{
+    // clean up client, including closing stream if opened
+    http_client_reinit(client, true);
+    return result;
+}
+
+int http_client_slice(http_client_t *client)
+{
+    char *pline;
+    int result;
+    int i;
+    int incount;
+    bool isauthorized;
+
+    if (client->prev_state != client->state)
+    {
+        http_log(4, "cl:%u: %s %s%s   in:%u  out:%u\n",
+            client->id, http_state_name(client->state),
+            client->state == httpReadline ? "->" : "",
+            client->state == httpReadline ? http_state_name(client->next_state) : "",
+            client->in.count, client->out.count);
+    }
+    client->prev_state = client->state;
+
+    switch (client->state)
+    {
+    case httpServeInit:
+        // wait for data on input
+        result = http_client_input(client, 0, 0);
+        if (result)
+        {
+            return http_slice_fatal(client, result);
+        }
+        if (client->in.count > 0)
+        {
+            // input is starting
+            http_client_reinit(client, false);
+
+            // move to get request
+            http_get_line(client, httpReadRequest);
+        }
+        break;
+
+    case httpClientInit:
+        // wait till socket to server connects
+        if (! client->stream)
+        {
+            HTTP_ERROR("No stream");
+            return http_slice_fatal(client, -1);
+        }
+        // poll for writeable means connected (assume caller is waiting
+        // for client event)
+        //
+        result = client->stream->poll(client->stream, writeable, 0, 2000);
+        if (result < 0)
+        {
+        }
+        if (result == 0)
+        {
+            // no data, remain in init state
+            break;
+        }
+        http_log(5, "cl:%u Connected\n", client->id);
+        {
+            http_resource_t *svres = client->resource;
+
+            // reset client for request, but save resource so
+            // reinit doesn't clear it out
+            client->resource = NULL;
+            http_client_reinit(client, false);
+            client->resource = svres;
+        }
+    #if HTTP_SUPPORT_TLS
+        // upgrade to TLS if indicated (scheme already checkd for support)
+        //
+        if (
+                client->scheme == httpHTTPS
+    #if HTTP_SUPPORT_SIP
+            ||  client->scheme == httpSIPS
+    #endif
+        )
+        {
+            iostream_t *stream;
+
+            client->secure = true;
+
+            stream = iostream_tls_create_from_iostream(client->stream, true);
+            if (! stream)
+            {
+                HTTP_ERROR("TLS upgrade failed");
+                client->stream = NULL;
+                return http_slice_fatal(client, -1);
+            }
+            client->stream = stream;
+        }
+    #endif
+        // setup to send the request
+        //
+        result = http_begin_request(client);
+        result |= http_append_request(client, "Host: %s", client->host);
+        client->expect100 = false;
+        if (client->use100)
+        {
+            client->expect100 = true;
+            result |= http_append_request(client, "Expect: 100-continue");
+        }
+        // get content-type, etc. from resource if present (post/put)
+        //
+        switch (client->method)
+        {
+        case httpPut:
+        case httpPost:
+            if (client->resource && client->resource->callback)
+            {
+                // tell resource the request is starting
+                //
+                // NOTE: this callback can change client state, setup xfer state, etc.
+                //
+                result = client->resource->callback(
+                                            client,
+                                            client->resource,
+                                            httpRequest,
+                                            NULL,
+                                            NULL
+                                            );
+                if (result)
+                {
+                    HTTP_ERROR("Send request callback cancels");
+                    return http_slice_fatal(client, -1);
+                }
+                client->resource_open = true;
+            }
+            result |= http_append_connection_to_request(client, false);
+
+            if (client->out_content_length)
+            {
+                if (client->out_transfer_type != httpChunked)
+                {
+                    result |= http_append_request(client, "Content-Length: %d",
+                                client->out_content_length);
+                }
+                else
+                {
+                    result |= http_append_request(client, "Transfer-Encoding: chunked");
+                }
+                result |= http_append_request(client, "Content-Type: %s",
+                                http_mime_string_for_content_type(client->out_content_type));
+            }
+            else
+            {
+                result |= http_append_request(client, "Content-Length: 0");
+            }
+            if (
+                        (client->out_transfer_type != httpChunked)
+                ||      ! (client->resource && client->out_content_length)
+            )
+            {
+                // first chunk output will insert empty line so only do this for non-chunked
+                // (of for chunked xfer where there won't be any chunks)
+                //
+                result |= http_append_request(client, "");
+            }
+            break;
+
+        default:
+            result |= http_append_connection_to_request(client, false);
+            result |= http_append_request(client, "Content-Length: 0");
+            result |= http_append_request(client, "Accept: */*");
+            result |= http_append_request(client, "");
+            break;
+        }
+        if (result)
+        {
+            return http_slice_fatal(client, result);
+        }
+        // if we expect 100-continue, go to send-request state and
+        // then get the reply, else go directly to body upload state
+        // to allow combining of request/headers with body to save
+        // writes to the remote server
+        //
+        if (client->use100)
+        {
+            client->state = httpSendRequest;
+        }
+        else
+        {
+            client->state = httpBodyUpload;
+        }
+        break;
+
+    case httpReadline:
+        result = http_client_input(client, 0, 0);
+        if (result)
+        {
+            return http_slice_fatal(client, result);
+        }
+        while (client->in.count > 0)
+        {
+            uint8_t next_in = client->in.data[client->in.tail++];
+
+            client->in.count--;
+            if (client->in.tail >= client->in.size)
+            {
+                client->in.tail = 0;
+            }
+            if (
+                    (next_in == '\n')
+                 && (client->line_count > 0)
+                 && (client->line[client->line_count - 1] == '\r')
+            )
+            {
+                // note line termination not included in result line
+                client->line[client->line_count - 1] = '\0';
+                client->state = client->next_state;
+                client->reported_line_error = false;
+                break;
+            }
+            client->line[client->line_count++] = next_in;
+            if (client->line_count >= HTTP_MAX_LINE - 1)
+            {
+                // policy is to truncate lines that are too long
+                // and let them through since they can often be ignored
+                //
+                if (! client->reported_line_error)
+                {
+                    HTTP_ERROR("Line too long, truncating");
+                    client->reported_line_error = true;
+                }
+                client->line_count--;
+            }
+        }
+        break;
+
+    case httpReadRequest:
+        // assume 1.1
+        client->vmaj = 1;
+        client->vmin = 1;
+
+        // extract request
+        pline = client->line;
+        pline = http_skip_white(pline);
+        if (http_method_from_name(pline, &client->method))
+        {
+            // still parse body to keep keepalive going
+            HTTP_ERROR("No such method");
+        }
+        // extract path
+        pline = http_skip_nonwhite(pline);
+        pline = http_skip_white(pline);
+        for (i = 0; (i < (HTTP_MAX_PATH - 1)) && *pline; i++)
+        {
+            if (*pline == ' ' || *pline == '\t')
+            {
+                break;
+            }
+            client->path[i] = (char)*pline++;
+        }
+        client->path[i] = 0;
+        pline = http_skip_white(pline);
+
+        // extract version
+        if (! http_ncasecmp(pline, "HTTP/"))
+        {
+            pline += 5;
+            client->scheme = httpHTTP;
+            client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
+            if (*pline)
+            {
+                pline++;
+                client->vmin = (uint8_t)strtoul(pline, &pline, 10);
+            }
+        }
+        #if HTTP_SUPPORT_SIP
+        if (! http_ncasecmp(pline, "SIP/"))
+        {
+            pline += 4;
+            client->scheme = httpSIP;
+            client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
+            if (*pline)
+            {
+                pline++;
+                client->vmin = (uint8_t)strtoul(pline, &pline, 10);
+            }
+        }
+        #endif
+        http_log(3, "cl:%u %s %s %s/%u.%u\n", client->id,
+                http_method_name(client->method),
+                client->path,
+                http_scheme_base_name(client->scheme),
+                client->vmaj, client->vmin);
+
+        client->resource = NULL;
+        client->resource_open = false;
+        client->ctxpriv  = NULL;
+
+        http_get_line(client, httpHeaders);
+        break;
+
+    case httpReadReply:
+        pline = client->line;
+        pline = http_skip_white(pline);
+
+        // extract version
+        if (! http_ncasecmp(pline, "HTTP/"))
+        {
+            uint8_t vmaj, vmin;
+
+            pline += 5;
+            vmaj = (uint8_t)strtoul(pline, &pline, 10);
+            if (*pline)
+            {
+                pline++;
+                vmin = (uint8_t)strtoul(pline, &pline, 10);
+            }
+        }
+        #if HTTP_SUPPORT_SIP
+        if (! http_ncasecmp(pline, "SIP/"))
+        {
+            uint8_t vmaj, vmin;
+
+            pline += 4;
+            vmaj = (uint8_t)strtoul(pline, &pline, 10);
+            if (*pline)
+            {
+                pline++;
+                vmin = (uint8_t)strtoul(pline, &pline, 10);
+            }
+        }
+        #endif
+        pline = http_skip_nonwhite(pline);
+        pline = http_skip_white(pline);
+
+        client->response = strtoul(pline, &pline, 10);
+
+        pline = http_skip_white(pline);
+        http_log(4, "reply %3d %s\n", client->response, pline);
+
+        if (client->expect100)
+        {
+            if (client->response != 100)
+            {
+                http_log(1, "Expected 100, got %d\n", client->response);
+                client->state = httpDone;
+                break;
+            }
+            // sent the request by itself, now send body, which gets back here after
+            client->expect100 = false;
+            client->state = httpBodyUpload;
+        }
+        else
+        {
+            // get reply headers
+            http_get_line(client, httpHeaders);
+        }
+        break;
+
+    case httpHeaders:
+        if (client->line[0] == '\0')
+        {
+            // blank line ends headers
+            //
+            if (client->isclient)
+            {
+                if (client->response >= 400)
+                {
+                    http_log(1, "Error %3d  %s\n", client->response, pline);
+                    client->state = httpDone;
+                    break;
+                }
+                if (client->response >= 300 && client->response < 400)
+                {
+                    socket_t socket;
+                    http_scheme_t newscheme;
+                    char newhost[HTTP_MAX_HOSTNAME];
+                    uint16_t newport;
+                    char newpath[HTTP_MAX_PATH];
+                    char newurl[HTTP_MAX_URL];
+
+                    // redirect, check for loops
+                    //
+                    if (client->redirects++ > 4)
+                    {
+                        HTTP_ERROR("Too many redirects");
+                        return http_slice_fatal(client, -1);
+                    }
+                    http_log(3, "Redirect %d to %s\n", client->redirects, client->location);
+
+                    // for absolute redirects, copy over path, else concatenate
+                    //
+                    if (client->location[0] == '/')
+                    {
+                        result = http_paste_url(newurl, client->scheme,
+                               client->host, client->port, client->location + 1);
+                        result |= http_parse_url(client->location, &newscheme,
+                                newhost, &newport, newpath);
+                    }
+                    else
+                    {
+                        result = http_parse_url(client->location, &newscheme,
+                                newhost, &newport, newpath);
+                        result += http_paste_url(newurl, newscheme, newhost, newport, newpath);
+                    }
+                    if (result)
+                    {
+                        HTTP_ERROR("Bad redirect url");
+                        return http_slice_fatal(client, -1);
+                    }
+                    // close down client connection if new location isn't same host:port
+                    // or connection isn't kept alive
+                    //
+                    if (client->stream)
+                    {
+                        client->stream->close(client->stream);
+                        client->stream = NULL;
+                    }
+                    // reinit stream state on client
+                    //
+                    http_client_reinit(client, true);
+
+                    result = http_parse_url(newurl, &client->scheme, client->host,
+                            &client->port, client->path);
+                    if (result)
+                    {
+                        HTTP_ERROR("Bad url");
+                        return http_slice_fatal(client, -1);
+                    }
+                    // connect to new server (this resets state, etc.)
+                    //
+                    socket = http_create_client_socket(httpTCP, client->host, client->port);
+                    if (socket == INVALID_SOCKET)
+                    {
+                        HTTP_ERROR("Can't make stream");
+                        return http_slice_fatal(client, -1);
+                    }
+                    client->stream = iostream_create_from_socket(socket);
+                    if (! client->stream)
+                    {
+                        HTTP_ERROR("Can't make stream");
+                        close_socket(socket);
+                        return http_slice_fatal(client, -1);
+                    }
+                    // go wait for client socket to connect
+                    client->state = httpClientInit;
+                    break;
+                }
+                else /* < 300 response, a-ok */
+                {
+                    // already sent request and body, get response body
+                    client->state = httpHandleSendRequest;
+                }
+            }
+            else
+            {
+                // get body
+                client->state = httpHandleReadRequest;
+            }
+            break;
+        }
+        result = http_process_header(client, client->line);
+        if (result < 0)
+        {
+            result = http_error_reply(client, 500, "Header error", true);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+            break;
+        }
+        if (result > 0)
+        {
+            result = http_error_reply(client, 400, "Header error", true);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+            break;
+        }
+        result = 0;
+        http_get_line(client, httpHeaders);
+        break;
+
+    case httpMultipartHeaders:
+        // multipart headers count against content length
+        i = strlen(client->line) + 2;
+        if (i <= client->in_content_length)
+        {
+            client->in_content_length -= i;
+        }
+        else
+        {
+            HTTP_ERROR("Bad content length");
+            client->in_content_length = 0;
+        }
+        if (client->line[0] == '\0')
+        {
+            client->state = httpHandleReadRequest;
+            break;
+        }
+        result = http_process_multipart_header(client, client->line);
+        if (result < 0)
+        {
+            result =http_error_reply(client, 500, "Multipart Header error", true);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+            break;
+        }
+        if (result > 0)
+        {
+            result = http_error_reply(client, 400, "Multipart Header error", true);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+            break;
+        }
+        result = 0;
+        http_get_line(client, httpMultipartHeaders);
+        break;
+
+    case httpHandleReadRequest:
+        if (client->expect100)
+        {
+            // if client is expecting 100, answer that now
+            //
+            client->expect100 = false;
+            result  = http_begin_reply(client, 100, "Continue");
+            result |= http_append_reply(client, "");
+            result |= http_send_out_data(client, httpHandleReadRequest, httpHandleReadRequest);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+            break;
+        }
+        switch (client->method)
+        {
+        case httpGet:
+        case httpPut:
+        case httpPost:
+        #if HTTP_SUPPORT_WEBDAV
+        case httpDelete:
+        case httpPropFind:
+        case httpPropPatch:
+        case httpMkCol:
+        case httpCopy:
+        case httpMove:
+        case httpLock:
+        case httpUnlock:
+        #endif
+        #if HTTP_SUPPORT_SIP
+        case httpInvite:
+        case httpAck:
+        case httpPrack:
+        case httpCancel:
+        case httpUpdate:
+        case httpInfo:
+        case httpSubscribe:
+        case httpNotify:
+        case httpRefer:
+        case httpMessage:
+        case httpRegister:
+        case httpBye:
+        #endif
+            client->resource = http_find_resource(client->resources, client->path, client->method);
+            if (! client->resource || ! client->resource->callback)
+            {
+                result = http_error_reply(client, 404, "Not Found", false);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                // set next state to body to discard it, making sure there's no resource
+                // so keep-alive is maintained properly
+                //
+                client->resource = NULL;
+                client->resource_open = false;
+                client->next_state = httpBodyDownload;
+            }
+            result = http_client_authorized(client, client->resource, &isauthorized);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+            if (! isauthorized)
+            {
+                http_log(5, "cl:%u not authorized to %s\n", client->id, client->path);
+
+                // set next state to body to discard it so keep-alive is maintained properly
+                //
+                client->next_state = httpBodyDownload;
+
+                // ensure there is no resource to access
+                //
+                if (client->resource_open)
+                {
+                    // can't happen, just here to ensure it can't
+                    HTTP_ERROR("Server had open resource");
+                    return http_slice_fatal(client, -1);
+                }
+                client->resource = NULL;
+                client->resource_open = false;
+                break;
+            }
+            // tell resource that we are starting a request
+            //
+            // NOTE: this callback can change the client state, set a reply, and setup xfer state
+            //
+            result = client->resource->callback(
+                                        client,
+                                        client->resource,
+                                        httpRequest,
+                                        NULL,
+                                        NULL
+                                        );
+            if (result)
+            {
+                HTTP_ERROR("Request callback cancels");
+                client->resource = NULL;
+                client->resource_open = false;
+                // return an error and force-close connection to discard data
+                result = http_error_reply(client, 500, "Resource failure", true);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+            }
+            else
+            {
+                client->resource_open = true;
+            }
+            break;
+
+        case httpUnsupported:
+            result = 0;
+            break;
+
+        default:
+            // any other methods are handled after body is downloaded in buffer
+            result = 0;
+            break;
+        }
+        // setup next state to read body or read chunk count unless callback changed our state
+        //
+        if (client->state == httpHandleReadRequest)
+        {
+            if (client->in_transfer_type == httpChunked)
+            {
+                http_get_line(client, httpReadChunkCount);
+            }
+            else
+            {
+                client->state = httpBodyDownload;
+            }
+        }
+        break;
+
+#if HTTP_SUPPORT_WEBSOCKET
+    case httpWebSocketUpgrade:
+        if (client->ws_upgrade)
+        {
+            client->ws_upgrade = false;
+
+            result = http_websocket_upgrade_reply(client);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+        }
+        else
+        {
+            result = http_websocket_slice(client);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+        }
+        break;
+#endif
+    case httpHandleSendRequest:
+        if (client->resource && client->resource->callback)
+        {
+            if (client->method == httpGet)
+            {
+                // put local filename into client path first (and move it out of base)
+                //
+                strncpy(client->path, client->resource->urlbase, sizeof(client->path) - 1);
+                client->path[sizeof(client->path) - 1] = '\0';
+                client->resource->urlbase = "";
+
+                // tell resource the request is starting for GET
+                //
+                // NOTE: this callback can change client state, setup xfer state, etc.
+                //
+                result = client->resource->callback(
+                                            client,
+                                            client->resource,
+                                            httpRequest,
+                                            NULL,
+                                            NULL
+                                            );
+                if (result)
+                {
+                    HTTP_ERROR("Send request callback cancels");
+                    client->resource = NULL;
+                    client->resource_open = false;
+                    result = http_error_reply(client, 500, "Resource failed", false);
+                    if (result)
+                    {
+                        return http_slice_fatal(client, result);
+                    }
+                }
+                else
+                {
+                    client->resource_open = true;
+                }
+            }
+        }
+        // setup next state to read body or read chunk count if resource callback didn't change state
+        //
+        if (client->state == httpHandleSendRequest)
+        {
+            if (client->in_transfer_type == httpChunked)
+            {
+                http_get_line(client, httpReadChunkCount);
+            }
+            else
+            {
+                client->state = httpBodyDownload;
+            }
+        }
+        break;
+
+    case httpReadChunkCount:
+        result = http_client_input(client, 0, 0);
+        if (result)
+        {
+            return http_slice_fatal(client, result);
+        }
+        // here, line could be CRLFnnnnn, or just nnnnn (first chunk) and if
+        // the first case, the first time in here will have a 0 length
+        // and the next cases willhave a length of 1, or a CR as first line char
+        //
+        if (client->line_count == 0 || ! client->line[0])
+        {
+            http_get_line(client, httpReadChunkCount);
+            break;
+        }
+        client->in_content_length = (size_t)strtoul(client->line, NULL, 16);
+        http_log(3, "cl:%u: next chunk %u\n", client->id, client->in_content_length);
+        if (client->in_content_length == 0)
+        {
+            // reading 0 means last chunk, switch to length xfer to stop
+            client->in_transfer_type = httpLength;
+        }
+        client->state = httpBodyDownload;
+        break;
+
+    case httpBodyDownload:
+        if (client->in_transfer_type == httpNone)
+        {
+            #if HTTP_SUPPORT_WEBSOCKET
+            if (client->ws_upgrade)
+            {
+                // client requested a websocket upgrade, so now that we read the body
+                // of the http request if any, reply to the upgrade and start a websocket
+                //
+                client->state = httpWebSocketUpgrade;
+                break;
+            }
+            #endif
+            if (client->keepalive && client->in_content_length == 0)
+            {
+                // assume there is no body in request if we're a server
+                // and its a get, otherwise insist on length
+                //
+                if (client->isclient)
+                {
+                    HTTP_ERROR("No content length");
+                    return http_slice_fatal(client, -1);
+                }
+                else
+                {
+                    if (client->method == httpPut || client->method == httpPost)
+                    {
+                        result = http_error_reply(client, 411, "Length Required", false);
+                        if (result)
+                        {
+                            return http_slice_fatal(client, result);
+                        }
+                        return 0;
+                    }
+                    else
+                    {
+                        client->in_transfer_type = httpLength;
+                    }
+                }
+            }
+            else if (client->isclient || client->method == httpGet || client->method == httpHead)
+            {
+                // keep kicking the can down the road till connection closes
+                client->in_content_length = client->in.size + 1;
+            }
+        }
+        if (client->in_content_length == 0)
+        {
+            if (client->in_transfer_type == httpChunked)
+            {
+                // time to get another chunk
+                http_get_line(client, httpReadChunkCount);
+                break;
+            }
+            if (client->isclient)
+            {
+                // got all the data back from remote, all over now
+                http_log(5, "cl:%u got body of client request\n", client->id);
+                client->state = httpKeepAlive;
+                break;
+            }
+            #if HTTP_SUPPORT_WEBSOCKET
+            if (client->ws_upgrade)
+            {
+                // client requested a websocket upgrade, so now that we read the body
+                // of the http request if any, reply to the upgrade and start a websocket
+                //
+                client->state = httpWebSocketUpgrade;
+                break;
+            }
+            #endif
+            switch (client->method)
+            {
+            case httpGet:
+            case httpPut:
+            case httpPost:
+                #if HTTP_SUPPORT_RANGES
+                if (client->start_byte > 0 || client->end_byte > 0)
+                {
+                    result  = http_begin_reply(client, 206, "Partial Content");
+                    result |= http_append_reply(client, "Content-Range: bytes %d-%d/%d",
+                                    client->start_byte, client->end_byte, client->out_content_length);
+                    if (client->end_byte == 0)
+                    {
+                        client->end_byte = client->out_content_length - 1;
+                    }
+                    client->out_content_length = client->end_byte - client->start_byte + 1;
+                }
+                else
+                #endif
+                {
+                    result = http_begin_reply(client, 200, "OK");
+                }
+                if (client->resource && client->out_content_length)
+                {
+                    if (client->out_transfer_type != httpChunked)
+                    {
+                        result |= http_append_reply(client, "Content-Length: %d",
+                                    client->out_content_length);
+                    }
+                    else
+                    {
+                        result |= http_append_reply(client, "Transfer-Encoding: chunked");
+                    }
+                    result |= http_append_reply(client, "Content-Type: %s",
+                                    http_mime_string_for_content_type(client->out_content_type));
+                }
+                else
+                {
+                    result |= http_append_reply(client, "Content-Length: 0");
+
+                    // disable chunked to avoid any counts being added in upload stage
+                    // client->out_transfer_type == httpNone;
+                }
+                if (client->method == httpGet || client->method == httpHead)
+                {
+                    #if HTTP_SUPPORT_RANGES
+                    result |= http_append_reply(client, "Accept-Ranges: bytes");
+                    #endif
+                }
+                result |= http_append_connection_to_reply(client, false);
+                if (client->modifiedwhen > 0)
+                {
+                    char modbuf[32];
+
+                    result |= http_append_reply(client, "Last-Modified: %s",
+                                http_time_to_rfc2616_date(client->modifiedwhen, modbuf, sizeof(modbuf)));
+                }
+                if (
+                            (client->out_transfer_type != httpChunked)
+                    ||      ! (client->resource && client->out_content_length)
+                )
+                {
+                    // first chunk output will insert empty line so only do this for non-chunked
+                    // (of for chunked xfer where there won't be any chunks)
+                    //
+                    result |= http_append_reply(client, "");
+                }
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                client->state = httpBodyUpload;
+                break;
+
+            #if HTTP_SUPPORT_WEBDAV
+            case httpDelete:
+            case httpPropFind:
+            case httpPropPatch:
+            case httpMkCol:
+            case httpCopy:
+            case httpMove:
+            case httpLock:
+            case httpUnlock:
+                if (! client->resource)
+                {
+                    HTTP_ERROR("No DAV resource");
+                    result = http_error_reply(client, 405, "Bad Request", false);
+                    if (result)
+                    {
+                        return http_slice_fatal(client, result);
+                    }
+                    return 0;
+                }
+                result = http_webdav_request(client);
+                if (result)
+                {
+                    // any errors that don't format a reply go to done state, else
+                    // assume the request handler sent a specific reply already
+                    //
+                    if (client->state != httpSendReply)
+                    {
+                        client->state = httpDone;
+                    }
+                    result = 0;
+                }
+                break;
+            #else
+            case httpDelete:
+                result = http_error_reply(client, 403, "Not Permitted", false);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                break;
+            #endif
+
+            case httpOptions:
+                result = http_begin_reply(client, 200, "OK");
+                result |= http_append_reply(client, "Allow: GET,HEAD,POST,DELETE,OPTIONS");
+            #if HTTP_SUPPORT_WEBDAV
+                result |= http_append_reply(client, "Allow: PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK");
+            #endif
+                result |= http_append_reply(client, "DAV: 1, 2");
+                result |= http_append_reply(client, "Content-Length: 0");
+                result |= http_append_connection_to_reply(client, false);
+                result |= http_append_reply(client, "");
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                result = http_send_out_data(client, httpSendReply, httpKeepAlive);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                break;
+
+            #if HTTP_SUPPORT_SIP
+            case httpInvite:
+            case httpAck:
+            case httpPrack:
+            case httpCancel:
+            case httpUpdate:
+            case httpInfo:
+            case httpSubscribe:
+            case httpNotify:
+            case httpRefer:
+            case httpMessage:
+            case httpRegister:
+            case httpBye:
+                if (! client->resource)
+                {
+                    HTTP_ERROR("No SIP resource");
+                    result = http_error_reply(client, 405, "Bad Request", false);
+                    if (result)
+                    {
+                        return http_slice_fatal(client, result);
+                    }
+                    return 0;
+                }
+                result = http_sip_request(client);
+                if (result)
+                {
+                    // any errors that don't format a reply go to done state, else
+                    // assume the request handler sent a specific reply already
+                    //
+                    if (client->state != httpSendReply)
+                    {
+                        client->state = httpDone;
+                    }
+                    result = 0;
+                }
+                break;
+            #endif
+
+            case httpUnsupported:
+                http_log(1, "Unsupported request\n");
+                result = http_error_reply(client, 405, "Method not Allowed", false);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                break;
+
+            default:
+                http_log(1, "Bad request: %s\n", http_method_name(client->method));
+                result = http_error_reply(client, 405, "Bad Request", false);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+            }
+            // body download complete, all set
+            //
+            break;
+        }
+        // continue getting body data
+        //
+        result = http_client_input(client, 0, 0);
+        if (result)
+        {
+            if (client->in_transfer_type == httpNone)
+            {
+                client->in_transfer_type = httpLength;
+                client->in_content_length = 0;
+                return 0;
+            }
+            return http_slice_fatal(client, result);
+        }
+        // rotate the input buffer so it is one contiguous buffer. this
+        // helps alot for things like writing files in block size chunks,
+        // and it is a noop for any data in the middle of a body which
+        // will normally have tail == 0 each block
+        //
+        iostream_normalize_ring(&client->in, NULL);
+
+        incount = client->in.count;
+
+        #if HTTP_SUPPORT_MULTIPART
+        // if multipart, look for any sign of a boundary in the input buffer
+        // and limit the input parsing to the data before the possible boundary
+        // check for full boundary if have 2 more chars than needed so we
+        // can check for crlf or -- after boundary in one go
+        //
+        if (
+                (client->boundary_length > 0)
+            &&  (client->boundary[0] != '\1')
+            &&  (client->in.data[0] == client->boundary[0])
+            &&  (client->in.count >= (client->boundary_length + 2))
+            &&  ! strncmp(client->in.data, client->boundary, client->boundary_length)
+        )
+        {
+            // this is a boundary. complete previous xfer state and parse headers
+            //
+            http_log(4, "at boundary %02X\n", client->boundary[0]);
+            if (client->resource && client->resource_open && client->resource->callback)
+            {
+                result = client->resource->callback(
+                                            client,
+                                            client->resource,
+                                            httpComplete,
+                                            NULL,
+                                            NULL
+                                            );
+                if (result < 0)
+                {
+                    HTTP_ERROR("Callback cancels");
+                    client->resource = NULL;
+                    client->resource_open = false;
+                    return http_slice_fatal(client, result);
+                }
+                result = 0;
+            }
+            client->resource = NULL;
+            client->resource_open = false;
+
+            // absorb the boundary
+            //
+            client->in_transferred += client->boundary_length;
+            client->in.count -= client->boundary_length;
+            client->in.tail += client->boundary_length;
+
+            // take the used data out of the content length for counted xfer
+            //
+            client->in_content_length -= client->boundary_length;
+
+            // if this is the first boundary, add in a prefix CRFL to the boundary
+            // text to ease matching subsequent boundaries. room is checked earlier
+            //
+            // note that the first char in the boundary is used also as boundary
+            // state to discard preamble
+            //
+            if (client->boundary[0] != '\r')
+            {
+                memmove(client->boundary + 2, client->boundary, client->boundary_length + 1);
+                client->boundary[0] = '\r';
+                client->boundary[1] = '\n';
+                client->boundary_length += 2;
+            }
+            // if the bytes after the boundary are "--" this is the end of the boundary
+            // so move to postamble phase to discard remaining data.  there has to always
+            // be two bytes after a boundary so we wait for them above before checking
+            //
+            if (
+                    (client->in.data[client->in.tail] == '-')
+                &&  (client->in.data[client->in.tail + 1] == '-')
+            )
+            {
+                client->in.tail += 2;
+                client->in.count -= 2;
+                client->in_content_length -= 2;
+
+                http_log(5, "-- ends boundary\n");
+
+                // clear boundary to indicate postamble phase (discard remaining data)
+                client->boundary[0] = '\1';
+            }
+            else if (
+                    (client->in.data[client->in.tail] == '\r')
+                &&  (client->in.data[client->in.tail + 1] == '\n')
+            )
+            {
+                // absorb any CRLF after a proper boundary
+                client->in.tail += 2;
+                client->in.count -= 2;
+                client->in_content_length -= 2;
+            }
+            // go parse the next part's content disposition if more data
+            //
+            if (client->in_content_length > 0 && client->boundary[0] != '\1')
+            {
+                http_get_line(client, httpMultipartHeaders);
+            }
+            break;
+        }
+        else if (
+                (client->boundary_length > 0)
+            &&  (client->boundary[0] != '\1')
+        )
+        {
+            // if a boundary is in the buffer, or the buffer ends with a partial boundary,
+            // limit input buffer size to bytes up-to the boundary. (exclude last CRLF
+            // of boundary because last one doesn't have it)
+            //
+            int boundex, index;
+            bool isboundary;
+
+            for (
+                    index = 0, isboundary = false;
+                    index < client->in.count && ! isboundary;
+            )
+            {
+                for (
+                        boundex = 0, i = index, isboundary = true;
+                        boundex < client->boundary_length && i < client->in.count;
+                        boundex++, i++
+                )
+                {
+                    if (client->in.data[i] != client->boundary[boundex])
+                    {
+                        // this isn't a boundary, restart checking at next byte
+                        //
+                        isboundary = false;
+                        index = i + 1;
+                        break;
+                    }
+                }
+            }
+            if (isboundary)
+            {
+                // got to end of input with a partial match, or found a complete boundary,
+                // so limit parsing to begining of boundary in input
+                //
+                http_log(4, "partial boundary %02X reduce to %u\n", client->boundary[0], index);
+                incount = index;
+
+                // if the first boundary hasn't been parsed (preamble phase) discard
+                // this data (this is never seen in practice)
+                //
+                if (client->boundary[0] == '-')
+                {
+                    http_log(4, "discard %u preamble\n", index);
+                    i = incount;
+                    client->in.count -= i;
+                    client->in.tail += i;
+                    if (client->in_content_length >= i)
+                    {
+                        client->in_content_length -= i;
+                    }
+                    else
+                    {
+                        client->in_content_length = 0;
+                    }
+                    incount = 0;
+                }
+            }
+        }
+        else if (
+                (client->boundary_length > 0)
+            &&  (client->boundary[0] == '\1')
+        )
+        {
+            // discard data past last boundary termination
+            //
+            i = client->in_content_length;
+            if (i > incount)
+            {
+                i = incount;
+            }
+            http_log(4, "discard %u postamble\n", i);
+            client->in.count -= i;
+            client->in.tail += i;
+            client->in_content_length -= i;
+        }
+        #endif
+
+        // give body data to callback, buffer is contiguous here, limit
+        // length to remaining content_length or amount available
+        //
+        i = client->in_content_length;
+        if (i > incount)
+        {
+            i = incount;
+        }
+        if (client->resource && client->resource->callback)
+        {
+            result = client->resource->callback(
+                                                client,
+                                                client->resource,
+                                                httpDownloadData,
+                                                &client->in.data,
+                                                &i
+                                                );
+            if (result)
+            {
+                HTTP_ERROR("Callback cancels");
+                return http_slice_fatal(client, result);
+            }
+        }
+        else
+        {
+            http_log(5, "Discard %d body of %d content remaining\n", i, client->in_content_length);
+        }
+        // take amount of data absorbed by callback away from input
+        // (which is all avail data if no callback supplied)
+        //
+        client->in_transferred += i;
+        client->in.count -= i;
+        client->in.tail += i;
+        if (client->in.tail >= client->in.size)
+        {
+            client->in.tail = 0;
+        }
+        // take the used data out of the content length for counted xfer
+        //
+        if (client->in_content_length >= i)
+        {
+            client->in_content_length -= i;
+        }
+        else
+        {
+            client->in_content_length = 0;
+        }
+        break;
+
+    case httpBodyUpload:
+        if (client->resource && client->resource->callback)
+        {
+            uint8_t *content;
+            size_t   count, room;
+
+            // rotate output buffer to ensure max contiguous data
+            // this should be a noop, unless something went wrong
+            //
+            if (client->out.tail != 0)
+            {
+                HTTP_ERROR("Out buffer not normalized");
+                iostream_normalize_ring(&client->out, NULL);
+            }
+            content = client->out.data + client->out.head;
+            room    = client->out.size - client->out.count;
+
+            // if running out of room flush the output buffer and come back here
+            //
+            if (
+                    (room < (client->out.size / 4))
+                ||  (room < 9)
+            )
+            {
+                // running out of output room, flush it
+                //
+                result = http_send_out_data(client, httpBodyUpload, httpBodyUpload);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                return 0;
+            }
+            count = client->out_content_length;
+            if (count == 0)
+            {
+                // there is no more data to send
+                //
+                if (client->out_transfer_type == httpChunked)
+                {
+                    if(client->out_transferred > 0)
+                    {
+                        // append a 0 count to terminate chunked, but only if there were
+                        // actual bytes and a previous non-0 count
+                        //
+                        result = http_append_reply(client, "\r\n0\r\n");
+                        if (result)
+                        {
+                            return http_slice_fatal(client, result);
+                        }
+                    }
+                }
+                http_log(4, "cl:%u: end of upload of %s\n", client->id, client->path);
+
+                if (client->isclient)
+                {
+                    // client - flush any request-and-data and move to download state
+                    result = http_send_out_data(client, httpSendRequest, httpReadReply);
+                }
+                else
+                {
+                    // serving client - flush reply-and-data and move to done state
+                    result = http_send_out_data(client, httpSendReply, httpKeepAlive);
+                }
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
+                return 0;
+            }
+            if (client->out_transfer_type == httpChunked)
+            {
+                // leave room for chunk count (room is > 8 here!)
+                //
+                content += 8;
+                room -= 8;
+            }
+            // limit data request to remaining output content
+            //
+            if (room > count)
+            {
+                room = count;
+            }
+            #if HTTP_SUPPORT_RANGES
+            // further limit request to bytes before byte range start
+            //
+            if (client->start_byte > 0)
+            {
+                if (client->start_byte > client->out_gotten)
+                {
+                    count = client->start_byte - client->out_gotten;
+                    if (room > count)
+                    {
+                        room = count;
+                    }
+                }
+            }
+            #endif
+            if (room > 0)
+            {
+                // have room for data, call callback to fill out buf
+                //
+                count = room;
+                result = client->resource->callback(
+                                                    client,
+                                                    client->resource,
+                                                    httpUploadData,
+                                                    &content,
+                                                    &count
+                                                    );
+                if (result)
+                {
+                    HTTP_ERROR("Upload callback cancels");
+                    result = http_error_reply(client, 500, "Reply internal", false);
+                    if (result)
+                    {
+                        return http_slice_fatal(client, result);
+                    }
+                    return 0;
+                }
+                client->out_gotten += count;
+
+                #if HTTP_SUPPORT_RANGES
+                if (client->start_byte > 0)
+                {
+                    if (client->start_byte >= client->out_gotten)
+                    {
+                        // haven't read past the start byte yet
+                        count = 0;
+                    }
+                    else if (client->end_byte != 0)
+                    {
+                        if (client->out_gotten > client->end_byte)
+                        {
+                            room = client->out_gotten - (client->end_byte + 1);
+                            if (room >= count)
+                            {
+                                // past the end byte, shouldn't get here since
+                                // out content length should be set properly
+                                //
+                                HTTP_ERROR("Bad range handling");
+                                count = 0;
+                            }
+                            else
+                            {
+                                // limit bytes uploaded to pieces in range
+                                count -= room;
+                            }
+                        }
+                    }
+                }
+                #endif
+
+                i = count;
+                if (count > 0 && client->out_transfer_type == httpChunked)
+                {
+                    // back annotate chunk count
+                    snprintf(content - 8, 8, "\r\n%04X\r", i);
+                    content[-1] = '\n';
+                    i += 8;
+                }
+            }
+            else
+            {
+                count = 0;
+                i = 0;
+            }
+            if (i > 0)
+            {
+                // got data from callback. if it used our reply buffer for
+                // the data, and there is still good room left in the reply buffer
+                // keep going, else write the buffer out and come back for more
+                // after that is done.  if the callback user didn't use our
+                // supplied buffer, have to send reply now, then data, then
+                // back to here
+                //
+                if (
+                        (content < client->out.data)
+                     || (content > (client->out.data + client->out.size))
+                )
+                {
+                    HTTP_ERROR("Not implemented");
+                    return http_slice_fatal(client, -1);
+                }
+                client->out.count += i;
+                client->out.head += i;
+                if (client->out.head >= client->out.size)
+                {
+                    client->out.head = 0;
+                }
+                // remove bytes uploaded from content_length
+                //
+                if (count > client->out_content_length)
+                {
+                    HTTP_ERROR("Xfer more than len");
+                    count = client->out_content_length;
+                }
+                client->out_transferred += count;
+                client->out_content_length -= count;
+            }
+        }
+        else if (client->out.count)
+        {
+            // no resource, but pre-loaded data (reply, request, etc.) in buffer
+            //
+            if (client->isclient)
+            {
+                // client - flush any request-and-data and move to download state
+                http_log(4, "cl:%u request with no body\n", client->id);
+                result = http_send_out_data(client, httpSendRequest, httpReadReply);
+            }
+            else
+            {
+                // serving client - flush reply-and-data and move to done state
+                http_log(4, "cl:%u reply with no body\n", client->id);
+                result = http_send_out_data(client, httpSendReply, httpKeepAlive);
+            }
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+        }
+        break;
+
+    case httpSendReply:
+    case httpSendRequest:
+        if (client->out.count > 0)
+        {
+            result = http_send_out_data(client, client->state, client->next_state);
+            if (result)
+            {
+                return http_slice_fatal(client, result);
+            }
+        }
+        else
+        {
+            if (client->state == httpSendRequest)
+            {
+                // request (and maybe the body) have been sent, get reply
+                http_get_line(client, httpReadReply);
+            }
+            else
+            {
+                // reply sent, do whats next
+                client->state = client->next_state;
+            }
+        }
+        break;
+
+    case httpPropFindEnumerate:
+    #if HTTP_SUPPORT_WEBDAV
+        result = http_webdav_find_slice(client);
+        if (result)
+        {
+            // any errors that don't format a reply go to done state
+            //
+            if (client->state == httpPropFindEnumerate)
+            {
+                client->state = httpDone;
+            }
+            result = 0;
+        }
+    #endif
+        break;
+
+    case httpSipSlice:
+    #if HTTP_SUPPORT_SIP
+        result = http_sip_slice(client);
+        if (result)
+        {
+            // any errors that don't format a reply go to done state
+            //
+            if (client->state == httpSipSlice)
+            {
+                client->state = httpDone;
+            }
+            result = 0;
+        }
+    #endif
+        break;
+
+    case httpKeepAlive:
+        // if keep-alive, restart this, and set initial input timeout
+        // as the keep-alive timeout
+        //
+        if (client->keepalive && ! client->isclient)
+        {
+            if (client->resource && client->resource->callback && client->resource_open)
+            {
+                result = client->resource->callback(
+                                                client,
+                                                client->resource,
+                                                httpComplete,
+                                                NULL,
+                                                NULL
+                                              );
+                if (result < 0)
+                {
+                    HTTP_ERROR("callback cancels");
+                    client->resource = NULL;
+                    client->resource_open = false;
+                    return http_slice_fatal(client, result);
+                }
+                result = 0;
+            }
+            client->resource = NULL;
+            client->resource_open = false;
+
+            client->long_timeout = HTTP_KEEPALIVE_TIMEOUT;
+            client->state = httpServeInit;
+        }
+        else
+        {
+            if (client->transport == httpUDP)
+            {
+                client->state = httpServeInit;
+            }
+            else
+            {
+                client->state = httpDone;
+            }
+        }
+        break;
+
+    case httpDone:
+        if (client->resource && client->resource_open && client->resource->callback)
+        {
+            result = client->resource->callback(
+                                            client,
+                                            client->resource,
+                                            httpComplete,
+                                            NULL,
+                                            NULL
+                                          );
+            if (result < 0)
+            {
+                HTTP_ERROR("callback cancels");
+                client->resource = NULL;
+                client->resource_open = false;
+                return http_slice_fatal(client, result);
+            }
+            result = 0;
+        }
+        client->resource = NULL;
+        client->resource_open = false;
+        break;
+
+    default:
+        HTTP_ERROR("Bad state");
+        return http_slice_fatal(client, -1);
+        break;
+
+    }
+    return 0;
+}
+
+int http_wait_for_client_event(http_client_t *client_list, int to_secs, int to_usecs)
+{
+    http_client_t *client;
+    int result;
+
+    result = 0;
+
+    for (client = client_list; client; client = client->next)
+    {
+        if (! http_client_blocked(client))
+        {
+            return 1;
+        }
+    }
+    for (client = client_list; client; client = client->next)
+    {
+        if (client->stream && http_client_blocked(client))
+        {
+            // if there is any data client wants to send, or waiting for a server
+            // to respond to a connection then poll for writeability
+            // else poll for readability if blocked on input data
+            //
+            if (client->out.count || client->state == httpClientInit)
+            {
+                result = client->stream->poll(client->stream, writeable, to_secs, to_usecs);
+            }
+            else
+            {
+                result = client->stream->poll(client->stream, readable, to_secs, to_usecs);
+            }
+            if (result)
+            {
+                // stop when any client indicates data-ready
+                http_log(7, "cl:%u poll ok\n", client->id);
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+int http_client_request(
+                        http_client_t *client,
+                        http_method_t method,
+                        const char *url,
+                        http_transport_t transport,
+                        bool use100,
+                        const char *localpath,
+                        http_resource_t *resource
+                       )
+{
+    socket_t socket;
+    http_resource_t *resources;
+    char scheme[HTTP_MAX_SCHEME];
+    int result;
+
+    // assume 1.1
+    client->vmaj = 1;
+    client->vmin = 1;
+
+    result = http_parse_url(url, &client->scheme, client->host, &client->port, client->path);
+    if (result)
+    {
+        HTTP_ERROR("Bad url");
+        return result;
+    }
+#if ! HTTP_SUPPORT_TLS
+    if (
+            client->scheme == httpHTTPS
+#if HTTP_SUPPORT_SIP
+        ||  client->scheme == httpSIPS
+#endif
+    )
+    {
+        HTTP_ERROR("TLS not supported");
+        return -1;
+    }
+#endif
+    if (localpath)
+    {
+        resources = NULL;
+        result = http_add_file_resource(&resources, localpath, "./", NULL);
+        if (result)
+        {
+            HTTP_ERROR("Can't add resource");
+            return result;
+        }
+    }
+    else
+    {
+        resources = resource;
+    }
+    client->resource = resources;
+    client->method = method;
+    client->transport = transport;
+
+    if (use100)
+    {
+        client->use100 = true;
+    }
+
+    socket = http_create_client_socket(transport, client->host, client->port);
+    if (socket == INVALID_SOCKET)
+    {
+        http_resource_free(resources);
+        return -1;
+    }
+    client->stream = iostream_create_from_socket(socket);
+    if (! client->stream)
+    {
+        HTTP_ERROR("Can't make stream");
+        http_resource_free(resources);
+        close_socket(socket);
+        return -1;
+    }
+    // go wait for client socket to connect
+    client->state = httpClientInit;
+    return 0;
+}
+
+socket_t http_create_server_socket(http_transport_t transport, uint16_t port)
+{
+    struct sockaddr_in serv_addr;
+    socket_t sock;
+
+    sock = socket(AF_INET, (transport == httpTCP) ? SOCK_STREAM : SOCK_DGRAM, 0);
+    if (sock < 0)
+    {
+        HTTP_ERROR("Can't create socket");
+        return INVALID_SOCKET;
+    }
+    {
+        #ifdef Windows
+        unsigned long nonblock;
+        #else
+        uint32_t nonblock;
+        #endif
+        int enable;
+
+        enable = 1;
+        if (setsockopt(sock, SOL_SOCKET,
+                    SO_REUSEADDR, (char*)&enable, sizeof(int)) < 0)
+        {
+            HTTP_ERROR("SO_REUSEADDR failed");
+            close_socket(sock);
+            return INVALID_SOCKET;
+        }
+        nonblock = 1;
+        if (ioctl_socket(sock, FIONBIO, &nonblock) < 0)
+        {
+            HTTP_ERROR("Can't make nonblocking");
+            close_socket(sock);
+            return INVALID_SOCKET;
+        }
+    }
+    memset((char *)&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(port);
+    if (bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        HTTP_ERROR("Can't bind server socket");
+        close_socket(sock);
+        return INVALID_SOCKET;
+    }
+    if (transport == httpTCP)
+    {
+        // Note: this is mostly useless on Linux which maintains
+        // two separate queues for connections giving clients false hopes
+        // if you see streams of failed requests consider upping the count
+        //
+        if (listen(sock, HTTP_MAX_CLIENT_CONNECTIONS) < 0)
+        {
+            HTTP_ERROR("Can't listen on server socket");
+            close_socket(sock);
+            return INVALID_SOCKET;
+        }
+    }
+    return sock;
+}
+
+static socket_t http_get_client_connection(socket_t sock)
+{
+    struct sockaddr_in cli_addr;
+    int clilen;
+    socket_t clientsock;
+
+    clilen = sizeof(cli_addr);
+    clientsock = accept(sock, (struct sockaddr *)&cli_addr, &clilen);
+
+    if (clientsock != INVALID_SOCKET)
+    {
+        #ifdef Windows
+        unsigned long nonblock;
+        #else
+        uint32_t nonblock;
+        #endif
+        nonblock = 1;
+        if (ioctl_socket(clientsock, FIONBIO, &nonblock) < 0)
+        {
+            HTTP_ERROR("can't make nonblocking");
+            close_socket(clientsock);
+            return INVALID_SOCKET;
+        }
+    }
+    return clientsock;
+}
+
+static socket_t http_pending_client_connection(socket_t sock, int to_secs, int to_usecs)
+{
+    fd_set fds;
+    int nfds;
+    struct timeval timeout;
+    int result;
+
+    FD_ZERO(&fds);
+    FD_SET((int)sock, &fds);
+    nfds = (int)sock + 1;
+    timeout.tv_sec = to_secs;
+    timeout.tv_usec = to_usecs;
+    result = select(
+                    nfds,
+                    &fds,
+                    NULL,
+                    NULL,
+                    (to_secs >= 0 && to_usecs >= 0) ? &timeout : NULL
+                   );
+    http_log(8, "serv sel %08X\n", result);
+    return result;
+}
+
+#if defined(OSX) || defined(Linux)
+static void http_server_signal()
+{
+    return;
+}
+#endif
+
+int http_server_init(
+                        http_server_t *server,
+                        http_resource_t *resources,
+                        uint16_t port,
+                        http_transport_t transport,
+                        bool secure
+                      )
+{
+    if (! server)
+    {
+        HTTP_ERROR("No context to set up");
+        return -1;
+    }
+    server->port = port;
+    server->secure = secure;
+    server->transport = transport;
+    server->next = NULL;
+    server->resources = resources;
+    server->clients = NULL;
+    server->connections = 0;
+
+    // create server socket
+    //
+    server->socket = http_create_server_socket(transport, port);
+    if (server->socket == INVALID_SOCKET)
+    {
+        HTTP_ERROR("Can't make server socket");
+        return -1;
+    }
+    if (transport == httpTCP)
+    {
+        // tcp, listen on port for connections
+        //
+        http_log(1, "listening TCP %son %u\n",
+                server->secure ? "secure " : "", server->port);
+        #if defined(OSX) || defined(Linux)
+        signal(SIGPIPE, http_server_signal);
+        #endif
+    }
+    else
+    {
+        http_client_t *client;
+
+        // udp, create a permanent client and use server socket for it
+        //
+        client = http_client_create(resources, false);
+        if (! client)
+        {
+            HTTP_ERROR("Can't make UDP client");
+        }
+        client->stream = iostream_create_from_socket(server->socket);
+        if (! client->stream)
+        {
+            HTTP_ERROR("Can't make stream");
+            http_client_free(client);
+            close_socket(server->socket);
+            return -1;
+        }
+        client->transport = transport;
+        client->socket = server->socket;
+        server->clients = client;
+        server->socket = INVALID_SOCKET;
+
+        http_log(1, "serving UDP %son %u\n",
+                server->secure ? "secure " : "", server->port);
+    }
+    return 0;
+}
+
+void http_server_cleanup(http_server_t *server)
+{
+    http_client_t *client;
+
+    if (! server)
+    {
+        HTTP_ERROR("no server");
+        return;
+    }
+    while (server->clients)
+    {
+        client = server->clients;
+        server->clients = server->clients->next;
+        server->connections--;
+
+        if (client->stream)
+        {
+            client->stream->close(client->stream);
+        }
+    }
+    if (server->socket != INVALID_SOCKET)
+    {
+        close_socket(server->socket);
+    }
+    server->socket = INVALID_SOCKET;
+}
+
+int http_server_slice(http_server_t *server, int to_secs, int to_usecs)
+{
+    int result;
+    bool clients_active;
+
+    // check for connection in server socket
+    //
+    if (! server)
+    {
+        HTTP_ERROR("Need context with socket");
+        return -1;
+    }
+    clients_active = false;
+
+    if (server->clients)
+    {
+        http_client_t *client;
+        bool found_dead;
+
+        // iterate through client list procession any data / advancing state
+        //
+        for (client = server->clients; client; client = client->next)
+        {
+            if (client->stream)
+            {
+                result = http_client_slice(client);
+                if (result || (client->state == httpDone))
+                {
+                    http_log(3, "client done on port %u\n", server->port);
+                    if (client->stream)
+                    {
+                        client->stream->close(client->stream);
+                        client->stream = NULL;
+                    }
+                    result = 0;
+                }
+            }
+        }
+        // iterate through client list culling dead clients
+        //
+        do
+        {
+            http_client_t *prevclient = NULL;
+
+            found_dead = false;
+
+            for (client = server->clients; client; client = client->next)
+            {
+                if (! client->stream)
+                {
+                    if (prevclient)
+                    {
+                        prevclient->next = client->next;
+                    }
+                    else
+                    {
+                        server->clients = client->next;
+                    }
+                    http_log(5, "culling client %u on port %u\n",
+                           client->id, server->port);
+                    http_client_free(client);
+                    server->connections--;
+                    found_dead = true;
+                    break;
+                }
+                prevclient = client;
+            }
+        }
+        while (found_dead);
+    }
+    // check for new client connections
+    //
+    if (server->connections < HTTP_MAX_CLIENT_CONNECTIONS)
+    {
+        result = http_pending_client_connection(server->socket, to_secs, to_usecs);
+        if (result < 0)
+        {
+            HTTP_ERROR("server socket broken");
+            return result;
+        }
+        if (result > 0)
+        {
+            http_client_t *client;
+            socket_t client_socket;
+
+            client_socket = http_get_client_connection(server->socket);
+            if (client_socket == INVALID_SOCKET)
+            {
+                HTTP_ERROR("Server socket broken");
+                http_client_free(client);
+                return -1;
+            }
+            client = http_client_create(server->resources, false);
+            if (! client)
+            {
+                HTTP_ERROR("Can't alloc client");
+                close_socket(client_socket);
+                return -1;
+            }
+            client->socket = client_socket;
+            client->secure = server->secure;
+
+            client->stream = iostream_create_from_socket(client_socket);
+            if (! client->stream)
+            {
+                HTTP_ERROR("Can't make stream");
+                http_client_free(client);
+                close_socket(client_socket);
+                return -1;
+            }
+    #if HTTP_SUPPORT_TLS
+            // upgrade to TLS if indicated
+            //
+            if (client->secure)
+            {
+                iostream_t *stream;
+
+                stream = iostream_tls_create_from_iostream(client->stream, false);
+                if (! stream)
+                {
+                    HTTP_ERROR("TLS upgrade failed");
+                    client->stream = NULL;
+                    http_client_free(client);
+                    return 0;
+                }
+                client->stream = stream;
+            }
+    #endif
+            client->next = server->clients;
+            server->clients = client;
+            server->connections++;
+
+            http_log(2, "connection %u on port %u\n",
+                   server->connections, server->port);
+            result = 0;
+        }
+    }
+    return result;
+}
+
+int http_wait_for_server_event(http_server_t *servers)
+{
+    http_server_t *server;
+    http_client_t *client;
+    int result;
+    int client_count, server_count;
+    int to_secs, to_usecs;
+
+#if defined(Linux) || defined(OSX)
+    fd_set rfds;
+    fd_set wfds;
+    fd_set efds;
+    int nfds;
+    struct timeval timeout;
+
+    FD_ZERO(&rfds);
+    FD_ZERO(&wfds);
+    FD_ZERO(&efds);
+
+    to_secs = 10;
+    to_usecs = 250000;
+
+    // put all sockets in one big select and wait a long time, but timeout
+    // occasionally to allow for long timeout processing in clients, etc.
+    //
+    for (server = servers, server_count = 0; server; server = server->next)
+    {
+        server_count++;
+        for (client = server->clients; client; client = client->next)
+        {
+            if (client->socket != INVALID_SOCKET)
+            {
+                // if client has data pending, and isn't in a write-state
+                // assume it can make progress and call it an event
+                //
+                if (! http_client_blocked(client))
+                {
+                    return 0;
+                }
+                // poll client socket for write if have data, else read
+                if (client->socket > nfds)
+                {
+                    nfds = client->socket;
+                }
+                if (client->out.count)
+                {
+                    FD_SET((int)client->socket, &wfds);
+                }
+                else
+                {
+                    FD_SET((int)client->socket, &rfds);
+                }
+                FD_SET((int)client->socket, &efds);
+            }
+            client_count++;
+        }
+        if (server->socket != INVALID_SOCKET && client_count < HTTP_MAX_CLIENT_CONNECTIONS)
+        {
+            // poll server socket for readability (new client connection)
+            if (server->socket > nfds)
+            {
+                nfds = server->socket;
+            }
+            FD_SET((int)server->socket, &rfds);
+            FD_SET((int)server->socket, &efds);
+        }
+    }
+    timeout.tv_sec = to_secs;
+    timeout.tv_usec = to_usecs;
+
+    result = select(
+                    nfds + 1,
+                    &rfds,
+                    &wfds,
+                    &efds,
+                    (to_secs >= 0 && to_usecs >= 0) ? &timeout : NULL
+                   );
+    if (result < 0)
+    {
+        // ignore error here, let individual poll find it
+        result = 0;
+    }
+#else
+    // wait for client and server events iteratively, waiting longer for
+    // server events if no clients, etc.
+    //
+    result = 0;
+    to_secs = 0;
+    to_usecs = 8000;
+
+    for (server = servers, server_count = 0; server; server = server->next)
+    {
+        server_count++;
+        for (client = server->clients; client; client = client->next)
+        {
+            client_count++;
+        }
+        if (client_count > 0)
+        {
+            result = http_wait_for_client_event(server->clients, to_secs, to_usecs);
+            if (result < 0)
+            {
+                // poll error, let client's own poll discover this and close it
+                HTTP_ERROR("Client error");
+                result = 0;
+                break;
+            }
+            else if (result > 0)
+            {
+                return result;
+            }
+        }
+    }
+    if (! result)
+    {
+        if (server_count == 1 && client_count == 0)
+        {
+            to_secs = 1;
+        }
+        // no client event, wait for a client connection on each server
+        //
+        for (server = servers; server; server = server->next)
+        {
+            if (server->connections < HTTP_MAX_CLIENT_CONNECTIONS)
+            {
+                result = http_pending_client_connection(server->socket, to_secs, to_usecs);
+                if (result < 0)
+                {
+                    HTTP_ERROR("server socket broken");
+                    return 0;
+                }
+                if (result > 0)
+                {
+                    break;
+                }
+            }
+        }
+    }
+#endif
+    return result;
+}
+
+int http_serve(http_server_t *servers)
+{
+    http_server_t *server;
+    int result;
+
+    do
+    {
+        // wait for something to do (new client, or client read/write ready)
+        // in some systems, this is a one-by-one poll
+        //
+        result = http_wait_for_server_event(servers);
+        if (result > 0)
+        {
+            result = 0;
+        }
+        for (server = servers; ! result && server != NULL; server = server->next)
+        {
+            result = http_server_slice(server, 0, 0);
+            if (result < 0)
+            {
+                // remove server?
+            }
+        }
+    }
+    while (! result);
+}
+

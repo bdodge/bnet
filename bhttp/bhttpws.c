@@ -48,7 +48,6 @@ static int ws_stream_inject_input(http_client_t *client)
     uint64_t chunk, room;
     uint32_t count;
     uint8_t byte;
-    bool masked;
     int i;
     int result;
 
@@ -87,12 +86,7 @@ static int ws_stream_inject_input(http_client_t *client)
 
     case wssHeaderByte1:
         byte = ws_next_client_byte(client);
-        masked = (byte & WSBIT_MASK) ? true : false;
-        if (! masked)
-        {
-            HTTP_ERROR("Unmasked data");
-            return -1;
-        }
+        wsx->masked = (byte & WSBIT_MASK) ? true : false;
         wsx->payload_length = byte & WSBIT_PAYL;
         if (wsx->payload_length == 126)
         {
@@ -153,15 +147,17 @@ static int ws_stream_inject_input(http_client_t *client)
         break;
 
     case wssMaskingKey:
-        if (client->in.count < 4)
+        if (wsx->masked)
         {
-            return 0;
+            if (client->in.count < 4)
+            {
+                return 0;
+            }
+            wsx->mask_key[0] = ws_next_client_byte(client);
+            wsx->mask_key[1] = ws_next_client_byte(client);
+            wsx->mask_key[2] = ws_next_client_byte(client);
+            wsx->mask_key[3] = ws_next_client_byte(client);
         }
-        wsx->mask_key[0] = ws_next_client_byte(client);
-        wsx->mask_key[1] = ws_next_client_byte(client);
-        wsx->mask_key[2] = ws_next_client_byte(client);
-        wsx->mask_key[3] = ws_next_client_byte(client);
-
         http_log(5, "Frame code=%02X fin=%c len=%llu\n",
                 wsx->opcode & WSBIT_OPC,
                 (wsx->opcode & WSBIT_FIN) ? 'Y' : 'N',
@@ -210,11 +206,21 @@ static int ws_stream_inject_input(http_client_t *client)
         }
         count = (uint32_t)chunk;
 
-        // unmask bytes
-        for (i = 0; i < count; i++)
+        if (wsx->masked)
         {
-            wsx->in.data[wsx->in.head + i] =
-                client->in.data[client->in.tail + i] ^ wsx->mask_key[i & 0x3];
+            // unmask bytes
+            for (i = 0; i < count; i++)
+            {
+                wsx->in.data[wsx->in.head + i] =
+                    client->in.data[client->in.tail + i] ^ wsx->mask_key[i & 0x3];
+            }
+        }
+        else
+        {
+            for (i = 0; i < count; i++)
+            {
+                wsx->in.data[wsx->in.head + i] = client->in.data[client->in.tail + i];
+            }
         }
         wsx->in.count += count;
         wsx->in.head += count;
@@ -433,6 +439,33 @@ static iostream_t *iostream_websocket_create_from_stream(iostream_t *instream)
     return stream;
 }
 
+int http_websocket_check_key(char *theirkey, char *ourkey)
+{
+    if (! theirkey || ! ourkey)
+    {
+        return -1;
+    }
+    // todo - validate
+    return 0;
+}
+
+int http_websocket_create_key(char *keybuf, size_t bufbytes)
+{
+    uint8_t b[8];
+    int i;
+
+    if (! keybuf || bufbytes < HTTP_MAX_WEBSOCKET_KEY)
+    {
+        return -1;
+    }
+    for (i = 0; i < 8; i++)
+    {
+        b[i] = i + 1;
+    }
+    http_base64_encode(keybuf, bufbytes, b, i, false);
+    return 0;
+}
+
 int http_websocket_slice(struct http_client *client)
 {
     ws_stream_ctx_t *wsx;
@@ -469,7 +502,7 @@ int http_websocket_slice(struct http_client *client)
     iostream_normalize_ring(&wsx->in, NULL);
     avail = wsx->in.count;
 
-    if (! client->resource)
+    if (! client->resource || ! client->resource->callback)
     {
         // no resource, drop data
         //
@@ -612,6 +645,22 @@ int http_websocket_slice(struct http_client *client)
     return result;
 }
 
+int http_websocket_create_stream(http_client_t *client)
+{
+    // allocate a websocket iostream.  NOTE! this does NOT wrap
+    // the underlying iostream.  the underlying http infrastructure
+    // will still deal directly with the iostream object and only the
+    // websocket slice will deal with this ws stream
+    //
+    client->ws_stream = iostream_websocket_create_from_stream(client->stream);
+    if (! client->ws_stream)
+    {
+        HTTP_ERROR("No stream");
+        return -1;
+    }
+    return 0;
+}
+
 int http_websocket_upgrade_reply(http_client_t *client)
 {
     int result = 0;
@@ -691,15 +740,6 @@ int http_websocket_upgrade_reply(http_client_t *client)
     if (result)
     {
         return result;
-    }
-    // allocate a websocket iostream to hand up, but this does
-    // NOT wrap the client's stream
-    //
-    client->ws_stream = iostream_websocket_create_from_stream(client->stream);
-    if (! client->ws_stream)
-    {
-        HTTP_ERROR("No stream");
-        return -1;
     }
     return http_send_out_data(client, httpSendReply, httpWebSocketUpgrade);
 }

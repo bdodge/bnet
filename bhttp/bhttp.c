@@ -56,7 +56,11 @@ http_client_t *http_client_create(http_resource_t *resources, bool isclient)
     client->use100    = false;
     client->expect100 = false;
     client->redirects = 0;
-
+    #if HTTP_SUPPORT_WEBSOCKET
+    client->ws_upgrade = false;
+    client->ws_key[0] = '\0';
+    client->ws_proto[0] = '\0';
+    #endif
     client->id = s_ids++;
 
     return client;
@@ -112,10 +116,7 @@ void http_client_reinit(http_client_t *client, bool newstream)
     http_webdav_findstate_init(client);
     #endif
     #if HTTP_SUPPORT_WEBSOCKET
-    client->ws_upgrade = false;
     client->ws_extensions = 0;
-    client->ws_key[0] = '\0';
-    client->ws_proto[0] = '\0';
     if (client->ws_stream)
     {
         client->ws_stream->close(client->ws_stream);
@@ -876,7 +877,10 @@ static int http_process_header(http_client_t *client, char *header)
     {
         if (! http_ncasecmp(value, "websocket"))
         {
-            http_log(5, "WebSocket upgrade requested\n");
+            if (! client->isclient)
+            {
+                http_log(5, "WebSocket upgrade requested\n");
+            }
             client->ws_upgrade = true;
         }
     }
@@ -895,6 +899,15 @@ static int http_process_header(http_client_t *client, char *header)
             return -1;
         }
         strcpy(client->ws_key, value);
+    }
+    else if (! http_ncasecmp(header, "sec-websocket-accept:"))
+    {
+        if (http_websocket_check_key(client->ws_key, value))
+        {
+            HTTP_ERROR("Websocket Accept Key");
+            client->ws_upgrade = false;
+            return -1;
+        }
     }
     else if (! http_ncasecmp(header, "sec-websocket-protocol:"))
     {
@@ -1151,6 +1164,12 @@ int http_client_slice(http_client_t *client)
             // input is starting
             http_client_reinit(client, false);
 
+    #if HTTP_SUPPORT_WEBSOCKET
+            // insist client re-ask for upgrade
+            client->ws_upgrade = false;
+            client->ws_key[0] = '\0';
+            client->ws_proto[0] = '\0';
+    #endif
             // move to get request
             http_get_line(client, httpReadRequest);
         }
@@ -1190,6 +1209,9 @@ int http_client_slice(http_client_t *client)
         //
         if (
                 client->scheme == httpHTTPS
+    #if HTTP_SUPPORT_WEBSOCKET
+            ||  client->scheme == httpWSS
+    #endif
     #if HTTP_SUPPORT_SIP
             ||  client->scheme == httpSIPS
     #endif
@@ -1219,6 +1241,17 @@ int http_client_slice(http_client_t *client)
             client->expect100 = true;
             result |= http_append_request(client, "Expect: 100-continue");
         }
+    #if HTTP_SUPPORT_WEBSOCKET
+        if (client->ws_upgrade)
+        {
+            result |= http_websocket_create_key(client->ws_key, sizeof(client->ws_key));
+            result |= http_append_request(client, "Upgrade: websocket");
+            result |= http_append_request(client, "Connection: Upgrade");
+            result |= http_append_request(client, "Sec-WebSocket-Key: %s", client->ws_key);
+            result |= http_append_request(client, "Sec-WebSocket-Protocol: %s", client->ws_proto);
+            result |= http_append_request(client, "Sec-WebSocket-Version: %u", client->ws_version);
+        }
+    #endif
         // get content-type, etc. from resource if present (post/put)
         //
         switch (client->method)
@@ -1271,14 +1304,21 @@ int http_client_slice(http_client_t *client)
             )
             {
                 // first chunk output will insert empty line so only do this for non-chunked
-                // (of for chunked xfer where there won't be any chunks)
+                // (or for chunked xfer where there won't be any chunks)
                 //
                 result |= http_append_request(client, "");
             }
             break;
 
         default:
+            #if HTTP_SUPPORT_WEBSOCKET
+            if (! client->ws_upgrade)
+            {
+            #endif
             result |= http_append_connection_to_request(client, false);
+            #if HTTP_SUPPORT_WEBSOCKET
+            }
+            #endif
             result |= http_append_request(client, "Content-Length: 0");
             result |= http_append_request(client, "Accept: */*");
             result |= http_append_request(client, "");
@@ -1773,14 +1813,22 @@ int http_client_slice(http_client_t *client)
 
 #if HTTP_SUPPORT_WEBSOCKET
     case httpWebSocketUpgrade:
-        if (client->ws_upgrade)
+        if (! client->ws_stream)
         {
-            client->ws_upgrade = false;
-
-            result = http_websocket_upgrade_reply(client);
+            result = http_websocket_create_stream(client);
             if (result)
             {
                 return http_slice_fatal(client, result);
+            }
+            if (! client->isclient)
+            {
+                // we're serving a client, format and send a reply
+                //
+                result = http_websocket_upgrade_reply(client);
+                if (result)
+                {
+                    return http_slice_fatal(client, result);
+                }
             }
         }
         else
@@ -2813,6 +2861,9 @@ int http_client_request(
 #if ! HTTP_SUPPORT_TLS
     if (
             client->scheme == httpHTTPS
+#if HTTP_SUPPORT_WEBSOCKET
+            client->scheme == httpWSS
+#endif
 #if HTTP_SUPPORT_SIP
         ||  client->scheme == httpSIPS
 #endif

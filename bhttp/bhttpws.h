@@ -23,6 +23,7 @@ typedef struct
     http_ws_state_t prev_in_state;
     http_ws_state_t prev_out_state;
     uint8_t         opcode;
+    bool            masked;
     uint64_t        payload_length;
     uint8_t         mask_key[4];
     iostream_t     *stream;
@@ -30,6 +31,9 @@ typedef struct
 }
 ws_stream_ctx_t;
 
+int http_websocket_create_key(char *keybuf, size_t bufbytes);
+int http_websocket_check_key(char *theirkey, char *ourkey);
+int http_websocket_create_stream(struct http_client *client);
 int http_websocket_upgrade_reply(struct http_client *client);
 int http_websocket_slice(struct http_client *client);
 

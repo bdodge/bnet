@@ -32,6 +32,10 @@ const char *http_scheme_name(http_scheme_t scheme)
     {
     case httpHTTP:      return "HTTP";
     case httpHTTPS:     return "HTTPS";
+    #if HTTP_SUPPORT_WEBSOCKET
+    case httpWSS:       return "WSS";
+    case httpWS:        return "WS";
+    #endif
     #if HTTP_SUPPORT_SIP
     case httpSIP:       return "SIP";
     case httpSIPS:      return "SIPS";
@@ -46,6 +50,10 @@ const char *http_scheme_base_name(http_scheme_t scheme)
     {
     case httpHTTP:      return "HTTP";
     case httpHTTPS:     return "HTTP";
+    #if HTTP_SUPPORT_WEBSOCKET
+    case httpWS:        return "HTTP";
+    case httpWSS:       return "HTTP";
+    #endif
     #if HTTP_SUPPORT_SIP
     case httpSIP:       return "SIP";
     case httpSIPS:      return "SIP";
@@ -66,6 +74,18 @@ int http_scheme_from_name(const char *name, http_scheme_t *scheme)
         *scheme = httpHTTP;
         return 0;
     }
+    #if HTTP_SUPPORT_WEBSOCKET
+    if (! strcasecmp(name, "wss"))
+    {
+        *scheme = httpWSS;
+        return 0;
+    }
+    if (! strcasecmp(name, "ws"))
+    {
+        *scheme = httpWS;
+        return 0;
+    }
+    #endif
     #if HTTP_SUPPORT_SIP
     if (! strcasecmp(name, "sips"))
     {

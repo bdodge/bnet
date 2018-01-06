@@ -25,8 +25,10 @@ http_transport_t;
 typedef enum
 {
     httpHTTP,
+    httpWS,
     httpSIP,
     httpHTTPS,
+    httpWSS,
     httpSIPS,
 }
 http_scheme_t;

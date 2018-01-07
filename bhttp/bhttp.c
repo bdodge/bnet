@@ -191,96 +191,6 @@ void http_client_free(http_client_t *client)
     }
 }
 
-static socket_t http_create_client_socket(http_transport_t transport, const char *host, uint16_t port)
-{
-    struct sockaddr_in serv_addr;
-    socket_t sock;
-    int result;
-    bool isname;
-    int i;
-
-    sock = socket(AF_INET, (transport == httpTCP) ? SOCK_STREAM : SOCK_DGRAM, 0);
-    if (sock < 0)
-    {
-        HTTP_ERROR("Can't create socket");
-        return INVALID_SOCKET;
-    }
-    {
-        #ifdef Windows
-        unsigned long nonblock;
-        #else
-        uint32_t nonblock;
-        #endif
-
-        nonblock = 1;
-        if (ioctl_socket(sock, FIONBIO, &nonblock) < 0)
-        {
-            HTTP_ERROR("Can't make nonblocking");
-            close_socket(sock);
-            return INVALID_SOCKET;
-        }
-    }
-    // if host is an IP address, use directly
-    for (i = 0, isname = false; i < strlen(host); i++)
-    {
-        if ((host[i] < '0' || host[i] > '9') && host[i] != '.')
-        {
-            isname = true;
-            break;
-        }
-    }
-    if (isname)
-    {
-        struct hostent *hostname = gethostbyname(host);
-
-        if (! hostname)
-        {
-            HTTP_ERROR("Can't find address");
-            close_socket(sock);
-            return INVALID_SOCKET;
-        }
-        memcpy(&serv_addr.sin_addr, hostname->h_addr, hostname->h_length);
-    }
-    else
-    {
-        if (! inet_aton(host, &serv_addr.sin_addr))
-        {
-            HTTP_ERROR("Invalid address");
-            close_socket(sock);
-            return INVALID_SOCKET;
-        }
-    }
-    // connect to remote server if tcp socket
-    //
-    if (transport == httpTCP)
-    {
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(port);
-        result = connect(sock, (void*)&serv_addr, sizeof(serv_addr));
-        if (result < 0)
-        {
-            // this is non blocking, so expect error.
-            //
-            #ifdef _WIN32
-            if (WSAGetLastError() == WSAEWOULDBLOCK)
-            #else
-            if (errno == EWOULDBLOCK || errno == EINPROGRESS)
-            #endif
-            {
-                result = 0;
-            }
-            else
-            {
-                http_log(0, "Can't connect to %s:%u\n", inet_ntoa(serv_addr.sin_addr), port);
-                HTTP_ERROR("Can't connect");
-                close_socket(sock);
-                return INVALID_SOCKET;
-            }
-        }
-    }
-    return sock;
-}
-
 int http_client_input(http_client_t *client, int to_secs, int to_usecs)
 {
     time_t now;
@@ -390,7 +300,7 @@ int http_send_data(http_client_t *client, const uint8_t *data, int count)
         wc = client->stream->poll(client->stream, writeable, 0, 1000);
         if (wc < 0)
         {
-            HTTP_ERROR("closed on send/p");
+            HTTP_ERROR("closed on send");
             return -1;
         }
         time(&now);
@@ -416,7 +326,7 @@ int http_send_data(http_client_t *client, const uint8_t *data, int count)
         wc = client->stream->write(client->stream, (uint8_t*)data, count);
         if (wc <= 0)
         {
-            HTTP_ERROR("closed on send/w");
+            HTTP_ERROR("closed on send");
             return -1;
         }
     }
@@ -1188,6 +1098,8 @@ int http_client_slice(http_client_t *client)
         result = client->stream->poll(client->stream, writeable, 0, 2000);
         if (result < 0)
         {
+            HTTP_ERROR("stream");
+            return http_slice_fatal(client, -1);
         }
         if (result == 0)
         {
@@ -1524,7 +1436,6 @@ int http_client_slice(http_client_t *client)
                 }
                 if (client->response >= 300 && client->response < 400)
                 {
-                    socket_t socket;
                     http_scheme_t newscheme;
                     char newhost[HTTP_MAX_HOSTNAME];
                     uint16_t newport;
@@ -1581,17 +1492,10 @@ int http_client_slice(http_client_t *client)
                     }
                     // connect to new server (this resets state, etc.)
                     //
-                    socket = http_create_client_socket(httpTCP, client->host, client->port);
-                    if (socket == INVALID_SOCKET)
-                    {
-                        HTTP_ERROR("Can't make stream");
-                        return http_slice_fatal(client, -1);
-                    }
-                    client->stream = iostream_create_from_socket(socket);
+                    client->stream = iostream_create_from_tcp_connection(client->host, client->port);
                     if (! client->stream)
                     {
                         HTTP_ERROR("Can't make stream");
-                        close_socket(socket);
                         return http_slice_fatal(client, -1);
                     }
                     // go wait for client socket to connect
@@ -2843,7 +2747,6 @@ int http_client_request(
                         http_resource_t *resource
                        )
 {
-    socket_t socket;
     http_resource_t *resources;
     char scheme[HTTP_MAX_SCHEME];
     int result;
@@ -2895,19 +2798,28 @@ int http_client_request(
     {
         client->use100 = true;
     }
-
-    socket = http_create_client_socket(transport, client->host, client->port);
-    if (socket == INVALID_SOCKET)
+    if (transport == httpTCP)
     {
-        http_resource_free(resources);
-        return -1;
+        client->stream = iostream_create_from_tcp_connection(client->host, client->port);
     }
-    client->stream = iostream_create_from_socket(socket);
+    else
+    {
+        socket_t socket;
+
+        socket = iostream_create_udp_socket();
+        if (socket != INVALID_SOCKET)
+        {
+            client->stream = iostream_create_from_socket(socket);
+        }
+        else
+        {
+            client->stream = NULL;
+        }
+    }
     if (! client->stream)
     {
         HTTP_ERROR("Can't make stream");
         http_resource_free(resources);
-        close_socket(socket);
         return -1;
     }
     // go wait for client socket to connect

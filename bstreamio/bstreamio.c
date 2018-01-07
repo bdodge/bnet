@@ -224,6 +224,32 @@ static int iostream_socket_close(iostream_t *stream)
     close_socket(socket);
 }
 
+socket_t iostream_create_tcp_socket()
+{
+    socket_t sock;
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0)
+    {
+        BERROR("Can't create socket");
+        return INVALID_SOCKET;
+    }
+    return sock;
+}
+
+socket_t iostream_create_udp_socket()
+{
+    socket_t sock;
+
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0)
+    {
+        BERROR("Can't create socket");
+        return INVALID_SOCKET;
+    }
+    return sock;
+}
+
 iostream_t *iostream_create_reader_from_file(const char *filename)
 {
     iostream_t *stream;
@@ -359,10 +385,94 @@ int iostream_socket_sendto(iostream_t *stream, uint8_t *buf, int len, const char
 }
 
 iostream_t *iostream_create_from_tcp_connection(
-                                                const char *hostname,
+                                                const char *host,
                                                 uint16_t port
                                                 )
 {
-}
+    iostream_t *stream;
+    struct sockaddr_in serv_addr;
+    socket_t sock;
+    #ifdef Windows
+    unsigned long nonblock;
+    #else
+    uint32_t nonblock;
+    #endif
+    int result;
+    bool isname;
+    int i;
 
+    sock = iostream_create_tcp_socket();
+    if (sock == INVALID_SOCKET)
+    {
+        return NULL;
+    }
+    nonblock = 1;
+    if (ioctl_socket(sock, FIONBIO, &nonblock) < 0)
+    {
+        BERROR("Can't make nonblocking");
+        close_socket(sock);
+        return NULL;
+    }
+
+    // if host is an IP address, use directly
+    for (i = 0, isname = false; i < strlen(host); i++)
+    {
+        if ((host[i] < '0' || host[i] > '9') && host[i] != '.')
+        {
+            isname = true;
+            break;
+        }
+    }
+    if (isname)
+    {
+        struct hostent *hostname = gethostbyname(host);
+
+        if (! hostname)
+        {
+            BERROR("Can't find address");
+            close_socket(sock);
+            return NULL;
+        }
+        memcpy(&serv_addr.sin_addr, hostname->h_addr, hostname->h_length);
+    }
+    else
+    {
+        if (! inet_aton(host, &serv_addr.sin_addr))
+        {
+            BERROR("Invalid address");
+            close_socket(sock);
+            return NULL;
+        }
+    }
+    // connect to remote server
+    //
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(port);
+    result = connect(sock, (void*)&serv_addr, sizeof(serv_addr));
+    if (result < 0)
+    {
+        // this is non blocking, so expect error.
+        //
+        #ifdef _WIN32
+        if (WSAGetLastError() == WSAEWOULDBLOCK)
+        #else
+        if (errno == EWOULDBLOCK || errno == EINPROGRESS)
+        #endif
+        {
+            result = 0;
+        }
+        else
+        {
+            BERROR("Can't connect");
+            close_socket(sock);
+            return NULL;
+        }
+    }
+    stream = iostream_create_from_socket(sock);
+    if (! stream)
+    {
+        close_socket(sock);
+    }
+    return stream;
+}
 

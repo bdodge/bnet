@@ -1,5 +1,13 @@
+#ifndef BMQTT_H
+#define BMQTT_H 1
 
+#include "bmqttconfig.h"
+#include "bnetheaders.h"
+#include "bstreamio.h"
+
+#if MQTT_SUPPORT_WEBSOCKET
 #include "bhttp.h"
+#endif
 
 typedef enum
 {
@@ -20,3 +28,57 @@ typedef enum
 }
 mqtt_command_t;
 
+typedef enum
+{
+	mqtTCP,
+	mqtTLS,
+	mqtWS,
+	mqtWSS
+}
+mqtransport_t;
+
+typedef enum
+{
+    mqsInit,
+    mqsTransportInit,
+    mqsTransport,
+    mqsConnect,
+    mqsPing,
+    mqsDisconnect,
+    mqsDone,
+}
+mqstate_t;
+
+typedef struct
+{
+	uint32_t id;
+    mqstate_t state;
+    mqstate_t prev_state;
+	mqtransport_t transport;
+	char url[HTTP_MAX_URL];
+	uint16_t port;
+	iostream_t *stream;
+	time_t long_timeout;
+	time_t last_in_time;
+	time_t last_out_time;
+    ioring_t in;
+    ioring_t out;
+#if MQTT_SUPPORT_WEBSOCKET
+	http_client_t *client;
+    http_resource_t *resources;
+#endif
+}
+mqcontext_t;
+
+void mqtt_client_free(mqcontext_t *mqx);
+mqcontext_t *mqtt_client_create(
+					const char *server,
+					uint16_t port,
+					mqtransport_t transport,
+					const char *client_id,
+					size_t io_max,
+					time_t io_timeout
+					);
+int mqtt_slice(mqcontext_t *mqx);
+
+#endif

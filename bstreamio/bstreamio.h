@@ -42,11 +42,14 @@ iostream_t *iostream_create_writer_from_file(const char *filename);
 
 int iostream_socket_sendto(iostream_t *stream, uint8_t *buf, int len, const char *host, uint16_t port);
 
+socket_t iostream_create_tcp_socket(void);
+socket_t iostream_create_udp_socket(void);
+
+iostream_t *iostream_create_from_socket(socket_t socket);
 iostream_t *iostream_create_from_tcp_connection(
                                             const char *hostname,
                                             uint16_t port
                                               );
-iostream_t *iostream_create_from_socket(socket_t socket);
 
 int iostream_sha1_hash(uint8_t *result, uint8_t *source, size_t bytes);
 

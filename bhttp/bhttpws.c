@@ -547,7 +547,7 @@ int http_websocket_slice(struct http_client *client)
         }
         if (avail > 0)
         {
-            byte = WSBIT_FIN | WSOPCODE_TEXT;
+            byte = WSBIT_FIN | ((wsx->opcode & WSOPCODE_TEXT) ? WSOPCODE_TEXT : WSOPCODE_DATA);
             client->out.data[client->out.head] = byte;
             client->out.head++;
             client->out.count++;

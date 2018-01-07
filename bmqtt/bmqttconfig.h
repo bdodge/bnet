@@ -5,6 +5,10 @@
 ///
 #define MQTT_MIN_IO_SIZE	128
 
+/// Largest supported topic
+///
+#define MQTT_MAX_TOPIC		128
+
 /// Support HTTP-WebSockets transport
 ///
 #define MQTT_SUPPORT_WEBSOCKET 1

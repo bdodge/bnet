@@ -20,13 +20,21 @@ typedef enum
 	MQPUBCOMP = 7,		// Client <-> Server: 	Publish complete (assured delivery part 3)
 	MQSUBSCRIBE = 8,	// Client to Server:	Client subscribe request
 	MQSUBACK = 9,		// Server to Client:	Subscribe acknowledgment
-	MQUNSUBSCRIBE = 10,	//Client to Server:	Unsubscribe request
+	MQUNSUBSCRIBE = 10,	//Client to Server:		Unsubscribe request
 	MQUNSUBACK = 11,	// Server to Client:	Unsubscribe acknowledgment
 	MQPINGREQ = 12,		// Client to Server:	PING request
 	MQPINGRESP = 13,	// Server to Client:	PING response
 	MQDISCONNECT = 14,	// Client to Server:	Client is disconnecting
 }
 mqtt_command_t;
+
+typedef enum
+{
+	mqqosMostOnce = 0,
+	mqqosLeastOnce = 1,
+	mqqosOnlyOnce = 2
+}
+mqqos_t;
 
 typedef enum
 {
@@ -44,6 +52,11 @@ typedef enum
     mqsTransport,
     mqsConnect,
     mqsPing,
+	mqsSubscribe,
+	mqsPublish,
+	mqsPublishRelease,
+	mqsPublishComplete,
+	mqsIdle,
     mqsDisconnect,
     mqsDone,
 }
@@ -52,6 +65,7 @@ mqstate_t;
 typedef struct
 {
 	uint32_t id;
+	mqqos_t qos;
     mqstate_t state;
     mqstate_t prev_state;
 	mqtransport_t transport;
@@ -72,10 +86,11 @@ mqcontext_t;
 
 void mqtt_client_free(mqcontext_t *mqx);
 mqcontext_t *mqtt_client_create(
+					const char *client_id,
 					const char *server,
 					uint16_t port,
 					mqtransport_t transport,
-					const char *client_id,
+					mqqos_t qos,
 					size_t io_max,
 					time_t io_timeout
 					);

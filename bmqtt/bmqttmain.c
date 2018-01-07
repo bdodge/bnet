@@ -39,6 +39,7 @@ int main(int argc, char **argv)
     argc--;
 
     mqx = mqtt_client_create(
+                "hello",
                 "test.mosquitto.org",
             #if 0
                 8080,
@@ -50,7 +51,9 @@ int main(int argc, char **argv)
                 8883,
                 mqtTLS,
             #endif
-                "hello",
+                mqqosMostOnce,
+            //  mqqosLeastOnce,
+            //  mqqosOnlyOnce,
                 HELLO_IO_SIZE,
                 15
                 );

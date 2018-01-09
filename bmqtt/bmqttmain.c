@@ -51,6 +51,7 @@ int main(int argc, char **argv)
                 8883,
                 mqtTLS,
             #endif
+                123,
                 mqqosMostOnce,
             //  mqqosLeastOnce,
             //  mqqosOnlyOnce,

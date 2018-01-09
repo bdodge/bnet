@@ -5,6 +5,10 @@
 ///
 #define MQTT_MIN_IO_SIZE	128
 
+/// Largest supported client ID
+///
+#define MQTT_MAX_ID			64
+
 /// Largest supported topic
 ///
 #define MQTT_MAX_TOPIC		128

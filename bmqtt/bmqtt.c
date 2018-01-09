@@ -12,7 +12,7 @@ typedef enum
 }
 mqvhtype_t;
 
-int mqtt_format_message(
+static int mqtt_format_message(
             mqcontext_t *mqx,
             uint8_t cmd, uint8_t flags,
             uint8_t *payload_data, size_t payload_size,
@@ -142,42 +142,24 @@ int mqtt_format_message(
     return 0;
 }
 
-int mqtt_connect(mqcontext_t *mqx)
+static int mqtt_connect(mqcontext_t *mqx, const char *client_id, uint16_t keepalive)
 {
-    int result;
-    uint8_t vh[10];
-    uint8_t pl[32];
-    size_t len;
-
-    // insist we're starting out fresh
-    mqx->out.head = mqx->out.count = 0;
-
-    // format payload (client ID)
-    //
-    len = strlen(mqtt_client_id);
-    if (len >= sizeof(pl))
-    {
-        BERROR("No room for client ID");
-        return -1;
-    }
-    pl[0] = (len >> 8) & 0xFF;
-    pl[1] = len & 0xFF;
-    strncpy((char *)pl + 2, mqtt_client_id, sizeof(pl) - 1);
-    pl[sizeof(pl) - 1] = '\0';
-
     return mqtt_format_message(
                         mqx,
                         MQCONNECT, 0,
-                        pl, len + 2,
-                        4,
+                        NULL, 0,
+                        5,
 						mqvhtString, "MQTT",		// protocol name
 						mqvhtUint8, (unsigned)4,	// level
 						mqvhtUint8, (unsigned)0,	// flags
-						mqvhtUint16, (unsigned)10	// keep-alive
+						mqvhtUint16, (unsigned)keepalive,
+						/* note that client_id is really payload, per spec,
+						   but it is more convenient to add it in this way */
+						mqvhtString, client_id
                         );
 }
 
-int mqtt_subscribe(
+static int mqtt_subscribe(
 					mqcontext_t *mqx,
 					const char *topic,
 					mqqos_t qos
@@ -185,14 +167,14 @@ int mqtt_subscribe(
 {
 	static uint16_t packet_id = 0;
 
-	// insist we're starting out fresh
-    mqx->out.head = mqx->out.count = 0;
 	packet_id++;
 
     return mqtt_format_message(
                         mqx,
-                        MQSUBSCRIBE, 2,
+                        MQSUBSCRIBE, 2, /* note magic 2 flag, per spec */
 						NULL, 0,
+						/* note, spec says these are payload not variable
+						   headers, but this works the same and is easier */
 						3,
 						mqvhtUint16, (unsigned)packet_id,
 						mqvhtString, topic,
@@ -200,7 +182,7 @@ int mqtt_subscribe(
                         );
 }
 
-int mqtt_publish(
+static int mqtt_publish(
 					mqcontext_t *mqx,
 					mqqos_t qos,
 					const char *topic,
@@ -210,8 +192,6 @@ int mqtt_publish(
 {
 	static uint16_t packet_id = 0;
 
-    // insist we're starting out fresh
-    mqx->out.head = mqx->out.count = 0;
 	packet_id++;
 
     return mqtt_format_message(
@@ -224,13 +204,8 @@ int mqtt_publish(
                         );
 }
 
-int mqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
+static int mqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
 {
-    int result;
-
-    // insist we're starting out fresh
-    mqx->out.head = mqx->out.count = 0;
-
     return mqtt_format_message(
                         mqx,
                         MQPUBREL, 2,
@@ -240,13 +215,8 @@ int mqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
                         );
 }
 
-int mqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
+static int mqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
 {
-    int result;
-
-    // insist we're starting out fresh
-    mqx->out.head = mqx->out.count = 0;
-
     return mqtt_format_message(
                         mqx,
                         MQPUBREC, 0,
@@ -256,13 +226,8 @@ int mqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
                         );
 }
 
-int mqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
+static int mqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
 {
-    int result;
-
-    // insist we're starting out fresh
-    mqx->out.head = mqx->out.count = 0;
-
     return mqtt_format_message(
                         mqx,
                         MQPUBCOMP, 0,
@@ -272,13 +237,8 @@ int mqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
                         );
 }
 
-int mqtt_ping(mqcontext_t *mqx)
+static int mqtt_ping(mqcontext_t *mqx)
 {
-    int result;
-
-    // insist we're starting out fresh
-    mqx->out.head = mqx->out.count = 0;
-
     return mqtt_format_message(
                         mqx,
                         MQPINGREQ, 0,
@@ -287,7 +247,7 @@ int mqtt_ping(mqcontext_t *mqx)
                         );
 }
 
-int mqtt_disconnect(mqcontext_t *mqx)
+static int mqtt_disconnect(mqcontext_t *mqx)
 {
     int result;
 
@@ -302,7 +262,7 @@ int mqtt_disconnect(mqcontext_t *mqx)
                         );
 }
 
-int mqtt_notify(
+static int mqtt_notify(
 						mqcontext_t *mqx,
 						mqqos_t qos,
 						const char *topic,
@@ -315,7 +275,7 @@ int mqtt_notify(
 	return 0;
 }
 
-int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
+static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 {
 	int result;
 	size_t bytes;
@@ -625,7 +585,7 @@ int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 	return 0;
 }
 
-int mqtt_resource(
+static int mqtt_resource(
                 http_client_t       *client,
                 http_resource_t     *resource,
                 http_callback_type_t cbtype,
@@ -663,7 +623,7 @@ int mqtt_resource(
         {
         case mqsInit:
         case mqsTransport:
-            result = mqtt_connect(mqx);
+			result = mqtt_connect(mqx, mqx->client_id, mqx->keepalive);
             if (result)
             {
                 return -1;
@@ -907,53 +867,12 @@ static int mqtt_client_output(mqcontext_t *mqx, int to_secs, int to_usecs)
 	return 0;
 }
 
-int mqtt_slice(mqcontext_t *mqx)
+static int mqtt_tcp_slice(mqcontext_t *mqx)
 {
-    int to_secs, to_usecs;
-    bool busy;
-    int result;
+	int result;
 
-    if (mqx->transport == mqtWS || mqx->transport == mqtWSS)
-    {
-#if MQTT_SUPPORT_WEBSOCKET
-        if (mqx->state == mqsInit)
-        {
-            result = http_client_request(mqx->client, httpGet,
-                        mqx->url, httpTCP, false, NULL, mqx->resources);
-            if (result)
-            {
-                return result;
-            }
-            mqx->state = mqsTransportInit;
-        }
-        else if (mqx->state == mqsDone)
-        {
-            return 0;
-        }
-        else
-        {
-            result = http_client_slice(mqx->client);
-            if (result)
-            {
-                BERROR("Client error");
-                return result;
-            }
-            // throw a rest in loop
-            //
-            to_secs = busy ? 0 : 0;
-            to_usecs = busy ? 0 : 10000;
-            result = http_wait_for_client_event(mqx->client, to_secs, to_usecs);
-            if (result < 0)
-            {
-                return result;
-            }
-            result = 0;
-        }
-        return result;
-#else
-        return -1;
-#endif
-    }
+	// TCP or TLS transport
+	//
     switch (mqx->state)
     {
     case mqsInit:
@@ -964,6 +883,7 @@ int mqtt_slice(mqcontext_t *mqx)
             return -1;
         }
         mqx->state = mqsTransportInit;
+		time(&mqx->last_in_time);
         break;
 
     case mqsTransportInit:
@@ -974,7 +894,7 @@ int mqtt_slice(mqcontext_t *mqx)
         }
         // poll for writeable means connected
         //
-        result = mqx->stream->poll(mqx->stream, writeable, 0, 2000);
+        result = mqx->stream->poll(mqx->stream, writeable, 0, 10000);
         if (result < 0)
         {
             BERROR("stream");
@@ -982,12 +902,21 @@ int mqtt_slice(mqcontext_t *mqx)
         }
         if (result == 0)
         {
-            // not connected, remain in init state (timeout?)
+			time_t now;
+
+            // not connected, remain in init state
+			//
+			time(&now);
+			if ((now - mqx->last_in_time) > mqx->long_timeout)
+			{
+				BERROR("Timeout connecting");
+				return -1;
+			}
             break;
         }
         http_log(5, "Connected\n");
 
-		// upgrade to TLS if indicated (scheme already checkd for support)
+		// upgrade to TLS if indicated
         //
         if (mqx->transport == mqtTLS)
         {
@@ -1003,11 +932,12 @@ int mqtt_slice(mqcontext_t *mqx)
 	        http_log(5, "TLS Connected\n");
             mqx->stream = stream;
         }
+		mqx->last_in_time = 0;
 		mqx->state = mqsTransport;
         break;
 
 	case mqsTransport:
-		result = mqtt_connect(mqx);
+		result = mqtt_connect(mqx, mqx->client_id, mqx->keepalive);
 		if (result)
 		{
 			BERROR("mqtt connect");
@@ -1044,6 +974,7 @@ int mqtt_slice(mqcontext_t *mqx)
 
 				iostream_normalize_ring(&mqx->in, NULL);
 				count = mqx->in.count;
+
 				result = mqtt_input_phase(mqx, mqx->in.data + mqx->in.tail, &count);
 				if (result)
 				{
@@ -1069,6 +1000,63 @@ int mqtt_slice(mqcontext_t *mqx)
     return 0;
 }
 
+static int mqtt_ws_slice(mqcontext_t *mqx)
+{
+	int result;
+
+#if MQTT_SUPPORT_WEBSOCKET
+    if (mqx->state == mqsInit)
+    {
+        result = http_client_request(mqx->client, httpGet,
+                    mqx->url, httpTCP, false, NULL, mqx->resources);
+        if (result)
+        {
+            return result;
+        }
+        mqx->state = mqsTransportInit;
+    }
+    else if (mqx->state == mqsDone)
+    {
+        return 0;
+    }
+    else
+    {
+        result = http_client_slice(mqx->client);
+        if (result)
+        {
+            BERROR("Client error");
+            return result;
+        }
+        // throw a rest in loop if not busy
+        //
+        result = http_wait_for_client_event(mqx->client, 0, 10000);
+        if (result < 0)
+        {
+            return result;
+        }
+        result = 0;
+    }
+#else
+    result = -1;
+#endif
+    return result;
+}
+
+int mqtt_slice(mqcontext_t *mqx)
+{
+    int result;
+
+    if (mqx->transport == mqtWS || mqx->transport == mqtWSS)
+    {
+		result = mqtt_ws_slice(mqx);
+	}
+	else
+	{
+		result = mqtt_tcp_slice(mqx);
+	}
+	return result;
+}
+
 void mqtt_client_free(mqcontext_t *mqx)
 {
     if (mqx->client)
@@ -1083,13 +1071,14 @@ void mqtt_client_free(mqcontext_t *mqx)
 }
 
 mqcontext_t *mqtt_client_create(
-                    const char *client_id,
-                    const char *server,
-                    uint16_t port,
-                    mqtransport_t transport,
-					mqqos_t qos,
-                    size_t io_max,
-					time_t io_timeout
+                    const char     *client_id,
+                    const char 	   *server,
+                    uint16_t 		port,
+                    mqtransport_t   transport,
+					uint16_t		keepalive,
+					mqqos_t 		qos,
+                    size_t 			io_max,
+					time_t 			io_timeout
                     )
 {
 	static uint32_t s_idx = 0;
@@ -1102,15 +1091,18 @@ mqcontext_t *mqtt_client_create(
         BERROR("Can't alloc MQ CTX");
         return NULL;
     }
-	mqx->id = ++s_idx;
-    mqx->state = mqsInit;
-    mqx->transport = transport;
-    mqx->port = port;
-    mqx->stream = NULL;
+	mqx->id 		= ++s_idx;
+    mqx->state 		= mqsInit;
+    mqx->transport 	= transport;
+    mqx->port 		= port;
+	mqx->keepalive 	= keepalive;
+	mqx->long_timeout = io_timeout;
+	strncpy(mqx->client_id, client_id, sizeof(mqx->client_id) - 1);
+	mqx->client_id[sizeof(mqx->client_id) - 1] = '\0';
+
+	mqx->stream = NULL;
     mqx->resources = NULL;
     mqx->client = NULL;
-
-	mqx->long_timeout = io_timeout;
 	mqx->last_in_time = 0;
 	mqx->last_out_time = 0;
 
@@ -1128,6 +1120,7 @@ mqcontext_t *mqtt_client_create(
 	}
 	else
 	{
+		// allocate in buffer for tcp/tls transport
 	    mqx->in.size = io_max;
 	    mqx->in.data = (uint8_t *)malloc(mqx->in.size);
 	    if (! mqx->in.data)
@@ -1141,6 +1134,8 @@ mqcontext_t *mqtt_client_create(
     mqx->in.head = 0;
     mqx->in.count = 0;
 
+	// all transports have an out buffer, where messages are formatted
+	//
     mqx->out.size = io_max;
     mqx->out.data = (uint8_t *)malloc(mqx->out.size);
     if (! mqx->out.data)
@@ -1186,6 +1181,8 @@ mqcontext_t *mqtt_client_create(
     }
     else
     {
+		// tcp or tls connections just want host:port
+		//
         strncpy(mqx->url, server, sizeof(mqx->url) - 1);
         mqx->url[sizeof(mqx->url) - 1] = '\0';
     }

@@ -64,36 +64,39 @@ mqstate_t;
 
 typedef struct
 {
-	uint32_t id;
-	mqqos_t qos;
-    mqstate_t state;
-    mqstate_t prev_state;
-	mqtransport_t transport;
-	char url[HTTP_MAX_URL];
-	uint16_t port;
-	iostream_t *stream;
-	time_t long_timeout;
-	time_t last_in_time;
-	time_t last_out_time;
-    ioring_t in;
-    ioring_t out;
+	uint32_t 		id;
+	mqqos_t 		qos;
+    mqstate_t 		state;
+    mqstate_t 		prev_state;
+	mqtransport_t 	transport;
+	uint16_t 		keepalive;
+	char 			client_id[MQTT_MAX_ID];
+	char 			url[HTTP_MAX_URL];
+	uint16_t 		port;
+	iostream_t 	   *stream;
+	time_t 			long_timeout;
+	time_t 			last_in_time;
+	time_t 			last_out_time;
+    ioring_t 		in;
+    ioring_t 		out;
 #if MQTT_SUPPORT_WEBSOCKET
-	http_client_t *client;
-    http_resource_t *resources;
+	http_client_t  *client;
+    http_resource_t*resources;
 #endif
 }
 mqcontext_t;
 
+int mqtt_slice(mqcontext_t *mqx);
 void mqtt_client_free(mqcontext_t *mqx);
 mqcontext_t *mqtt_client_create(
-					const char *client_id,
-					const char *server,
-					uint16_t port,
-					mqtransport_t transport,
-					mqqos_t qos,
-					size_t io_max,
-					time_t io_timeout
+					const char     *client_id,
+					const char     *server,
+					uint16_t 	   	port,
+					mqtransport_t  	transport,
+					uint16_t 	   	keepalive,
+					mqqos_t 	   	qos,
+					size_t 			io_max,
+					time_t 			io_timeout
 					);
-int mqtt_slice(mqcontext_t *mqx);
 
 #endif

@@ -16,6 +16,13 @@ typedef enum
 }
 http_ws_state_t;
 
+typedef enum
+{
+    wsdfText,
+    wsdfBinary
+}
+http_ws_format_t;
+
 typedef struct
 {
     http_ws_state_t in_state;
@@ -23,14 +30,18 @@ typedef struct
     http_ws_state_t prev_in_state;
     http_ws_state_t prev_out_state;
     uint8_t         opcode;
-    bool            masked;
+    bool            in_masked;
     uint64_t        payload_length;
-    uint8_t         mask_key[4];
+    uint8_t         in_mask_key[4];
+    uint8_t         out_fmt;
+    bool            out_masked;
+    uint8_t         out_mask_key[4];
     iostream_t     *stream;
     ioring_t        in;
 }
 ws_stream_ctx_t;
 
+int http_websocket_set_format(struct http_client *client, http_ws_format_t fmt, bool ismasked, char *mask);
 int http_websocket_create_key(char *keybuf, size_t bufbytes);
 int http_websocket_check_key(char *theirkey, char *ourkey);
 int http_websocket_create_stream(struct http_client *client);

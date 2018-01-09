@@ -50,15 +50,8 @@ typedef enum
     mqsInit,
     mqsTransportInit,
     mqsTransport,
-    mqsConnect,
-    mqsPing,
-	mqsSubscribe,
-	mqsPublish,
-	mqsPublishRelease,
-	mqsPublishComplete,
-	mqsIdle,
-    mqsDisconnect,
-    mqsDone,
+    mqsConnected,
+    mqsDone
 }
 mqstate_t;
 
@@ -73,6 +66,7 @@ typedef struct
 	char 			client_id[MQTT_MAX_ID];
 	char 			url[HTTP_MAX_URL];
 	uint16_t 		port;
+	bool			selftest;
 	iostream_t 	   *stream;
 	time_t 			long_timeout;
 	time_t 			last_in_time;

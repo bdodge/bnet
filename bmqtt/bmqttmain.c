@@ -40,11 +40,13 @@ int main(int argc, char **argv)
 
     mqx = mqtt_client_create(
                 "hello",
-                "test.mosquitto.org",
-            #if 0
-                8080,
+//                "test.mosquitto.org",
+                "broker.mqttdashboard.com",
+            #if 1
+//                8080,
+                8000,
                 mqtWS,
-            #elif 1
+            #elif 0
                 1883,
                 mqtTCP,
             #else

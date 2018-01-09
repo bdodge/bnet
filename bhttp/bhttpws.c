@@ -86,7 +86,7 @@ static int ws_stream_inject_input(http_client_t *client)
 
     case wssHeaderByte1:
         byte = ws_next_client_byte(client);
-        wsx->masked = (byte & WSBIT_MASK) ? true : false;
+        wsx->in_masked = (byte & WSBIT_MASK) ? true : false;
         wsx->payload_length = byte & WSBIT_PAYL;
         if (wsx->payload_length == 126)
         {
@@ -147,16 +147,16 @@ static int ws_stream_inject_input(http_client_t *client)
         break;
 
     case wssMaskingKey:
-        if (wsx->masked)
+        if (wsx->in_masked)
         {
             if (client->in.count < 4)
             {
                 return 0;
             }
-            wsx->mask_key[0] = ws_next_client_byte(client);
-            wsx->mask_key[1] = ws_next_client_byte(client);
-            wsx->mask_key[2] = ws_next_client_byte(client);
-            wsx->mask_key[3] = ws_next_client_byte(client);
+            wsx->in_mask_key[0] = ws_next_client_byte(client);
+            wsx->in_mask_key[1] = ws_next_client_byte(client);
+            wsx->in_mask_key[2] = ws_next_client_byte(client);
+            wsx->in_mask_key[3] = ws_next_client_byte(client);
         }
         http_log(5, "Frame code=%02X fin=%c len=%llu\n",
                 wsx->opcode & WSBIT_OPC,
@@ -206,13 +206,13 @@ static int ws_stream_inject_input(http_client_t *client)
         }
         count = (uint32_t)chunk;
 
-        if (wsx->masked)
+        if (wsx->in_masked)
         {
             // unmask bytes
             for (i = 0; i < count; i++)
             {
                 wsx->in.data[wsx->in.head + i] =
-                    client->in.data[client->in.tail + i] ^ wsx->mask_key[i & 0x3];
+                    client->in.data[client->in.tail + i] ^ wsx->in_mask_key[i & 0x3];
             }
         }
         else
@@ -430,6 +430,10 @@ static iostream_t *iostream_websocket_create_from_stream(iostream_t *instream)
     wsx->prev_in_state  = wssPayload;
     wsx->prev_out_state = wssPayload;
 
+    // defaults. owner can override in request callback
+    wsx->out_fmt  = WSOPCODE_DATA;
+    wsx->out_masked = false;
+
     stream->read  = ws_stream_read;
     stream->write = ws_stream_write;
     stream->poll  = ws_stream_poll;
@@ -437,6 +441,24 @@ static iostream_t *iostream_websocket_create_from_stream(iostream_t *instream)
     stream->priv = (void*)wsx;
 
     return stream;
+}
+
+int http_websocket_set_format(struct http_client *client, http_ws_format_t fmt, bool ismasked, char *mask)
+{
+    ws_stream_ctx_t *wsx;
+
+    if (! client || ! client->ws_stream || ! client->ws_stream->priv)
+    {
+        return -1;
+    }
+    wsx = (ws_stream_ctx_t *)client->ws_stream->priv;
+    wsx->out_fmt = (fmt == wsdfText) ? WSOPCODE_TEXT : WSOPCODE_DATA;
+    wsx->out_masked = ismasked;
+    if (ismasked)
+    {
+        memcpy(wsx->out_mask_key, mask, 4);
+    }
+    return 0;
 }
 
 int http_websocket_check_key(char *theirkey, char *ourkey)
@@ -547,7 +569,15 @@ int http_websocket_slice(struct http_client *client)
         }
         if (avail > 0)
         {
-            byte = WSBIT_FIN | ((wsx->opcode & WSOPCODE_TEXT) ? WSOPCODE_TEXT : WSOPCODE_DATA);
+            byte = WSBIT_FIN;
+            if (wsx->out_fmt & WSOPCODE_TEXT)
+            {
+                byte |= WSOPCODE_TEXT;
+            }
+            else
+            {
+                byte |= WSOPCODE_DATA;
+            }
             client->out.data[client->out.head] = byte;
             client->out.head++;
             client->out.count++;
@@ -556,6 +586,10 @@ int http_websocket_slice(struct http_client *client)
             {
                 // one byte length
                 byte = avail;
+                if (wsx->out_masked)
+                {
+                    byte |= WSBIT_MASK;
+                }
                 client->out.data[client->out.head] = byte;
                 client->out.head++;
                 client->out.count++;
@@ -564,6 +598,10 @@ int http_websocket_slice(struct http_client *client)
             {
                 // two byte length
                 byte = 126;
+                if (wsx->out_masked)
+                {
+                    byte |= WSBIT_MASK;
+                }
                 client->out.data[client->out.head] = byte;
                 client->out.head++;
                 client->out.count++;
@@ -579,8 +617,11 @@ int http_websocket_slice(struct http_client *client)
             else
             {
                 // eight byte length
-                // two byte length
                 byte = 127;
+                if (wsx->out_masked)
+                {
+                    byte |= WSBIT_MASK;
+                }
                 client->out.data[client->out.head] = byte;
                 client->out.head++;
                 client->out.count++;
@@ -633,7 +674,32 @@ int http_websocket_slice(struct http_client *client)
                 client->out.head++;
                 client->out.count++;
             }
-            memcpy(client->out.data + client->out.head, pbackdata, avail);
+            if (wsx->out_masked)
+            {
+                size_t i, j;
+
+                client->out.data[client->out.head] = wsx->out_mask_key[0];
+                client->out.head++;
+                client->out.count++;
+                client->out.data[client->out.head] = wsx->out_mask_key[1];
+                client->out.head++;
+                client->out.count++;
+                client->out.data[client->out.head] = wsx->out_mask_key[2];
+                client->out.head++;
+                client->out.count++;
+                client->out.data[client->out.head] = wsx->out_mask_key[3];
+                client->out.head++;
+                client->out.count++;
+                j = client->out.head;
+                for (i = 0; i < avail; i++, j++)
+                {
+                    client->out.data[j] = pbackdata[i] ^ wsx->out_mask_key[i & 0x3];
+                }
+            }
+            else
+            {
+                memcpy(client->out.data + client->out.head, pbackdata, avail);
+            }
             client->out.count += avail;
             client->out.head += avail;
             if (client->out.head >= client->out.size)

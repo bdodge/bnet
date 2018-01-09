@@ -150,6 +150,7 @@ static int mqtt_connect(mqcontext_t *mqx, const char *client_id, uint16_t keepal
                         NULL, 0,
                         5,
 						mqvhtString, "MQTT",		// protocol name
+//						mqvhtString, "MQIsdp",		// protocol name
 						mqvhtUint8, (unsigned)4,	// level
 						mqvhtUint8, (unsigned)0,	// flags
 						mqvhtUint16, (unsigned)keepalive,
@@ -279,11 +280,21 @@ static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 {
 	int result;
 	size_t bytes;
+	uint32_t length, hdr_length;
+	uint8_t *pdata;
     uint8_t cmd, flags, ilen;
 	uint16_t packet_id;
+	uint8_t qos;
+	uint16_t len;
+	char topic[MQTT_MAX_TOPIC];
 
 	bytes = *count;
 
+	if (mqx->state == mqsInit && mqx->state == mqsDone)
+	{
+		BERROR("Not connected\n");
+		return -1;
+	}
 	if (bytes < 2)
 	{
 		// wait for enough bytes to get fixed header
@@ -292,296 +303,175 @@ static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 	}
     // assume we take all
     *count = bytes;
+	pdata = data;
 
-    cmd   = data[0] >> 4;
-    flags = data[0] & 0xF;
-    ilen  = data[1];
-	data += 2;
+    cmd   = *pdata >> 4;
+    flags = *pdata++ & 0xF;
+    ilen  = *pdata++;
 
-    http_log(4, "MQX state %d  cmd=%u len=%u\n", mqx->state, cmd, ilen);
-
-	// TODO - generically handle commands async from state.  need external agent to drive state
-	if (cmd == MQPUBLISH)
+	length = ilen & 0x7F;
+	if (ilen & 0x80)
 	{
-		if (mqx->state != mqsInit && mqx->state != mqsDone)
+		if (bytes < 3)
 		{
-			uint8_t qos;
-			uint16_t len;
-			char topic[MQTT_MAX_TOPIC];
-
-			// wait till the message is all in
-			if (bytes < ilen)
+			*count = 0;
+			return 0;
+		}
+		ilen = *pdata++;
+		length += (uint32_t)(ilen & 0x7F) << 7;
+		if (ilen & 0x80)
+		{
+			if (bytes < 4)
 			{
 				*count = 0;
 				return 0;
 			}
-			qos = (flags >> 1) & 0x3;
-			if (qos == 0x3)
+			ilen = *pdata++;
+			length += (uint32_t)(ilen & 0x7F) << 14;
+			if (ilen & 0x80)
 			{
-				BERROR("Bad QOS");
-				return -1;
-			}
-			len = (data[0] << 8) | data[1];
-			if (len >= MQTT_MAX_TOPIC || len >= ilen)
-			{
-				BERROR("Topic Length");
-				return -1;
-			}
-			data += 2;
-			strncpy(topic, data, len);
-			topic[sizeof(topic) - 1] = '\0';
-			data += len;
-			packet_id = (data[0] << 8) | data[1];
-			data += 2;
-
-			result = mqtt_notify(mqx, qos, topic, packet_id, data, ilen - len - 4);
-			if (result)
-			{
-				BERROR("Notify");
-				return -1;
-			}
-			*count = 2 + ilen;
-
-			if (qos == mqqosLeastOnce)
-			{
-				result = mqtt_format_message(
-										mqx,
-										MQPUBACK, 0,
-										NULL, 0,
-										1,
-										mqvhtUint16, (unsigned)packet_id
-										);
-				if (result)
+				if (bytes < 5)
 				{
+					*count = 0;
+					return 0;
+				}
+				ilen = *pdata++;
+				length += (uint32_t)(ilen & 0x7F) << 21;
+				if (ilen & 0x80)
+				{
+					// protocol framing error? discard all
+					*count = bytes;
 					return -1;
 				}
-				mqx->state = mqsIdle;
 			}
-			else if (qos == mqqosOnlyOnce)
-			{
-				result = mqtt_publish_received(mqx, packet_id);
-				if (result)
-				{
-					return -1;
-				}
-				mqx->state = mqsPublishComplete;
-			}
-			else
-			{
-				mqx->state = mqsIdle;
-			}
-			return 0;
 		}
 	}
-	else if (cmd == MQPINGRESP)
+	// take fixed header out of bytes available
+	//
+	hdr_length = pdata - data;
+	bytes -= hdr_length;
+
+	if (length > mqx->out.size)
 	{
-		if (mqx->state != mqsPing)
+		BERROR("packet overflow");
+		return -1;
+	}
+	// for now, wait for all length bytes to be buffered.
+	//
+	if (length > bytes)
+	{
+		*count = 0;
+		return 0;
+	}
+    http_log(4, "MQX state %d  cmd=%u len=%u\n", mqx->state, cmd, length);
+
+	// absorb only header and length from input
+	//
+	*count = hdr_length + length;
+
+	switch (cmd)
+	{
+	case MQCONNACK:
+        http_log(4, "MQTT Connected\n");
+        mqx->state = mqsConnected;
+		result = 0;
+		if (mqx->selftest)
 		{
-			// Eat ping response when not expecting it
-			// only take these command bytes out
-	        bytes = 2 + ilen;
-        	*count = bytes;
-			return 0;
+			// testing: do ping when connected
+			result = mqtt_ping(mqx);
 		}
-	}
-	else if (cmd == MQPUBREL)
-	{
-		mqx->state = mqsPublishComplete;
-	}
-	else if (cmd == MQPUBCOMP)
-	{
-		mqx->state = mqsPublishRelease;
-	}
-    switch (mqx->state)
-    {
-    case mqsInit:
-        // can't happen? absorb and ignore
-        break;
-
-    case mqsConnect:
-        // waiting for connack
-        if (cmd == MQCONNACK)
-        {
-            http_log(4, "MQTT Connected\n");
-
-            // we are connected! do a ping to test
-            result = mqtt_ping(mqx);
-            if (result)
-            {
-                return -1;
-            }
-            mqx->state = mqsPing;
-
-            // only take these command bytes out
-            bytes = 2 + ilen;
-            *count = bytes;
-            break;
-        }
-        // any other msg is an error
-        BERROR("Dropping: not connack");
-        return -1;
-
-    case mqsPing:
-        if (cmd == MQPINGRESP)
-        {
-            http_log(4, "MQTT Pong\n");
-
-            // we got ping, subscribe to something
-            result = mqtt_subscribe(mqx, "hithere", mqx->qos);
-            if (result)
-            {
-                return -1;
-            }
-            mqx->state = mqsSubscribe;
-
-			// only take these command bytes out
-            bytes = 2 + ilen;
-            *count = bytes;
-            break;
-        }
-        // any other msg is an error
-        BERROR("Dropping: not pingresp");
-        return -1;
-
-    case mqsSubscribe:
-        if (cmd == MQSUBACK)
-        {
-            http_log(4, "MQTT Subscribed\n");
-
-            result = mqtt_publish(mqx, mqx->qos, "hithere", NULL, 0);
-            if (result)
-            {
-                return -1;
-            }
-			if (mqx->qos != mqqosMostOnce)
-			{
-	            mqx->state = mqsPublish;
-			}
-			else
-			{
-	            mqx->state = mqsIdle;
-			}
-            // only take these command bytes out
-            bytes = 2 + ilen;
-            *count = bytes;
-            break;
-        }
-        // any other msg is an error
-        BERROR("Dropping: not suback");
-        return -1;
-
-    case mqsPublish:
-        if (cmd == MQPUBACK)
-        {
-			if (bytes < 4)
-			{
-				*count = 0;
-				break;
-			}
-			packet_id = (data[0] << 8) | data[1];
-
-			http_log(4, "MQTT PUBACK id=%04X\n", packet_id);
-
-            mqx->state = mqsIdle;
-
-            // only take these command bytes out
-            bytes = 2 + ilen;
-            *count = bytes;
-            break;
-        }
-		if (cmd == MQPUBREC)
-		{
-			if (bytes < 4)
-			{
-				*count = 0;
-				break;
-			}
-			packet_id = (data[0] << 8) | data[1];
-
-			http_log(4, "MQTT PUBREC id=%04X\n", packet_id);
-
-            result = mqtt_publish_release(mqx, packet_id);
-            if (result)
-            {
-                return -1;
-            }
-            mqx->state = mqsPublishRelease;
-
-            // only take these command bytes out
-            bytes = 2 + ilen;
-            *count = bytes;
-            break;
-		}
-        // any other msg is an error
-        BERROR("Dropping: not puback or pubrec");
-        return -1;
-
-    case mqsPublishRelease:
-        if (cmd == MQPUBCOMP)
-        {
-			if (bytes < 4)
-			{
-				*count = 0;
-				break;
-			}
-			packet_id = (data[0] << 8) | data[1];
-
-			http_log(4, "MQTT PUBCOMP\n");
-
-            mqx->state = mqsIdle;
-
-            // only take these command bytes out
-            bytes = 2 + ilen;
-            *count = bytes;
-            break;
-        }
-        // any other msg is an error
-        BERROR("Dropping: not pubcomp");
-        return -1;
-
-    case mqsPublishComplete:
-        if (cmd == MQPUBREL)
-        {
-			if (bytes < 4)
-			{
-				*count = 0;
-				break;
-			}
-			packet_id = (data[0] << 8) | data[1];
-
-			http_log(4, "MQTT PUBREL\n");
-
-            result = mqtt_publish_complete(mqx, packet_id);
-            if (result)
-            {
-                return -1;
-            }
-            mqx->state = mqsIdle;
-
-            // only take these command bytes out
-            bytes = 2 + ilen;
-            *count = bytes;
-            break;
-        }
-        // any other msg is an error
-        BERROR("Dropping: not pubrel");
-        return -1;
-
-	case mqsIdle:
-		/*
-        result = mqtt_disconnect(mqx);
-        if (result)
-        {
-            return -1;
-        }
-        mqx->state = mqsDisconnect;
-		*/
 		break;
 
-    default:
-        BERROR("Bad State");
-        return -1;
-    }
+	case MQPUBLISH:
+		http_log(4, "MQTT PUBLISH\n");
+		qos = (flags >> 1) & 0x3;
+		if (qos == 0x3)
+		{
+			BERROR("Bad QOS");
+			return -1;
+		}
+		len = (pdata[0] << 8) | pdata[1];
+		if (len >= MQTT_MAX_TOPIC || len >= ilen)
+		{
+			BERROR("Topic Length");
+			return -1;
+		}
+		pdata += 2;
+		strncpy(topic, pdata, len);
+		topic[sizeof(topic) - 1] = '\0';
+		pdata += len;
+		packet_id = (pdata[0] << 8) | pdata[1];
+		pdata += 2;
+
+		result = mqtt_notify(mqx, qos, topic, packet_id, pdata, ilen - len - 4);
+		if (result)
+		{
+			BERROR("Notify");
+			return -1;
+		}
+		if (qos == mqqosLeastOnce)
+		{
+			result = mqtt_format_message(
+									mqx,
+									MQPUBACK, 0,
+									NULL, 0,
+									1,
+									mqvhtUint16, (unsigned)packet_id
+									);
+		}
+		else if (qos == mqqosOnlyOnce)
+		{
+			result = mqtt_publish_received(mqx, packet_id);
+		}
+		break;
+
+	case MQPUBREL:
+		http_log(4, "MQTT PUBREL\n");
+		packet_id = (data[0] << 8) | data[1];
+		result = mqtt_publish_complete(mqx, packet_id);
+        break;
+
+	case MQPUBACK:
+		packet_id = (data[0] << 8) | data[1];
+		http_log(4, "MQTT PUBACK id=%04X\n", packet_id);
+		result = 0;
+        break;
+
+	case MQPUBREC:
+		packet_id = (data[0] << 8) | data[1];
+		http_log(4, "MQTT PUBREC id=%04X\n", packet_id);
+        result = mqtt_publish_release(mqx, packet_id);
+        break;
+
+	case MQPUBCOMP:
+		packet_id = (data[0] << 8) | data[1];
+		http_log(4, "MQTT PUBCOMP id=%04X\n", packet_id);
+		result = 0;
+        break;
+
+	case MQSUBACK:
+        http_log(4, "MQTT Subscribed\n");
+		if (mqx->selftest)
+		{
+			// testing: do publish when subscribed
+	        result = mqtt_publish(mqx, mqx->qos, "hithere", NULL, 0);
+		}
+		break;
+
+	case MQPINGRESP:
+		http_log(4, "MQTT PINGRESP\n");
+		result = 0;
+		if (mqx->selftest)
+		{
+			// testing: subscribe on a ping response
+            result = mqtt_subscribe(mqx, "hithere", mqx->qos);
+		}
+		break;
+	}
+    if (result)
+	{
+		return -1;
+	}
 	return 0;
 }
 
@@ -604,7 +494,8 @@ static int mqtt_resource(
     case httpRequest:
 
         http_log(5, "MQTT: request\n");
-        mqx->state = mqsTransport;
+
+        mqx->state = mqsTransportInit;
         break;
 
     case httpUploadData:
@@ -622,22 +513,24 @@ static int mqtt_resource(
         switch (mqx->state)
         {
         case mqsInit:
-        case mqsTransport:
+        case mqsTransportInit:
+			// setup outgoing websocket format and mask
+			//
+			result = http_websocket_set_format(client, wsdfBinary, true, "mask");
+			if (result)
+			{
+				return -1;
+			}
 			result = mqtt_connect(mqx, mqx->client_id, mqx->keepalive);
             if (result)
             {
                 return -1;
             }
-            mqx->state = mqsConnect;
+			mqx->state = mqsTransport;
             break;
 
-        case mqsConnect:
-        case mqsPing:
-        case mqsSubscribe:
-        case mqsPublish:
-        case mqsPublishRelease:
-        case mqsPublishComplete:
-        case mqsIdle:
+		case mqsTransport:
+        case mqsConnected:
             // waiting for cmd or timeout
             if (mqx->out.count)
             {
@@ -646,17 +539,6 @@ static int mqtt_resource(
                 mqx->out.count = 0;
                 mqx->out.head = mqx->out.tail = 0;
             }
-            break;
-
-        case mqsDisconnect:
-            if (mqx->out.count)
-            {
-                *data = mqx->out.data + mqx->out.tail;
-                *count = mqx->out.count;
-                mqx->out.count = 0;
-                mqx->out.head = mqx->out.tail = 0;
-            }
-            mqx->state = mqsDone;
             break;
 
         case mqsDone:
@@ -943,7 +825,7 @@ static int mqtt_tcp_slice(mqcontext_t *mqx)
 			BERROR("mqtt connect");
 			return -1;
 		}
-		mqx->state = mqsConnect;
+		mqx->state = mqsConnected;
 		break;
 
 	default:
@@ -997,6 +879,7 @@ static int mqtt_tcp_slice(mqcontext_t *mqx)
     case mqsDone:
         break;
     }
+	mqx->prev_state = mqx->state;
     return 0;
 }
 
@@ -1007,6 +890,8 @@ static int mqtt_ws_slice(mqcontext_t *mqx)
 #if MQTT_SUPPORT_WEBSOCKET
     if (mqx->state == mqsInit)
     {
+		// start the http request to open the websocket
+		//
         result = http_client_request(mqx->client, httpGet,
                     mqx->url, httpTCP, false, NULL, mqx->resources);
         if (result)
@@ -1021,6 +906,9 @@ static int mqtt_ws_slice(mqcontext_t *mqx)
     }
     else
     {
+		// any input data will cause callback for
+		// resource to get called above, which drives
+		//
         result = http_client_slice(mqx->client);
         if (result)
         {
@@ -1091,11 +979,15 @@ mqcontext_t *mqtt_client_create(
         BERROR("Can't alloc MQ CTX");
         return NULL;
     }
+	mqx->selftest	= true;
+
 	mqx->id 		= ++s_idx;
     mqx->state 		= mqsInit;
+	mqx->prev_state = mqsDone;
     mqx->transport 	= transport;
     mqx->port 		= port;
 	mqx->keepalive 	= keepalive;
+	mqx->qos 		= qos;
 	mqx->long_timeout = io_timeout;
 	strncpy(mqx->client_id, client_id, sizeof(mqx->client_id) - 1);
 	mqx->client_id[sizeof(mqx->client_id) - 1] = '\0';
@@ -1105,8 +997,6 @@ mqcontext_t *mqtt_client_create(
     mqx->client = NULL;
 	mqx->last_in_time = 0;
 	mqx->last_out_time = 0;
-
-	mqx->qos = qos;
 
     if (io_max < MQTT_MIN_IO_SIZE)
     {

@@ -17,16 +17,13 @@ PROGOBJECTS=$(OBJDIR)/bjsontest.o
 
 CFLAGS+=-I$(HTTP_PATH) -I$(IO_PATH)
 
-bjsontest: $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB) $(IOLIB) $(TLSDEPS)
-	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB) $(IOLIB) $(TLSLIBS) $(LIBS)
+bjsontest: $(PROGOBJECTS) $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(OBJECTS) $(LIBS)
 
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS)
 
 $(OBJDIR)/bjsontest.o: $(SRCDIR)/bjsontest.c $(HEADERS)
 $(OBJDIR)/bjson.o: $(SRCDIR)/bjson.c $(HEADERS)
-
-$(MBEDTLS_PATH)/library/%.a:
-	make -C $(MBEDTLS_PATH) lib CC="$(CC)" CFLAGS="$(CFLAGS)"
 
 

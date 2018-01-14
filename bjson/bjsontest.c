@@ -33,6 +33,12 @@ json_test_entry_t s_tests_1[] =
     "}\n"
     },
     {
+    "name", 0, "", bjson_syntax,
+    "{\n"
+    "   \"name\": true1\n"
+    "}\n"
+    },
+    {
     "name", 0, "123", 0,
     "{\n"
     "   \"name\": 123\n"
@@ -266,6 +272,33 @@ json_test_entry_t s_tests_4[] =
     },
 };
 
+static const char s_json_5[] =
+    "{\n"
+    "  \"object\":[ {\n"
+    "   \"id1\": 1,\n"
+    "   \"value1\": {\n"
+    "     \"id2\": 2,\n"
+    "     \"value2\": {\n"
+    "      \"id3\": 3,\n"
+    "      \"value3\": {\n"
+    "       \"inner\": 5\n"
+    "      }\n"
+    "     }\n"
+    "   }\n"
+    " },{\n"
+    "   \"id21\": 21,\n"
+    "   \"value21\": {\n"
+    "     \"id22\": 22,\n"
+    "     \"value22\": {\n"
+    "      \"id23\": 23,\n"
+    "      \"value23\": {\n"
+    "       \"inner2\": 25\n"
+    "      }\n"
+    "     }\n"
+    "   }\n"
+    "  }]\n"
+    "}\n";
+
 json_test_entry_t s_tests_5[] =
 {
     {
@@ -287,63 +320,15 @@ json_test_entry_t s_tests_5[] =
     },
     {
     "object", 0, "{\"id1\":1,\"value1\":{\"id2\":2,\"value2\":{\"id3\":3,\"value3\":{\"inner\":5}}}}", 0,
-    "{\n"
-    "  \"object\":[ {\n"
-    "   \"id1\": 1,\n"
-    "   \"value1\": {\n"
-    "     \"id2\": 2,\n"
-    "     \"value2\": {\n"
-    "      \"id3\": 3,\n"
-    "      \"value3\": {\n"
-    "       \"inner\": 5\n"
-    "      }\n"
-    "     }\n"
-    "   }\n"
-    " },{\n"
-    "   \"id21\": 21,\n"
-    "   \"value21\": {\n"
-    "     \"id22\": 22,\n"
-    "     \"value22\": {\n"
-    "      \"id23\": 23,\n"
-    "      \"value23\": {\n"
-    "       \"inner2\": 25\n"
-    "      }\n"
-    "     }\n"
-    "   }\n"
-    "  }]\n"
-    "}\n"
+    s_json_5
     },
     {
     "object", 1, "{\"id21\":21,\"value21\":{\"id22\":22,\"value22\":{\"id23\":23,\"value23\":{\"inner2\":25}}}}", 0,
-    "{\n"
-    "  \"object\":[ {\n"
-    "   \"id1\": [1,2,3,4],\n"
-    "   \"value1\": {\n"
-    "     \"id2\": [2,3,4,5],\n"
-    "     \"value2\": {\n"
-    "      \"id3\": 3,\n"
-    "      \"value3\": {\n"
-    "       \"inner\": 5\n"
-    "      }\n"
-    "     }\n"
-    "   }\n"
-    " },{\n"
-    "   \"id21\": 21,\n"
-    "   \"value21\": {\n"
-    "     \"id22\": 22,\n"
-    "     \"value22\": {\n"
-    "      \"id23\": 23,\n"
-    "      \"value23\": {\n"
-    "       \"inner2\": 25\n"
-    "      }\n"
-    "     }\n"
-    "   }\n"
-    "  }]\n"
-    "}\n"
+    s_json_5
     },
 };
 
-static const char *jt33 =
+static const char s_json_33[] =
 "{\n"
 "   \"items\":\n"
 "       {\n"
@@ -379,6 +364,32 @@ static const char *jt33 =
 "       }\n"
 "}\n";
 
+json_test_entry_t s_tests_33[] =
+{
+    {
+    "items.item.ppu", 0, "0.55", 0,
+    s_json_33
+    },
+    {
+    "items.item.batters.batter.type", 0, "\"Regular\"", 0,
+    s_json_33
+    },
+    {
+    "items.item.batters.batter", 3, "{\"id\":\"1004\",\"type\":\"Devil\'s Food\"}", 0,
+    s_json_33
+    },
+    {
+        // explicitly allow "skipping" objects inside the two objects in key path
+        "value1.value3", 0, "{\"inner\":5}", 0,
+        s_json_5
+    },
+    {
+        // explicitly don't allow "skipping" across objects
+        "value1.value22", 0, "none", bjson_not_found,
+        s_json_5
+    },
+};
+
 int main(int argc, char **argv)
 {
     bjson_parser_t *pjx;
@@ -389,13 +400,14 @@ int main(int argc, char **argv)
     char val[128];
     char bigval[1024];
     int result;
-    
-#if 0
+
+#if 1
+#if 1
     // general keywords and basic types
     for (i = 0; i < sizeof(s_tests_1) / sizeof(json_test_entry_t); i++)
     {
         entry = &s_tests_1[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, 0, val, sizeof(val));
+        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', 0, val, sizeof(val));
         printf("Basic Test %d\n", i);
         if (result != entry->exp_ret)
         {
@@ -416,12 +428,12 @@ int main(int argc, char **argv)
         }
     }
 #endif
-#if 0
+#if 1
     // number arrays
     for (i = 0; i < sizeof(s_tests_2) / sizeof(json_test_entry_t); i++)
     {
         entry = &s_tests_2[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, entry->index, val, sizeof(val));
+        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
         printf("NumArray Test %d\n", i);
         if (result != entry->exp_ret)
         {
@@ -442,12 +454,12 @@ int main(int argc, char **argv)
         }
     }
 #endif
-#if 0
+#if 1
     // harder strings
     for (i = 0; i < sizeof(s_tests_3) / sizeof(json_test_entry_t); i++)
     {
         entry = &s_tests_3[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, entry->index, val, sizeof(val));
+        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
         printf("String Test %d\n", i);
         if (result != entry->exp_ret)
         {
@@ -468,12 +480,12 @@ int main(int argc, char **argv)
         }
     }
 #endif
-#if 0
+#if 1
     // object values
     for (i = 0; i < sizeof(s_tests_4) / sizeof(json_test_entry_t); i++)
     {
         entry = &s_tests_4[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, entry->index, val, sizeof(val));
+        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
         printf("ObjVal Test %d\n", i);
         if (result != entry->exp_ret)
         {
@@ -499,7 +511,7 @@ int main(int argc, char **argv)
     for (i = 0; i < sizeof(s_tests_5) / sizeof(json_test_entry_t); i++)
     {
         entry = &s_tests_5[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, entry->index, val, sizeof(val));
+        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
         printf("Nested ObjVal Test %d\n", i);
         if (result != entry->exp_ret)
         {
@@ -520,25 +532,50 @@ int main(int argc, char **argv)
         }
     }
 #endif
-    pjx = bjson_parser_create(jt33);
+#endif
+    pjx = bjson_parser_create(s_json_33);
     if (! pjx)
     {
         fprintf(stderr, "can't create parser\n");
         return -1;
     }
+    // by-hand test
     key = "name";
-    result = bjson_find_key(pjx, key);
+    result = bjson_find_key(pjx, key, '\0');
     if (result)
     {
         fprintf(stderr, "find error: %d\n", result);
         return -1;
     }
-    result = bjson_copy_key_value(pjx, key, 0, val, sizeof(val));
+    result = bjson_copy_key_value(pjx, 0, val, sizeof(val));
     if (result)
     {
         fprintf(stderr, "get error: %d\n", result);
         return -1;
     }
-    printf("Key:%s Value:%s\n", key, val);
+
+    for (i = 0; i < sizeof(s_tests_33) / sizeof(json_test_entry_t); i++)
+    {
+        entry = &s_tests_33[i];
+        result = bjson_find_and_copy_key_value(entry->json, entry->key, '.', entry->index, val, sizeof(val));
+        printf("key-path ObjVal Test %d\n", i);
+        if (result != entry->exp_ret)
+        {
+            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
+            return -1;
+        }
+        if (! entry->exp_ret)
+        {
+            if (strcmp(entry->exp_value, val))
+            {
+                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
+                return -1;
+            }
+            else
+            {
+                printf("  Key:%s[%u] Value:%s\n", entry->key, (unsigned)entry->index, val);
+            }
+        }
+    }
     return 0;
 }

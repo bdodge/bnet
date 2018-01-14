@@ -1,4 +1,3 @@
-
 #include "bnetheaders.h"
 #include "bjson.h"
 
@@ -379,6 +378,26 @@ json_test_entry_t s_tests_33[] =
     s_json_33
     },
     {
+    "items.item.batters.batter[2].type", 0, "\"Blueberry\"", 0,
+    s_json_33
+    },
+    {
+    "items.item.topping[6].id", 0, "\"5004\"", 0,
+    s_json_33
+    },
+    {
+    "items.item.topping[7].id", 0, "none", bjson_not_found,
+    s_json_33
+    },
+    {
+    "items.item.id[0].id", 0, "none", bjson_not_object,
+    s_json_33
+    },
+    {
+    "items.item[0]", 0, "none", bjson_parameter,
+    s_json_33
+    },
+    {
         // explicitly allow "skipping" objects inside the two objects in key path
         "value1.value3", 0, "{\"inner\":5}", 0,
         s_json_5
@@ -401,7 +420,6 @@ int main(int argc, char **argv)
     char bigval[1024];
     int result;
 
-#if 1
 #if 1
     // general keywords and basic types
     for (i = 0; i < sizeof(s_tests_1) / sizeof(json_test_entry_t); i++)
@@ -532,7 +550,7 @@ int main(int argc, char **argv)
         }
     }
 #endif
-#endif
+#if 1
     pjx = bjson_parser_create(s_json_33);
     if (! pjx)
     {
@@ -577,5 +595,6 @@ int main(int argc, char **argv)
             }
         }
     }
+#endif
     return 0;
 }

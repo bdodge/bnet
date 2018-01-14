@@ -21,14 +21,46 @@ static int bjson_hextou(char digit, uint8_t *val)
     return -1;
 }
 
-int bjson_is_white(char ch)
+static int bjson_is_white(char ch)
 {
     return (ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n');
 }
 
-int bjson_is_number(char ch)
+static int bjson_is_number(char ch)
 {
     return (ch >= '0') && (ch <= '9');
+}
+
+static size_t bjson_utf8_encode(uint32_t unicode, uint8_t utfbuf[5])
+{
+    unsigned short ca, cb, cc, cd;
+    wchar_t  uc, nc;
+    int  j, k;
+    size_t i, len;
+
+    j = 0;
+    
+    if (unicode < 0x80)
+    {
+        utfbuf[j++] = (unicode & 0xFF);
+    }
+    else if (unicode < 0x800) {
+        utfbuf[j++] = 0xC0 | (unicode >> 6);
+        utfbuf[j++] = 0x80 | (unicode & 0x3F);
+    }
+    else if (unicode < 0x10000) {
+        utfbuf[j++] = 0xE0 |  (unicode >> 12);
+        utfbuf[j++] = 0x80 | ((unicode >> 6) & 0x3F);
+        utfbuf[j++] = 0x80 |  (unicode  & 0x3F);
+    }
+    else if (unicode < 0x200000) {
+        utfbuf[j++] = 0xF0 |  (unicode >> 18);
+        utfbuf[j++] = 0x80 | ((unicode >> 12) & 0x3F);
+        utfbuf[j++] = 0x80 | ((unicode >> 6) & 0x3F);
+        utfbuf[j++] = 0x80 |  (unicode  & 0x3F);
+    }
+    utfbuf[j] = '\0';
+    return j;
 }
 
 static int bjson_copy_keyword_value(bjson_parser_t *pjx, const char *kw, char *value, size_t nvalue)
@@ -58,10 +90,19 @@ static int bjson_copy_keyword_value(bjson_parser_t *pjx, const char *kw, char *v
     return bjson_ok;
 }
 
+typedef enum
+{
+    ns_at_start, ns_leading_zero,
+    ns_in_number, ns_in_fraction,
+    ns_at_exponent, ns_in_exponent,
+    ns_done
+}
+bjson_number_state_t;
+
 static int bjson_copy_number_value(bjson_parser_t *pjx, char *value, size_t nvalue)
 {
+    bjson_number_state_t number_state;
     size_t i;
-    bool saw_dot;
     
     if (! pjx || ! pjx->psrc || ! value)
     {
@@ -71,28 +112,95 @@ static int bjson_copy_number_value(bjson_parser_t *pjx, char *value, size_t nval
     {
         return bjson_overflow;
     }
-    i = 0;    
-    saw_dot = false;
-    
-    value[i++] = *pjx->psrc++;
-    
-    while (
-            (
-                bjson_is_number(*pjx->psrc)
-            ||  (*pjx->psrc == '.')
-            )
-            &&  (i < (nvalue - 1))
-    )
+    if ((*pjx->psrc < '0' || *pjx->psrc > '9') && (*pjx->psrc != '-'))
     {
-        if (*pjx->psrc == '.')
+        return bjson_syntax;
+    }
+    number_state = ns_at_start;
+    i = 0;    
+    
+    while (number_state != ns_done)
+    {
+        switch (*pjx->psrc)
         {
-            if (saw_dot)
+        case '.':
+            if (
+                    number_state != ns_leading_zero
+                &&  number_state != ns_in_number
+            )
             {
                 return bjson_syntax;
-            }            
-            saw_dot = true;
+            }
+            number_state = ns_in_fraction;
+            value[i++] = *pjx->psrc++;
+            break;
+        case '-':
+            if (
+                    number_state != ns_at_start
+                &&  number_state != ns_at_exponent
+            )
+            {
+                return bjson_syntax;
+            }
+            if (number_state == ns_at_exponent)
+            {
+                number_state = ns_in_exponent;
+            }
+            else
+            {
+                number_state = ns_in_number;
+            }
+            value[i++] = *pjx->psrc++;
+            break;
+        case '+':
+            if (number_state != ns_at_exponent)
+            {
+                return bjson_syntax;
+            }
+            number_state = ns_in_exponent;
+            value[i++] = *pjx->psrc++;
+            break;
+        case 'e': case 'E':
+            if(
+                    number_state != ns_in_number
+                &&  number_state != ns_in_fraction
+            )
+            {
+                return bjson_syntax;
+            }
+            number_state = ns_at_exponent;
+            value[i++] = *pjx->psrc++;
+            break;
+        case '0':
+            if (number_state == ns_leading_zero)
+            {
+                return bjson_syntax;
+            }
+            if (number_state == ns_at_start)
+            {
+                number_state = ns_leading_zero;
+            }
+            value[i++] = *pjx->psrc++;
+            break;
+        default:
+            if (bjson_is_number(*pjx->psrc))
+            {
+                if (number_state == ns_at_start)
+                {
+                    number_state = ns_in_number;
+                }
+                else if (number_state == ns_at_exponent)
+                {
+                    number_state = ns_in_exponent;
+                }
+                value[i++] = *pjx->psrc++;
+            }
+            else
+            {
+                number_state = ns_done;
+            }
+            break;
         }
-        value[i++] = *pjx->psrc++;
     }
     if (i >= (nvalue - 1))
     {
@@ -100,6 +208,10 @@ static int bjson_copy_number_value(bjson_parser_t *pjx, char *value, size_t nval
     }
     value[i] = '\0';
 
+    if (number_state != ns_done)
+    {
+        return bjson_syntax;
+    }
     if (
             ! bjson_is_white(*pjx->psrc)
          && *pjx->psrc != ','
@@ -118,6 +230,9 @@ static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nval
     uint32_t uval;
     uint8_t  xval;
     char echar;
+    uint8_t utf8_buffer[5];
+    size_t utf8_len;
+    size_t j;
     
     if (! pjx || ! pjx->psrc || ! value)
     {
@@ -150,22 +265,22 @@ static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nval
             switch(echar)
             {
             case '"': case '\\': case '/':
-                value[i] = echar;
+                value[i++] = echar;
                 break;
             case 'b':
-                value[i] = '\b';
+                value[i++] = '\b';
                 break;
             case 'f':
-                value[i] = '\f';
+                value[i++] = '\f';
                 break;;
             case 'n':
-                value[i] = '\n';
+                value[i++] = '\n';
                 break;
             case 'r':
-                value[i] = '\r';
+                value[i++] = '\r';
                 break;
             case 't':
-                value[i] = '\t';
+                value[i++] = '\t';
                 break;
             case 'u':
                 echar = *pjx->psrc++;
@@ -196,8 +311,15 @@ static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nval
                 }
                 uval = (uval << 4) | (uint32_t)xval;
                 
-                // utf8 encode this ucode into value
-                value[i++] = (uint8_t)uval;
+                utf8_len = bjson_utf8_encode(uval, utf8_buffer);
+                if ((i + utf8_len) >= (nvalue - 1))
+                {
+                    return bjson_overflow;
+                }
+                for (j = 0; j < utf8_len; j++)
+                {
+                    value[i++] = (char)utf8_buffer[j];
+                }
                 break;
             default:
                 return bjson_syntax;
@@ -205,6 +327,10 @@ static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nval
         }
         else
         {
+            if (*pjx->psrc < ' ')
+            {
+                return bjson_syntax;
+            }
             value[i++] = *pjx->psrc++;
             if (*pjx->psrc == '\"')
             {
@@ -277,6 +403,7 @@ static int bjson_copy_array_or_object_value(bjson_parser_t *pjx, char *value, in
         case 't':
             result = bjson_copy_keyword_value(pjx, "true", value + i, nvalue - i);
             break;
+        case '-':
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
             result = bjson_copy_number_value(pjx, value + i, nvalue - i);
@@ -314,6 +441,7 @@ static int bjson_copy_array_or_object_value(bjson_parser_t *pjx, char *value, in
             result = bjson_ok;
             pjx->psrc++;
             value[i++] = '[';
+            value[i] = '\0';
             skipend[nest++] = ']';
             break;
         case '{':
@@ -324,6 +452,7 @@ static int bjson_copy_array_or_object_value(bjson_parser_t *pjx, char *value, in
             result = bjson_ok;
             pjx->psrc++;
             value[i++] = '{';
+            value[i] = '\0';
             skipend[nest++] = '}';
             break;
         case ']':
@@ -335,13 +464,12 @@ static int bjson_copy_array_or_object_value(bjson_parser_t *pjx, char *value, in
                 {
                     return bjson_syntax;
                 }
+                value[i++] = *pjx->psrc++;
+                value[i] = '\0';
                 if (nest == 0)
                 {
-                    value[i++] = *pjx->psrc;
-                    value[i] = '\0';
                     return bjson_ok;
                 }
-                pjx->psrc++;
             }
             else
             {
@@ -395,6 +523,7 @@ int bjson_copy_value(bjson_parser_t *pjx, char *value, int nvalue)
     case 't':
         return bjson_copy_keyword_value(pjx, "true", value, nvalue);
 
+    case '-':
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
         return bjson_copy_number_value(pjx, value, nvalue);
@@ -435,28 +564,104 @@ static int bjson_skip_keyword_value(bjson_parser_t *pjx, const char *kw)
 
 static int bjson_skip_number_value(bjson_parser_t *pjx)
 {
-    bool saw_dot;
+    bjson_number_state_t number_state;
     
     if (! pjx || ! pjx->psrc)
     {
         return bjson_parameter;
     }
-    saw_dot = 0;
-    
-    while (
-                bjson_is_number(*pjx->psrc)
-            ||  (*pjx->psrc == '.')
-    )
+    if ((*pjx->psrc < '0' || *pjx->psrc > '9') && (*pjx->psrc != '-'))
     {
-        if (*pjx->psrc == '.')
+        return bjson_syntax;
+    }
+    number_state = ns_at_start;
+    
+    while (number_state != ns_done)
+    {
+        switch (*pjx->psrc)
         {
-            if (saw_dot)
+        case '.':
+            if (
+                    number_state != ns_leading_zero
+                &&  number_state != ns_in_number
+            )
             {
                 return bjson_syntax;
             }
-            saw_dot = true;
+            number_state = ns_in_fraction;
+            pjx->psrc++;
+            break;
+        case '-':
+            if (
+                    number_state != ns_at_start
+                &&  number_state != ns_at_exponent
+            )
+            {
+                return bjson_syntax;
+            }
+            if (number_state == ns_at_exponent)
+            {
+                number_state = ns_in_exponent;
+            }
+            else
+            {
+                number_state = ns_in_number;
+            }
+            pjx->psrc++;
+            break;
+        case '+':
+            if (number_state != ns_at_exponent)
+            {
+                return bjson_syntax;
+            }
+            number_state = ns_in_exponent;
+            pjx->psrc++;
+            break;
+        case 'e': case 'E':
+            if(
+                    number_state != ns_in_number
+                &&  number_state != ns_in_fraction
+            )
+            {
+                return bjson_syntax;
+            }
+            number_state = ns_at_exponent;
+            pjx->psrc++;
+            break;
+        case '0':
+            if (number_state == ns_leading_zero)
+            {
+                return bjson_syntax;
+            }
+            if (number_state == ns_at_start)
+            {
+                number_state = ns_leading_zero;
+            }
+            pjx->psrc++;
+            break;
+        default:
+            if (bjson_is_number(*pjx->psrc))
+            {
+                if (number_state == ns_at_start)
+                {
+                    number_state = ns_in_number;
+                }
+                else if (number_state == ns_at_exponent)
+                {
+                    number_state = ns_in_exponent;
+                }
+                pjx->psrc++;
+            }
+            else
+            {
+                number_state = ns_done;
+            }
+            break;
         }
-        pjx->psrc++;
+    }
+    if (number_state != ns_done)
+    {
+        return bjson_syntax;
     }
     if (
             ! bjson_is_white(*pjx->psrc)
@@ -528,6 +733,10 @@ static int bjson_skip_string_value(bjson_parser_t *pjx)
         }
         else
         {
+            if (*pjx->psrc < ' ')
+            {
+                return bjson_syntax;
+            }
             pjx->psrc++;
             if (*pjx->psrc == '\"')
             {
@@ -588,6 +797,7 @@ static int bjson_skip_array_or_object_value(bjson_parser_t *pjx)
         case 't':
             result = bjson_skip_keyword_value(pjx, "true");
             break;
+        case '-':
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
             result = bjson_skip_number_value(pjx);
@@ -686,6 +896,7 @@ static int bjson_skip_value(bjson_parser_t *pjx)
     case 't':
         return bjson_skip_keyword_value(pjx, "true");
 
+    case '-':
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
         return bjson_skip_number_value(pjx);
@@ -827,6 +1038,7 @@ int bjson_get_key_value(bjson_parser_t *pjx, const char *key, int index, const c
     case 'n':
     case 'f':
     case 't':
+    case '-':
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
     case '\"':

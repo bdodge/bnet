@@ -20,7 +20,7 @@ typedef enum
 	MQPUBCOMP = 7,		// Client <-> Server: 	Publish complete (assured delivery part 3)
 	MQSUBSCRIBE = 8,	// Client to Server:	Client subscribe request
 	MQSUBACK = 9,		// Server to Client:	Subscribe acknowledgment
-	MQUNSUBSCRIBE = 10,	//Client to Server:		Unsubscribe request
+	MQUNSUBSCRIBE = 10,	// Client to Server:	Unsubscribe request
 	MQUNSUBACK = 11,	// Server to Client:	Unsubscribe acknowledgment
 	MQPINGREQ = 12,		// Client to Server:	PING request
 	MQPINGRESP = 13,	// Server to Client:	PING response
@@ -79,6 +79,8 @@ typedef struct
 #endif
 }
 mqcontext_t;
+
+int mqtt_subscribe(mqcontext_t *mqx);
 
 int mqtt_slice(mqcontext_t *mqx);
 void mqtt_client_free(mqcontext_t *mqx);

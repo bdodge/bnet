@@ -54,8 +54,8 @@ int main(int argc, char **argv)
                 mqtTLS,
             #endif
                 123,
-                mqqosMostOnce,
-            //  mqqosLeastOnce,
+             //   mqqosMostOnce,
+              mqqosLeastOnce,
             //  mqqosOnlyOnce,
                 HELLO_IO_SIZE,
                 15

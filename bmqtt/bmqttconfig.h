@@ -17,5 +17,9 @@
 ///
 #define MQTT_SUPPORT_WEBSOCKET 1
 
+/// Run internal self-test
+///
+#define MQTT_SUPPORT_RUN_SELFTEST 1
+
 #endif
 

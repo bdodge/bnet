@@ -12,7 +12,7 @@ typedef enum
 }
 mqvhtype_t;
 
-static int mqtt_format_message(
+static int smqtt_format_message(
             mqcontext_t *mqx,
             uint8_t cmd, uint8_t flags,
             uint8_t *payload_data, size_t payload_size,
@@ -142,15 +142,15 @@ static int mqtt_format_message(
     return 0;
 }
 
-static int mqtt_connect(mqcontext_t *mqx, const char *client_id, uint16_t keepalive)
+static int smqtt_connect(mqcontext_t *mqx, const char *client_id, uint16_t keepalive)
 {
-    return mqtt_format_message(
+	http_log(5, "-> MQTT Connect\n");
+    return smqtt_format_message(
                         mqx,
                         MQCONNECT, 0,
                         NULL, 0,
                         5,
 						mqvhtString, "MQTT",		// protocol name
-//						mqvhtString, "MQIsdp",		// protocol name
 						mqvhtUint8, (unsigned)4,	// level
 						mqvhtUint8, (unsigned)0,	// flags
 						mqvhtUint16, (unsigned)keepalive,
@@ -160,7 +160,7 @@ static int mqtt_connect(mqcontext_t *mqx, const char *client_id, uint16_t keepal
                         );
 }
 
-static int mqtt_subscribe(
+static int smqtt_subscribe(
 					mqcontext_t *mqx,
 					const char *topic,
 					mqqos_t qos
@@ -170,9 +170,11 @@ static int mqtt_subscribe(
 
 	packet_id++;
 
-    return mqtt_format_message(
+	http_log(5, "-> MQTT SUBSCRIBE id=%04X\n", (unsigned)packet_id);
+
+    return smqtt_format_message(
                         mqx,
-                        MQSUBSCRIBE, 2, /* note magic 2 flag, per spec */
+                        MQSUBSCRIBE, 2, /* note magic flag bit, as per spec */
 						NULL, 0,
 						/* note, spec says these are payload not variable
 						   headers, but this works the same and is easier */
@@ -183,7 +185,7 @@ static int mqtt_subscribe(
                         );
 }
 
-static int mqtt_publish(
+static int smqtt_publish(
 					mqcontext_t *mqx,
 					mqqos_t qos,
 					const char *topic,
@@ -195,7 +197,9 @@ static int mqtt_publish(
 
 	packet_id++;
 
-    return mqtt_format_message(
+	http_log(5, "-> MQTT PUBLISH id=%04X\n", (unsigned)packet_id);
+
+	return smqtt_format_message(
                         mqx,
                         MQPUBLISH, ((qos & 0x3) << 1),
                         payload_data, payload_size,
@@ -205,9 +209,11 @@ static int mqtt_publish(
                         );
 }
 
-static int mqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
+static int smqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
 {
-    return mqtt_format_message(
+	http_log(5, "-> MQTT PUBREL id=%04X\n", (unsigned)packet_id);
+
+	return smqtt_format_message(
                         mqx,
                         MQPUBREL, 2,
                         NULL, 0,
@@ -216,9 +222,24 @@ static int mqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
                         );
 }
 
-static int mqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
+static int smqtt_publish_ack(mqcontext_t *mqx, uint16_t packet_id)
 {
-    return mqtt_format_message(
+	http_log(5, "-> MQTT PUBACK id=%04X\n", (unsigned)packet_id);
+
+	return smqtt_format_message(
+                        mqx,
+                        MQPUBACK, 0,
+                        NULL, 0,
+                        1,
+						mqvhtUint16, (unsigned)packet_id
+                        );
+}
+
+static int smqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
+{
+	http_log(5, "-> MQTT PUBREC id=%04X\n", (unsigned)packet_id);
+
+	return smqtt_format_message(
                         mqx,
                         MQPUBREC, 0,
                         NULL, 0,
@@ -227,9 +248,11 @@ static int mqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
                         );
 }
 
-static int mqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
+static int smqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
 {
-    return mqtt_format_message(
+	http_log(5, "-> MQTT PUBCOMP id=%04X\n", (unsigned)packet_id);
+
+	return smqtt_format_message(
                         mqx,
                         MQPUBCOMP, 0,
                         NULL, 0,
@@ -238,9 +261,11 @@ static int mqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
                         );
 }
 
-static int mqtt_ping(mqcontext_t *mqx)
+static int smqtt_ping(mqcontext_t *mqx)
 {
-    return mqtt_format_message(
+	http_log(5, "-> MQTT PING\n");
+
+	return smqtt_format_message(
                         mqx,
                         MQPINGREQ, 0,
                         NULL, 0,
@@ -248,14 +273,16 @@ static int mqtt_ping(mqcontext_t *mqx)
                         );
 }
 
-static int mqtt_disconnect(mqcontext_t *mqx)
+static int smqtt_disconnect(mqcontext_t *mqx)
 {
     int result;
 
-    // insist we're starting out fresh
+	http_log(5, "-> MQTT DISCONNECT\n");
+
+	// insist we're starting out fresh
     mqx->out.head = mqx->out.count = 0;
 
-    return mqtt_format_message(
+    return smqtt_format_message(
                         mqx,
                         MQDISCONNECT, 0,
                         NULL, 0,
@@ -263,7 +290,7 @@ static int mqtt_disconnect(mqcontext_t *mqx)
                         );
 }
 
-static int mqtt_notify(
+static int smqtt_notify(
 						mqcontext_t *mqx,
 						mqqos_t qos,
 						const char *topic,
@@ -276,7 +303,7 @@ static int mqtt_notify(
 	return 0;
 }
 
-static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
+static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 {
 	int result;
 	size_t bytes;
@@ -372,18 +399,17 @@ static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 	switch (cmd)
 	{
 	case MQCONNACK:
-        http_log(4, "MQTT Connected\n");
+        http_log(5, "<- MQTT CONNACK\n");
         mqx->state = mqsConnected;
 		result = 0;
 		if (mqx->selftest)
 		{
 			// testing: do ping when connected
-			result = mqtt_ping(mqx);
+			result = smqtt_ping(mqx);
 		}
 		break;
 
 	case MQPUBLISH:
-		http_log(4, "MQTT PUBLISH\n");
 		qos = (flags >> 1) & 0x3;
 		if (qos == 0x3)
 		{
@@ -403,7 +429,9 @@ static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 		packet_id = (pdata[0] << 8) | pdata[1];
 		pdata += 2;
 
-		result = mqtt_notify(mqx, qos, topic, packet_id, pdata, ilen - len - 4);
+		http_log(5, "<- MQTT PUBLISH id=%04X\n", (unsigned)packet_id);
+
+		result = smqtt_notify(mqx, qos, topic, packet_id, pdata, ilen - len - 4);
 		if (result)
 		{
 			BERROR("Notify");
@@ -411,61 +439,59 @@ static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 		}
 		if (qos == mqqosLeastOnce)
 		{
-			result = mqtt_format_message(
-									mqx,
-									MQPUBACK, 0,
-									NULL, 0,
-									1,
-									mqvhtUint16, (unsigned)packet_id
-									);
+			result = smqtt_publish_ack(mqx, packet_id);
 		}
 		else if (qos == mqqosOnlyOnce)
 		{
-			result = mqtt_publish_received(mqx, packet_id);
+			result = smqtt_publish_received(mqx, packet_id);
 		}
 		break;
 
 	case MQPUBREL:
-		http_log(4, "MQTT PUBREL\n");
-		packet_id = (data[0] << 8) | data[1];
-		result = mqtt_publish_complete(mqx, packet_id);
+		packet_id = (pdata[0] << 8) | pdata[1];
+		http_log(5, "<- MQTT PUBREL id=%04X\n", packet_id);
+		result = smqtt_publish_complete(mqx, packet_id);
         break;
 
 	case MQPUBACK:
-		packet_id = (data[0] << 8) | data[1];
-		http_log(4, "MQTT PUBACK id=%04X\n", packet_id);
+		packet_id = (pdata[0] << 8) | pdata[1];
+		http_log(5, "<- MQTT PUBACK id=%04X\n", packet_id);
 		result = 0;
         break;
 
 	case MQPUBREC:
-		packet_id = (data[0] << 8) | data[1];
-		http_log(4, "MQTT PUBREC id=%04X\n", packet_id);
-        result = mqtt_publish_release(mqx, packet_id);
+		packet_id = (pdata[0] << 8) | pdata[1];
+		http_log(5, "<- MQTT PUBREC id=%04X\n", packet_id);
+        result = smqtt_publish_release(mqx, packet_id);
         break;
 
 	case MQPUBCOMP:
-		packet_id = (data[0] << 8) | data[1];
-		http_log(4, "MQTT PUBCOMP id=%04X\n", packet_id);
+		packet_id = (pdata[0] << 8) | pdata[1];
+		http_log(5, "<- MQTT PUBCOMP id=%04X\n", packet_id);
 		result = 0;
         break;
 
 	case MQSUBACK:
-        http_log(4, "MQTT Subscribed\n");
+        http_log(5, "<- MQTT Subscribed\n");
 		if (mqx->selftest)
 		{
 			// testing: do publish when subscribed
-	        result = mqtt_publish(mqx, mqx->qos, "hithere", NULL, 0);
+	        result = smqtt_publish(mqx, mqx->qos, "hithere", NULL, 0);
 		}
 		break;
 
 	case MQPINGRESP:
-		http_log(4, "MQTT PINGRESP\n");
+		http_log(5, "<- MQTT PINGRESP\n");
 		result = 0;
 		if (mqx->selftest)
 		{
 			// testing: subscribe on a ping response
-            result = mqtt_subscribe(mqx, "hithere", mqx->qos);
+            result = smqtt_subscribe(mqx, "hithere", mqx->qos);
 		}
+		break;
+
+	default:
+		http_log(1, "<- ??? 0x%02X\n", cmd);
 		break;
 	}
     if (result)
@@ -475,7 +501,7 @@ static int mqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 	return 0;
 }
 
-static int mqtt_resource(
+static int smqtt_resource(
                 http_client_t       *client,
                 http_resource_t     *resource,
                 http_callback_type_t cbtype,
@@ -508,7 +534,7 @@ static int mqtt_resource(
             BERROR("No CTX");
             return -1;
         }
-        http_log(4, "MQX state %d\n", mqx->state);
+        http_log(6, "MQX state %d\n", mqx->state);
 
         switch (mqx->state)
         {
@@ -521,7 +547,7 @@ static int mqtt_resource(
 			{
 				return -1;
 			}
-			result = mqtt_connect(mqx, mqx->client_id, mqx->keepalive);
+			result = smqtt_connect(mqx, mqx->client_id, mqx->keepalive);
             if (result)
             {
                 return -1;
@@ -571,7 +597,7 @@ static int mqtt_resource(
             *count = 0;
             break;
         }
-		result = mqtt_input_phase(mqx, *data, count);
+		result = smqtt_input_phase(mqx, *data, count);
 		if (result)
 		{
 			return -1;
@@ -589,7 +615,7 @@ static int mqtt_resource(
     return 0;
 }
 
-static int mqtt_client_input(mqcontext_t *mqx, int to_secs, int to_usecs)
+static int smqtt_client_input(mqcontext_t *mqx, int to_secs, int to_usecs)
 {
     time_t now;
     int result;
@@ -683,7 +709,7 @@ static int mqtt_client_input(mqcontext_t *mqx, int to_secs, int to_usecs)
 	return 0;
 }
 
-static int mqtt_client_output(mqcontext_t *mqx, int to_secs, int to_usecs)
+static int smqtt_client_output(mqcontext_t *mqx, int to_secs, int to_usecs)
 {
 	time_t now;
 	int result;
@@ -749,7 +775,7 @@ static int mqtt_client_output(mqcontext_t *mqx, int to_secs, int to_usecs)
 	return 0;
 }
 
-static int mqtt_tcp_slice(mqcontext_t *mqx)
+static int smqtt_tcp_slice(mqcontext_t *mqx)
 {
 	int result;
 
@@ -819,7 +845,7 @@ static int mqtt_tcp_slice(mqcontext_t *mqx)
         break;
 
 	case mqsTransport:
-		result = mqtt_connect(mqx, mqx->client_id, mqx->keepalive);
+		result = smqtt_connect(mqx, mqx->client_id, mqx->keepalive);
 		if (result)
 		{
 			BERROR("mqtt connect");
@@ -833,7 +859,7 @@ static int mqtt_tcp_slice(mqcontext_t *mqx)
 		if (mqx->out.count)
 		{
 			iostream_normalize_ring(&mqx->out, NULL);
-			result = mqtt_client_output(mqx, 0, 10000);
+			result = smqtt_client_output(mqx, 0, 10000);
 			if (result)
 			{
 				BERROR("Output");
@@ -843,7 +869,7 @@ static int mqtt_tcp_slice(mqcontext_t *mqx)
 		else
 		{
 			// check input
-			result = mqtt_client_input(mqx, 0, 10000);
+			result = smqtt_client_input(mqx, 0, 10000);
 			if (result)
 			{
 				BERROR("Input");
@@ -857,7 +883,7 @@ static int mqtt_tcp_slice(mqcontext_t *mqx)
 				iostream_normalize_ring(&mqx->in, NULL);
 				count = mqx->in.count;
 
-				result = mqtt_input_phase(mqx, mqx->in.data + mqx->in.tail, &count);
+				result = smqtt_input_phase(mqx, mqx->in.data + mqx->in.tail, &count);
 				if (result)
 				{
 					BERROR("Input phase");
@@ -883,7 +909,7 @@ static int mqtt_tcp_slice(mqcontext_t *mqx)
     return 0;
 }
 
-static int mqtt_ws_slice(mqcontext_t *mqx)
+static int smqtt_ws_slice(mqcontext_t *mqx)
 {
 	int result;
 
@@ -917,7 +943,7 @@ static int mqtt_ws_slice(mqcontext_t *mqx)
         }
         // throw a rest in loop if not busy
         //
-        result = http_wait_for_client_event(mqx->client, 0, 10000);
+        result = http_wait_for_client_event(mqx->client, 0, 100000);
         if (result < 0)
         {
             return result;
@@ -936,11 +962,11 @@ int mqtt_slice(mqcontext_t *mqx)
 
     if (mqx->transport == mqtWS || mqx->transport == mqtWSS)
     {
-		result = mqtt_ws_slice(mqx);
+		result = smqtt_ws_slice(mqx);
 	}
 	else
 	{
-		result = mqtt_tcp_slice(mqx);
+		result = smqtt_tcp_slice(mqx);
 	}
 	return result;
 }
@@ -979,8 +1005,6 @@ mqcontext_t *mqtt_client_create(
         BERROR("Can't alloc MQ CTX");
         return NULL;
     }
-	mqx->selftest	= true;
-
 	mqx->id 		= ++s_idx;
     mqx->state 		= mqsInit;
 	mqx->prev_state = mqsDone;
@@ -992,6 +1016,12 @@ mqcontext_t *mqtt_client_create(
 	strncpy(mqx->client_id, client_id, sizeof(mqx->client_id) - 1);
 	mqx->client_id[sizeof(mqx->client_id) - 1] = '\0';
 
+	mqx->selftest	= false;
+#ifdef MQTT_SUPPORT_RUN_SELFTEST
+#if MQTT_SUPPORT_RUN_SELFTEST
+	mqx->selftest	= true;
+#endif
+#endif
 	mqx->stream = NULL;
     mqx->resources = NULL;
     mqx->client = NULL;
@@ -1041,7 +1071,7 @@ mqcontext_t *mqtt_client_create(
     if (mqx->transport == mqtWS || mqx->transport == mqtWSS)
     {
 #if MQTT_SUPPORT_WEBSOCKET
-        result = http_add_func_resource(&mqx->resources, "/echo", NULL, mqtt_resource, NULL);
+        result = http_add_func_resource(&mqx->resources, "/mqtt", NULL, smqtt_resource, NULL);
         if (result)
         {
             BERROR("Can't make resource");

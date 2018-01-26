@@ -38,6 +38,12 @@ json_test_entry_t s_tests_1[] =
     "}\n"
     },
     {
+    "name", 0, "", bjson_syntax,
+    "{\n"
+    "   \"name\": tru\n"
+    "}\n"
+    },
+    {
     "name", 0, "123", 0,
     "{\n"
     "   \"name\": 123\n"
@@ -174,6 +180,22 @@ json_test_entry_t s_tests_1[] =
     "{\n"
     "   \"name\": 004\n"
     "}\n"
+    },
+    {
+    "name", 0, "none", bjson_memory,
+    ""
+    },
+    {
+    "name", 0, "none", bjson_not_found,
+    " "
+    },
+    {
+    "a", 0, "\"a\"", 0,
+    "{\"a\":\"a\""
+    },
+    {
+    "hi\\n\\rbye", 0, "\"yo\"", 0,
+    "{\"hi\n\rbye\":\"yo\"}"
     },
 };
 
@@ -378,6 +400,18 @@ json_test_entry_t s_tests_33[] =
     s_json_33
     },
     {
+    "items.item.batters.batter[3]", 0, "{\"id\":\"1004\",\"type\":\"Devil\'s Food\"}", 0,
+    s_json_33
+    },
+    {
+    "items.item.batters.batter[1]", 2, "", bjson_parameter,
+    s_json_33
+    },
+    {
+    "items.item.batters.batter[2]", 0, "{\"id\":\"1003\",\"type\":\"Blueberry\"}", 0,
+    s_json_33
+    },
+    {
     "items.item.batters.batter[2].type", 0, "\"Blueberry\"", 0,
     s_json_33
     },
@@ -394,7 +428,12 @@ json_test_entry_t s_tests_33[] =
     s_json_33
     },
     {
-    "items.item[0]", 0, "none", bjson_parameter,
+    // overflow if used with smaller buffer
+    "items.item[0]", 0, "none", bjson_overflow,
+    s_json_33
+    },
+    {
+    "items.item[1]", 0, "none", bjson_not_found,
     s_json_33
     },
     {
@@ -413,6 +452,7 @@ int main(int argc, char **argv)
 {
     bjson_parser_t *pjx;
     const char *key;
+    size_t keyindex;
     json_test_entry_t *entry;
     int i;
     char smallval[16];
@@ -472,7 +512,7 @@ int main(int argc, char **argv)
         }
     }
 #endif
-#if 1
+#if 0
     // harder strings
     for (i = 0; i < sizeof(s_tests_3) / sizeof(json_test_entry_t); i++)
     {
@@ -559,10 +599,15 @@ int main(int argc, char **argv)
     }
     // by-hand test
     key = "name";
-    result = bjson_find_key(pjx, key, '\0');
+    result = bjson_find_key(pjx, key, '\0', &keyindex);
     if (result)
     {
         fprintf(stderr, "find error: %d\n", result);
+        return -1;
+    }
+    if (keyindex != 0)
+    {
+        fprintf(stderr, "expected 0 index, got %d\n", (int)keyindex);
         return -1;
     }
     result = bjson_copy_key_value(pjx, 0, val, sizeof(val));
@@ -571,7 +616,20 @@ int main(int argc, char **argv)
         fprintf(stderr, "get error: %d\n", result);
         return -1;
     }
-
+    key = "name[123]";
+    result = bjson_find_key(pjx, key, '\0', &keyindex);
+    if (result)
+    {
+        fprintf(stderr, "find error: %d\n", result);
+        return -1;
+    }
+    if (keyindex != 123)
+    {
+        fprintf(stderr, "expected 123 index, got %d\n", (int)keyindex);
+        return -1;
+    }
+#endif
+#if 1
     for (i = 0; i < sizeof(s_tests_33) / sizeof(json_test_entry_t); i++)
     {
         entry = &s_tests_33[i];

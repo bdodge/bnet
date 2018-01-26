@@ -50,49 +50,51 @@ int bjson_value_type(
 int bjson_copy_value(
                                 bjson_parser_t *pjx,
                                 char *value,
-                                int nvalue
+                                size_t nvalue
                                 );
 
 int bjson_get_key_value(
                                 bjson_parser_t *pjx,
-                                int index,
+                                size_t index,
                                 const char **value
                                 );
 
 int bjson_copy_key_value(
                                 bjson_parser_t *pjx,
-                                int index,
+                                size_t index,
                                 char *value,
-                                int nvalue
+                                size_t nvalue
                                 );
 
 int bjson_find_next_key(
                                 bjson_parser_t *pjx,
                                 const char *keypath,
-                                char pathdelim
+                                char pathdelim,
+                                size_t *pindex
                                 );
 
 int bjson_find_key(
                                 bjson_parser_t *pjx,
                                 const char *keypath,
-                                char pathdelim
+                                char pathdelim,
+                                size_t *pindex
                                 );
 
 int bjson_find_key_value(
                                 const char *json,
                                 const char *keypath,
                                 char pathdelim,
-                                int index,
+                                size_t index,
                                 const char **value
                                 );
 
 int bjson_find_and_copy_key_value(
                                 const char *json,
                                 const char *keypath,
-                                char pathdelim,
-                                int index,
+                                const char pathdelim,
+                                size_t index,
                                 char *value,
-                                int nvalue
+                                size_t nvalue
                                 );
 
 bjson_parser_t *bjson_parser_create(

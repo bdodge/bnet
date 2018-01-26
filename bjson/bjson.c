@@ -345,7 +345,7 @@ static int bjson_copy_number_value(bjson_parser_t *pjx, char *value, size_t nval
     return bjson_ok;
 }
 
-static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nvalue)
+static int bjson_unescape_string(bjson_parser_t *pjx, bool isquoted, char *value, size_t nvalue)
 {
     size_t i;
     uint32_t uval;
@@ -359,20 +359,31 @@ static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nval
     {
         return bjson_parameter;
     }
-    if (*pjx->psrc != '\"')
+    if (isquoted)
     {
-        return bjson_syntax;
+        if (*pjx->psrc != '\"')
+        {
+            return bjson_syntax;
+        }
+        if (value)
+        {
+            if (nvalue < 3)
+            {
+                return bjson_overflow;
+            }
+            i = 0;
+            value[i++] = *pjx->psrc;
+        }
+        pjx->psrc++;
     }
-    if (value)
+    else if (value)
     {
-       if (nvalue < 3)
+        i = 0;
+        if (nvalue < 1)
         {
             return bjson_overflow;
         }
-        i = 0;
-        value[i++] = *pjx->psrc;
     }
-    pjx->psrc++;
     do
     {
         if (value && (i >= (nvalue - 2)))
@@ -489,19 +500,36 @@ static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nval
             pjx->psrc++;
             if (*pjx->psrc == '\"')
             {
-                if (value)
+                if (isquoted)
                 {
-                    value[i++] = '\"';
-                    value[i] = '\0';
+                    if (value)
+                    {
+                        value[i++] = '\"';
+                        value[i] = '\0';
+                    }
+                    pjx->psrc++;
+                    return bjson_ok;
                 }
-                pjx->psrc++;
-                return bjson_ok;
+                return bjson_syntax;
             }
         }
     }
     while (*pjx->psrc);
 
-    return bjson_syntax;
+    if (isquoted)
+    {
+        bjson_syntax;
+    }
+    if (value)
+    {
+        value[i] = '\0';
+    }
+    return bjson_ok;
+}
+
+static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nvalue)
+{
+    return bjson_unescape_string(pjx, true, value, nvalue);
 }
 
 static int bjson_copy_array_or_object_value(
@@ -710,7 +738,7 @@ static int bjson_copy_array_or_object_value(
     return bjson_syntax;
 }
 
-int bjson_copy_value(bjson_parser_t *pjx, char *value, int nvalue)
+int bjson_copy_value(bjson_parser_t *pjx, char *value, size_t nvalue)
 {
     if (! pjx || ! pjx->psrc)
     {
@@ -747,7 +775,7 @@ int bjson_copy_value(bjson_parser_t *pjx, char *value, int nvalue)
 #define bjson_skip_value(pjx)   \
     bjson_copy_value(pjx, NULL, 0)
 
-static int bjson_find_element(bjson_parser_t *pjx, int index, const char **value)
+static int bjson_find_element(bjson_parser_t *pjx, size_t index, const char **value)
 {
     int result;
     size_t atdex;
@@ -811,7 +839,7 @@ static int bjson_find_element(bjson_parser_t *pjx, int index, const char **value
     return bjson_not_found;
 }
 
-int bjson_get_key_value(bjson_parser_t *pjx, int index, const char **value)
+int bjson_get_key_value(bjson_parser_t *pjx, size_t index, const char **value)
 {
     const char *pv;
 
@@ -883,7 +911,7 @@ int bjson_get_key_value(bjson_parser_t *pjx, int index, const char **value)
     }
 }
 
-int bjson_copy_key_value(bjson_parser_t *pjx, int index, char *value, int nvalue)
+int bjson_copy_key_value(bjson_parser_t *pjx, size_t index, char *value, size_t nvalue)
 {
     const char *pv;
     int result;
@@ -916,7 +944,7 @@ static int bjson_find_keycomponent(
 
     do
     {
-        // look for the text "component": from the current position
+        // look for the text "<component>": from the current position
         //
         pkey = bjson_memmem(pjx->psrc, remlength, component, keylength);
         if (! pkey)
@@ -971,14 +999,16 @@ static int bjson_find_keycomponent(
     return bjson_not_found;
 }
 
-int bjson_find_next_key(bjson_parser_t *pjx, const char *keypath, const char pathdelim)
+int bjson_find_next_key(bjson_parser_t *pjx, const char *keypath, const char pathdelim, size_t *pindex)
 {
     bjson_parser_t subparser;
     const char *component;
     char *component_end;
+    char *keybuf;
     size_t keylength;
     size_t remlength;
     size_t keyindex;
+    bool wasindexed;
     const char *value;
     size_t value_len;
     bjson_type_t value_type;
@@ -998,10 +1028,46 @@ int bjson_find_next_key(bjson_parser_t *pjx, const char *keypath, const char pat
     {
         pjx->psrc = pjx->json;
     }
+    if (pindex)
+    {
+        *pindex = 0;
+    }
     // initial length is all of json after the current spot
     //
     remlength = pjx->length - (pjx->psrc - pjx->json);
 
+    keybuf = NULL;
+
+    // if keypath has escaped chars, unescape it into a buffer
+    // otherwise use it directly
+    //
+    if (strchr(keypath, '\\'))
+    {
+        // allocate buffer to unescape, big enough to utf8 encode all of it
+        //
+        keylength = strlen(keypath);
+        subparser.json = keypath;
+        subparser.psrc = keypath;
+        subparser.pkey = keypath;
+        subparser.length = keylength;
+
+        keylength *= 4;
+        keybuf = (char*)malloc(keylength);
+        if (! keybuf)
+        {
+            return bjson_memory;
+        }
+        // unescape the key
+        //
+        result = bjson_unescape_string(&subparser, false, keybuf, keylength);
+        if (result)
+        {
+            return result;
+        }
+        // and use it as the actual key
+        //
+        keypath = keybuf;
+    }
     // initial component is the first (or the whole) part of key
     //
     component = keypath;
@@ -1013,20 +1079,32 @@ int bjson_find_next_key(bjson_parser_t *pjx, const char *keypath, const char pat
         // stop at array index if found and remember it
         //
         keyindex = 0;
+        wasindexed = false;
         component_end = NULL;
 
         for(keylength = 0; component[keylength]; keylength++)
         {
             if (component[keylength] == pathdelim)
             {
+                // got to end of this component
+                // (if pathdelim is 0, loop would already exit at component end)
+                //
                 component_end = (char*)component + keylength;
                 break;
             }
             if (component[keylength] == '[')
             {
+                // key components like "component[13]" parse to component, and index 13,
+                // which lets the user get "a[4].b[2].c[5]" for example, instead of
+                // recursively fetching the next part
+                //
                 keyindex = strtoul(component + keylength + 1, &component_end, 10);
                 if (! component_end)
                 {
+                    if (keybuf)
+                    {
+                        free(keybuf);
+                    }
                     return bjson_syntax;
                 }
                 while (bjson_is_white(*component_end))
@@ -1035,6 +1113,10 @@ int bjson_find_next_key(bjson_parser_t *pjx, const char *keypath, const char pat
                 }
                 if (*component_end != ']')
                 {
+                    if (keybuf)
+                    {
+                        free(keybuf);
+                    }
                     return bjson_syntax;
                 }
                 component_end++;
@@ -1042,91 +1124,157 @@ int bjson_find_next_key(bjson_parser_t *pjx, const char *keypath, const char pat
                 {
                     component_end++;
                 }
+                /* uncommenting this code disallows indexing of the last key
+                 * component but it is a handy shortcut depending on how the user
+                 * uses the api.
+                 * it gets wierd if the user says "give me component[4], index 5"
+                 *
                 if (*component_end != pathdelim || ! pathdelim)
                 {
                     // only allow indexing on non last key component
                     return bjson_parameter;
                 }
+                */
+                wasindexed = true;
                 break;
             }
         }
-        if (remlength < (keylength + 3))
+        do // try
         {
-            // not enough length left to have qoute-component-quote-colon
-            return bjson_not_found;
-        }
-        // find this key component in the json string of length remlength
-        //
-        result = bjson_find_keycomponent(pjx, component, remlength, keylength);
-        if (result)
-        {
-            return result;
-        }
-        // found this key component. if at end of component list, all set
-        //
-        if (! pathdelim || ! component_end)
-        {
-            return bjson_ok;
-        }
-        // there is another component, find that next, but only if this key's
-        // value is an object, since other json types don't have sub keys
-        //
-        result = bjson_get_key_value(pjx, keyindex, &value);
-        if (result)
-        {
-            return result;
-        }
-        result = bjson_value_type(pjx, value, &value_type);
-        if (result)
-        {
-            return result;
-        }
-        if (value_type != bjson_object)
-        {
-            return bjson_not_object;
-        }
-        // clone the parser state, and get length of this object
-        //
-        subparser.json = pjx->json;
-        subparser.psrc = pjx->psrc;
-        subparser.pkey = pjx->pkey;
-        subparser.length = pjx->length;
-        result = bjson_copy_array_or_object_value(&subparser, &value_len, NULL, 0);
-        if (result)
-        {
-            return result;
-        }
-        // limit remaining length to just the length of this object
-        remlength = value_len;
+            if (remlength < (keylength + 3))
+            {
+                // not enough length left to have qoute-component-quote-colon
+                return bjson_not_found;
+            }
+            // find this key component in the json string of length remlength
+            //
+            result = bjson_find_keycomponent(pjx, component, remlength, keylength);
+            if (result)
+            {
+                break;
+            }
+            // found this key component. if at end of component list, all set
+            //
+            if (! pathdelim || ! component_end || ! *component_end)
+            {
+                if (keybuf)
+                {
+                    free(keybuf);
+                }
+                if (wasindexed)
+                {
+                    // ended in an index, so return that
+                    if (pindex)
+                    {
+                        *pindex = keyindex;
+                    }
+                }
+                return bjson_ok;
+            }
+            // there is another component, find that next, but only if this key's
+            // value is an object, since other json types don't have sub keys
+            //
+            result = bjson_get_key_value(pjx, keyindex, &value);
+            if (result)
+            {
+                break;
+            }
+            result = bjson_value_type(pjx, value, &value_type);
+            if (result)
+            {
+                break;
+            }
+            if (value_type != bjson_object)
+            {
+                result = bjson_not_object;
+                break;
+            }
+            // clone the parser state, and get length of this object
+            //
+            subparser.json = pjx->json;
+            subparser.psrc = pjx->psrc;
+            subparser.pkey = pjx->pkey;
+            subparser.length = pjx->length;
+            result = bjson_copy_array_or_object_value(&subparser, &value_len, NULL, 0);
+            if (result)
+            {
+                break;
+            }
+            // limit remaining length to just the length of this object
+            remlength = value_len;
 
-        // point to next component
-        component = component_end + 1;
+            // point to next component if there is one
+            if (*component_end)
+            {
+                component = component_end + 1;
+                if (! *component)
+                {
+                    // dangling delim
+                    result = bjson_syntax;
+                    break;
+                }
+            }
+            else
+            {
+                // got to end of key (must have been indexed)
+                //
+                if (wasindexed)
+                {
+                    if (keybuf)
+                    {
+                        free(keybuf);
+                    }
+                    return bjson_ok;
+                }
+                else
+                {
+                    // this can't happen
+                    result = bjson_syntax;
+                    break;
+                }
+            }
+        }
+        while (0); // catch
+
+        if (result)
+        {
+            if (keybuf)
+            {
+                free(keybuf);
+            }
+            return result;
+        }
     }
     while (pathdelim && component_end && *component_end);
 
+    if (keybuf)
+    {
+        free(keybuf);
+    }
     return bjson_not_found;
 }
 
-int bjson_find_key(bjson_parser_t *pjx, const char *keypath, const char pathdelim)
+int bjson_find_key(bjson_parser_t *pjx, const char *keypath, const char pathdelim, size_t *pindex)
 {
     if (! pjx || ! keypath)
     {
         return bjson_parameter;
     }
     pjx->psrc = pjx->json;
-    return bjson_find_next_key(pjx, keypath, pathdelim);
+    return bjson_find_next_key(pjx, keypath, pathdelim, pindex);
 }
 
 int bjson_find_key_value(
                         const char *json,
                         const char *keypath,
                         const char pathdelim,
-                        int index,
+                        size_t index,
                         const char **value
                         )
 
 {
     bjson_parser_t *pjx;
+    size_t keyindex;
     int result;
 
     pjx = bjson_parser_create(json);
@@ -1134,10 +1282,21 @@ int bjson_find_key_value(
     {
         return bjson_memory;
     }
-    result = bjson_find_key(pjx, keypath, pathdelim);
+    result = bjson_find_key(pjx, keypath, pathdelim, &keyindex);
     if (result)
     {
+        bjson_parser_free(pjx);
         return result;
+    }
+    if (keyindex > 0)
+    {
+        if (index > 0)
+        {
+            // last key index specified in text AND parameter
+            bjson_parser_free(pjx);
+            return bjson_parameter;
+        }
+        index = keyindex;
     }
     result = bjson_get_key_value(pjx, index, value);
     bjson_parser_free(pjx);
@@ -1148,12 +1307,13 @@ int bjson_find_and_copy_key_value(
                                 const char *json,
                                 const char *keypath,
                                 const char pathdelim,
-                                int index,
+                                size_t index,
                                 char *value,
-                                int nvalue
+                                size_t nvalue
                                 )
 {
     bjson_parser_t *pjx;
+    size_t keyindex;
     int result;
 
     pjx = bjson_parser_create(json);
@@ -1161,10 +1321,21 @@ int bjson_find_and_copy_key_value(
     {
         return bjson_memory;
     }
-    result = bjson_find_key(pjx, keypath, pathdelim);
+    result = bjson_find_key(pjx, keypath, pathdelim, &keyindex);
     if (result)
     {
+        bjson_parser_free(pjx);
         return result;
+    }
+    if (keyindex > 0)
+    {
+        if (index > 0)
+        {
+            // last key index specified in text AND parameter
+            bjson_parser_free(pjx);
+            return bjson_parameter;
+        }
+        index = keyindex;
     }
     result = bjson_copy_key_value(pjx, index, value, nvalue);
     bjson_parser_free(pjx);

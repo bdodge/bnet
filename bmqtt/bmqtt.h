@@ -45,6 +45,21 @@ typedef enum
 }
 mqtransport_t;
 
+struct tag_mqcontext;
+typedef int (mqnotify_func_t)(struct tag_mqcontext *mqx, const char *topic, void *priv);
+
+typedef struct tag_mqsubrec
+{
+	struct tag_mqsubrec*next;
+	time_t 				time;
+	uint16_t			id;
+	mqqos_t 			qos;
+	mqnotify_func_t    *notify;
+	void               *priv;
+	char 				topic[MQTT_MAX_TOPIC];
+}
+mqsubrec_t;
+
 typedef enum
 {
     mqsInit,
@@ -55,9 +70,10 @@ typedef enum
 }
 mqstate_t;
 
-typedef struct
+typedef struct tag_mqcontext
 {
 	uint32_t 		id;
+	uint32_t		packet_id;
 	mqqos_t 		qos;
     mqstate_t 		state;
     mqstate_t 		prev_state;
@@ -66,6 +82,10 @@ typedef struct
 	char 			client_id[MQTT_MAX_ID];
 	char 			url[HTTP_MAX_URL];
 	uint16_t 		port;
+	mqsubrec_t	   *subrecs_published;
+	mqsubrec_t	   *subrecs_pending;
+	mqsubrec_t	   *subrecs_leaving;
+	mqsubrec_t	   *subrecs;
 	bool			selftest;
 	iostream_t 	   *stream;
 	time_t 			long_timeout;
@@ -80,10 +100,43 @@ typedef struct
 }
 mqcontext_t;
 
-int mqtt_subscribe(mqcontext_t *mqx);
+int mqtt_subscribe(
+					mqcontext_t *mqx,
+					const char *topic,
+					mqqos_t qos,
+					mqnotify_func_t *notify,
+					void *priv
+					);
 
-int mqtt_slice(mqcontext_t *mqx);
-void mqtt_client_free(mqcontext_t *mqx);
+int mqtt_unsubscribe(
+					mqcontext_t *mqx,
+					const char *topic
+					);
+
+int mqtt_publish(
+					mqcontext_t *mqx,
+					const char *topic,
+					mqqos_t qos,
+					uint8_t *payload_data,
+					size_t payload_size
+					);
+
+int mqtt_disconnect(
+					mqcontext_t *mqx
+					);
+
+int mqtt_connect(
+					mqcontext_t *mqx
+					);
+
+int mqtt_slice(
+					mqcontext_t *mqx
+					);
+
+void mqtt_client_free(
+					mqcontext_t *mqx
+					);
+
 mqcontext_t *mqtt_client_create(
 					const char     *client_id,
 					const char     *server,

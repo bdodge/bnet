@@ -54,9 +54,9 @@ int main(int argc, char **argv)
                 mqtTLS,
             #endif
                 123,
-             //   mqqosMostOnce,
-              mqqosLeastOnce,
-            //  mqqosOnlyOnce,
+            //    mqqosMostOnce,
+            //  mqqosLeastOnce,
+              mqqosOnlyOnce,
                 HELLO_IO_SIZE,
                 15
                 );
@@ -67,11 +67,12 @@ int main(int argc, char **argv)
     }
     else
     {
-        do
+        result = mqtt_connect(mqx);
+
+        while (! result && mqx->state != mqsDone)
         {
             result = mqtt_slice(mqx);
         }
-        while (! result && mqx->state != mqsDone);
     }
     iostream_tls_epilog();
     mqtt_client_free(mqx);

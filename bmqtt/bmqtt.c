@@ -12,6 +12,72 @@ typedef enum
 }
 mqvhtype_t;
 
+static void smqtt_subrec_destroy(mqsubrec_t *subrec)
+{
+	if (subrec)
+	{
+		free(subrec);
+	}
+}
+
+static mqsubrec_t *smqtt_subrec_create(const char *topic, mqqos_t qos)
+{
+	mqsubrec_t *subrec;
+	int result;
+
+	subrec = (mqsubrec_t *)malloc(sizeof(mqsubrec_t));
+	if (! subrec)
+	{
+		return NULL;
+	}
+	strncpy(subrec->topic, topic, sizeof(subrec->topic));
+	subrec->qos = qos;
+	subrec->notify = NULL;
+	subrec->priv = NULL;
+	time(&subrec->time);
+	return subrec;
+}
+
+static int smqtt_clean_subrecs(mqcontext_t *mqx)
+{
+	mqsubrec_t *subrec;
+	mqsubrec_t *nxtrec;
+
+	subrec = mqx->subrecs;
+	mqx->subrecs = NULL;
+	while (subrec)
+	{
+		nxtrec = subrec->next;
+		smqtt_subrec_destroy(subrec);
+		subrec = nxtrec;
+	}
+	subrec = mqx->subrecs_leaving;
+	mqx->subrecs_leaving = NULL;
+	while (subrec)
+	{
+		nxtrec = subrec->next;
+		smqtt_subrec_destroy(subrec);
+		subrec = nxtrec;
+	}
+	subrec = mqx->subrecs_pending;
+	mqx->subrecs_pending = NULL;
+	while (subrec)
+	{
+		nxtrec = subrec->next;
+		smqtt_subrec_destroy(subrec);
+		subrec = nxtrec;
+	}
+	subrec = mqx->subrecs_published;
+	mqx->subrecs_published = NULL;
+	while (subrec)
+	{
+		nxtrec = subrec->next;
+		smqtt_subrec_destroy(subrec);
+		subrec = nxtrec;
+	}
+	return 0;
+}
+
 static int smqtt_format_message(
             mqcontext_t *mqx,
             uint8_t cmd, uint8_t flags,
@@ -162,15 +228,16 @@ static int smqtt_connect(mqcontext_t *mqx, const char *client_id, uint16_t keepa
 
 static int smqtt_subscribe(
 					mqcontext_t *mqx,
-					const char *topic,
-					mqqos_t qos
+					mqsubrec_t  *subrec
 				)
 {
-	static uint16_t packet_id = 0;
+	if (! mqx || ! subrec)
+	{
+		return -1;
+	}
+	subrec->id = mqx->packet_id++;
 
-	packet_id++;
-
-	http_log(5, "-> MQTT SUBSCRIBE id=%04X\n", (unsigned)packet_id);
+	http_log(5, "-> MQTT SUBSCRIBE id=%04X\n", (unsigned)subrec->id);
 
     return smqtt_format_message(
                         mqx,
@@ -179,33 +246,55 @@ static int smqtt_subscribe(
 						/* note, spec says these are payload not variable
 						   headers, but this works the same and is easier */
 						3,
-						mqvhtUint16, (unsigned)packet_id,
-						mqvhtString, topic,
-						mqvhtUint8,  (unsigned)qos
+						mqvhtUint16, (unsigned)subrec->id,
+						mqvhtString, subrec->topic,
+						mqvhtUint8,  (unsigned)subrec->qos
+                        );
+}
+
+static int smqtt_unsubscribe(
+					mqcontext_t *mqx,
+					mqsubrec_t  *subrec
+				)
+{
+	if (! mqx || ! subrec)
+	{
+		return -1;
+	}
+	subrec->id = mqx->packet_id++;
+
+	http_log(5, "-> MQTT UNSUBSCRIBE id=%04X\n", (unsigned)subrec->id);
+
+    return smqtt_format_message(
+                        mqx,
+                        MQUNSUBSCRIBE, 2, /* note magic flag bit, as per spec */
+						NULL, 0,
+						/* note, spec says these are payload not variable
+						   headers, but this works the same and is easier */
+						2,
+						mqvhtUint16, (unsigned)subrec->id,
+						mqvhtString, subrec->topic
                         );
 }
 
 static int smqtt_publish(
 					mqcontext_t *mqx,
-					mqqos_t qos,
-					const char *topic,
+					mqsubrec_t *subrec,
 					uint8_t *payload_data,
 					size_t payload_size
 				)
 {
-	static uint16_t packet_id = 0;
+	subrec->id = mqx->packet_id++;
 
-	packet_id++;
-
-	http_log(5, "-> MQTT PUBLISH id=%04X\n", (unsigned)packet_id);
+	http_log(5, "-> MQTT PUBLISH id=%04X\n", (unsigned)subrec->id);
 
 	return smqtt_format_message(
                         mqx,
-                        MQPUBLISH, ((qos & 0x3) << 1),
+                        MQPUBLISH, ((subrec->qos & 0x3) << 1),
                         payload_data, payload_size,
-						(qos != mqqosMostOnce) ? 2 : 1,
-						mqvhtString, topic,
-						mqvhtUint16, (unsigned)packet_id
+						(subrec->qos != mqqosMostOnce) ? 2 : 1,
+						mqvhtString, subrec->topic,
+						mqvhtUint16, (unsigned)subrec->id
                         );
 }
 
@@ -290,16 +379,132 @@ static int smqtt_disconnect(mqcontext_t *mqx)
                         );
 }
 
+static int smqtt_handle_puback(
+						mqcontext_t *mqx,
+						bool is_pubrec,
+						uint16_t packet_id
+				)
+{
+	mqsubrec_t *subrec, *prevsubrec;
+
+	prevsubrec = NULL;
+
+	for (
+			subrec = mqx->subrecs_published;
+			subrec;
+			subrec = subrec->next
+	)
+	{
+		if (subrec->id == packet_id)
+		{
+			// unlink from published
+			if (prevsubrec)
+			{
+				prevsubrec->next = subrec->next;
+			}
+			else
+			{
+				mqx->subrecs_published = subrec->next;
+			}
+			http_log(5, "Removing record of published topic %s id=%04X\n",
+						subrec->topic, subrec->id);
+			smqtt_subrec_destroy(subrec);
+			return 0;
+		}
+		prevsubrec = subrec;
+	}
+	http_log(1, "MQTT - No such id=%04X for puback/rec\n");
+	// this is non-fatal, it could have been yanked out?
+	return 0;
+}
+
+static int smqtt_handle_suback(
+						mqcontext_t *mqx,
+						bool is_unsub,
+						uint16_t packet_id
+				)
+{
+	mqsubrec_t *subrec, *prevsubrec;
+
+	prevsubrec = NULL;
+
+	for (
+			subrec = is_unsub ?
+				mqx->subrecs_leaving : mqx->subrecs_pending;
+			subrec;
+			subrec = subrec->next
+	)
+	{
+		if (subrec->id == packet_id)
+		{
+			// move from pending to subscribed
+			if (prevsubrec)
+			{
+				prevsubrec->next = subrec->next;
+			}
+			else
+			{
+				if (is_unsub)
+				{
+					mqx->subrecs_leaving = subrec->next;
+				}
+				else
+				{
+					mqx->subrecs_pending = subrec->next;
+				}
+			}
+			subrec->next = mqx->subrecs;
+			mqx->subrecs = subrec;
+
+			http_log(5, "Successfully %ssubscribed to %s\n",
+						is_unsub ? "un" : "", subrec->topic);
+			return 0;
+		}
+		prevsubrec = subrec;
+	}
+	http_log(1, "MQTT - No such id=%04X for un/suback\n");
+	// this is non-fatal, it could have been yanked out?
+	return 0;
+}
+
+static int smqtt_selftest_notify(mqcontext_t *mqx, const char *topic, void *priv)
+{
+	int result;
+
+	http_log(4, "MQTT TEST ------ topic:%s priv=%s\n", topic, priv ? (char*)priv : "error");
+
+	// unsubscribe in the callback
+	result = mqtt_unsubscribe(mqx, topic);
+	return result;
+}
+
 static int smqtt_notify(
 						mqcontext_t *mqx,
-						mqqos_t qos,
 						const char *topic,
+						mqqos_t qos,
 						uint16_t packet_id,
 						uint8_t *payload_data,
 						size_t payload_size
 				)
 {
-	http_log(4, "MQTT Got Publish: %s %04X\n", topic, packet_id);
+	http_log(4, "MQTT Got Notified of: %s %04X\n", topic, packet_id);
+	mqsubrec_t *subrec;
+	int result;
+
+	for (subrec = mqx->subrecs; subrec; subrec = subrec->next)
+	{
+		if (! strcmp(subrec->topic, topic))
+		{
+			result = 0;
+
+			if (subrec->notify)
+			{
+				result = subrec->notify(mqx, topic, subrec->priv);
+			}
+			return result;
+		}
+	}
+	http_log(1, "MQTT - No subscription for %s\n", topic);
 	return 0;
 }
 
@@ -431,7 +636,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 
 		http_log(5, "<- MQTT PUBLISH id=%04X\n", (unsigned)packet_id);
 
-		result = smqtt_notify(mqx, qos, topic, packet_id, pdata, ilen - len - 4);
+		result = smqtt_notify(mqx, topic, qos, packet_id, pdata, ilen - len - 4);
 		if (result)
 		{
 			BERROR("Notify");
@@ -456,13 +661,17 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 	case MQPUBACK:
 		packet_id = (pdata[0] << 8) | pdata[1];
 		http_log(5, "<- MQTT PUBACK id=%04X\n", packet_id);
-		result = 0;
+		result = smqtt_handle_puback(mqx, false, packet_id);
         break;
 
 	case MQPUBREC:
 		packet_id = (pdata[0] << 8) | pdata[1];
 		http_log(5, "<- MQTT PUBREC id=%04X\n", packet_id);
-        result = smqtt_publish_release(mqx, packet_id);
+		result = smqtt_handle_puback(mqx, true, packet_id);
+		if (! result)
+		{
+	        result = smqtt_publish_release(mqx, packet_id);
+		}
         break;
 
 	case MQPUBCOMP:
@@ -472,11 +681,26 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
         break;
 
 	case MQSUBACK:
-        http_log(5, "<- MQTT Subscribed\n");
-		if (mqx->selftest)
+		packet_id = (pdata[0] << 8) | pdata[1];
+        http_log(5, "<- MQTT SUBACK id=%04X\n", packet_id);
+		// process ack
+		result = smqtt_handle_suback(mqx, false, packet_id);
+		if (mqx->selftest && ! result)
 		{
 			// testing: do publish when subscribed
-	        result = smqtt_publish(mqx, mqx->qos, "hithere", NULL, 0);
+	        result = mqtt_publish(mqx, "hithere", mqx->qos, NULL, 0);
+		}
+		break;
+
+	case MQUNSUBACK:
+		packet_id = (pdata[0] << 8) | pdata[1];
+        http_log(5, "<- MQTT UNSUBACK id=%04X\n", packet_id);
+		// process ack
+		result = smqtt_handle_suback(mqx, true, packet_id);
+		if (mqx->selftest && ! result)
+		{
+			// testing: disconnect now
+	        result = mqtt_disconnect(mqx);
 		}
 		break;
 
@@ -485,8 +709,9 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 		result = 0;
 		if (mqx->selftest)
 		{
-			// testing: subscribe on a ping response
-            result = smqtt_subscribe(mqx, "hithere", mqx->qos);
+			// testing: subscribe on the ping response
+            result = mqtt_subscribe(mqx, "hithere",
+					mqx->qos, smqtt_selftest_notify, (void*)"hi");
 		}
 		break;
 
@@ -775,6 +1000,23 @@ static int smqtt_client_output(mqcontext_t *mqx, int to_secs, int to_usecs)
 	return 0;
 }
 
+static int smqtt_tcp_connect(mqcontext_t *mqx)
+{
+	int result;
+
+	// open a tcp socket to broker
+	//
+	mqx->stream = iostream_create_from_tcp_connection(mqx->url, mqx->port);
+	if (! mqx->stream)
+	{
+		BERROR("Stream create");
+		return -1;
+	}
+	mqx->state = mqsTransportInit;
+	time(&mqx->last_in_time);
+	return 0;
+}
+
 static int smqtt_tcp_slice(mqcontext_t *mqx)
 {
 	int result;
@@ -784,35 +1026,29 @@ static int smqtt_tcp_slice(mqcontext_t *mqx)
     switch (mqx->state)
     {
     case mqsInit:
-        mqx->stream = iostream_create_from_tcp_connection(mqx->url, mqx->port);
-        if (! mqx->stream)
-        {
-            BERROR("Stream create");
-            return -1;
-        }
-        mqx->state = mqsTransportInit;
-		time(&mqx->last_in_time);
-        break;
+		// shouldn't really get here, call connect first
+		BERROR("Call connect function");
+		result = 1;
 
     case mqsTransportInit:
-        if (! mqx->stream)
-        {
-            BERROR("No stream");
-            return -1;
-        }
-        // poll for writeable means connected
-        //
-        result = mqx->stream->poll(mqx->stream, writeable, 0, 10000);
-        if (result < 0)
-        {
-            BERROR("stream");
-            return -1;
-        }
-        if (result == 0)
-        {
+		if (! mqx->stream)
+		{
+			BERROR("No stream");
+			return -1;
+		}
+		// poll for writeable means connected
+		//
+		result = mqx->stream->poll(mqx->stream, writeable, 0, 10000);
+		if (result < 0)
+		{
+			BERROR("stream");
+			return -1;
+		}
+		if (result == 0)
+		{
 			time_t now;
 
-            // not connected, remain in init state
+			// not connected, remain in init state
 			//
 			time(&now);
 			if ((now - mqx->last_in_time) > mqx->long_timeout)
@@ -820,29 +1056,30 @@ static int smqtt_tcp_slice(mqcontext_t *mqx)
 				BERROR("Timeout connecting");
 				return -1;
 			}
-            break;
-        }
-        http_log(5, "Connected\n");
+			// wait more
+			break;
+		}
+		http_log(5, "Connected\n");
 
 		// upgrade to TLS if indicated
-        //
-        if (mqx->transport == mqtTLS)
-        {
-            iostream_t *stream;
+		//
+		if (mqx->transport == mqtTLS)
+		{
+			iostream_t *stream;
 
-            stream = iostream_tls_create_from_iostream(mqx->stream, true);
-            if (! stream)
-            {
-                BERROR("TLS upgrade failed");
-                mqx->stream = NULL;
-                return -1;
-            }
-	        http_log(5, "TLS Connected\n");
-            mqx->stream = stream;
-        }
-		mqx->last_in_time = 0;
+			stream = iostream_tls_create_from_iostream(mqx->stream, true);
+			if (! stream)
+			{
+				BERROR("TLS upgrade failed");
+				mqx->stream = NULL;
+				return -1;
+			}
+			http_log(5, "TLS Connected\n");
+			mqx->stream = stream;
+		}
 		mqx->state = mqsTransport;
-        break;
+		mqx->last_in_time = 0;
+		break;
 
 	case mqsTransport:
 		result = smqtt_connect(mqx, mqx->client_id, mqx->keepalive);
@@ -866,37 +1103,34 @@ static int smqtt_tcp_slice(mqcontext_t *mqx)
 				return result;
 			}
 		}
-		else
+		// check input
+		result = smqtt_client_input(mqx, 0, 10000);
+		if (result)
 		{
-			// check input
-			result = smqtt_client_input(mqx, 0, 10000);
+			BERROR("Input");
+			return result;
+		}
+		// if there is any data read, process it
+		if (mqx->in.count)
+		{
+			size_t count;
+
+			iostream_normalize_ring(&mqx->in, NULL);
+			count = mqx->in.count;
+
+			result = smqtt_input_phase(mqx, mqx->in.data + mqx->in.tail, &count);
 			if (result)
 			{
-				BERROR("Input");
+				BERROR("Input phase");
 				return result;
 			}
-			// if there is any data read, process it
-			if (mqx->in.count)
+			if (count)
 			{
-				size_t count;
-
-				iostream_normalize_ring(&mqx->in, NULL);
-				count = mqx->in.count;
-
-				result = smqtt_input_phase(mqx, mqx->in.data + mqx->in.tail, &count);
-				if (result)
+				mqx->in.count -= count;
+				mqx->in.tail += count;
+				if (mqx->in.tail >= mqx->in.size)
 				{
-					BERROR("Input phase");
-					return result;
-				}
-				if (count)
-				{
-					mqx->in.count -= count;
-					mqx->in.tail += count;
-					if (mqx->in.tail >= mqx->in.size)
-					{
-						mqx->in.tail = 0;
-					}
+					mqx->in.tail = 0;
 				}
 			}
 		}
@@ -909,6 +1143,22 @@ static int smqtt_tcp_slice(mqcontext_t *mqx)
     return 0;
 }
 
+static int smqtt_ws_connect(mqcontext_t *mqx)
+{
+	int result;
+
+	// start the http request to open the websocket
+	//
+	result = http_client_request(mqx->client, httpGet,
+			mqx->url, httpTCP, false, NULL, mqx->resources);
+	if (result)
+	{
+		return result;
+	}
+	mqx->state = mqsTransportInit;
+	return 0;
+}
+
 static int smqtt_ws_slice(mqcontext_t *mqx)
 {
 	int result;
@@ -916,15 +1166,8 @@ static int smqtt_ws_slice(mqcontext_t *mqx)
 #if MQTT_SUPPORT_WEBSOCKET
     if (mqx->state == mqsInit)
     {
-		// start the http request to open the websocket
-		//
-        result = http_client_request(mqx->client, httpGet,
-                    mqx->url, httpTCP, false, NULL, mqx->resources);
-        if (result)
-        {
-            return result;
-        }
-        mqx->state = mqsTransportInit;
+		BERROR("Call connect first");
+		return -1;
     }
     else if (mqx->state == mqsDone)
     {
@@ -956,6 +1199,169 @@ static int smqtt_ws_slice(mqcontext_t *mqx)
     return result;
 }
 
+int mqtt_subscribe(
+					mqcontext_t *mqx,
+					const char *topic,
+					mqqos_t qos,
+					mqnotify_func_t *notify,
+					void *priv
+				)
+{
+	mqsubrec_t *subrec;
+	int result;
+
+	subrec = smqtt_subrec_create(topic, qos);
+	if (! subrec)
+	{
+		BERROR("Can't alloc subrec");
+		return -1;
+	}
+	subrec->notify = notify;
+	subrec->priv = priv;
+
+	// format the subscribe
+	result = smqtt_subscribe(mqx, subrec);
+	if (result)
+	{
+		BERROR("Can't subscribe");
+		free(subrec);
+		return result;
+	}
+	// place subrec on the to-ack list
+	subrec->next = mqx->subrecs_pending;
+	mqx->subrecs_pending = subrec;
+	return 0;
+}
+
+int mqtt_unsubscribe(
+					mqcontext_t *mqx,
+					const char *topic
+				)
+{
+	mqsubrec_t *subrec;
+	mqsubrec_t *prevsubrec;
+	int result;
+
+	prevsubrec = NULL;
+	for (subrec = mqx->subrecs; subrec; subrec = subrec->next)
+	{
+		if (! strcmp(subrec->topic, topic))
+		{
+			// move from listed to leaving
+			if (prevsubrec)
+			{
+				prevsubrec->next = subrec->next;
+			}
+			else
+			{
+				mqx->subrecs = subrec->next;
+			}
+			// format the unsubscribe
+			result = smqtt_unsubscribe(mqx, subrec);
+			if (result)
+			{
+				BERROR("Can't unsubscribe");
+				free(subrec);
+				return result;
+			}
+			// place on leavers and expect to ack
+			subrec->next = mqx->subrecs_leaving;
+			mqx->subrecs_leaving = subrec;
+			return 0;
+		}
+		prevsubrec = subrec;
+	}
+	http_log(1, "MQTT - No such subscription for %s\n", topic);
+	return -1;
+}
+
+int mqtt_publish(
+					mqcontext_t *mqx,
+					const char *topic,
+					mqqos_t qos,
+					uint8_t *payload_data,
+					size_t payload_size
+				)
+{
+	mqsubrec_t *subrec;
+	int result;
+
+	subrec = smqtt_subrec_create(topic, qos);
+	if (! subrec)
+	{
+		BERROR("Can't alloc subrec");
+		return -1;
+	}
+	// format the publish
+	result = smqtt_publish(mqx, subrec, payload_data, payload_size);
+	if (result)
+	{
+		BERROR("Can't publish");
+		free(subrec);
+		return result;
+	}
+	// place subrec on the to-ack list if especting an ack
+	if (qos != mqqosMostOnce)
+	{
+		subrec->next = mqx->subrecs_published;
+		mqx->subrecs_published = subrec;
+	}
+	else
+	{
+		free(subrec);
+	}
+	return 0;
+}
+
+int mqtt_disconnect(mqcontext_t *mqx)
+{
+	int result;
+	time_t now, then;
+
+	if (
+			mqx->state == mqsInit
+		||	mqx->state == mqsDone
+	)
+	{
+		return 0;
+	}
+	result = 0;
+
+	if (mqx->state == mqsConnected)
+	{
+		result = smqtt_disconnect(mqx);
+		if (result)
+		{
+			BERROR("Disconnect");
+			return result;
+		}
+	}
+	return result;
+}
+
+int mqtt_connect(mqcontext_t *mqx)
+{
+	int result;
+
+	if (mqx->state == mqsInit || mqx->state == mqsDone)
+	{
+	    if (mqx->transport == mqtWS || mqx->transport == mqtWSS)
+	    {
+			result = smqtt_ws_connect(mqx);
+		}
+		else
+		{
+			result = smqtt_tcp_connect(mqx);
+		}
+		return result;
+	}
+	else
+	{
+		BERROR("Already connecting");
+		return -1;
+	}
+}
+
 int mqtt_slice(mqcontext_t *mqx)
 {
     int result;
@@ -973,13 +1379,38 @@ int mqtt_slice(mqcontext_t *mqx)
 
 void mqtt_client_free(mqcontext_t *mqx)
 {
+	// make sure disconnected
+	mqtt_disconnect(mqx);
+
+	// remove any pub-sub records
+	smqtt_clean_subrecs(mqx);
+
+#if MQTT_SUPPORT_WEBSOCKET
+	// cleanup http if in use
     if (mqx->client)
     {
         http_client_free(mqx->client);
     }
+	if (mqx->resources)
+	{
+		http_resource_free(mqx->resources);
+	}
+#endif
+	// make sure stream is closed and free
+	if (mqx->stream)
+	{
+		mqx->stream->close(mqx->stream);
+		mqx->stream = NULL;
+	}
+	// clean out
     if (mqx->out.data)
     {
         free(mqx->out.data);
+    }
+	// clean out
+    if (mqx->in.data)
+    {
+        free(mqx->in.data);
     }
     free(mqx);
 }
@@ -1006,6 +1437,7 @@ mqcontext_t *mqtt_client_create(
         return NULL;
     }
 	mqx->id 		= ++s_idx;
+	mqx->packet_id  = 1;
     mqx->state 		= mqsInit;
 	mqx->prev_state = mqsDone;
     mqx->transport 	= transport;
@@ -1015,6 +1447,11 @@ mqcontext_t *mqtt_client_create(
 	mqx->long_timeout = io_timeout;
 	strncpy(mqx->client_id, client_id, sizeof(mqx->client_id) - 1);
 	mqx->client_id[sizeof(mqx->client_id) - 1] = '\0';
+
+	mqx->subrecs_published = NULL;
+	mqx->subrecs_pending = NULL;
+	mqx->subrecs_leaving = NULL;
+	mqx->subrecs = NULL;
 
 	mqx->selftest	= false;
 #ifdef MQTT_SUPPORT_RUN_SELFTEST

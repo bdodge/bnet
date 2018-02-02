@@ -18,22 +18,22 @@ typedef enum
 }
 bxml_error_t;
 
-typedef enum
+typedef enum 
 {
-    bjson_null,
-    bjson_tag,
-    bjson_attribute_name,
-    bjson_attribute_value,
-    bjson_element,
+    bxttNone,
+    bxttStart,
+    bxttEnd
 }
-bxml_type_t;
+bxml_tag_type_t;
 
 typedef struct
 {
     const char *xml;
+    const char *root;
     const char *psrc;
-    const char *pelement;
-    size_t depth;
+    size_t line;
+    size_t error_line;
+    bxml_error_t error_code;
     size_t length;
 }
 bxml_parser_t;
@@ -55,14 +55,16 @@ int bxml_find_next_element(
                                 bxml_parser_t *pjx,
                                 const char *elementpath,
                                 char pathdelim,
-                                size_t *pindex
+                                size_t index,
+                                const char **start_tag
                                 );
 
-int bxml_find_first_element(
+int bxml_find_element(
                                 bxml_parser_t *pjx,
                                 const char *elementpath,
                                 char pathdelim,
-                                size_t *pindex
+                                size_t index,
+                                const char **start_tag
                                 );
 
 int bxml_find_nth_element(
@@ -70,7 +72,8 @@ int bxml_find_nth_element(
                                 const char *elementpath,
                                 char pathdelim,
                                 size_t index,
-                                const char **element
+                                const char **element,
+                                size_t *element_length
                                 );
 
 int bxml_find_and_copy_nth_element(

@@ -2,7 +2,7 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-SOURCES=$(SRCDIR)/bxml.c
+SOURCES=$(SRCDIR)/bxml.c $(SRCDIR)/bxmlutil.c
 HEADERS=$(SOURCES:%.c=%.h) $(SRCROOT)/common/bnetheaders.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 

@@ -1,72 +1,10 @@
 #include "bnetheaders.h"
 #include "bxml.h"
-
-static int bxml_hextou(char digit, uint8_t *val)
-{
-    if (digit >= 'a' && digit <= 'f')
-    {
-        *val = digit - 'a' + 10;
-        return 0;
-    }
-    if (digit >= 'A' && digit <= 'F')
-    {
-        *val = digit - 'A' + 10;
-        return 0;
-    }
-    if (digit >= '0' && digit <= '9')
-    {
-        *val = digit - '0';
-        return 0;
-    }
-    return -1;
-}
+#include "bxmlutil.h"
 
 static int bxml_is_white(char ch)
 {
     return (ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n');
-}
-
-static int bxml_is_number(char ch)
-{
-    return (ch >= '0') && (ch <= '9');
-}
-
-static int bxml_is_delimiter(char ch)
-{
-    return (ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n')
-        || (ch == ']') || (ch == '}') || (ch == ',');
-}
-
-static size_t bxml_utf8_encode(uint32_t unicode, uint8_t utfbuf[5])
-{
-    unsigned short ca, cb, cc, cd;
-    wchar_t  uc, nc;
-    int  j, k;
-    size_t i, len;
-
-    j = 0;
-
-    if (unicode < 0x80)
-    {
-        utfbuf[j++] = (unicode & 0xFF);
-    }
-    else if (unicode < 0x800) {
-        utfbuf[j++] = 0xC0 | (unicode >> 6);
-        utfbuf[j++] = 0x80 | (unicode & 0x3F);
-    }
-    else if (unicode < 0x10000) {
-        utfbuf[j++] = 0xE0 |  (unicode >> 12);
-        utfbuf[j++] = 0x80 | ((unicode >> 6) & 0x3F);
-        utfbuf[j++] = 0x80 |  (unicode  & 0x3F);
-    }
-    else if (unicode < 0x200000) {
-        utfbuf[j++] = 0xF0 |  (unicode >> 18);
-        utfbuf[j++] = 0x80 | ((unicode >> 12) & 0x3F);
-        utfbuf[j++] = 0x80 | ((unicode >> 6) & 0x3F);
-        utfbuf[j++] = 0x80 |  (unicode  & 0x3F);
-    }
-    utfbuf[j] = '\0';
-    return j;
 }
 
 static int bxml_error(bxml_parser_t *pxp, int errcode)
@@ -79,10 +17,10 @@ static int bxml_error(bxml_parser_t *pxp, int errcode)
     return errcode;
 }
 
-int bxml_compare_tags(const char *tag1, const char *tag2, size_t tag2_len)
+static int bxml_compare_tags(const char *tag1, const char tag1_end, const char *tag2, size_t tag2_len)
 {
     size_t i;
-    
+
     if (! tag1)
     {
         return -1;
@@ -94,17 +32,17 @@ int bxml_compare_tags(const char *tag1, const char *tag2, size_t tag2_len)
     i = 0;
     while (*tag1 && *tag2)
     {
-        if (bxml_is_white(*tag1) || *tag1 == '>')
+        if (bxml_is_white(*tag1) || *tag1 == tag1_end)
         {
-            if (bxml_is_white(*tag2) || *tag2 == '>')
+            if (bxml_is_white(*tag2) || *tag2 == tag1_end)
             {
                 return 0;
             }
             return -1;
         }
-        else if (bxml_is_white(*tag2) || *tag2 == '>')
+        else if (bxml_is_white(*tag2) || *tag2 == tag1_end)
         {
-            if (*tag1 == '>')
+            if (*tag1 == tag1_end)
             {
                 return 0;
             }
@@ -121,26 +59,259 @@ int bxml_compare_tags(const char *tag1, const char *tag2, size_t tag2_len)
         i++;
         if (tag2_len > 0 && i >= tag2_len)
         {
-            return 0;
+            // ran out of tag2, all matching, expect
+            // tag1 to be white or closing
+            //
+            if (bxml_is_white(tag1[1]) || tag1[1] == tag1_end)
+            {
+                return 0;
+            }
+            return 1;
         }
         tag1++;
         tag2++;
     }
     if (*tag1)
     {
+        if (*tag1 == tag1_end)
+        {
+            return 0;
+        }
         return 1;
     }
     if (*tag2)
     {
+        if (*tag2 == tag1_end)
+        {
+            return 0;
+        }
         return -1;
     }
     return 0;
 }
 
+int bxml_find_attribute(
+                        bxml_parser_t *pxp,
+                        const char *ptag,
+                        const char *pattrib,
+                        const char **attrib_value,
+                        size_t *attrib_value_len
+                        )
+{
+    size_t remlength;
+    int result;
+
+    if (! ptag || ! pattrib)
+    {
+        return bxml_parameter;
+    }
+    if (pxp)
+    {
+        if (ptag < pxp->root || (ptag - pxp->xml) > pxp->length)
+        {
+            return bxml_parameter;
+        }
+    }
+    do
+    {
+        if (pxp)
+        {
+            remlength = pxp->length - (ptag - pxp->xml);
+        }
+        else
+        {
+            remlength = strlen(ptag);
+        }
+        while (remlength > 0 && ! bxml_is_white(*ptag))
+        {
+            if (*ptag == '>')
+            {
+                return bxml_not_found;
+            }
+            ptag++;
+            remlength--;
+        }
+        while (remlength > 0 && bxml_is_white(*ptag))
+        {
+            ptag++;
+            remlength--;
+        }
+        if (remlength < 1 || *ptag == '>' || *ptag == '\0')
+        {
+            return bxml_not_found;
+        }
+        if (bxml_compare_tags(ptag, '=', pattrib, 0))
+        {
+            result = bxml_not_found;
+        }
+        else
+        {
+            result = bxml_ok;
+        }
+        // if found attrib or not, still advance past it
+        //
+        while (remlength > 0 && ! bxml_is_white(*ptag))
+        {
+            if (*ptag == '=')
+            {
+                break;
+            }
+            if (*ptag == '>' || ! *ptag)
+            {
+                return bxml_not_found;
+            }
+            ptag++;
+            remlength--;
+        }
+        while (remlength > 0 && bxml_is_white(*ptag))
+        {
+            ptag++;
+            remlength--;
+        }
+        if (*ptag != '=' || remlength < 1)
+        {
+            return bxml_syntax;
+        }
+        ptag++;
+        remlength--;
+
+        while (remlength > 0 && bxml_is_white(*ptag))
+        {
+            ptag++;
+            remlength--;
+        }
+        if (*ptag != '\"' || remlength < 2)
+        {
+            return bxml_syntax;
+        }
+        if (result == bxml_ok)
+        {
+            // did match attrib name, so break out now
+            break;
+        }
+        // not a match, parse over value
+        //
+        ptag++;
+        remlength--;
+
+        while (remlength > 0 && *ptag != '\"')
+        {
+            if (*ptag == '>' || ! *ptag)
+            {
+                return bxml_syntax;
+            }
+            ptag++;
+            remlength--;
+        }
+        while (remlength > 0 && bxml_is_white(*ptag))
+        {
+            ptag++;
+            remlength--;
+        }
+        if (remlength == 0 || *ptag == '>' || ! *ptag)
+        {
+            return bxml_not_found;
+        }
+    }
+    while (result == bxml_not_found);
+
+    if (attrib_value)
+    {
+        *attrib_value = ptag;
+    }
+    if (attrib_value_len)
+    {
+        const char *pend;
+
+        *attrib_value_len = 0;
+        if (remlength < 2)
+        {
+            return bxml_syntax;
+        }
+        pend = ptag;
+        pend++;
+        remlength--;
+
+        while (remlength > 0 && *pend != '\"')
+        {
+            if (*ptag == '>' || ! *ptag)
+            {
+                return bxml_syntax;
+            }
+            pend++;
+            remlength--;
+        }
+        *attrib_value_len = pend - ptag + 1;
+    }
+    return bxml_ok;
+}
+
+int bxml_find_and_copy_attribute(
+                        bxml_parser_t *pxp,
+                        const char *ptag,
+                        const char *pattrib,
+                        char *attrib_value,
+                        size_t attrib_value_len,
+                        bool keep_white,
+                        bool keep_entities
+                        )
+{
+    const char *pa;
+    size_t alen;
+    int result;
+
+    result = bxml_find_attribute(pxp, ptag, pattrib, &pa, &alen);
+    if (result)
+    {
+        return result;
+    }
+    if (alen > 1)
+    {
+        if (pa[0] == '\"')
+        {
+            pa++;
+            alen--;
+        }
+        if (pa[alen - 1] == '\"')
+        {
+            alen--;
+        }
+    }
+    result = bxml_copy_element(attrib_value, attrib_value_len, pa, alen,
+                    keep_white, keep_entities);
+    return result;
+}
+
+static int bxml_parse_data(bxml_parser_t *pxp)
+{
+    size_t remlength;
+
+    if (! pxp->psrc)
+    {
+        return bxml_ok;
+    }
+    remlength = pxp->length - (pxp->psrc - pxp->xml);
+
+    while (*pxp->psrc && remlength > 1)
+    {
+        if (*pxp->psrc == '\n')
+        {
+            pxp->line++;
+        }
+        else if (*pxp->psrc == '<')
+        {
+            return bxml_ok;
+        }
+        pxp->psrc++;
+        remlength--;
+    }
+    return bxml_error(pxp, bxml_syntax);
+}
+
 static int bxml_parse_pi(bxml_parser_t *pxp)
 {
     size_t remlength;
-    
+
     if (! pxp->psrc)
     {
         return bxml_ok;
@@ -182,7 +353,7 @@ static int bxml_parse_pi(bxml_parser_t *pxp)
 static int bxml_parse_entity(bxml_parser_t *pxp)
 {
     size_t remlength;
-    
+
     if (! pxp->psrc)
     {
         return bxml_ok;
@@ -222,7 +393,7 @@ static int bxml_parse_comment(bxml_parser_t *pxp)
 {
     size_t remlength;
     int result;
-    
+
     if (! pxp->psrc)
     {
         return bxml_error(pxp, bxml_syntax);
@@ -243,7 +414,7 @@ static int bxml_parse_comment(bxml_parser_t *pxp)
     }
     pxp->psrc += 4;
     remlength -= 4;
-    
+
     while (remlength > 2 && *pxp->psrc)
     {
         if (
@@ -255,7 +426,7 @@ static int bxml_parse_comment(bxml_parser_t *pxp)
             {
                 pxp->psrc += 3;
                 remlength -= 3;
-                
+
                 while (remlength > 0 && bxml_is_white(*pxp->psrc))
                 {
                     pxp->psrc++;
@@ -290,7 +461,7 @@ static int bxml_parse_tag(
 {
     size_t remlength;
     int result;
-    
+
     if (! pxp->psrc)
     {
         return bxml_error(pxp, bxml_syntax);
@@ -330,7 +501,7 @@ static int bxml_parse_tag(
                     return bxml_error(pxp, bxml_syntax);
                 }
             }
-            else 
+            else
             {
                 result = bxml_parse_entity(pxp);
                 if (result)
@@ -367,7 +538,7 @@ static int bxml_parse_tag(
             }
             pxp->psrc++;
             remlength--;
-    
+
             while (*pxp->psrc != '>' && *pxp->psrc && remlength > 0)
             {
                 if (*pxp->psrc == '\n')
@@ -406,7 +577,7 @@ static int bxml_parse_tag(
     return bxml_error(pxp, bxml_syntax);
 }
 
-static int bxml_parse_value(
+int bxml_parse_value(
                             bxml_parser_t *pxp,
                             const char *from_tag,
                             const char *till_tag,
@@ -422,12 +593,54 @@ static int bxml_parse_value(
     size_t remlength;
     bxml_tag_type_t tag_type;
     int result;
-    
+
     if (!pxp || ! pxp->psrc)
     {
         return bxml_ok;
     }
+    if (value || value_len)
+    {
+        if (till_tag)
+        {
+            // the two modes of call are mutually exclusive
+            //
+            return bxml_parameter;
+        }
+        // extracting the value of from_tag
+        //
+        // re-parse the tag for this value to ensure the parser
+        // is starting directly after, and to get the tag type
+        // so if it is an end-tag (as well as a start tag) then
+        // there is no value
+        //
+        pxp->psrc = from_tag;
+        result = bxml_parse_tag(pxp, true, &ptag, &tag_type);
+        if (result)
+        {
+            // shouldn't be possible
+            return bxml_error(pxp, bxml_syntax);
+        }
+        if (tag_type == bxttEnd)
+        {
+            if (ptag[1] == '/')
+            {
+                // shouldn't be calling this for an explicit end tag
+                //
+                return bxml_parameter;
+            }
+            if (value)
+            {
+                *value = pxp->psrc;
+            }
+            if (value_len)
+            {
+                *value_len = 0;
+            }
+            return bxml_ok;
+        }
+    }
     // starting on inside of starting tag, so relative depth is 1
+    // parsing end-tag decrements this to 0
     //
     depth = 1;
 
@@ -461,13 +674,15 @@ static int bxml_parse_value(
             {
                 return result;
             }
+            remlength = pxp->length - (pxp->psrc - pxp->xml);
+
             if (tag_type == bxttStart)
             {
                 depth++;
-                
+
                 if (till_tag)
                 {
-                    if (! bxml_compare_tags(ptag + 1, till_tag, tag_len))
+                    if (! bxml_compare_tags(ptag + 1, '>', till_tag, tag_len))
                     {
                         if (end_tag)
                         {
@@ -476,10 +691,47 @@ static int bxml_parse_value(
                         return bxml_ok;
                     }
                 }
+                if (remlength < 3)
+                {
+                    // can't be room for end tag
+                    return bxml_error(pxp, bxml_syntax);
+                }
             }
             else if (tag_type == bxttEnd)
             {
+                if (ptag[1] != '/')
+                {
+                    // its also a start tag
+                    depth++;
+
+                    if (till_tag)
+                    {
+                        if (! bxml_compare_tags(ptag + 1, '/', till_tag, tag_len))
+                        {
+                            if (end_tag)
+                            {
+                                *end_tag = ptag;
+                            }
+                            return bxml_ok;
+                        }
+                    }
+                }
+                if (depth == 0)
+                {
+                    // ran off end of element without our end tag
+                    return bxml_error(pxp, bxml_syntax);
+                }
                 depth--;
+
+                if (depth == 0)
+                {
+                    // parsed entire value but didn't see till_tag
+                    //
+                    if (till_tag)
+                    {
+                        return bxml_not_found;
+                    }
+                }
             }
             else
             {
@@ -492,8 +744,6 @@ static int bxml_parse_value(
                     }
                 }
             }
-            remlength = pxp->length - (pxp->psrc - pxp->xml);
-            
             // if it was a tag, compare it our starting element if at starting depth
             // and this is an end tag
             //
@@ -515,7 +765,7 @@ static int bxml_parse_value(
                 {
                     ptag++;
                 }
-                result = bxml_compare_tags(pele, ptag, 0);
+                result = bxml_compare_tags(pele, '>', ptag, 0);
                 if (result == 0)
                 {
                     // this is the end tag for "from tag"
@@ -548,44 +798,94 @@ static int bxml_parse_value(
     return bxml_error(pxp, bxml_syntax);
 }
 
-int bxml_get_nth_element(
-                        bxml_parser_t *pxp,
-                        size_t index,
-                        const char **element
-                        )
-{
-    return 0;
-}
-
 int bxml_copy_element(
-                        bxml_parser_t *pxp,
                         char *element,
                         size_t nelement,
                         const char *value,
-                        size_t value_len
+                        size_t value_len,
+                        bool keep_white,
+                        bool keep_entities
                         )
 {
-    size_t len = nelement - 1;
-    
+    int result;
+    int i;
+    size_t elen;
+    size_t olen;
+    uint16_t ucode;
+    bool nonwhite;
+
     if (! element || ! nelement || ! value)
     {
         return bxml_parameter;
     }
-    while (value_len > 0 && bxml_is_white(value[value_len - 1]))
+    element[0] = '\0';
+
+    if (! keep_white)
     {
-        value_len--;
+        while (value_len > 0 && bxml_is_white(value[value_len - 1]))
+        {
+            value_len--;
+        }
+        while (value_len > 0 && bxml_is_white(*value))
+        {
+            value++;
+            value_len--;
+        }
     }
-    if (value_len < len)
+    i = 0;
+    nonwhite = true;
+
+    while (i < (nelement - 1) && i < value_len)
     {
-        len = value_len;
+        if (! keep_white && bxml_is_white(*value))
+        {
+            if (nonwhite)
+            {
+                element[i++] = ' ';
+                nonwhite = false;
+            }
+            else
+            {
+                value_len--;
+            }
+            value++;
+        }
+        else if (! keep_entities && *value == '&')
+        {
+            value++;
+            for (elen = 0; elen < value_len - 1; elen++)
+            {
+                if (value[elen] == ';')
+                {
+                    break;
+                }
+            }
+            if (value[elen] != ';')
+            {
+                return bxml_syntax;
+            }
+            result = bxml_decode_entity(value, elen, &olen, &ucode);
+            if (result)
+            {
+                return result;
+            }
+            value+= olen;
+            value_len -= olen;
+            element[i++] = (char)ucode;
+        }
+        else
+        {
+            element[i++] = *value++;
+            nonwhite = true;
+        }
     }
-    strncpy(element, value, len);
-    element[len] = '\0';
+    element[i] = '\0';
     return bxml_ok;
 }
 
 static int bxml_find_element_component(
                                 bxml_parser_t *pxp,
+                                const char *parent,
                                 const char *component,
                                 size_t tagindex,
                                 size_t remlength,
@@ -603,14 +903,73 @@ static int bxml_find_element_component(
     {
         return bxml_parameter;
     }
+    if (! parent)
+    {
+        parent = pxp->psrc;
+    }
     start_psrc = pxp->psrc;
     *tag_start = NULL;
-    
-    // parse forward for the element from the current position
-    //
+
     index = 0;
-    do
+
+    // Find the first occurance of the tag in the xml
+    // starting at the current spot, or parent tag if
+    // parent specified.
+    //
+    result = bxml_parse_value(
+                                pxp,
+                                parent,
+                                component,
+                                taglength,
+                                tag_start,
+                                NULL,
+                                NULL
+                               );
+    if (result == bxml_ok)
     {
+        // found our tag inside an outer tag, if it is the nth
+        // occurance, then we're all set
+        //
+        if (tagindex == 0)
+        {
+            // found our tag inside the value
+            return bxml_ok;
+        }
+        // for purposes of skipping the value, tag_start should
+        // have been set to the start of the found tag
+        //
+        ptag = *tag_start;
+
+        // parse out to the end of this particular element
+        //
+        result = bxml_parse_value(pxp, ptag, NULL, 0, NULL, NULL, NULL);
+        if (result)
+        {
+            return result;
+        }
+        // parse any remaing value of parent element, until next tag
+        //
+        result = bxml_parse_data(pxp);
+        if (result)
+        {
+            return result;
+        }
+        index++;
+    }
+    else
+    {
+        return result;
+    }
+    // look for tag among siblings only. parser should be at next start tag (or end)
+    //
+    while (
+            *pxp->psrc
+        &&  (pxp->psrc - start_psrc) < remlength
+        &&  pxp->psrc < (pxp->xml + pxp->length)
+    )
+    {
+        // parse forward for the element start tag from the current position
+        //
         if (*pxp->psrc != '<')
         {
             return bxml_error(pxp, bxml_syntax);
@@ -619,67 +978,70 @@ static int bxml_find_element_component(
         if (result)
         {
             return result;
-        }        
+        }
         if (! ptag)
         {
-            // can't happen
+            // can't happen unless there is no tag in the xml
             return bxml_error(pxp, bxml_syntax);
-        }        
-        if (ptag[1] == '/')
-        {
-            ptag++;
         }
-        if (bxml_compare_tags(ptag + 1, component, taglength))
+        if (tag_type == bxttEnd)
         {
-            // parse the element's value if not our component. this will
-            // stop at the first occurance of tag, if found
+            // parsed an end-tag meaning parsed out of scope
+            // of siblings of parent element, so won't find it
             //
-            result = bxml_parse_value(pxp, ptag, component, taglength, tag_start, NULL, NULL);
-            if (result && result != bxml_not_found)
+            return bxml_not_found;
+        }
+        if (bxml_compare_tags(ptag + 1, '>', component, taglength))
+        {
+            // not our tag, consume its whole value ignoring any
+            // children tags that match component, since they aren't
+            // sibling level tags
+            //
+            result = bxml_parse_value(pxp, ptag, NULL, 0, NULL, NULL, NULL);
+            if (result)
             {
                 return result;
-            }        
-            else if (result == bxml_ok)
-            {
-                if (index == tagindex)
-                {
-                    // found our tag inside the value
-                    return bxml_ok;
-                }
             }
-            // restart at location of tag we were looking for
+            // parse any remaing value of parent element, until next tag
             //
-            ptag = *tag_start;
+            result = bxml_parse_data(pxp);
+            if (result)
+            {
+                return result;
+            }
         }
         else
         {
+            // this is the tag we are looking for
+            //
             if (tag_type != bxttStart)
             {
                 return bxml_error(pxp, bxml_syntax);
-            }        
+            }
             if (index == tagindex)
             {
                 // found our tag
                 *tag_start = ptag;
                 return bxml_ok;
             }
+            // parse out the rest of this tag's value to get to next one
+            // (note this passes over any nested tags of same name)
+            //
+            result = bxml_parse_value(pxp, ptag, NULL, 0, NULL, NULL, NULL);
+            if (result)
+            {
+                return result;
+            }
+            // parse any remaing value of parent element, until next tag
+            //
+            result = bxml_parse_data(pxp);
+            if (result)
+            {
+                return result;
+            }
+            index++;
         }
-        if (! *pxp->psrc)
-        {
-            return bxml_not_found;
-        }
-        result = bxml_parse_value(pxp, ptag, NULL, 0, tag_start, NULL, NULL);
-        if (result)
-        {
-            return result;
-        }
-        index++;
     }
-    while (
-            *pxp->psrc
-        &&  (pxp->psrc - start_psrc) < remlength
-        &&  pxp->psrc < (pxp->xml + pxp->length)
-    );
     return bxml_not_found;
 }
 
@@ -692,6 +1054,7 @@ int bxml_find_next_element(
                           )
 {
     bxml_parser_t subparser;
+    const char *parent;
     const char *component;
     char *component_end;
     size_t keylength;
@@ -713,14 +1076,13 @@ int bxml_find_next_element(
         pxp->psrc = pxp->root;
     }
     *tag_start = NULL;
-    
-    // initial length is all of xml after the current spot
-    //
-    remlength = pxp->length - (pxp->psrc - pxp->xml);
 
     // initial component is the first (or the whole) part of key
     //
     component = elementpath;
+
+    // start at outermost layer
+    parent = NULL;
 
     do
     {
@@ -799,14 +1161,23 @@ int bxml_find_next_element(
                     keyindex = index;
                 }
             }
+            remlength = pxp->length - (pxp->psrc - pxp->xml);
             if (remlength < (keylength + 2))
             {
                 // not enough length left to have <component>
                 return bxml_not_found;
             }
-            // find this component in the xml string of length remlength
+            // find this component in the xml
             //
-            result = bxml_find_element_component(pxp, component, keyindex, remlength, keylength, tag_start);
+            result = bxml_find_element_component(
+                                                pxp,
+                                                parent,
+                                                component,
+                                                keyindex,
+                                                remlength,
+                                                keylength,
+                                                tag_start
+                                                );
             if (result)
             {
                 break;
@@ -845,16 +1216,15 @@ int bxml_find_next_element(
                     break;
                 }
             }
-            // to look for inner element, back parser to the start tag of
-            // this element, since finding the component assumes we're on that
-            //
             if (! *tag_start)
             {
                 // can't happen, but don't ever let it
                 result = bxml_syntax;
                 break;
             }
-            pxp->psrc = *tag_start;
+            // restrict child element search to inside parrent element
+            //
+            parent = *tag_start;
         }
         while (0); // catch
 
@@ -877,7 +1247,7 @@ int bxml_find_element(
                      )
 {
     size_t remlength;
-    
+
     if (! pxp || ! elementpath || ! tag_start)
     {
         return bxml_parameter;
@@ -899,13 +1269,13 @@ int bxml_find_nth_element(
                         const char *elementpath,
                         const char pathdelim,
                         size_t index,
+                        const char **tag_start,
                         const char **element,
                         size_t *element_size
                         )
 
 {
     bxml_parser_t *pxp;
-    const char *tag_start;
     int result;
 
     pxp = bxml_parser_create(xml);
@@ -917,13 +1287,16 @@ int bxml_find_nth_element(
     {
         return bxml_error(pxp, bxml_syntax);
     }
-    result = bxml_find_element(pxp, elementpath, pathdelim, index, &tag_start);
+    result = bxml_find_element(pxp, elementpath, pathdelim, index, tag_start);
     if (result)
     {
         bxml_parser_free(pxp);
         return result;
     }
-    result = bxml_parse_value(pxp, tag_start, NULL, 0, NULL, element, element_size);
+    if (element || element_size)
+    {
+        result = bxml_parse_value(pxp, *tag_start, NULL, 0, NULL, element, element_size);
+    }
     bxml_parser_free(pxp);
     return result;
 }
@@ -934,7 +1307,9 @@ int bxml_find_and_copy_nth_element(
                                 const char pathdelim,
                                 size_t index,
                                 char *element,
-                                size_t nelement
+                                size_t nelement,
+                                bool keep_white,
+                                bool keep_entities
                                 )
 {
     bxml_parser_t *pxp;
@@ -961,7 +1336,8 @@ int bxml_find_and_copy_nth_element(
     result = bxml_parse_value(pxp, tag_start, NULL, 0, NULL, &value, &value_len);
     if (! result)
     {
-        result = bxml_copy_element(pxp, element, nelement, value, value_len);
+        result = bxml_copy_element(element, nelement, value, value_len,
+                        keep_white, keep_entities);
     }
     bxml_parser_free(pxp);
     return result;
@@ -981,7 +1357,7 @@ bxml_parser_t *bxml_parser_create(const char *xml)
     bxml_parser_t *pxp;
     size_t remlength;
     int result;
-    
+
     if (! xml)
     {
         return NULL;
@@ -997,11 +1373,11 @@ bxml_parser_t *bxml_parser_create(const char *xml)
         pxp->root = NULL;
         pxp->psrc = xml;
         pxp->length = strlen(xml);
-        
+
         pxp->line = 1;
         pxp->error_line = 0;
         pxp->error_code = 0;
-        
+
         // locate root element
         result = 0;
         do
@@ -1024,7 +1400,7 @@ bxml_parser_t *bxml_parser_create(const char *xml)
             }
         }
         while (remlength >= 4 && ! result);
-        
+
         if (! result && pxp->psrc[0] == '<')
         {
             pxp->root = pxp->psrc;

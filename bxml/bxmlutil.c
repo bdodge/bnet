@@ -13,6 +13,9 @@ s_bxml_entities[] =
     { "apos",   39 },
     { "lt",     60 },
     { "gt",     62 },
+},
+s_bxml_html_entities[] =
+{
     { "OElig",  338 },
     { "oelig",  339 },
     { "Scaron", 352 },
@@ -43,5 +46,53 @@ s_bxml_entities[] =
     { "euro",   8364 }
 };
 
-#define BXML_ENTITY_TABSIZE	(sizeof(s_bxml_entities)/sizeof(struct tag_entity_tab))
+#define BXML_ENTITY_TABSIZE			(sizeof(s_bxml_entities)/sizeof(struct tag_entity_tab))
+#define BXML_HTML_ENTITY_TABSIZE	(sizeof(s_bxml_html_entities)/sizeof(struct tag_entity_tab))
+
+int bxml_decode_entity(const char *entity, size_t inlen, size_t *outlen, uint16_t *ucode)
+{
+	const char *name;
+	size_t nlen;
+	int i;
+
+	if (! entity || ! inlen || ! ucode)
+	{
+		return bxml_parameter;
+	}
+	if (entity[0] == '&')
+	{
+		entity++;
+		inlen--;
+	}
+	for (i = 0; i < inlen; i++)
+	{
+		if (entity[i] == ';')
+		{
+			inlen = i;
+			break;
+		}
+	}
+	if (entity[i] != ';')
+	{
+		return bxml_syntax;
+	}
+	for (i = 0; i < BXML_ENTITY_TABSIZE; i++)
+	{
+		name = s_bxml_entities[i].name;
+		if (entity[1] == name[1])
+		{
+			nlen = strlen(name);
+			if (nlen == inlen)
+			{
+				if (! strncmp(entity, name, nlen))
+				{
+					*outlen = nlen + 1;
+					*ucode = s_bxml_entities[i].unicode;
+					return bxml_ok;
+				}
+			}
+		}
+	}
+	return bxml_not_found;
+}
 

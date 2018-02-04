@@ -293,7 +293,7 @@ bxml_parser_t *bxml_parser_create(
 ///
 /// @returns non-0 on error (no such parser)
 ///
-int bxml_parser_free(
+int bxml_parser_destroy(
                                 bxml_parser_t *pxp
                                 );
 

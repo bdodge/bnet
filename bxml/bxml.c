@@ -1290,14 +1290,14 @@ int bxml_find_nth_element(
     result = bxml_find_element(pxp, elementpath, pathdelim, index, tag_start);
     if (result)
     {
-        bxml_parser_free(pxp);
+        bxml_parser_destroy(pxp);
         return result;
     }
     if (element || element_size)
     {
         result = bxml_parse_value(pxp, *tag_start, NULL, 0, NULL, element, element_size);
     }
-    bxml_parser_free(pxp);
+    bxml_parser_destroy(pxp);
     return result;
 }
 
@@ -1330,7 +1330,7 @@ int bxml_find_and_copy_nth_element(
     result = bxml_find_element(pxp, elementpath, pathdelim, index, &tag_start);
     if (result)
     {
-        bxml_parser_free(pxp);
+        bxml_parser_destroy(pxp);
         return result;
     }
     result = bxml_parse_value(pxp, tag_start, NULL, 0, NULL, &value, &value_len);
@@ -1339,11 +1339,11 @@ int bxml_find_and_copy_nth_element(
         result = bxml_copy_element(element, nelement, value, value_len,
                         keep_white, keep_entities);
     }
-    bxml_parser_free(pxp);
+    bxml_parser_destroy(pxp);
     return result;
 }
 
-int bxml_parser_free(bxml_parser_t *pxp)
+int bxml_parser_destroy(bxml_parser_t *pxp)
 {
     if (pxp)
     {

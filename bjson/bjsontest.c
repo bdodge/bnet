@@ -11,6 +11,8 @@ typedef struct
 }
 json_test_entry_t;
 
+#define dimoftest(test) (sizeof(test)/sizeof(json_test_entry_t))
+
 json_test_entry_t s_tests_1[] =
 {
     {
@@ -202,6 +204,12 @@ json_test_entry_t s_tests_1[] =
 json_test_entry_t s_tests_2[] =
 {
     {
+    "number_array", 1, "2", 0,
+    "{\n"
+    "   \"number_array\": [1,2,3,4,5,6]\n"
+    "}\n"
+    },
+    {
     "number_array", 0, "1", 0,
     "{\n"
     "   \"number_array\": [ 1, 2, 3, 4, 5, 6 ]\n"
@@ -349,6 +357,9 @@ json_test_entry_t s_tests_5[] =
     },
 };
 
+static const char s_json_6[] =
+"{\"aaa\":[{\"bbb\":[1,2,3],\"ccc\":[4,5,6]},{\"bbb\":[7,8,9],\"ccc\":[10,11,12]}]}";
+
 static const char s_json_33[] =
 "{\n"
 "   \"items\":\n"
@@ -387,6 +398,18 @@ static const char s_json_33[] =
 
 json_test_entry_t s_tests_33[] =
 {
+    {
+    "aaa.ccc", 0, "4", 0,
+    s_json_6
+    },
+    {
+    "ccc[1]", 0, "5", 0,
+    s_json_6
+    },
+    {
+    "aaa[1].ccc[2]", 0, "12", 0,
+    s_json_6
+    },
     {
     "items.item.ppu", 0, "0.55", 0,
     s_json_33
@@ -448,146 +471,91 @@ json_test_entry_t s_tests_33[] =
     },
 };
 
+static int runtest(json_test_entry_t *entry, size_t numentries, const char *blurb, const char pathdelim)
+{
+    char val[128]; // note, keep this size as overflow test depends on it
+    int result;
+    size_t i;
+
+    for (i = 0; i < numentries; i++, entry++)
+    {
+        printf("%s %d\n", blurb ? blurb : "", i);
+        result = bjson_find_and_copy_json_key_value(
+                    entry->json, entry->key, pathdelim, entry->index, val, sizeof(val));
+        if (result != entry->exp_ret)
+        {
+            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
+            return -1;
+        }
+        if (! entry->exp_ret)
+        {
+            if (strcmp(entry->exp_value, val))
+            {
+                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
+                return -1;
+            }
+            else
+            {
+                if (entry->index)
+                {
+                    printf("  Key:%s[%d] Value:%s\n", entry->key, entry->index, val);
+                }
+                else
+                {
+                    printf("  Key:%s Value:%s\n", entry->key, val);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     bjson_parser_t *pjx;
     const char *key;
-    size_t keyindex;
-    json_test_entry_t *entry;
-    int i;
-    char smallval[16];
+    const char *value;
     char val[128];
-    char bigval[1024];
     int result;
 
-#if 1
+#if 0
     // general keywords and basic types
-    for (i = 0; i < sizeof(s_tests_1) / sizeof(json_test_entry_t); i++)
+    result = runtest(s_tests_1, dimoftest(s_tests_1), "Basic", '\0');
+    if (result)
     {
-        entry = &s_tests_1[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', 0, val, sizeof(val));
-        printf("Basic Test %d\n", i);
-        if (result != entry->exp_ret)
-        {
-            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
-            return -1;
-        }
-        if (! entry->exp_ret)
-        {
-            if (strcmp(entry->exp_value, val))
-            {
-                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
-                return -1;
-            }
-            else
-            {
-                printf("  Key:%s Value:%s\n", entry->key, val);
-            }
-        }
+        return result;
     }
 #endif
-#if 1
+#if 0
     // number arrays
-    for (i = 0; i < sizeof(s_tests_2) / sizeof(json_test_entry_t); i++)
+    result = runtest(s_tests_2, dimoftest(s_tests_2), "NumArrays", '\0');
+    if (result)
     {
-        entry = &s_tests_2[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
-        printf("NumArray Test %d\n", i);
-        if (result != entry->exp_ret)
-        {
-            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
-            return -1;
-        }
-        if (! entry->exp_ret)
-        {
-            if (strcmp(entry->exp_value, val))
-            {
-                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
-                return -1;
-            }
-            else
-            {
-                printf("  Key:%s[%u] Value:%s\n", entry->key, (unsigned)entry->index, val);
-            }
-        }
+        return result;
     }
 #endif
 #if 0
     // harder strings
-    for (i = 0; i < sizeof(s_tests_3) / sizeof(json_test_entry_t); i++)
+    result = runtest(s_tests_3, dimoftest(s_tests_3), "Strings", '\0');
+    if (result)
     {
-        entry = &s_tests_3[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
-        printf("String Test %d\n", i);
-        if (result != entry->exp_ret)
-        {
-            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
-            return -1;
-        }
-        if (! entry->exp_ret)
-        {
-            if (strcmp(entry->exp_value, val))
-            {
-                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
-                return -1;
-            }
-            else
-            {
-                printf("  Key:%s[%u] Value:%s\n", entry->key, (unsigned)entry->index, val);
-            }
-        }
+        return result;
     }
 #endif
-#if 1
+#if 0
     // object values
-    for (i = 0; i < sizeof(s_tests_4) / sizeof(json_test_entry_t); i++)
+    result = runtest(s_tests_4, dimoftest(s_tests_4), "Objects", '\0');
+    if (result)
     {
-        entry = &s_tests_4[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
-        printf("ObjVal Test %d\n", i);
-        if (result != entry->exp_ret)
-        {
-            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
-            return -1;
-        }
-        if (! entry->exp_ret)
-        {
-            if (strcmp(entry->exp_value, val))
-            {
-                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
-                return -1;
-            }
-            else
-            {
-                printf("  Key:%s[%u] Value:%s\n", entry->key, (unsigned)entry->index, val);
-            }
-        }
+        return result;
     }
 #endif
 #if 1
     // nested object values
-    for (i = 0; i < sizeof(s_tests_5) / sizeof(json_test_entry_t); i++)
+    result = runtest(s_tests_5, dimoftest(s_tests_5), "NestedObjects", '\0');
+    if (result)
     {
-        entry = &s_tests_5[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, '\0', entry->index, val, sizeof(val));
-        printf("Nested ObjVal Test %d\n", i);
-        if (result != entry->exp_ret)
-        {
-            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
-            return -1;
-        }
-        if (! entry->exp_ret)
-        {
-            if (strcmp(entry->exp_value, val))
-            {
-                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
-                return -1;
-            }
-            else
-            {
-                printf("  Key:%s[%u] Value:%s\n", entry->key, (unsigned)entry->index, val);
-            }
-        }
+        return result;
     }
 #endif
 #if 1
@@ -599,60 +567,39 @@ int main(int argc, char **argv)
     }
     // by-hand test
     key = "name";
-    result = bjson_find_key(pjx, key, '\0', &keyindex);
+    result = bjson_find_key_value(pjx, key, '\0', 0, &value);
     if (result)
     {
         fprintf(stderr, "find error: %d\n", result);
         return -1;
     }
-    if (keyindex != 0)
-    {
-        fprintf(stderr, "expected 0 index, got %d\n", (int)keyindex);
-        return -1;
-    }
-    result = bjson_copy_key_value(pjx, 0, val, sizeof(val));
+    result = bjson_copy_key_value(pjx, value, val, sizeof(val));
     if (result)
     {
         fprintf(stderr, "get error: %d\n", result);
         return -1;
     }
-    key = "name[123]";
-    result = bjson_find_key(pjx, key, '\0', &keyindex);
-    if (result)
+    if (strcmp(val, "\"Cake\""))
     {
-        fprintf(stderr, "find error: %d\n", result);
+        fprintf(stderr, "Expected Cake, got %s\n", val);
         return -1;
     }
-    if (keyindex != 123)
+    key = "name[123]";
+    result = bjson_find_key_value(pjx, key, '\0', 0, &value);
+    if (result != bjson_not_array)
     {
-        fprintf(stderr, "expected 123 index, got %d\n", (int)keyindex);
+        fprintf(stderr, "find error: %d, expected %d\n", result, bjson_not_array);
         return -1;
     }
 #endif
 #if 1
-    for (i = 0; i < sizeof(s_tests_33) / sizeof(json_test_entry_t); i++)
+    // nested object values
+    result = runtest(s_tests_33, dimoftest(s_tests_33), "key-paths", '.');
+    if (result)
     {
-        entry = &s_tests_33[i];
-        result = bjson_find_and_copy_key_value(entry->json, entry->key, '.', entry->index, val, sizeof(val));
-        printf("key-path ObjVal Test %d\n", i);
-        if (result != entry->exp_ret)
-        {
-            fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
-            return -1;
-        }
-        if (! entry->exp_ret)
-        {
-            if (strcmp(entry->exp_value, val))
-            {
-                fprintf(stderr, "value error: %s, expected %s\n", val, entry->exp_value);
-                return -1;
-            }
-            else
-            {
-                printf("  Key:%s[%u] Value:%s\n", entry->key, (unsigned)entry->index, val);
-            }
-        }
+        return result;
     }
 #endif
     return 0;
 }
+

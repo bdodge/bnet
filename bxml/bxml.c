@@ -29,6 +29,18 @@ static int bxml_compare_tags(const char *tag1, const char tag1_end, const char *
     {
         return 1;
     }
+    // advance past namespace in tag1 if any
+    for (i = 0; tag1[i]; i++)
+    {
+        if (bxml_is_white(tag1[i]) || tag1[i] == ':')
+        {
+            break;
+        }
+    }
+    if (tag1[i] == ':')
+    {
+        tag1 += (i + 1);
+    }
     i = 0;
     while (*tag1 && *tag2)
     {
@@ -99,6 +111,7 @@ int bxml_find_attribute(
                         )
 {
     size_t remlength;
+    char endquote;
     int result;
 
     if (! ptag || ! pattrib)
@@ -180,10 +193,13 @@ int bxml_find_attribute(
             ptag++;
             remlength--;
         }
-        if (*ptag != '\"' || remlength < 2)
+        if ((*ptag != '\"' && *ptag != '\'') || remlength < 2)
         {
             return bxml_syntax;
         }
+        // remember beginning quote type
+        endquote = *ptag;
+
         if (result == bxml_ok)
         {
             // did match attrib name, so break out now
@@ -194,7 +210,7 @@ int bxml_find_attribute(
         ptag++;
         remlength--;
 
-        while (remlength > 0 && *ptag != '\"')
+        while (remlength > 0 && *ptag != endquote)
         {
             if (*ptag == '>' || ! *ptag)
             {
@@ -232,7 +248,7 @@ int bxml_find_attribute(
         pend++;
         remlength--;
 
-        while (remlength > 0 && *pend != '\"')
+        while (remlength > 0 && *pend != endquote)
         {
             if (*ptag == '>' || ! *ptag)
             {
@@ -267,12 +283,12 @@ int bxml_find_and_copy_attribute(
     }
     if (alen > 1)
     {
-        if (pa[0] == '\"')
+        if (pa[0] == '\"' || pa[0] == '\'')
         {
             pa++;
             alen--;
         }
-        if (pa[alen - 1] == '\"')
+        if (pa[alen - 1] == '\"' || pa[alen - 1] == '\'')
         {
             alen--;
         }

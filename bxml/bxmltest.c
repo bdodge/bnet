@@ -320,6 +320,13 @@ xml_test_entry_t s_tests_3[] =
     },
 };
 
+static const char s_xml_j[] =
+    "<?xml version='1.0'?>"
+    "<stream:stream to='gmail.com' xml:lang='en' version='1.0'"
+    " xmlns:stream='http://etherx.jabber.org/streams'"
+    " xmlns='jabber:client'"
+    "></stream>";
+
 xml_test_entry_t s_tests_4[] =
 {
     {
@@ -357,6 +364,10 @@ xml_test_entry_t s_tests_4[] =
     {
     "aaaa", "b", 0, "", -bxml_not_found,
     "<aaaa a=\"a\"></aaaa>"
+    },
+    {
+    "stream", "to", 0, "gmail.com", 0,
+    s_xml_j
     },
 };
 

@@ -17,7 +17,7 @@ static int bxml_error(bxml_parser_t *pxp, int errcode)
     return errcode;
 }
 
-static int bxml_compare_tags(const char *tag1, const char tag1_end, const char *tag2, size_t tag2_len)
+int bxml_compare_tags(const char *tag1, const char tag1_end, const char *tag2, size_t tag2_len)
 {
     size_t i;
 
@@ -29,17 +29,29 @@ static int bxml_compare_tags(const char *tag1, const char tag1_end, const char *
     {
         return 1;
     }
-    // advance past namespace in tag1 if any
-    for (i = 0; tag1[i]; i++)
+    // advance past namespace in tag1 if any, if there is no namespace in tag2
+    // (perhaps make a param to do this?)
+    //
+    for (i = 0; tag2[i] && (tag2_len == 0 || i < tag2_len); i++)
     {
-        if (bxml_is_white(tag1[i]) || tag1[i] == ':')
+        if (bxml_is_white(tag2[i]) || tag2[i] == ':' || tag2[i] == tag1_end)
         {
             break;
         }
     }
-    if (tag1[i] == ':')
+    if (tag2[i] != ':')
     {
-        tag1 += (i + 1);
+        for (i = 0; tag1[i]; i++)
+        {
+            if (bxml_is_white(tag1[i]) || tag1[i] == ':' || tag1[i] == tag1_end)
+            {
+                break;
+            }
+        }
+        if (tag1[i] == ':')
+        {
+            tag1 += (i + 1);
+        }
     }
     i = 0;
     while (*tag1 && *tag2)
@@ -919,6 +931,14 @@ static int bxml_find_element_component(
     {
         return bxml_parameter;
     }
+    if (! pxp->psrc)
+    {
+        pxp->psrc = pxp->root;
+    }
+    if (! pxp->psrc)
+    {
+        return bxml_syntax;
+    }
     if (! parent)
     {
         parent = pxp->psrc;
@@ -1269,6 +1289,10 @@ int bxml_find_element(
         return bxml_parameter;
     }
     pxp->psrc = pxp->root;
+    if (! pxp->psrc)
+    {
+        return bxml_syntax;
+    }
     *tag_start = NULL;
 
     // should be on root element now

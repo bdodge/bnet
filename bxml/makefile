@@ -9,10 +9,11 @@ OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 PROGSOURCES=$(SRCDIR)/bxmltest.c
 PROGOBJECTS=$(OBJDIR)/bxmltest.o
 
-CFLAGS+=-I$(HTTP_PATH) -I$(IO_PATH)
-
 bxmltest: $(PROGOBJECTS) $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(OBJECTS) $(LIBS)
+
+library: $(OBJECTS)
+	$(AR) $(ARFLAGS) bxmllib.a $^
 
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS)

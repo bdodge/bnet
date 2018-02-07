@@ -96,3 +96,99 @@ int bxml_decode_entity(const char *entity, size_t inlen, size_t *outlen, uint16_
 	return bxml_not_found;
 }
 
+int bxml_format_element(
+				char *buf,
+				size_t nbuf,
+				size_t *nout,
+				bool start,
+				const char *tag,
+				const char *value,
+				size_t nattribs,
+				...
+				)
+{
+	const char *attr;
+	const char *val;
+	size_t nmade;
+	int nfmt;
+
+	if (! buf || ! nbuf || ! nout || ! tag)
+	{
+		return -1;
+	}
+	nmade = 0;
+	nfmt = snprintf(buf, nbuf, "%s<%s",
+		start ? "<?xml version='1.0'?>" : "",
+		tag);
+	if (nfmt < 0 || nfmt >= nbuf)
+	{
+		return -1;
+	}
+	nmade += nfmt;
+	nbuf -= nfmt;
+	buf += nfmt;
+
+	if (nattribs > 0)
+	{
+	    va_list args;
+
+		va_start(args, nattribs);
+		while (nattribs-- > 0 && nbuf > 0)
+		{
+			attr = (const char *)va_arg(args, char *);
+			val  = (const char *)va_arg(args, char *);
+
+			nfmt = snprintf(buf, nbuf, " %s=\'%s\'", attr, val);
+			if (nfmt < 0 || nfmt >= nbuf)
+			{
+				return -1;
+			}
+			nmade += nfmt;
+			nbuf -= nfmt;
+			buf += nfmt;
+		}
+	}
+	if (value && *value)
+	{
+		nfmt = snprintf(buf, nbuf, ">%s</%s>", value, tag);
+	}
+	else if (value)
+	{
+		nfmt = snprintf(buf, nbuf, "/>");
+	}
+	else
+	{
+		nfmt = snprintf(buf, nbuf, ">");
+	}
+	if (nfmt < 0 || nfmt >= nbuf)
+	{
+		return -1;
+	}
+	nmade += nfmt;
+	*nout = nmade;
+	return 0;
+}
+
+int bxml_format_endtag(
+                char *buf,
+                size_t nbuf,
+                size_t *nout,
+                const char *tag
+                )
+{
+	int nfmt;
+
+	if (! buf || ! nbuf || ! nout || ! tag)
+	{
+		return -1;
+	}
+	nfmt = snprintf(buf, nbuf, "</%s>", tag);
+	if (nfmt < 0 || nfmt >= nbuf)
+	{
+		return -1;
+	}
+	*nout = nfmt;
+
+	return 0;
+}
+

@@ -34,6 +34,61 @@ typedef struct
 }
 bxml_parser_t;
 
+/// Format an element from tag and optional value and attributes
+///
+/// @param buf      [out] result of formatting
+/// @param nbuf     [in] size of buf, in bytes
+/// @param nout     [out] bytes written to buf
+/// @param start    [in] true if a document header should be prepended
+/// @param tag      [in] the element's tag
+/// @param value    [in] the element's value.
+///                         If NULL, the element is not closed
+///                         If non-NULL but blank, the element is self-closed
+///                         otherwise element is closed around value
+/// @param nattribs [in] number of attribute-value pairs that follow, can be 0
+/// @param attribute-value pairs [in] two const char* of attribute and value
+///
+/// Examples:
+///   bxml_format_element(buf, sizeof(buf), &outcount, false, "hi", "bye", 1, "this", "value");
+///       creates in buf "<hi this='value'>bye</hi>"
+///   bxml_format_element(buf, sizeof(buf), &outcount, true, "hi", "", 0);
+///       creates in buf "<?xml version='1.0'?><hi/>"
+///   bxml_format_element(buf, sizeof(buf), &outcount, false, "hi", NULL, 0);
+///       creates in buf "<hi>"
+///
+/// @returns non-0 on error (like buffer overflow would happen)
+///
+int bxml_format_element(
+                char *buf,
+                size_t nbuf,
+                size_t *nout,
+                bool start,
+                const char *tag,
+                const char *value,
+                size_t nattribs,
+                ...
+                );
+
+/// Close the element started by a call to @bxml_format_element()
+///
+/// @param buf      [out] result of formatting
+/// @param nbuf     [in] size of buf, in bytes
+/// @param nout     [out] bytes written to buf
+/// @param tag [in] the tag that started the element
+///
+/// Examples:
+///   bxml_format_element(buf, sizeof(buf), &outcount, "hi");
+///       creates in buf "</hi>"
+///
+/// @returns non-0 on error
+///
+int bxml_format_endtag(
+                char *buf,
+                size_t nbuf,
+                size_t *nout,
+                const char *tag
+                );
+
 /// Find the attribute in the tag
 ///
 /// @param pxp      [in]  the xml parser, may be NULL, used for error checking only

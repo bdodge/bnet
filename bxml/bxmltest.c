@@ -133,6 +133,10 @@ xml_test_entry_t s_tests_1[] =
     "te&lt;st", "", 0, "<>", 0,
     "<?xml?><te&lt;st>&lt;&gt;</te&lt;st>"
     },
+    {
+    "test", "", 0, "tset", 0,
+    "<?xml?><test:test test='test'>tset</test:test>"
+    },
 };
 
 static char s_abc[] =

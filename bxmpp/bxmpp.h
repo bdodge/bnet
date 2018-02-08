@@ -21,6 +21,7 @@ typedef enum
     bxmppTLS,
     bxmppTLSproceed,
     bxmppSASL,
+    bxmppSASLreply,
     bxmppConnected,
     bxmppOutPhase,
     bxmppInPhase

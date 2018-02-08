@@ -2,26 +2,27 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-HTTP_PATH=$(SRCROOT)/bhttp
-IO_PATH=$(SRCROOT)/bstreamio
-
 SOURCES=$(SRCDIR)/bjson.c
 HEADERS=$(SOURCES:%.c=%.h) $(SRCROOT)/common/bnetheaders.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-HTTPLIB=$(HTTP_PATH)/bhttplib.a
-IOLIB=$(IO_PATH)/bstreamio.a
-
 PROGSOURCES=$(SRCDIR)/bjsontest.c
 PROGOBJECTS=$(OBJDIR)/bjsontest.o
 
-CFLAGS+=-I$(HTTP_PATH) -I$(IO_PATH)
+CFLAGS+=-I$(UTIL_PATH)
 
-bjsontest: $(PROGOBJECTS) $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(OBJECTS) $(LIBS)
+LIBS+=$(UTILLIB)
+
+bjsontest: $(PROGOBJECTS) $(OBJECTS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+library: $(JSONLIB)
+
+$(JSONLIB): $(OBJECTS)
+	$(AR) $(ARFLAGS) $@ $^
 
 clean:
-	rm $(PROGOBJECTS) $(OBJECTS)
+	rm $(PROGOBJECTS) $(OBJECTS) $(JSONLIB)
 
 $(OBJDIR)/bjsontest.o: $(SRCDIR)/bjsontest.c $(HEADERS)
 $(OBJDIR)/bjson.o: $(SRCDIR)/bjson.c $(HEADERS)

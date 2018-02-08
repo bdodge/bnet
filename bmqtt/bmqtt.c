@@ -210,7 +210,7 @@ static int smqtt_format_message(
 
 static int smqtt_connect(mqcontext_t *mqx, const char *client_id, uint16_t keepalive)
 {
-	http_log(5, "-> MQTT Connect\n");
+	butil_log(5, "-> MQTT Connect\n");
     return smqtt_format_message(
                         mqx,
                         MQCONNECT, 0,
@@ -237,7 +237,7 @@ static int smqtt_subscribe(
 	}
 	subrec->id = mqx->packet_id++;
 
-	http_log(5, "-> MQTT SUBSCRIBE id=%04X\n", (unsigned)subrec->id);
+	butil_log(5, "-> MQTT SUBSCRIBE id=%04X\n", (unsigned)subrec->id);
 
     return smqtt_format_message(
                         mqx,
@@ -263,7 +263,7 @@ static int smqtt_unsubscribe(
 	}
 	subrec->id = mqx->packet_id++;
 
-	http_log(5, "-> MQTT UNSUBSCRIBE id=%04X\n", (unsigned)subrec->id);
+	butil_log(5, "-> MQTT UNSUBSCRIBE id=%04X\n", (unsigned)subrec->id);
 
     return smqtt_format_message(
                         mqx,
@@ -286,7 +286,7 @@ static int smqtt_publish(
 {
 	subrec->id = mqx->packet_id++;
 
-	http_log(5, "-> MQTT PUBLISH id=%04X\n", (unsigned)subrec->id);
+	butil_log(5, "-> MQTT PUBLISH id=%04X\n", (unsigned)subrec->id);
 
 	return smqtt_format_message(
                         mqx,
@@ -300,7 +300,7 @@ static int smqtt_publish(
 
 static int smqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
 {
-	http_log(5, "-> MQTT PUBREL id=%04X\n", (unsigned)packet_id);
+	butil_log(5, "-> MQTT PUBREL id=%04X\n", (unsigned)packet_id);
 
 	return smqtt_format_message(
                         mqx,
@@ -313,7 +313,7 @@ static int smqtt_publish_release(mqcontext_t *mqx, uint16_t packet_id)
 
 static int smqtt_publish_ack(mqcontext_t *mqx, uint16_t packet_id)
 {
-	http_log(5, "-> MQTT PUBACK id=%04X\n", (unsigned)packet_id);
+	butil_log(5, "-> MQTT PUBACK id=%04X\n", (unsigned)packet_id);
 
 	return smqtt_format_message(
                         mqx,
@@ -326,7 +326,7 @@ static int smqtt_publish_ack(mqcontext_t *mqx, uint16_t packet_id)
 
 static int smqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
 {
-	http_log(5, "-> MQTT PUBREC id=%04X\n", (unsigned)packet_id);
+	butil_log(5, "-> MQTT PUBREC id=%04X\n", (unsigned)packet_id);
 
 	return smqtt_format_message(
                         mqx,
@@ -339,7 +339,7 @@ static int smqtt_publish_received(mqcontext_t *mqx, uint16_t packet_id)
 
 static int smqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
 {
-	http_log(5, "-> MQTT PUBCOMP id=%04X\n", (unsigned)packet_id);
+	butil_log(5, "-> MQTT PUBCOMP id=%04X\n", (unsigned)packet_id);
 
 	return smqtt_format_message(
                         mqx,
@@ -352,7 +352,7 @@ static int smqtt_publish_complete(mqcontext_t *mqx, uint16_t packet_id)
 
 static int smqtt_ping(mqcontext_t *mqx)
 {
-	http_log(5, "-> MQTT PING\n");
+	butil_log(5, "-> MQTT PING\n");
 
 	return smqtt_format_message(
                         mqx,
@@ -366,7 +366,7 @@ static int smqtt_disconnect(mqcontext_t *mqx)
 {
     int result;
 
-	http_log(5, "-> MQTT DISCONNECT\n");
+	butil_log(5, "-> MQTT DISCONNECT\n");
 
 	// insist we're starting out fresh
     mqx->out.head = mqx->out.count = 0;
@@ -406,14 +406,14 @@ static int smqtt_handle_puback(
 			{
 				mqx->subrecs_published = subrec->next;
 			}
-			http_log(5, "Removing record of published topic %s id=%04X\n",
+			butil_log(5, "Removing record of published topic %s id=%04X\n",
 						subrec->topic, subrec->id);
 			smqtt_subrec_destroy(subrec);
 			return 0;
 		}
 		prevsubrec = subrec;
 	}
-	http_log(1, "MQTT - No such id=%04X for puback/rec\n");
+	butil_log(1, "MQTT - No such id=%04X for puback/rec\n");
 	// this is non-fatal, it could have been yanked out?
 	return 0;
 }
@@ -456,13 +456,13 @@ static int smqtt_handle_suback(
 			subrec->next = mqx->subrecs;
 			mqx->subrecs = subrec;
 
-			http_log(5, "Successfully %ssubscribed to %s\n",
+			butil_log(5, "Successfully %ssubscribed to %s\n",
 						is_unsub ? "un" : "", subrec->topic);
 			return 0;
 		}
 		prevsubrec = subrec;
 	}
-	http_log(1, "MQTT - No such id=%04X for un/suback\n");
+	butil_log(1, "MQTT - No such id=%04X for un/suback\n");
 	// this is non-fatal, it could have been yanked out?
 	return 0;
 }
@@ -471,7 +471,7 @@ static int smqtt_selftest_notify(mqcontext_t *mqx, const char *topic, void *priv
 {
 	int result;
 
-	http_log(4, "MQTT TEST ------ topic:%s priv=%s\n", topic, priv ? (char*)priv : "error");
+	butil_log(4, "MQTT TEST ------ topic:%s priv=%s\n", topic, priv ? (char*)priv : "error");
 
 	// unsubscribe in the callback
 	result = mqtt_unsubscribe(mqx, topic);
@@ -487,7 +487,7 @@ static int smqtt_notify(
 						size_t payload_size
 				)
 {
-	http_log(4, "MQTT Got Notified of: %s %04X\n", topic, packet_id);
+	butil_log(4, "MQTT Got Notified of: %s %04X\n", topic, packet_id);
 	mqsubrec_t *subrec;
 	int result;
 
@@ -504,7 +504,7 @@ static int smqtt_notify(
 			return result;
 		}
 	}
-	http_log(1, "MQTT - No subscription for %s\n", topic);
+	butil_log(1, "MQTT - No subscription for %s\n", topic);
 	return 0;
 }
 
@@ -595,7 +595,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 		*count = 0;
 		return 0;
 	}
-    http_log(4, "MQX state %d  cmd=%u len=%u\n", mqx->state, cmd, length);
+    butil_log(4, "MQX state %d  cmd=%u len=%u\n", mqx->state, cmd, length);
 
 	// absorb only header and length from input
 	//
@@ -604,7 +604,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 	switch (cmd)
 	{
 	case MQCONNACK:
-        http_log(5, "<- MQTT CONNACK\n");
+        butil_log(5, "<- MQTT CONNACK\n");
         mqx->state = mqsConnected;
 		result = 0;
 		if (mqx->selftest)
@@ -634,7 +634,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 		packet_id = (pdata[0] << 8) | pdata[1];
 		pdata += 2;
 
-		http_log(5, "<- MQTT PUBLISH id=%04X\n", (unsigned)packet_id);
+		butil_log(5, "<- MQTT PUBLISH id=%04X\n", (unsigned)packet_id);
 
 		result = smqtt_notify(mqx, topic, qos, packet_id, pdata, ilen - len - 4);
 		if (result)
@@ -654,19 +654,19 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 
 	case MQPUBREL:
 		packet_id = (pdata[0] << 8) | pdata[1];
-		http_log(5, "<- MQTT PUBREL id=%04X\n", packet_id);
+		butil_log(5, "<- MQTT PUBREL id=%04X\n", packet_id);
 		result = smqtt_publish_complete(mqx, packet_id);
         break;
 
 	case MQPUBACK:
 		packet_id = (pdata[0] << 8) | pdata[1];
-		http_log(5, "<- MQTT PUBACK id=%04X\n", packet_id);
+		butil_log(5, "<- MQTT PUBACK id=%04X\n", packet_id);
 		result = smqtt_handle_puback(mqx, false, packet_id);
         break;
 
 	case MQPUBREC:
 		packet_id = (pdata[0] << 8) | pdata[1];
-		http_log(5, "<- MQTT PUBREC id=%04X\n", packet_id);
+		butil_log(5, "<- MQTT PUBREC id=%04X\n", packet_id);
 		result = smqtt_handle_puback(mqx, true, packet_id);
 		if (! result)
 		{
@@ -676,13 +676,13 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 
 	case MQPUBCOMP:
 		packet_id = (pdata[0] << 8) | pdata[1];
-		http_log(5, "<- MQTT PUBCOMP id=%04X\n", packet_id);
+		butil_log(5, "<- MQTT PUBCOMP id=%04X\n", packet_id);
 		result = 0;
         break;
 
 	case MQSUBACK:
 		packet_id = (pdata[0] << 8) | pdata[1];
-        http_log(5, "<- MQTT SUBACK id=%04X\n", packet_id);
+        butil_log(5, "<- MQTT SUBACK id=%04X\n", packet_id);
 		// process ack
 		result = smqtt_handle_suback(mqx, false, packet_id);
 		if (mqx->selftest && ! result)
@@ -694,7 +694,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 
 	case MQUNSUBACK:
 		packet_id = (pdata[0] << 8) | pdata[1];
-        http_log(5, "<- MQTT UNSUBACK id=%04X\n", packet_id);
+        butil_log(5, "<- MQTT UNSUBACK id=%04X\n", packet_id);
 		// process ack
 		result = smqtt_handle_suback(mqx, true, packet_id);
 		if (mqx->selftest && ! result)
@@ -705,7 +705,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 		break;
 
 	case MQPINGRESP:
-		http_log(5, "<- MQTT PINGRESP\n");
+		butil_log(5, "<- MQTT PINGRESP\n");
 		result = 0;
 		if (mqx->selftest)
 		{
@@ -716,7 +716,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 		break;
 
 	default:
-		http_log(1, "<- ??? 0x%02X\n", cmd);
+		butil_log(1, "<- ??? 0x%02X\n", cmd);
 		break;
 	}
     if (result)
@@ -744,7 +744,7 @@ static int smqtt_resource(
     {
     case httpRequest:
 
-        http_log(5, "MQTT: request\n");
+        butil_log(5, "MQTT: request\n");
 
         mqx->state = mqsTransportInit;
         break;
@@ -759,7 +759,7 @@ static int smqtt_resource(
             BERROR("No CTX");
             return -1;
         }
-        http_log(6, "MQX state %d\n", mqx->state);
+        butil_log(6, "MQX state %d\n", mqx->state);
 
         switch (mqx->state)
         {
@@ -808,13 +808,13 @@ static int smqtt_resource(
         }
         if (*count > 0)
         {
-            http_log(5, "MQTT: Sending Bytes: %u\n", *count);
+            butil_log(5, "MQTT: Sending Bytes: %u\n", *count);
         }
         break;
 
     case httpDownloadData:
 
-        http_log(5, "MQTT: Getting Bytes: %u\n", *count);
+        butil_log(5, "MQTT: Getting Bytes: %u\n", *count);
         bytes = *count;
         if (bytes < 2)
         {
@@ -831,7 +831,7 @@ static int smqtt_resource(
 
     case httpComplete:
 
-        http_log(5, "MQTT: complete\n");
+        butil_log(5, "MQTT: complete\n");
         break;
 
     default:
@@ -898,7 +898,7 @@ static int smqtt_client_input(mqcontext_t *mqx, int to_secs, int to_usecs)
                         return 0;
                     }
                     // 0 read after ok poll means connection closed
-                    http_log(5, "end of connection %u\n", mqx->id);
+                    butil_log(5, "end of connection %u\n", mqx->id);
                     return -1;
                 }
                 mqx->in.head += len;
@@ -907,7 +907,7 @@ static int smqtt_client_input(mqcontext_t *mqx, int to_secs, int to_usecs)
                     mqx->in.head = 0;
                 }
                 mqx->in.count += len;
-                http_log(7, "read %d on id %u\n", len, mqx->id);
+                butil_log(7, "read %d on id %u\n", len, mqx->id);
             }
         }
     }
@@ -922,7 +922,7 @@ static int smqtt_client_input(mqcontext_t *mqx, int to_secs, int to_usecs)
         }
         if ((now - mqx->last_in_time) > mqx->long_timeout)
         {
-            http_log(3, "cl:%u read timeout\n", mqx->id);
+            butil_log(3, "cl:%u read timeout\n", mqx->id);
             return -1;
         }
     }
@@ -971,7 +971,7 @@ static int smqtt_client_output(mqcontext_t *mqx, int to_secs, int to_usecs)
 		}
 		if ((now - mqx->last_out_time) > mqx->long_timeout)
 		{
-			http_log(3, "mqx %u write timeout\n", mqx->id);
+			butil_log(3, "mqx %u write timeout\n", mqx->id);
 			return -1;
 		}
 		return 0;
@@ -1059,7 +1059,7 @@ static int smqtt_tcp_slice(mqcontext_t *mqx)
 			// wait more
 			break;
 		}
-		http_log(5, "Connected\n");
+		butil_log(5, "Connected\n");
 
 		// upgrade to TLS if indicated
 		//
@@ -1074,7 +1074,7 @@ static int smqtt_tcp_slice(mqcontext_t *mqx)
 				mqx->stream = NULL;
 				return -1;
 			}
-			http_log(5, "TLS Connected\n");
+			butil_log(5, "TLS Connected\n");
 			mqx->stream = stream;
 		}
 		mqx->state = mqsTransport;
@@ -1271,7 +1271,7 @@ int mqtt_unsubscribe(
 		}
 		prevsubrec = subrec;
 	}
-	http_log(1, "MQTT - No such subscription for %s\n", topic);
+	butil_log(1, "MQTT - No such subscription for %s\n", topic);
 	return -1;
 }
 
@@ -1524,7 +1524,7 @@ mqcontext_t *mqtt_client_create(
             mqtt_client_free(mqx);
             return NULL;
         }
-        http_log(3, "MQTT Client to %s\n", mqx->url);
+        butil_log(3, "MQTT Client to %s\n", mqx->url);
 
         mqx->client->ctxpriv = mqx;
         mqx->client->keepalive = false;

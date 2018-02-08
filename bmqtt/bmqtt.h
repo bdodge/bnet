@@ -4,6 +4,7 @@
 #include "bmqttconfig.h"
 #include "bnetheaders.h"
 #include "bstreamio.h"
+#include "butil.h"
 
 #if MQTT_SUPPORT_WEBSOCKET
 #include "bhttp.h"

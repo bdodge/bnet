@@ -734,7 +734,7 @@ static int http_process_header(http_client_t *client, char *header)
             switch (client->auth_type)
             {
             case httpAuthBasic:
-                if (http_base64_decode(client->auth_creds, sizeof(client->auth_creds), value) < 0)
+                if (butil_base64_decode(client->auth_creds, sizeof(client->auth_creds), value) < 0)
                 {
                     HTTP_ERROR("Authorization encoding");
                     return -1;

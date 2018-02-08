@@ -9,14 +9,16 @@ OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 PROGSOURCES=$(SRCDIR)/bxmltest.c
 PROGOBJECTS=$(OBJDIR)/bxmltest.o
 
-bxmltest: $(PROGOBJECTS) $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(OBJECTS) $(LIBS)
+bxmltest: $(PROGOBJECTS) $(XMLLIB)
+	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(XMLLIB) $(LIBS)
 
-library: $(OBJECTS)
+library: $(XMLLIB)
+
+$(XMLLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) bxmllib.a $^
 
 clean:
-	rm $(PROGOBJECTS) $(OBJECTS)
+	rm $(PROGOBJECTS) $(OBJECTS) $(XMLLIB)
 
 $(OBJDIR)/bxmltest.o: $(SRCDIR)/bxmltest.c $(HEADERS)
 $(OBJDIR)/bxml.o: $(SRCDIR)/bxml.c $(HEADERS)

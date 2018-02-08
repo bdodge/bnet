@@ -4,6 +4,22 @@ SRCROOT ?= ..
 MBEDTLS_PATH=$(SRCROOT)/mbedtls
 MBEDTLS_LIBS= mbedtls mbedx509 mbedcrypto
 
+UTIL_PATH=$(SRCROOT)/butil
+IO_PATH=$(SRCROOT)/bstreamio
+XML_PATH=$(SRCROOT)/bxml
+JSON_PATH=$(SRCROOT)/bjson
+HTTP_PATH=$(SRCROOT)/bhttp
+XMPP_PATH=$(SRCROOT)/bxmpp
+MQTT_PATH=$(SRCROOT)/bmqtt
+
+UTILLIB=$(UTIL_PATH)/butillib.a
+IOLIB=$(IO_PATH)/bstreamio.a
+XMLLIB=$(XML_PATH)/bxmllib.a
+JSONLIB=$(IO_PATH)/bjsonlib.a
+HTTPLIB=$(HTTP_PATH)/bhttplib.a
+XMPPLIB=$(XMPP_PATH)/bxmpplib.a
+MQTTLIB=$(MQTT_PATH)/bmqttlib.a
+
 CFLAGS += -I$(SRCROOT) -I$(SRCROOT)/common
 
 ifeq ($(OS),Windows_NT)
@@ -63,4 +79,29 @@ ARFLAGS=-r
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(OBJDIR)
 	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(UTIL_PATH)/%.a:
+	make -C $(UTIL_PATH) library
+
+$(IO_PATH)/%.a:
+	make -C $(IO_PATH) library
+
+$(XML_PATH)/%.a:
+	make -C $(XML_PATH) library
+
+$(JSON_PATH)/%.a:
+	make -C $(JSON_PATH) library
+
+$(HTTP_PATH)/%.a:
+	make -C $(HTTP_PATH) library
+
+$(XMPP_PATH)/%.a:
+	make -C $(XMPP_PATH) library
+
+$(MQTT_PATH)/%.a:
+	make -C $(MQTT_PATH) library
+
+$(MBEDTLS_PATH)/library/%.a:
+	make -C $(MBEDTLS_PATH) lib CC="$(CC)" CFLAGS="$(CFLAGS)"
+
 

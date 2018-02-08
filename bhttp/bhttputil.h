@@ -8,8 +8,8 @@
 #define HTTP_LOG_TAG(n)   (((uint32_t)(n)) >> 16)
 #define LOGTAG(t, n)      ((((uint32_t)(t)) << 16) | ((uint32_t)(n) & 0xFFFF))
 
-void http_log(uint32_t level, const char *fmt, ...);
-void http_set_log_level(uint32_t level);
+#define http_log butil_log
+#define http_set_log_level butil_set_log_level
 
 int http_join_path(char *path, size_t room, const char *root, const char *base, const char *file);
 
@@ -42,9 +42,6 @@ int http_paste_url(
                     const uint16_t port,
                     const char *path
                     );
-
-int http_base64_decode(uint8_t *out, size_t outsize, const char *src);
-int http_base64_encode(char *out, size_t outsize, const uint8_t *src, size_t srcbytes, bool hexencode);
 
 int http_auth_string_to_type(const char *auth_str, http_auth_type_t *auth_type);
 const char *http_auth_type_to_string(http_auth_type_t auth_type);

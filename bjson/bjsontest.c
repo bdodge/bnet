@@ -518,7 +518,7 @@ int main(int argc, char **argv)
     char val[128];
     int result;
 
-#if 0
+#if 1
     // general keywords and basic types
     result = runtest(s_tests_1, dimoftest(s_tests_1), "Basic", '\0');
     if (result)
@@ -526,7 +526,7 @@ int main(int argc, char **argv)
         return result;
     }
 #endif
-#if 0
+#if 1
     // number arrays
     result = runtest(s_tests_2, dimoftest(s_tests_2), "NumArrays", '\0');
     if (result)
@@ -534,7 +534,7 @@ int main(int argc, char **argv)
         return result;
     }
 #endif
-#if 0
+#if 1
     // harder strings
     result = runtest(s_tests_3, dimoftest(s_tests_3), "Strings", '\0');
     if (result)
@@ -542,7 +542,7 @@ int main(int argc, char **argv)
         return result;
     }
 #endif
-#if 0
+#if 1
     // object values
     result = runtest(s_tests_4, dimoftest(s_tests_4), "Objects", '\0');
     if (result)

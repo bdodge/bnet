@@ -1,5 +1,6 @@
 
 SRCROOT=..
+
 include $(SRCROOT)/common/makecommon.mk
 
 SOURCES=$(SRCDIR)/bhttp.c $(SRCDIR)/bhttpres.c $(SRCDIR)/bhttpdav.c \
@@ -8,25 +9,16 @@ SOURCES=$(SRCDIR)/bhttp.c $(SRCDIR)/bhttpres.c $(SRCDIR)/bhttpdav.c \
 HEADERS=$(SOURCES:%.c=%.h) bhttpconfig.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-HTTPLIB=bhttplib.a
-
 PROGSOURCES=$(SRCDIR)/bhttpmain.c
 PROGOBJECTS=$(OBJDIR)/bhttpmain.o
 
-CC=gcc
-CFLAGS+=-g -fno-diagnostics-color
-
-AR=ar
-ARFLAGS=-r
-
-IOLIB_PATH=../bstreamio
-IOLIB=$(IOLIB_PATH)/bstreamio.a
-
-bhttp: $(PROGOBJECTS) $(HTTPLIB) $(IOLIB) $(TLSDEPS)
+bhttp: $(PROGOBJECTS) $(HTTPLIB) $(IOLIB) $(UTILLIB) $(TLSDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
+library: $(HTTPLIB)
+
 $(HTTPLIB): $(OBJECTS)
-	$(AR) $(ARFLAGS) $@ $^
+	$(AR) $(ARFLAGS) $(HTTPLIB) $^
 
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
@@ -38,11 +30,5 @@ $(OBJDIR)/bhttpdav.o: $(SRCDIR)/bhttpdav.c $(HEADERS)
 $(OBJDIR)/bhttpws.o: $(SRCDIR)/bhttpws.c $(HEADERS)
 $(OBJDIR)/bhttpsip.o: $(SRCDIR)/bhttpsip.c $(HEADERS)
 $(OBJDIR)/bhttputil.o: $(SRCDIR)/bhttputil.c $(HEADERS)
-
-$(IOLIB):
-	make -C $(IOLIB_PATH)
-
-$(MBEDTLS_PATH)/library/%.a:
-	make -C $(MBEDTLS_PATH) lib CC="$(CC)" CFLAGS="$(CFLAGS)"
 
 

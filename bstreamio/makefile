@@ -15,6 +15,8 @@ endif
 
 IOLIB=bstreamio.a
 
+library: $(IOLIB)
+
 $(IOLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $?
 

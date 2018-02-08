@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 #else
     signal(SIGPIPE, SIG_IGN);
 #endif
-    http_set_log_level(5);
+    butil_set_log_level(5);
 
     result = iostream_tls_prolog();
     if (result)

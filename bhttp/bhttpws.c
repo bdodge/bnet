@@ -484,7 +484,7 @@ int http_websocket_create_key(char *keybuf, size_t bufbytes)
     {
         b[i] = i + 1;
     }
-    http_base64_encode(keybuf, bufbytes, b, i, false);
+    butil_base64_encode(keybuf, bufbytes, b, i, false, false);
     return 0;
 }
 
@@ -791,7 +791,7 @@ int http_websocket_upgrade_reply(http_client_t *client)
     result = iostream_sha1_hash(sha_buffer, key_buffer, key_len);
 
     // base64 encode that 20 byte hash directly into the current output position
-    result = http_base64_encode((char *)client->out.data + client->out.head, 64, sha_buffer, 20, false);
+    result = butil_base64_encode((char *)client->out.data + client->out.head, 64, sha_buffer, 20, false, false);
     if (result <= 0)
     {
         HTTP_ERROR("No room for encoded key");

@@ -3,74 +3,13 @@
 //#define _GNU_SOURCE
 
 #include "bnetheaders.h"
+#include "butil.h"
 #include "bjson.h"
-
-static int bjson_hextou(char digit, uint8_t *val)
-{
-    if (digit >= 'a' && digit <= 'f')
-    {
-        *val = digit - 'a' + 10;
-        return 0;
-    }
-    if (digit >= 'A' && digit <= 'F')
-    {
-        *val = digit - 'A' + 10;
-        return 0;
-    }
-    if (digit >= '0' && digit <= '9')
-    {
-        *val = digit - '0';
-        return 0;
-    }
-    return -1;
-}
-
-static int bjson_is_white(char ch)
-{
-    return (ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n');
-}
-
-static int bjson_is_number(char ch)
-{
-    return (ch >= '0') && (ch <= '9');
-}
 
 static int bjson_is_delimiter(char ch)
 {
     return (ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n')
         || (ch == ']') || (ch == '}') || (ch == ',');
-}
-
-static size_t bjson_utf8_encode(uint32_t unicode, uint8_t utfbuf[5])
-{
-    unsigned short ca, cb, cc, cd;
-    wchar_t  uc, nc;
-    int  j, k;
-    size_t i, len;
-
-    j = 0;
-
-    if (unicode < 0x80)
-    {
-        utfbuf[j++] = (unicode & 0xFF);
-    }
-    else if (unicode < 0x800) {
-        utfbuf[j++] = 0xC0 | (unicode >> 6);
-        utfbuf[j++] = 0x80 | (unicode & 0x3F);
-    }
-    else if (unicode < 0x10000) {
-        utfbuf[j++] = 0xE0 |  (unicode >> 12);
-        utfbuf[j++] = 0x80 | ((unicode >> 6) & 0x3F);
-        utfbuf[j++] = 0x80 |  (unicode  & 0x3F);
-    }
-    else if (unicode < 0x200000) {
-        utfbuf[j++] = 0xF0 |  (unicode >> 18);
-        utfbuf[j++] = 0x80 | ((unicode >> 12) & 0x3F);
-        utfbuf[j++] = 0x80 | ((unicode >> 6) & 0x3F);
-        utfbuf[j++] = 0x80 |  (unicode  & 0x3F);
-    }
-    utfbuf[j] = '\0';
-    return j;
 }
 
 int bjson_value_type(bjson_parser_t *pjx, const char *value, bjson_type_t *ptype)
@@ -303,7 +242,7 @@ static int bjson_copy_number_value(bjson_parser_t *pjx, char *value, size_t nval
             pjx->psrc++;
             break;
         default:
-            if (bjson_is_number(*pjx->psrc))
+            if (butil_is_number(*pjx->psrc))
             {
                 if (number_state == ns_at_start)
                 {
@@ -456,28 +395,28 @@ static int bjson_unescape_string(
                 }
                 // go through the motions to validate chars even if no value
                 echar = *psrc++;
-                if (bjson_hextou(echar, &xval))
+                if (butil_hextou(echar, &xval))
                 {
                     return bjson_syntax;
                 }
                 uval = (uint32_t)xval;
 
                 echar = *psrc++;
-                if (bjson_hextou(echar, &xval))
+                if (butil_hextou(echar, &xval))
                 {
                     return bjson_syntax;
                 }
                 uval = (uval << 4) | (uint32_t)xval;
 
                 echar = *psrc++;
-                if (bjson_hextou(echar, &xval))
+                if (butil_hextou(echar, &xval))
                 {
                     return bjson_syntax;
                 }
                 uval = (uval << 4) | (uint32_t)xval;
 
                 echar = *psrc++;
-                if (bjson_hextou(echar, &xval))
+                if (butil_hextou(echar, &xval))
                 {
                     return bjson_syntax;
                 }
@@ -485,7 +424,7 @@ static int bjson_unescape_string(
 
                 if (value)
                 {
-                    utf8_len = bjson_utf8_encode(uval, utf8_buffer);
+                    utf8_len = butil_utf8_encode(uval, utf8_buffer);
                     if ((i + utf8_len) >= (nvalue - 1))
                     {
                         return bjson_overflow;
@@ -626,7 +565,7 @@ static int bjson_copy_array_or_object_value(
         {
             copydest = NULL;
         }
-        while (bjson_is_white(*pjx->psrc))
+        while (butil_is_white(*pjx->psrc))
         {
             pjx->psrc++;
         }
@@ -654,7 +593,7 @@ static int bjson_copy_array_or_object_value(
             result = bjson_copy_string_value(pjx, copydest, nvalue - i);
             if (! result)
             {
-                while (bjson_is_white(*pjx->psrc))
+                while (butil_is_white(*pjx->psrc))
                 {
                     pjx->psrc++;
                 }
@@ -750,7 +689,7 @@ static int bjson_copy_array_or_object_value(
         }
         // skip white space after whatever it is we just skipped
         //
-        while (bjson_is_white(*pjx->psrc))
+        while (butil_is_white(*pjx->psrc))
         {
             pjx->psrc++;
         }
@@ -831,7 +770,7 @@ static int bjson_find_element(bjson_parser_t *pjx, size_t index, const char **va
 
     while (*pjx->psrc)
     {
-        while (bjson_is_white(*pjx->psrc))
+        while (butil_is_white(*pjx->psrc))
         {
             pjx->psrc++;
         }
@@ -853,7 +792,7 @@ static int bjson_find_element(bjson_parser_t *pjx, size_t index, const char **va
             return result;
         }
         // skip any white space after value
-        while (bjson_is_white(*pjx->psrc))
+        while (butil_is_white(*pjx->psrc))
         {
             pjx->psrc++;
         }
@@ -899,7 +838,7 @@ static int bjson_get_key_value(bjson_parser_t *pjx, size_t index, const char **v
         return bjson_syntax;
     }
     pv++;
-    while (bjson_is_white(*pv))
+    while (butil_is_white(*pv))
     {
         pv++;
     }
@@ -911,7 +850,7 @@ static int bjson_get_key_value(bjson_parser_t *pjx, size_t index, const char **v
     pjx->psrc = pv;
 
     // find first non-white char of value
-    while (bjson_is_white(*pjx->psrc))
+    while (butil_is_white(*pjx->psrc))
     {
         if ((pjx->psrc - pjx->json) >= pjx->length)
         {
@@ -1015,7 +954,7 @@ static int bjson_find_key_component(
             // (ignoring white space) then this is our next key
             //
             pkeyend = pkey + keylength + 1;
-            while (bjson_is_white(*pkeyend) && (pkeyend <= pjsonend))
+            while (butil_is_white(*pkeyend) && (pkeyend <= pjsonend))
             {
                 pkeyend++;
             }
@@ -1029,7 +968,7 @@ static int bjson_find_key_component(
                 //
                 pkeyend++;
 
-                while (bjson_is_white(*pkeyend) && (pkeyend <= pjsonend))
+                while (butil_is_white(*pkeyend) && (pkeyend <= pjsonend))
                 {
                     pkeyend++;
                 }
@@ -1126,7 +1065,7 @@ int bjson_find_next_key(
                 {
                     return bjson_syntax;
                 }
-                while (bjson_is_white(*component_end))
+                while (butil_is_white(*component_end))
                 {
                     component_end++;
                 }
@@ -1135,7 +1074,7 @@ int bjson_find_next_key(
                     return bjson_syntax;
                 }
                 component_end++;
-                while (bjson_is_white(*component_end))
+                while (butil_is_white(*component_end))
                 {
                     component_end++;
                 }

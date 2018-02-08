@@ -4,6 +4,7 @@
 #include "bnetheaders.h"
 
 #include "bhttpconfig.h"
+#include "butil/butil.h"
 #include "bstreamio/bstreamio.h"
 #include "bhttpdav.h"
 #include "bhttpws.h"

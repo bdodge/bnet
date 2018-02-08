@@ -1,189 +1,5 @@
 #include "bxmpp.h"
 
-int http_base64_decode(uint8_t *out, size_t outsize, const char *src)
-{
-    uint8_t *base = out;
-    uint32_t bits, c, v, outchars;
-    size_t errors = 0;
-
-    outchars = 0;
-    bits = 0;
-
-    while ((c = *src++) != '\0')
-    {
-        if (outsize < 4)
-        {
-            errors++;
-            break;
-        }
-        if (c >= 'A' && c <= 'Z')
-        {
-            v = c - 'A';
-        }
-        else if (c >= 'a' && c <= 'z')
-        {
-            v = c - 'a' + 26;
-        }
-        else if (c >= '0' && c <= '9')
-        {
-            v = c - '0' + 52;
-        }
-        else if (c == '+')
-        {
-            v = 62;
-        }
-        else if (c == '/')
-        {
-            v = 63;
-        }
-        else
-        {
-            break;
-        }
-        bits += v;
-        outchars++;
-
-        if (outchars == 4)
-        {
-            *out++ = (bits >> 16);
-            *out++ = (bits >> 8) & 0xff;
-            *out++ = (bits & 0xff);
-            bits = 0;
-            outchars = 0;
-        }
-        else
-        {
-            bits <<= 6;
-        }
-    }
-    switch(outchars)
-    {
-    case 1:
-        errors++;
-        break;
-    case 2:
-        if (outsize < 2)
-        {
-            errors++;
-            break;
-        }
-        *out++ = (bits >> 10);
-        break;
-    case 3:
-        if (outsize < 3)
-        {
-            errors++;
-            break;
-        }
-        *out++ = (bits >> 16);
-        *out++ = (bits >> 8) & 0xff;
-        break;
-    }
-    *out = '\0';
-    return errors ? -1 : (out - base);
-}
-
-static inline int base64_hexencode_byte(char *out, uint8_t byte)
-{
-    if (byte == '+')
-    {
-        *out++ = '%';
-        *out++ = '2';
-        *out++ = 'B';
-        return 3;
-    }
-    else if(byte == '/')
-    {
-        *out++ = '%';
-        *out++ = '2';
-        *out++ = 'F';
-        return 3;
-    }
-    else if(byte == '=')
-    {
-        *out++ = '%';
-        *out++ = '3';
-        *out++ = 'D';
-        return 3;
-    }
-    else
-    {
-        *out++ = byte;
-        return 1;
-    }
-}
-
-int http_base64_encode(char *out, size_t outsize, const uint8_t *src, size_t srcbytes, bool hexescape)
-{
-    char *base = out;
-    uint8_t  b1, b2, b3;
-    uint32_t d;
-    size_t j = 0, k = 0;
-    int i;
-
-    static const char *s_alphabet64 =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    while (j < (outsize - 4) && k < srcbytes)
-    {
-        b1 = src[k];
-        b2 = (k+1 < srcbytes) ? src[k+1] : 0;
-        b3 = (k+2 < srcbytes) ? src[k+2] : 0;
-
-        d = (b1 << 16) | (b2 << 8) | b3;
-
-        if(hexescape)
-        {
-            char b;
-
-            b = s_alphabet64[(d>>18)];
-            i = base64_hexencode_byte(out, b);
-            j += i;
-            out += i;
-
-            b = s_alphabet64[(d>>12) & 0x3f];
-            i = base64_hexencode_byte(out, b);
-            j += i;
-            out += i;
-
-            if (k+1 < srcbytes)
-            {
-                b = s_alphabet64[(d>>6) & 0x3f];
-                i = base64_hexencode_byte(out, b);
-                j += i;
-                out += i;
-            }
-            else {
-                i = base64_hexencode_byte(out, '=');
-                j += i;
-                out += i;
-            }
-            if(k+2 < srcbytes)
-            {
-                b = s_alphabet64[(d) & 0x3f];
-                i = base64_hexencode_byte(out, b);
-                j += i;
-                out += i;
-            }
-            else {
-                i = base64_hexencode_byte(out, '=');
-                j += i;
-                out += i;
-            }
-        }
-        else {
-            *out++ =                    s_alphabet64[((d>>18)        )];
-            *out++ =                    s_alphabet64[((d>>12) & 0x3f )];
-            *out++ = (k+1 < srcbytes) ? s_alphabet64[((d>> 6) & 0x3f )] : '=';
-            *out++ = (k+2 < srcbytes) ? s_alphabet64[((d    ) & 0x3f )] : '=';
-            j += 4;
-        }
-        k+= 3;
-    }
-    *out = '\0';
-    return (k <= srcbytes) ? -1 : (out - base);
-}
-
 static const char *s_bind_xml       =   "<iq type='set' id='0'>"
                                           "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'>"
                                             "<resource>%s</resource>"
@@ -212,7 +28,7 @@ static int bxmpp_check_errors(bxmpp_t *bxp)
         }
         else
         {
-            printf("bad xml?=%s\n", bxp->pxp->xml);
+            butil_log(5, "BAD XML? %s\n", bxp->pxp->xml);
             return result;
         }
     }
@@ -222,7 +38,7 @@ static int bxmpp_check_errors(bxmpp_t *bxp)
         result = bxml_copy_element((char*)bxp->in.data, bxp->in.size, eval, eval_len, false, false);
         if (! result)
         {
-            printf("error: %s\n", bxp->in.data);
+            butil_log(3, "error: %s\n", bxp->in.data);
         }
     }
     return -1;
@@ -240,6 +56,10 @@ static const char *bxmpp_state(bxmpp_state_t state)
     case bxmppTLSproceed:       return "TLSproceed";
     case bxmppSASL:             return "SASL";
     case bxmppSASLreply:        return "SASLreply";
+    case bxmppBind:             return "Bind";
+    case bxmppBindReply:        return "BinReply";
+    case bxmppSession:          return "Session";
+    case bxmppSessionReply:     return "SessionReply";
     case bxmppConnected:        return "Connected";
     case bxmppOutPhase:         return "OutPhase";
     case bxmppInPhase:          return "InPhase";
@@ -255,7 +75,7 @@ static const char *bxmpp_layer(bxmpp_layer_t layer)
     case bxmppLayerTCP:         return "TCP";
     case bxmppLayerTLS:         return "TLS";
     case bxmppLayerSASL:        return "SASL";
-    case bxmppLayerBound:       return "Connected";
+    case bxmppLayerSession:     return "Session";
     }
     return "???";
 }
@@ -281,6 +101,10 @@ int bxmpp_setup(bxmpp_t *bxp)
     size_t count;
     int result;
 
+    char authbuf[256], encbuf[256];
+    size_t len;
+    extern const char *s_username, *s_password;
+
     static int oldincount;
     static bxmpp_state_t oldstate;
 
@@ -288,7 +112,7 @@ int bxmpp_setup(bxmpp_t *bxp)
 
     if (bxp->state != oldstate || bxp->in.count != oldincount)
     {
-        printf("state %s layer %s  in=%u out=%u\n",
+        butil_log(5, "state %s layer %s  in=%u out=%u\n",
               bxmpp_state(bxp->state),
               bxmpp_layer(bxp->layer),
               bxp->in.count, bxp->out.count);
@@ -318,7 +142,7 @@ int bxmpp_setup(bxmpp_t *bxp)
         }
         else
         {
-            printf("Connnected to %s:%u\n", bxp->host, bxp->port);
+            butil_log(4, "Connnected to %s:%u\n", bxp->host, bxp->port);
             bxp->state = bxmppTransport;
             bxp->next_state = bxmppInit;
             bxp->layer = bxmppLayerTCP;
@@ -350,8 +174,6 @@ int bxmpp_setup(bxmpp_t *bxp)
             return result;
         }
         bxp->out.head = bxp->out.count;
-
-        printf("OUT=%s\n", bxp->out.data);
 
         // go to output phase, then to transport reply if ok
         //
@@ -393,22 +215,21 @@ int bxmpp_setup(bxmpp_t *bxp)
                     result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
                     if (! result)
                     {
-                        printf("starttttls=%s\n", pval);
+                        butil_log(5, "starttttls=%s\n", pval);
 
                         // see if starttls is really required
                         //
                         result = strncmp(pval + 1, "required", 8);
                         if (! result)
                         {
-                            printf("TLS required\n");
+                            butil_log(4, "TLS required\n");
                             bxp->state = bxmppTLS;
                         }
                     }
                 }
                 else if (result != bxml_not_found)
                 {
-                    printf("xml=%d\n", result);
-                    BERROR("Bad Reply XML");
+                    butil_log(4, "Bad Reply XML:%s\n", bxp->pxp->xml);
                     bxp->state = bxmppDone;
                 }
                 break;
@@ -438,7 +259,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                                               false,
                                               false
                                               );
-                                printf("mech[%d]=%s\n", i, bxp->in.data);
+                                butil_log(5, "mech[%d]=%s\n", i, bxp->in.data);
                             }
                         }
                         else
@@ -453,7 +274,21 @@ int bxmpp_setup(bxmpp_t *bxp)
 
             case bxmppLayerSASL:
 
-                result = -1;
+                // check for stream features: bind
+                //
+                result = bxml_find_element(bxp->pxp, "stream.features.bind", '.', 0, &ptag);
+                if (result)
+                {
+                    butil_log(2, "No bind feature, can't move past SASL\n");
+                    bxp->state = bxmppDone;
+                }
+                else
+                {
+                    // Bind stream
+                    butil_log(5, "Can Bind\n");
+                    bxp->state = bxmppBind;
+                }
+                result = 0;
                 break;
 
             default:
@@ -522,7 +357,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                     bxp->stream = NULL;
                     bxp->state = bxmppDone;
                 }
-                printf("TLS started\n");
+                butil_log(4, "TLS started\n");
 
                 // use tcp stream wrapped in tls io
                 //
@@ -535,13 +370,12 @@ int bxmpp_setup(bxmpp_t *bxp)
             }
             else if (result == bxml_not_found)
             {
-                printf("No proceed in starttls reply\n");
+                butil_log(4, "No proceed in starttls reply\n");
                 bxp->state = bxmppDone;
             }
             else
             {
-                printf("xml=%d\n", result);
-                BERROR("Bad Reply XML");
+                butil_log(4, "Bad Reply XML:%s\n", bxp->pxp->xml);
                 bxp->state = bxmppDone;
             }
         }
@@ -551,18 +385,13 @@ int bxmpp_setup(bxmpp_t *bxp)
 
     case bxmppSASL:
 
-    {
-        char authbuf[256], encbuf[256];
-        size_t len;
-        extern const char *s_username, *s_password;
-
         authbuf[0] = 0;
         strcpy(authbuf + 1, s_username);
         len = 2 + strlen(s_username);
         strcpy(authbuf + len, s_password);
         len += strlen(s_password);
 
-        result = http_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)authbuf, len, false);
+        result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)authbuf, len, false, false);
 
         // Send sasl auth
         //
@@ -582,7 +411,7 @@ int bxmpp_setup(bxmpp_t *bxp)
             return result;
         }
         bxp->out.head = bxp->out.count;
-    }
+
         // go to output phase, then to sasl reply if ok
         //
         bxmpp_push_state(bxp, bxmppOutPhase, bxmppSASLreply);
@@ -590,9 +419,295 @@ int bxmpp_setup(bxmpp_t *bxp)
         break;
 
     case bxmppSASLreply:
+
+        // parse xml reply
+        //
+        bxp->pxp = bxml_parser_create((char*)bxp->in.data);
+        if (! bxp->pxp)
+        {
+            BERROR("No XML parser for sasl reply");
+            return -1;
+        }
+        bxp->in.count = 0;
+        bxp->in.head = bxp->in.tail = 0;
+
+        // check for errors from server
+        //
+        result = bxmpp_check_errors(bxp);
+        if (! result)
+        {
+            // check for stream features: starttls
+            //
+            result = bxml_find_element(bxp->pxp, "success", '\0', 0, &ptag);
+            if (! result)
+            {
+                // restart the stream on the SASL layer
+                // RESTART STREAM --------------------
+                bxp->layer = bxmppLayerSASL;
+                bxp->state = bxmppTransport;
+            }
+            else if (result == bxml_not_found)
+            {
+                bool explained_it = false;
+
+                do // Try
+                {
+                    result = bxml_find_element(bxp->pxp, "aborted", '\0', 0, &ptag);
+                    if (! result)
+                    {
+                        butil_log(2, "Aborted in SASL\n");
+                        explained_it = true;
+                        break;
+                    }
+                    result = bxml_find_element(bxp->pxp, "failure", '\0', 0, &ptag);
+                    if (result)
+                    {
+                        butil_log(4, "Bad SASL reply XML? %s\n", bxp->pxp->xml);
+                        explained_it = true;
+                        break;
+                    }
+                    // see if there is a text message
+                    //
+                    result = bxml_find_element(bxp->pxp, "failure.text", '.', 0, &ptag);
+                    if (result)
+                    {
+                        break;
+                    }
+                    result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
+                    if (result)
+                    {
+                        break;
+                    }
+                    result = bxml_copy_element((char*)bxp->in.data, bxp->in.size, pval, val_len, false, false);
+                    if (! result)
+                    {
+                        butil_log(3, "SASL Failed: %s\n", bxp->in.data);
+                        explained_it = true;
+                    }
+                }
+                while (0); // Catch
+
+                if (! explained_it)
+                {
+                    butil_log(3, "SASL Failure (unspecified)\n");
+                }
+                bxp->state = bxmppDone;
+            }
+            else
+            {
+                butil_log(4, "Bad Reply XML:%s\n", bxp->pxp->xml);
+                bxp->state = bxmppDone;
+            }
+        }
+        bxml_parser_destroy(bxp->pxp);
+        bxp->pxp = NULL;
+        break;
+
+    case bxmppBind:
+
+        // Send bind
+        //
+        result = bxml_format_element(
+                                authbuf,
+                                sizeof(authbuf),
+                                &val_len,
+                                false,
+                                "bind",
+                                "<resource>talk</resource>",
+                                1,
+                                "xmlns", "urn:ietf:params:xml:ns:xmpp-bind"
+                                );
+        if (result)
+        {
+            BERROR("Format bind");
+            return result;
+        }
+        result = bxml_format_element(
+                                (char*)bxp->out.data,
+                                bxp->out.size,
+                                (size_t*)&bxp->out.count,
+                                false,
+                                "iq",
+                                authbuf,
+                                2,
+                                "type", "set",
+                                "id", "0"
+                                );
+        if (result)
+        {
+            BERROR("Format IQ");
+            return result;
+        }
+        bxp->out.head = bxp->out.count;
+
+        // go to output phase, then to sasl reply if ok
+        //
+        bxmpp_push_state(bxp, bxmppOutPhase, bxmppBindReply);
+        result = 0;
+        break;
+
+    case bxmppBindReply:
+
+        // parse xml reply
+        //
+        bxp->pxp = bxml_parser_create((char*)bxp->in.data);
+        if (! bxp->pxp)
+        {
+            BERROR("No XML parser for sasl reply");
+            return -1;
+        }
+        bxp->in.count = 0;
+        bxp->in.head = bxp->in.tail = 0;
+
+        bxp->state = bxmppDone;
+
+        // check for errors from server
+        //
+        result = bxmpp_check_errors(bxp);
+        if (! result)
+        {
+            // check for bind results: jid
+            //
+            result = bxml_find_element(bxp->pxp, "iq.bind.jid", '.', 0, &ptag);
+            if (result)
+            {
+                butil_log(3, "No JID in bind result\n");
+                break;
+            }
+            result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
+            if (result)
+            {
+                BERROR("Parse JID");
+                break;
+            }
+            result = bxml_copy_element(bxp->jid, sizeof(bxp->jid), pval, val_len, false, false);
+            if (result)
+            {
+                BERROR("Copy JID");
+                break;
+            }
+            butil_log(4, "Bound to ID:%s\n", bxp->jid);
+        #if 0
+            bxp->layer = bxmppLayerSession;
+            bxp->state = bxmppSession;
+        #else
+            bxp->layer = bxmppLayerSession;
+            bxp->state = bxmppConnected;
+
+            // send a message to ourselves
+            //
+            result = bxml_format_element(
+                                    (char*)bxp->out.data,
+                                    bxp->out.size,
+                                    (size_t*)&bxp->out.count,
+                                    false,
+                                    "message",
+                                    "<body>Hello</body>",
+                                    5,
+                                    "from", bxp->jid,
+                                    "to", bxp->jid,
+                                    "version", "1.0",
+                                    "xmlns", "jabber:client",
+                                    "xmlns:stream", "http://etherx.jabber.org/streams"
+                                    );
+            if (result)
+            {
+                BERROR("Format IQ");
+                return result;
+            }
+            bxp->out.head = bxp->out.count;
+            bxmpp_push_state(bxp, bxmppOutPhase, bxmppConnected);
+        #endif
+        }
+        bxml_parser_destroy(bxp->pxp);
+        bxp->pxp = NULL;
+        break;
+
+    case bxmppSession:
+
+        bxp->state = bxmppDone;
+        break;
+
+    case bxmppSessionReply:
+
+        bxp->state = bxmppDone;
         break;
 
     case bxmppConnected:
+
+        // parse xml from server
+        //
+        bxp->pxp = bxml_parser_create((char*)bxp->in.data);
+        if (! bxp->pxp)
+        {
+            BERROR("No XML parser for sasl reply");
+            return -1;
+        }
+        bxp->in.count = 0;
+        bxp->in.head = bxp->in.tail = 0;
+
+        bxp->state = bxmppDone;
+
+        do // try
+        {
+            // check for errors from server
+            //
+            result = bxmpp_check_errors(bxp);
+            if (result)
+            {
+                break;
+            }
+            // check for message
+            //
+            result = bxml_find_element(bxp->pxp, "message", '.', 0, &ptag);
+            if (! result)
+            {
+                result = bxml_find_and_copy_attribute(
+                                                    bxp->pxp,
+                                                    ptag,
+                                                    "from",
+                                                    authbuf,
+                                                    sizeof(authbuf),
+                                                    false,
+                                                    false
+                                                    );
+                if (result)
+                {
+                    authbuf[0] = '\0';
+                }
+                result = bxml_find_element(bxp->pxp, "message.body", '.', 0, &ptag);
+                if (! result)
+                {
+                    result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
+                    if (result)
+                    {
+                        BERROR("Parse Message");
+                        break;
+                    }
+                    result = bxml_copy_element((char *)bxp->out.data, bxp->out.size, pval, val_len, false, false);
+                    if (result)
+                    {
+                        BERROR("Copy message");
+                        break;
+                    }
+                    butil_log(2, "MESSAGE From %s:\n%s\n", authbuf, bxp->out.data);
+                }
+                bxmpp_push_state(bxp, bxmppInPhase, bxmppConnected);
+                result = 0;
+            }
+            else if (result != bxml_not_found)
+            {
+                break;
+            }
+            else
+            {
+                result = 0;
+            }
+        }
+        while (0);
+
+        bxml_parser_destroy(bxp->pxp);
+        bxp->pxp = NULL;
         break;
 
     case bxmppDone:
@@ -629,6 +744,8 @@ int bxmpp_setup(bxmpp_t *bxp)
         {
             count = bxp->out.size - bxp->out.tail;
         }
+        butil_log(5, "XML REQ>>>=%s\n", bxp->out.data);
+
         // send it up stream
         //
         result = bxp->stream->write(bxp->stream, bxp->out.data + bxp->out.tail, count);
@@ -709,7 +826,7 @@ int bxmpp_setup(bxmpp_t *bxp)
         }
         bxp->in.count++;
 
-        fprintf(stderr, "XML REPLY=\n%s\n", bxp->in.data);
+        butil_log(5, "XML REPLY<<<<=%s\n", bxp->in.data);
 
         // return to state
         //

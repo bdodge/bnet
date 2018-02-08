@@ -2,6 +2,7 @@
 #define BXMPP_H 1
 
 #include "bnetheaders.h"
+#include "butil.h"
 #include "bxml.h"
 #include "bstreamio.h"
 
@@ -11,6 +12,7 @@
 
 #define BXMPP_MAX_HOST  256
 #define BXMPP_MAX_ADDR  128
+#define BXMPP_MAX_JID   128
 
 typedef enum
 {
@@ -22,6 +24,10 @@ typedef enum
     bxmppTLSproceed,
     bxmppSASL,
     bxmppSASLreply,
+    bxmppBind,
+    bxmppBindReply,
+    bxmppSession,
+    bxmppSessionReply,
     bxmppConnected,
     bxmppOutPhase,
     bxmppInPhase
@@ -34,7 +40,7 @@ typedef enum
     bxmppLayerTCP,
     bxmppLayerTLS,
     bxmppLayerSASL,
-    bxmppLayerBound
+    bxmppLayerSession
 }
 bxmpp_layer_t;
 
@@ -43,6 +49,7 @@ typedef struct
     char host[BXMPP_MAX_HOST];
     char to[BXMPP_MAX_ADDR];
     char from[BXMPP_MAX_ADDR];
+    char jid[BXMPP_MAX_JID];
     uint16_t        port;
     bxmpp_layer_t   layer;
     bxmpp_state_t   state;

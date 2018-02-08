@@ -8,6 +8,8 @@ int main(int argc, char **argv)
 	bxmpp_t *bxp;
 	int result;
 
+	butil_set_log_level(5);
+
 	bxp = bxmpp_create("xmpp.jp"/*"jabber.org"*/, BXMPP_PORT, "xmpp.jp",
 		"xmpp.jp");
 	if (! bxp)

@@ -5,6 +5,7 @@
 #include <semaphore.h>
 #include <errno.h>
 
+#ifndef OSX
 #ifdef OSX
     // OSX posix threads only supports named semaphores
     //
@@ -261,3 +262,4 @@ bos_interface_t *bosal_interface()
     }
     return &s_bosal_posix_interface;
 }
+#endif

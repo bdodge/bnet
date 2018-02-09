@@ -13,7 +13,11 @@ ifndef NO_MBED_TLS
 	CFLAGS+=-DIOSTREAM_SUPPORT_TLS
 endif
 
-IOLIB=bstreamio.a
+PROGSOURCES=$(SRCDIR)/bstreamiotest.c
+PROGOBJECTS=$(OBJDIR)/bstreamiotest.o
+
+bstreamiotest: $(PROGOBJECTS) $(IOLIB)
+	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(IOLIB) $(LIBS)
 
 library: $(IOLIB)
 
@@ -29,4 +33,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 $(OBJDIR)/bstreamio.o: $(SRCDIR)/bstreamio.c $(HEADERS)
 $(OBJDIR)/bstreamtls.o: $(SRCDIR)/bstreamtls.c $(HEADERS) $(CERTS)
+
+$(OBJDIR)/bstreamiotest.o: $(SRCDIR)/bstreamiotest.c $(HEADERS)
 

@@ -1,10 +1,17 @@
 #include "bxmpp.h"
 
-static const char *s_bind_xml       =   "<iq type='set' id='0'>"
-                                          "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'>"
-                                            "<resource>%s</resource>"
-                                          "</bind>"
-                                        "</iq>";
+static struct tag_authlist
+{
+    const char *authname;
+    bxmpp_auth_type_t type;
+}
+s_authlist[] =
+{
+    {    "notusedkeep", bxmppAuthNone  },
+    {    "SCRAM-SHA-1", bxmppAuthSCRAMSHA1  },
+//    {    "PLAIN",       bxmppAuthPLAIN   },
+};
+#define BXMPP_NUM_AUTHS   (sizeof(s_authlist)/sizeof(struct tag_authlist))
 
 static int bxmpp_check_errors(bxmpp_t *bxp)
 {
@@ -44,6 +51,86 @@ static int bxmpp_check_errors(bxmpp_t *bxp)
     return -1;
 }
 
+static int bxmpp_start_authentication(bxmpp_t *bxp)
+{
+    char authbuf[256], encbuf[256];
+    uint32_t nonce;
+    size_t len;
+    extern const char *s_username, *s_password;
+    int result;
+
+    switch (bxp->authtype)
+    {
+    case bxmppAuthNone:
+    case bxmppAuthPLAIN:
+
+        authbuf[0] = 0;
+        strcpy(authbuf + 1, s_username);
+        len = 2 + strlen(s_username);
+        strcpy(authbuf + len, s_password);
+        len += strlen(s_password);
+
+        result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)authbuf, len, false, false);
+
+        // Send sasl auth
+        //
+        result = bxml_format_element(
+                                (char*)bxp->out.data,
+                                bxp->out.size,
+                                (size_t*)&bxp->out.count,
+                                false,
+                                "auth",
+                                encbuf,
+                                2,
+                                "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl",
+                                "mechanism", "PLAIN"
+                                );
+        if (result)
+        {
+            return result;
+        }
+        bxp->out.head = bxp->out.count;
+        break;
+
+    case bxmppAuthSCRAMSHA1:
+
+        time(&nonce);
+        result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)&nonce, 4, false, false);
+
+        len = snprintf(authbuf, sizeof(authbuf),
+            "n,,n=%s,r=%s", s_username, encbuf);
+
+        result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)authbuf, len, false, false);
+        result = butil_base64_decode(authbuf, sizeof(authbuf), (uint8_t*)encbuf);
+        butil_log(3, "auth=%s\n", authbuf);
+
+        // Send sasl auth
+        //
+        result = bxml_format_element(
+                                (char*)bxp->out.data,
+                                bxp->out.size,
+                                (size_t*)&bxp->out.count,
+                                false,
+                                "auth",
+                                encbuf,
+                                2,
+                                "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl",
+                                "mechanism", "SCRAM-SHA-1"
+                                );
+        if (result)
+        {
+            return result;
+        }
+        bxp->out.head = bxp->out.count;
+        break;
+
+    default:
+        BERROR("Not an auth");
+        return -1;
+    }
+    return 0;
+}
+
 static const char *bxmpp_state(bxmpp_state_t state)
 {
     switch (state)
@@ -56,6 +143,8 @@ static const char *bxmpp_state(bxmpp_state_t state)
     case bxmppTLSproceed:       return "TLSproceed";
     case bxmppSASL:             return "SASL";
     case bxmppSASLreply:        return "SASLreply";
+    case bxmppSCRAM:            return "SCRAM";
+    case bxmppSCRAMreply:       return "SCRAMreply";
     case bxmppBind:             return "Bind";
     case bxmppBindReply:        return "BinReply";
     case bxmppSession:          return "Session";
@@ -241,7 +330,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                 result = bxml_find_element(bxp->pxp, "stream.features.mechanisms", '.', 0, &ptag);
                 if (! result)
                 {
-                    int i;
+                    int i, j;
 
                     for (i = 0; i < 16; i++)
                     {
@@ -260,6 +349,21 @@ int bxmpp_setup(bxmpp_t *bxp)
                                               false
                                               );
                                 butil_log(5, "mech[%d]=%s\n", i, bxp->in.data);
+
+                                // match auth avail to auth configured
+                                //
+                                if (bxp->authtype == bxmppAuthNone)
+                                {
+                                    for (j = 0; j < BXMPP_NUM_AUTHS; j++)
+                                    {
+                                        if (! strcmp(s_authlist[j].authname, (char*)bxp->in.data))
+                                        {
+                                            butil_log(4, "Selected Auth %s\n", (char*)bxp->in.data);
+                                            bxp->authtype = s_authlist[j].type;
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                         }
                         else
@@ -385,33 +489,11 @@ int bxmpp_setup(bxmpp_t *bxp)
 
     case bxmppSASL:
 
-        authbuf[0] = 0;
-        strcpy(authbuf + 1, s_username);
-        len = 2 + strlen(s_username);
-        strcpy(authbuf + len, s_password);
-        len += strlen(s_password);
-
-        result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)authbuf, len, false, false);
-
-        // Send sasl auth
-        //
-        result = bxml_format_element(
-                                (char*)bxp->out.data,
-                                bxp->out.size,
-                                (size_t*)&bxp->out.count,
-                                false,
-                                "auth",
-                                encbuf,
-                                2,
-                                "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl",
-                                "mechanism", "PLAIN"
-                                );
+        result = bxmpp_start_authentication(bxp);
         if (result)
         {
-            return result;
+            break;
         }
-        bxp->out.head = bxp->out.count;
-
         // go to output phase, then to sasl reply if ok
         //
         bxmpp_push_state(bxp, bxmppOutPhase, bxmppSASLreply);
@@ -882,6 +964,7 @@ bxmpp_t *bxmpp_create(const char *host, uint16_t port, const char *from, const c
             free(bxp);
             return NULL;
         }
+        bxp->authtype = bxmppAuthNone;
         strcpy(bxp->host, host);
         strcpy(bxp->from, from);
         strcpy(bxp->to, to);

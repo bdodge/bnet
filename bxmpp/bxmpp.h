@@ -16,6 +16,15 @@
 
 typedef enum
 {
+    bxmppAuthNone,
+    bxmppAuthPLAIN,
+    bxmppAuthOAUTH2,
+    bxmppAuthSCRAMSHA1
+}
+bxmpp_auth_type_t;
+
+typedef enum
+{
     bxmppDone,
     bxmppInit,
     bxmppTransport,
@@ -24,6 +33,8 @@ typedef enum
     bxmppTLSproceed,
     bxmppSASL,
     bxmppSASLreply,
+    bxmppSCRAM,
+    bxmppSCRAMreply,
     bxmppBind,
     bxmppBindReply,
     bxmppSession,
@@ -54,6 +65,7 @@ typedef struct
     bxmpp_layer_t   layer;
     bxmpp_state_t   state;
     bxmpp_state_t   next_state;
+    bxmpp_auth_type_t authtype;
     bxml_parser_t  *pxp;
     ioring_t        in;
     ioring_t        out;

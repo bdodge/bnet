@@ -58,8 +58,9 @@ bxmpp_layer_t;
 typedef struct
 {
     char host[BXMPP_MAX_HOST];
-    char to[BXMPP_MAX_ADDR];
-    char from[BXMPP_MAX_ADDR];
+    char user[BXMPP_MAX_ADDR];
+    char pass[BXMPP_MAX_ADDR];
+    char id[BXMPP_MAX_ADDR];
     char jid[BXMPP_MAX_JID];
     uint16_t        port;
     bxmpp_layer_t   layer;
@@ -75,7 +76,13 @@ bxmpp_t;
 
 int bxmpp_setup(bxmpp_t *bxp);
 
-bxmpp_t *bxmpp_create(const char *host, uint16_t port, const char *from, const char *to);
+bxmpp_t *bxmpp_create(
+                        const char *host,
+                        uint16_t    port,
+                        const char *user,
+                        const char *password,
+                        const char *id
+                    );
 
 int bxmpp_destroy(bxmpp_t *bxp);
 

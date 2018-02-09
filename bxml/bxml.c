@@ -1304,6 +1304,60 @@ int bxml_find_element(
     return bxml_find_next_element(pxp, elementpath, pathdelim, index, tag_start);
 }
 
+int bxml_find_and_copy_element(
+                        bxml_parser_t *pxp,
+                        const char *elementpath,
+                        const char pathdelim,
+                        size_t index,
+                        char *value,
+                        size_t value_len,
+                        bool keep_white,
+                        bool keep_entities
+                     )
+{
+    const char *ptag;
+    const char *pval;
+    size_t val_len;
+    size_t remlength;
+    int result;
+
+    if (! pxp || ! elementpath || ! value || ! value_len)
+    {
+        return bxml_parameter;
+    }
+    pxp->psrc = pxp->root;
+    if (! pxp->psrc)
+    {
+        return bxml_syntax;
+    }
+    // should be on root element now
+    //
+    if (*pxp->psrc != '<')
+    {
+        return bxml_syntax;
+    }
+    result = bxml_find_next_element(pxp, elementpath, pathdelim, index, &ptag);
+    if (result)
+    {
+        return result;
+    }
+    if (! ptag)
+    {
+        return bxml_not_found;
+    }
+    result = bxml_parse_value(pxp, ptag, NULL, 0, NULL, &pval, &val_len);
+    if (result)
+    {
+        return result;
+    }
+    if (! pval)
+    {
+        return bxml_not_found;
+    }
+    result = bxml_copy_element(value, value_len, pval, val_len, keep_white, keep_entities);
+    return result;
+}
+
 int bxml_find_nth_element(
                         const char *xml,
                         const char *elementpath,

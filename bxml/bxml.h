@@ -235,6 +235,36 @@ int bxml_find_element(
                         const char **tag_start
                      );
 
+/// Find (a sequence of) xml elements by tag and copy its value
+/// into a buffer. See @bxml_find_element() and @bml_copy_element()
+///
+/// The element path is a sequence of nested tags with optional
+/// indices. The tags do not have to correspond to exact nesting
+/// as the xml being parse, just the same general nesting.
+/// see @bxml_find_and_copy_nth_element() for examples.
+///
+/// @param pxp          [in] the xml parser
+/// @param elementpath  [in] the element (sequence) to define
+/// @param pathdelim    [in] the character that delimits the elementpath
+/// @param index        [in] which of a series of inner element to get
+/// @param value        [in]  the pointer to the value of an element in pxp
+/// @param value_length [in] the number of bytes in the value
+/// @param keep_white   [in] set non-0 to preserve all white space in values
+/// @param keep_entities[in] set non-0 to suppress expansion of entities in value copy
+///
+/// @returns non-0 on error
+///
+int bxml_find_and_copy_element(
+                                bxml_parser_t *pxp,
+                                const char *elementpath,
+                                const char pathdelim,
+                                size_t index,
+                                char *value,
+                                size_t value_len,
+                                bool keep_white,
+                                bool keep_entities
+                             );
+
 /// Find (a sequence of) xml elements by tag and point to it
 /// Starting from the top of the xml in the parser
 ///

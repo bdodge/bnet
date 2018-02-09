@@ -9,7 +9,7 @@ s_authlist[] =
 {
     {    "notusedkeep", bxmppAuthNone  },
     {    "SCRAM-SHA-1", bxmppAuthSCRAMSHA1  },
-//    {    "PLAIN",       bxmppAuthPLAIN   },
+//   {    "PLAIN",       bxmppAuthPLAIN   },
 };
 #define BXMPP_NUM_AUTHS   (sizeof(s_authlist)/sizeof(struct tag_authlist))
 
@@ -26,7 +26,13 @@ static int bxmpp_check_errors(bxmpp_t *bxp)
     }
     // look for stream:error
     //
-    result = bxml_find_element(bxp->pxp, "error", '.', 0, &etag);
+    result = bxml_find_and_copy_element(
+                                        bxp->pxp,
+                                        "error", '.',
+                                         0,
+                                        (char *)bxp->in.data, bxp->in.size,
+                                        false, false
+                                        );
     if (result)
     {
         if (result == bxml_not_found)
@@ -39,15 +45,7 @@ static int bxmpp_check_errors(bxmpp_t *bxp)
             return result;
         }
     }
-    result = bxml_parse_value(bxp->pxp, etag, NULL, 0, NULL, &eval, &eval_len);
-    if (! result)
-    {
-        result = bxml_copy_element((char*)bxp->in.data, bxp->in.size, eval, eval_len, false, false);
-        if (! result)
-        {
-            butil_log(3, "error: %s\n", bxp->in.data);
-        }
-    }
+    butil_log(3, "error: %s\n", bxp->in.data);
     return -1;
 }
 
@@ -56,7 +54,7 @@ static int bxmpp_start_authentication(bxmpp_t *bxp)
     char authbuf[256], encbuf[256];
     uint32_t nonce;
     size_t len;
-    extern const char *s_username, *s_password;
+    time_t now;
     int result;
 
     switch (bxp->authtype)
@@ -65,10 +63,10 @@ static int bxmpp_start_authentication(bxmpp_t *bxp)
     case bxmppAuthPLAIN:
 
         authbuf[0] = 0;
-        strcpy(authbuf + 1, s_username);
-        len = 2 + strlen(s_username);
-        strcpy(authbuf + len, s_password);
-        len += strlen(s_password);
+        strcpy(authbuf + 1, bxp->user);
+        len = 2 + strlen(bxp->user);
+        strcpy(authbuf + len, bxp->pass);
+        len += strlen(bxp->pass);
 
         result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)authbuf, len, false, false);
 
@@ -94,13 +92,15 @@ static int bxmpp_start_authentication(bxmpp_t *bxp)
 
     case bxmppAuthSCRAMSHA1:
 
-        time(&nonce);
+        time(&now);
+        nonce = (uint32_t)now;
+
         result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)&nonce, 4, false, false);
 
-        len = snprintf(authbuf, sizeof(authbuf),
-            "n,,n=%s,r=%s", s_username, encbuf);
+        len = snprintf(authbuf, sizeof(authbuf), "n,,n=%s,r=%s", bxp->user, encbuf);
 
         result = butil_base64_encode(encbuf, sizeof(encbuf), (uint8_t*)authbuf, len, false, false);
+
         result = butil_base64_decode(authbuf, sizeof(authbuf), (uint8_t*)encbuf);
         butil_log(3, "auth=%s\n", authbuf);
 
@@ -122,6 +122,50 @@ static int bxmpp_start_authentication(bxmpp_t *bxp)
             return result;
         }
         bxp->out.head = bxp->out.count;
+        break;
+
+    default:
+        BERROR("Not an auth");
+        return -1;
+    }
+    return 0;
+}
+
+static int bxmpp_finish_authentication(bxmpp_t *bxp, char *challenge)
+{
+    char authbuf[256], encbuf[256];
+    uint32_t nonce;
+    size_t len;
+    time_t now;
+    int result;
+
+    switch (bxp->authtype)
+    {
+    case bxmppAuthSCRAMSHA1:
+
+        result = butil_base64_decode(authbuf, sizeof(authbuf), challenge);
+
+        butil_log(4, "Challenge=%s\n", authbuf);
+#if 0
+        // Send sasl auth
+        //
+        result = bxml_format_element(
+                                (char*)bxp->out.data,
+                                bxp->out.size,
+                                (size_t*)&bxp->out.count,
+                                false,
+                                "auth",
+                                encbuf,
+                                2,
+                                "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl",
+                                "mechanism", "SCRAM-SHA-1"
+                                );
+        if (result)
+        {
+            return result;
+        }
+        bxp->out.head = bxp->out.count;
+#endif
         break;
 
     default:
@@ -192,7 +236,6 @@ int bxmpp_setup(bxmpp_t *bxp)
 
     char authbuf[256], encbuf[256];
     size_t len;
-    extern const char *s_username, *s_password;
 
     static int oldincount;
     static bxmpp_state_t oldstate;
@@ -253,7 +296,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                                 "stream:stream",
                                 NULL,
                                 4,
-                                "to", bxp->to,
+                                "to", bxp->host,
                                 "xmlns", "jabber:client",
                                 "xmlns:stream", "http://etherx.jabber.org/streams",
                                 "version", "1.0"
@@ -334,34 +377,28 @@ int bxmpp_setup(bxmpp_t *bxp)
 
                     for (i = 0; i < 16; i++)
                     {
-                        result = bxml_find_element(bxp->pxp, "mechanism", '.', i, &ptag);
+                        result = bxml_find_and_copy_element(
+                                        bxp->pxp,
+                                        "mechanism", '.',
+                                         i,
+                                        (char *)bxp->in.data, bxp->in.size,
+                                        false, false
+                                        );
                         if (! result)
                         {
-                            result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
-                            if (! result)
-                            {
-                                result = bxml_copy_element(
-                                              (char *)bxp->in.data,
-                                              bxp->in.size,
-                                              pval,
-                                              val_len,
-                                              false,
-                                              false
-                                              );
-                                butil_log(5, "mech[%d]=%s\n", i, bxp->in.data);
+                            butil_log(5, "mech[%d]=%s\n", i, bxp->in.data);
 
-                                // match auth avail to auth configured
-                                //
-                                if (bxp->authtype == bxmppAuthNone)
+                            // match auth avail to auth configured
+                            //
+                            if (bxp->authtype == bxmppAuthNone)
+                            {
+                                for (j = 0; j < BXMPP_NUM_AUTHS; j++)
                                 {
-                                    for (j = 0; j < BXMPP_NUM_AUTHS; j++)
+                                    if (! strcmp(s_authlist[j].authname, (char*)bxp->in.data))
                                     {
-                                        if (! strcmp(s_authlist[j].authname, (char*)bxp->in.data))
-                                        {
-                                            butil_log(4, "Selected Auth %s\n", (char*)bxp->in.data);
-                                            bxp->authtype = s_authlist[j].type;
-                                            break;
-                                        }
+                                        butil_log(4, "Selected Auth %s\n", (char*)bxp->in.data);
+                                        bxp->authtype = s_authlist[j].type;
+                                        break;
                                     }
                                 }
                             }
@@ -518,6 +555,26 @@ int bxmpp_setup(bxmpp_t *bxp)
         result = bxmpp_check_errors(bxp);
         if (! result)
         {
+            // for scram type auth schemes we expect a challenge here
+            //
+            if (bxp->authtype == bxmppAuthSCRAMSHA1)
+            {
+                // check for challenge
+                //
+                result = bxml_find_and_copy_element(bxp->pxp, "challenge", '\0', 0,
+                        authbuf, sizeof(authbuf), false, false);
+                if (! result)
+                {
+                    result = bxmpp_finish_authentication(bxp, authbuf);
+                    if (! result)
+                    {
+                        // restart the stream on the SASL layer
+                        // RESTART STREAM --------------------
+                        bxp->layer = bxmppLayerSASL;
+                        bxp->state = bxmppTransport;
+                    }
+                }
+            }
             // check for stream features: starttls
             //
             result = bxml_find_element(bxp->pxp, "success", '\0', 0, &ptag);
@@ -550,17 +607,13 @@ int bxmpp_setup(bxmpp_t *bxp)
                     }
                     // see if there is a text message
                     //
-                    result = bxml_find_element(bxp->pxp, "failure.text", '.', 0, &ptag);
-                    if (result)
-                    {
-                        break;
-                    }
-                    result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
-                    if (result)
-                    {
-                        break;
-                    }
-                    result = bxml_copy_element((char*)bxp->in.data, bxp->in.size, pval, val_len, false, false);
+                    result = bxml_find_and_copy_element(
+                                        bxp->pxp,
+                                        "failure.text", '.',
+                                         0,
+                                        (char *)bxp->in.data, bxp->in.size,
+                                        false, false
+                                        );
                     if (! result)
                     {
                         butil_log(3, "SASL Failed: %s\n", bxp->in.data);
@@ -924,11 +977,17 @@ int bxmpp_setup(bxmpp_t *bxp)
 }
 
 
-bxmpp_t *bxmpp_create(const char *host, uint16_t port, const char *from, const char *to)
+bxmpp_t *bxmpp_create(
+                        const char *host,
+                        uint16_t    port,
+                        const char *user,
+                        const char *password,
+                        const char *id
+                     )
 {
     bxmpp_t *bxp;
 
-    if (! host || ! from || ! to)
+    if (! host || ! user || ! password || ! id)
     {
         return NULL;
     }
@@ -936,11 +995,15 @@ bxmpp_t *bxmpp_create(const char *host, uint16_t port, const char *from, const c
     {
         return NULL;
     }
-    if (strlen(from) >= BXMPP_MAX_ADDR)
+    if (strlen(user) >= BXMPP_MAX_ADDR)
     {
         return NULL;
     }
-    if (strlen(to) >= BXMPP_MAX_ADDR)
+    if (strlen(password) >= BXMPP_MAX_ADDR)
+    {
+        return NULL;
+    }
+    if (strlen(id) >= BXMPP_MAX_ADDR)
     {
         return NULL;
     }
@@ -966,9 +1029,10 @@ bxmpp_t *bxmpp_create(const char *host, uint16_t port, const char *from, const c
         }
         bxp->authtype = bxmppAuthNone;
         strcpy(bxp->host, host);
-        strcpy(bxp->from, from);
-        strcpy(bxp->to, to);
         bxp->port = port;
+        strcpy(bxp->user, user);
+        strcpy(bxp->pass, password);
+        strcpy(bxp->id, id);
         bxp->layer = bxmppLayerNone;
         bxp->state = bxmppInit;
         bxp->next_state = bxmppInit;

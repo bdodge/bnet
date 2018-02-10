@@ -1372,7 +1372,7 @@ int bxml_find_nth_element(
     bxml_parser_t *pxp;
     int result;
 
-    pxp = bxml_parser_create(xml);
+    pxp = bxml_parser_create(NULL, xml);
     if (! pxp)
     {
         return bxml_memory;
@@ -1407,32 +1407,23 @@ int bxml_find_and_copy_nth_element(
                                 )
 {
     bxml_parser_t *pxp;
-    const char *tag_start;
-    const char *value;
-    size_t value_len;
     int result;
 
-    pxp = bxml_parser_create(xml);
+    pxp = bxml_parser_create(NULL, xml);
     if (! pxp)
     {
         return bxml_memory;
     }
-    if (! pxp->root)
-    {
-        return bxml_error(pxp, bxml_syntax);
-    }
-    result = bxml_find_element(pxp, elementpath, pathdelim, index, &tag_start);
-    if (result)
-    {
-        bxml_parser_destroy(pxp);
-        return result;
-    }
-    result = bxml_parse_value(pxp, tag_start, NULL, 0, NULL, &value, &value_len);
-    if (! result)
-    {
-        result = bxml_copy_element(element, nelement, value, value_len,
-                        keep_white, keep_entities);
-    }
+    result = bxml_find_and_copy_element(
+                                        pxp,
+                                        elementpath,
+                                        pathdelim,
+                                        index,
+                                        element,
+                                        nelement,
+                                        keep_white,
+                                        keep_entities
+                                        );
     bxml_parser_destroy(pxp);
     return result;
 }
@@ -1441,12 +1432,15 @@ int bxml_parser_destroy(bxml_parser_t *pxp)
 {
     if (pxp)
     {
-        free(pxp);
+        if (pxp->selfowned)
+        {
+            free(pxp);
+        }
     }
     return 0;
 }
 
-bxml_parser_t *bxml_parser_create(const char *xml)
+bxml_parser_t *bxml_parser_create(bxml_parser_t *shell, const char *xml)
 {
     bxml_parser_t *pxp;
     size_t remlength;
@@ -1456,7 +1450,19 @@ bxml_parser_t *bxml_parser_create(const char *xml)
     {
         return NULL;
     }
-    pxp = (bxml_parser_t *)malloc(sizeof(bxml_parser_t));
+    if (shell)
+    {
+        pxp = shell;
+        pxp->selfowned = false;
+    }
+    else
+    {
+        pxp = (bxml_parser_t *)malloc(sizeof(bxml_parser_t));
+        if (pxp)
+        {
+            pxp->selfowned = true;
+        }
+    }
     if (pxp)
     {
         while (bxml_is_white(*xml))

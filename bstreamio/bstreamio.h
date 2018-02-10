@@ -52,6 +52,23 @@ iostream_t *iostream_create_from_tcp_connection(
                                               );
 
 int iostream_sha1_hash(uint8_t *result, uint8_t *source, size_t bytes);
+int iostream_pkcs5_pbkdf2_hmac(
+                                uint8_t *key,
+                                size_t keylen,
+                                const uint8_t *password,
+                                size_t passlen,
+                                const uint8_t *salt,
+                                size_t saltlen,
+                                size_t iterations
+                                );
+
+int iostream_sha1_hmac(
+                                const uint8_t *key,
+                                size_t keylen,
+                                const uint8_t *input,
+                                size_t ilen,
+                                uint8_t *output
+                                );
 
 iostream_t *iostream_tls_create_from_iostream(iostream_t *stream, bool isclient);
 

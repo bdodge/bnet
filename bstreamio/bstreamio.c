@@ -166,6 +166,7 @@ static int iostream_file_close(iostream_t *stream)
     stream->priv = (void*)(intptr_t)-1;
     iostream_free(stream);
     close(fileno);
+    return 0;
 }
 
 static int iostream_socket_read(iostream_t *stream, uint8_t *buf, int len)
@@ -222,6 +223,7 @@ static int iostream_socket_close(iostream_t *stream)
     stream->priv = (void*)(intptr_t)INVALID_SOCKET;
     iostream_free(stream);
     close_socket(socket);
+    return 0;
 }
 
 socket_t iostream_create_tcp_socket()

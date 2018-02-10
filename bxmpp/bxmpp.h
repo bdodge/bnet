@@ -9,6 +9,7 @@
 #define BXMPP_PORT 5222
 
 #define BXMPP_IO_SIZE 1436
+#define BXMPP_NONCE_SIZE 24
 
 #define BXMPP_MAX_HOST  256
 #define BXMPP_MAX_ADDR  128
@@ -67,7 +68,12 @@ typedef struct
     bxmpp_state_t   state;
     bxmpp_state_t   next_state;
     bxmpp_auth_type_t authtype;
+    bxml_parser_t   xmlparser;
     bxml_parser_t  *pxp;
+    uint8_t         nonce[BXMPP_NONCE_SIZE];
+    char            abuf[BXMPP_IO_SIZE];
+    char            ibuf[BXMPP_IO_SIZE];
+    char            obuf[BXMPP_IO_SIZE];
     ioring_t        in;
     ioring_t        out;
     iostream_t     *stream;

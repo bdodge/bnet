@@ -24,6 +24,7 @@ bxml_tag_type_t;
 
 typedef struct
 {
+    bool selfowned;
     const char *xml;
     const char *root;
     const char *psrc;
@@ -364,15 +365,21 @@ int bxml_find_and_copy_nth_element(
 
 /// Create an XML parser (reader)
 ///
-/// @param xml           [in] the xml to parse. Can't be NULL
+/// @param shell        [in] a context to (re)use if not wanting to allocate
+/// @param xml          [in] the xml to parse. Can not be NULL
 ///
-/// @returns an allocated xml parser object, or NULL on error (bad xml)
+/// @returns a possibly allocated xml parser object, or NULL on error (bad xml)
 ///
 bxml_parser_t *bxml_parser_create(
+                                bxml_parser_t *shell,
                                 const char *xml
                                 );
 
-/// Free an XML parser created with bxml_parser_create
+/// Free an XML parser created with @bxml_parser_create()
+/// If the parser shell was passed in to the create call
+/// it will not be freed in thia function, and you don't
+/// need to call this.  If you did not pass the shell in
+/// to the call, them you do need to call this
 ///
 /// @param pxp [in] pointer to xml parser to free
 ///

@@ -10,6 +10,7 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/x509_csr.h"
 #include "mbedtls/entropy.h"
+#include "mbedtls/pkcs5.h"
 #include "mbedtls/sha1.h"
 #include "mbedtls/net.h"
 #include "mbedtls/error.h"
@@ -111,6 +112,87 @@ int iostream_sha1_hash(uint8_t *result, uint8_t *source, size_t bytes)
     mbedtls_sha1_finish(&shactx, result);
     mbedtls_sha1_free(&shactx);
     return 0;
+}
+
+int iostream_pkcs5_pbkdf2_hmac(
+                                uint8_t *key,
+                                size_t keylen,
+                                const uint8_t *password,
+                                size_t passlen,
+                                const uint8_t *salt,
+                                size_t saltlen,
+                                size_t iterations
+                                )
+{
+    mbedtls_md_context_t sha1_ctx;
+    const mbedtls_md_info_t *info_sha1;
+    int result;
+
+    if (! key || ! keylen || ! password || ! passlen || ! salt || ! saltlen)
+    {
+        return -1;
+    }
+    mbedtls_md_init(&sha1_ctx);
+
+    do // try
+    {
+        info_sha1 = mbedtls_md_info_from_type(MBEDTLS_MD_SHA1);
+        if(info_sha1 == NULL)
+        {
+            result = -1;
+            break;
+        }
+        result = mbedtls_md_setup(&sha1_ctx, info_sha1, 1);
+        if (result)
+        {
+            break;
+        }
+        result = mbedtls_pkcs5_pbkdf2_hmac(
+                                        &sha1_ctx,
+                                        password, passlen,
+                                        salt, saltlen,
+                                        iterations,
+                                        keylen, key
+                                        );
+    }
+    while (0); // catch
+
+    mbedtls_md_free(&sha1_ctx);
+    return result;
+}
+
+int iostream_sha1_hmac(
+                                const uint8_t *key,
+                                size_t keylen,
+                                const uint8_t *input,
+                                size_t ilen,
+                                uint8_t *output
+                      )
+{
+    const mbedtls_md_info_t *info_sha1;
+    int result;
+
+    if (! key || ! keylen || ! input || ! ilen || ! output)
+    {
+        return -1;
+    }
+    do // try
+    {
+        info_sha1 = mbedtls_md_info_from_type(MBEDTLS_MD_SHA1);
+        if(info_sha1 == NULL)
+        {
+            result = -1;
+            break;
+        }
+        result = mbedtls_md_hmac(info_sha1, key, keylen, input, ilen, output);
+        if (result)
+        {
+            break;
+        }
+    }
+    while (0); // catch
+
+    return result;
 }
 
 static int iostream_tls_read(iostream_t *stream, uint8_t *buf, int len)

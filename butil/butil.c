@@ -296,7 +296,7 @@ int butil_base64_encode(
         k+= 3;
     }
     *out = '\0';
-    return (k <= srcbytes) ? -1 : (out - base);
+    return (k < srcbytes) ? -1 : (out - base);
 }
 
 

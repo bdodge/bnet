@@ -7,6 +7,7 @@ MBEDTLS_LIBS= mbedtls mbedx509 mbedcrypto
 UTIL_PATH=$(SRCROOT)/butil
 IO_PATH=$(SRCROOT)/bstreamio
 XML_PATH=$(SRCROOT)/bxml
+SASL_PATH=$(SRCROOT)/bsasl
 JSON_PATH=$(SRCROOT)/bjson
 OSAL_PATH=$(SRCROOT)/bosal
 HTTP_PATH=$(SRCROOT)/bhttp
@@ -16,6 +17,7 @@ MQTT_PATH=$(SRCROOT)/bmqtt
 UTILLIB=$(UTIL_PATH)/butillib.a
 IOLIB=$(IO_PATH)/bstreamio.a
 XMLLIB=$(XML_PATH)/bxmllib.a
+SASLLIB=$(SASL_PATH)/bsasllib.a
 OSALLIB=$(OSAL_PATH)/bosallib.a
 JSONLIB=$(IO_PATH)/bjsonlib.a
 HTTPLIB=$(HTTP_PATH)/bhttplib.a
@@ -90,6 +92,9 @@ $(IO_PATH)/%.a:
 
 $(XML_PATH)/%.a:
 	make -C $(XML_PATH) library
+
+$(SASL_PATH)/%.a:
+	make -C $(SASL_PATH) library
 
 $(JSON_PATH)/%.a:
 	make -C $(JSON_PATH) library

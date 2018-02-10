@@ -3,37 +3,15 @@
 static struct tag_authlist
 {
     const char *authname;
-    bxmpp_auth_type_t type;
+    bsasl_auth_type_t type;
 }
 s_authlist[] =
 {
-    {    "notusedkeep", bxmppAuthNone  },
-    {    "SCRAM-SHA-1", bxmppAuthSCRAMSHA1  },
-//   {    "PLAIN",       bxmppAuthPLAIN   },
+    {    "notusedkeep", bsaslAuthNone  },
+    {    "SCRAM-SHA-1", bsaslAuthSCRAMSHA1  },
+//   {    "PLAIN",       bsaslAuthPLAIN   },
 };
 #define BXMPP_NUM_AUTHS   (sizeof(s_authlist)/sizeof(struct tag_authlist))
-
-static int bxmpp_create_nonce(uint8_t *nonce, size_t n)
-{
-    static uint8_t s_nonce_text[] = "thisissosillyyesitis";
-    time_t now;
-    uint8_t nmask[4];
-    int i;
-
-    time(&now);
-
-    nmask[0] = (now >> 8) & 0xff;
-    nmask[1] = now & 0xff;
-    nmask[2] = (now >> 24) & 0xff;
-    nmask[3] = (now >> 16) & 0xff;
-
-    for (i = 0; i < n; i++)
-    {
-        nonce[i] = s_nonce_text[i & 0xF];
-//        nonce[i] = s_nonce_text[i & 0xF] ^ nmask[i & 0x3];
-    }
-    return 0;
-}
 
 static int bxmpp_check_errors(bxmpp_t *bxp)
 {
@@ -73,416 +51,60 @@ static int bxmpp_check_errors(bxmpp_t *bxp)
 
 static int bxmpp_start_authentication(bxmpp_t *bxp)
 {
+    const char *auth_mechanism;
     size_t len;
     time_t now;
     int i;
     int result;
 
-    switch (bxp->authtype)
+    bxp->sasl = bsasl_auth_context_create(bxp->user, bxp->pass);
+    if (! bxp->sasl)
     {
-    case bxmppAuthNone:
-    case bxmppAuthPLAIN:
-
-        bxp->abuf[0] = 0;
-        strcpy(bxp->abuf + 1, bxp->user);
-        len = 2 + strlen(bxp->user);
-        strcpy(bxp->abuf + len, bxp->pass);
-        len += strlen(bxp->pass);
-
-        result = butil_base64_encode(bxp->ibuf, bxp->in.size, (uint8_t*)bxp->abuf, len, false, false);
-
-        // Send sasl auth
-        //
-        result = bxml_format_element(
-                                (char*)bxp->out.data,
-                                bxp->out.size,
-                                (size_t*)&bxp->out.count,
-                                false,
-                                "auth",
-                                (char*)bxp->in.data,
-                                2,
-                                "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl",
-                                "mechanism", "PLAIN"
-                                );
-        if (result)
-        {
-            return result;
-        }
-        bxp->out.head = bxp->out.count;
-        break;
-
-    case bxmppAuthSCRAMSHA1:
-
-        result = bxmpp_create_nonce(bxp->nonce, BXMPP_NONCE_SIZE);
-
-        len = snprintf(bxp->abuf, sizeof(bxp->abuf), "n,,n=%s,r=", bxp->user);
-        for (i = 0; i < BXMPP_NONCE_SIZE; i++)
-        {
-            bxp->abuf[len + i] = bxp->nonce[i];
-        }
-        len += i;
-
-        result = butil_base64_encode(bxp->ibuf, bxp->in.size, (uint8_t*)bxp->abuf, len, false, false);
-
-        result = butil_base64_decode((uint8_t*)bxp->abuf, sizeof(bxp->abuf), bxp->ibuf);
-        butil_log(3, "auth=%s\n", bxp->abuf);
-
-        // Send sasl auth
-        //
-        result = bxml_format_element(
-                                (char*)bxp->out.data,
-                                bxp->out.size,
-                                (size_t*)&bxp->out.count,
-                                false,
-                                "auth",
-                                (char*)bxp->in.data,
-                                2,
-                                "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl",
-                                "mechanism", "SCRAM-SHA-1"
-                                );
-        if (result)
-        {
-            return result;
-        }
-        bxp->out.head = bxp->out.count;
-        break;
-
-    default:
-        BERROR("Not an auth");
+        BERROR("No SASL ctx");
         return -1;
     }
-    return 0;
+    result = bsasl_start_authentication(bxp->sasl, bxp->authtype);
+    if (result)
+    {
+        return result;
+    }
+    auth_mechanism = bsasl_method_name(bxp->authtype);
+
+    // Send sasl auth
+    //
+    result = bxml_format_element(
+                            (char*)bxp->out.data,
+                            bxp->out.size,
+                            (size_t*)&bxp->out.count,
+                            false,
+                            "auth",
+                            (char*)bxp->sasl->clientFinalMessage,
+                            2,
+                            "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl",
+                            "mechanism", auth_mechanism
+                            );
+    bxp->out.head = bxp->out.count;
+    return result;
 }
 
 #define BXMPP_MAX_AUTHLEN 128
 
 static int bxmpp_finish_authentication(bxmpp_t *bxp, const char *challenge)
 {
-    size_t challenge_len;
-    size_t servernonce_len;
-    size_t serversalt_len;
-    size_t authmessage_len;
-    size_t clientfinalmessagebare_len;
-    char *pc;
-    char *pe;
-    size_t len;
-    size_t iterations;
-    int i;
     int result;
-
-    uint8_t *authalloc;
-    uint8_t *serverNonce;
-    uint8_t *serverSalt;
-    uint8_t *clientFinalMessageBare;
-    uint8_t *saltedPassword;
-    uint8_t *clientKey;
-    uint8_t *storedKey;
-    uint8_t *authMessage;
-    uint8_t *clientSignature;
-    uint8_t *clientProof;
-    uint8_t *serverKey;
-    uint8_t *serverSignature;
-    uint8_t *clientFinalMessage;
-
-    authalloc = (uint8_t *)malloc(BXMPP_MAX_AUTHLEN * 16);
-    if (! authalloc)
-    {
-        BERROR("Authalloc");
-        return -1;
-    }
-    serverNonce             = authalloc;
-    serverSalt              = authalloc + (1 * BXMPP_MAX_AUTHLEN);
-    clientFinalMessageBare  = authalloc + (2 * BXMPP_MAX_AUTHLEN);
-    saltedPassword          = authalloc + (3 * BXMPP_MAX_AUTHLEN);
-    clientKey               = authalloc + (4 * BXMPP_MAX_AUTHLEN);
-    storedKey               = authalloc + (5 * BXMPP_MAX_AUTHLEN);
-    authMessage             = authalloc + (6 * BXMPP_MAX_AUTHLEN);
-    clientSignature         = authalloc + (9 * BXMPP_MAX_AUTHLEN);
-    clientProof             = authalloc + (10 * BXMPP_MAX_AUTHLEN);
-    serverKey               = authalloc + (11 * BXMPP_MAX_AUTHLEN);
-    serverSignature         = authalloc + (12 * BXMPP_MAX_AUTHLEN);
-    clientFinalMessage      = authalloc + (13 * BXMPP_MAX_AUTHLEN);
 
     switch (bxp->authtype)
     {
-    case bxmppAuthSCRAMSHA1:
+    default:
+        break;
 
-        challenge_len = butil_base64_decode((uint8_t*)bxp->abuf, sizeof(bxp->abuf), challenge);
-        if (challenge_len < BXMPP_NONCE_SIZE)
-        {
-            butil_log(1, "Not enough challenge\n");
-            return -1;
-        }
-        butil_log(3, "Challenge=\n%s\n", bxp->abuf);
+    case bsaslAuthSCRAMSHA1:
 
-        pc = bxp->abuf;
-        if (pc[0] != 'r' || pc[1] != '=')
-        {
-            butil_log(1, "challenge not r=\n");
-            return -1;
-        }
-        pc+= 2;
-
-        // make sure server replied with our nonce
-        //
-        if (memcmp(pc, bxp->nonce, BXMPP_NONCE_SIZE))
-        {
-            butil_log(1, "Client nonce mismatch\n");
-            return -1;
-        }
-        // get server nonce
-        //
-        pe = strstr(pc, ",s=");
-        if (! pe)
-        {
-            butil_log(1, "No salt section\n");
-            return -1;
-        }
-        servernonce_len = (pe - pc);
-
-        if (servernonce_len > BXMPP_MAX_AUTHLEN)
-        {
-            BERROR("nonce overflow");
-            return -1;
-        }
-        memcpy(serverNonce, pc, servernonce_len);
-
-        printf("serverNonce=\n");
-        for (i = 0; i < servernonce_len; i++)
-        {
-            printf("%c", serverNonce[i]);
-        }
-        printf("\n");
-
-        // get salt
-        //
-        pc = pe + 3;
-        pe = strstr(pc, ",i=");
-        if (! pe)
-        {
-            butil_log(1, "No iterations\n");
-            return -1;
-        }
-        *pe = '\0';
-        serversalt_len = butil_base64_decode(serverSalt, BXMPP_MAX_AUTHLEN, pc);
-        *pe = ',';
-
-        printf("serverSalt=\n");
-        for (i = 0; i < serversalt_len; i++)
-        {
-            printf("%02X", serverSalt[i]);
-        }
-        printf("\n");
-
-        pe += 3;
-        if (! *pe)
-        {
-            butil_log(1, "No interations\n");
-        }
-        iterations = strtoul(pe, NULL, 10);
-
-        butil_log(5, "Iterations: %u\n", iterations);
-
-        //clientFinalMessageBare = "c=biws,r=" .. serverNonce
-
-        memcpy(clientFinalMessageBare, "c=biws,r=", 9);
-        memcpy(clientFinalMessageBare + 9, serverNonce, servernonce_len);
-
-        clientfinalmessagebare_len = 9 + servernonce_len;
-
-        printf("clientFinalMessageBare=\n");
-        for (i = 0; i < clientfinalmessagebare_len; i++)
-        {
-            printf("%c", clientFinalMessageBare[i]);
-        }
-        printf("\n");
-
-        //saltedPassword = PBKDF2-SHA-1(normalizedPassword, salt, i)
-        //
-        // hash up salted password
-        //
-        result = iostream_pkcs5_pbkdf2_hmac(
-                                saltedPassword,
-                                20,
-                                (uint8_t*)bxp->pass,
-                                strlen(bxp->pass),
-                                serverSalt,
-                                serversalt_len,
-                                iterations
-                                );
+        result = bsasl_finish_authentication(bxp->sasl, challenge);
         if (result)
         {
-            butil_log(1, "Salting passwd failed\n");
-            return -1;
+            return result;
         }
-        printf("saltedPassword=\n");
-        for (i = 0; i < 20; i++)
-        {
-            printf("%02X", (uint8_t)saltedPassword[i]);
-        }
-        printf("\n");
-
-        //clientKey = HMAC-SHA-1(saltedPassword, "Client Key")
-
-        result = iostream_sha1_hmac(
-                                saltedPassword,
-                                20,
-                                (uint8_t*)"Client Key",
-                                10,
-                                clientKey
-                                );
-
-        if (result)
-        {
-            butil_log(1, "clientKey sha failed\n");
-            return -1;
-        }
-        printf("clientKey=\n");
-        for (i = 0; i < 20; i++)
-        {
-            printf("%02X", (uint8_t)clientKey[i]);
-        }
-        printf("\n");
-
-        //storedKey = SHA-1(clientKey)
-        //
-        result = iostream_sha1_hash(storedKey, clientKey, 20);
-        if (result)
-        {
-            butil_log(1, "storedKey sha failed\n");
-            return -1;
-        }
-        printf("storedKey=\n");
-        for (i = 0; i < 20; i++)
-        {
-            printf("%02X", (uint8_t)clientKey[i]);
-        }
-        printf("\n");
-
-        //authMessage = initialMessage .. "," .. serverFirstMessage .. "," .. clientFinalMessageBare
-        //
-        len = snprintf((char*)authMessage, BXMPP_MAX_AUTHLEN, "n=%s,r=", bxp->user);
-        for (i = 0; i < BXMPP_NONCE_SIZE; i++)
-        {
-            authMessage[len++] = bxp->nonce[i];
-        }
-        authMessage[len++] = ',';
-
-        for (i = 0; i < challenge_len; i++)
-        {
-            authMessage[len++] = bxp->abuf[i];
-        }
-        authMessage[len++] = ',';
-
-        for (i = 0; i < clientfinalmessagebare_len; i++)
-        {
-            authMessage[len++] = clientFinalMessageBare[i];
-        }
-        authMessage[len] = '\0';
-
-        authmessage_len = len;
-
-        butil_log(1, "auth=%s\n", authMessage);
-
-        //clientSignature = HMAC-SHA-1(storedKey, authMessage)
-
-        result = iostream_sha1_hmac(
-                                storedKey,
-                                20,
-                                authMessage,
-                                len,
-                                clientSignature
-                                );
-        if (result)
-        {
-            butil_log(1, "clientSignature sha failed\n");
-            return -1;
-        }
-        printf("clientSignature=\n");
-        for (i = 0; i < 20; i++)
-        {
-            printf("%02X", (uint8_t)clientSignature[i]);
-        }
-        printf("\n");
-
-        //clientProof = clientKey XOR clientSignature
-
-        for (i = 0; i < 20; i++)
-        {
-            clientProof[i] = clientKey[i] ^ clientSignature[i];
-        }
-
-        printf("clientProof=\n");
-        for (i = 0; i < 20; i++)
-        {
-            printf("%02X", (uint8_t)clientProof[i]);
-        }
-        printf("\n");
-
-        //serverKey = HMAC-SHA-1(saltedPassword, "Server Key")
-
-        result = iostream_sha1_hmac(
-                                saltedPassword,
-                                20,
-                                (uint8_t*)"Server Key",
-                                10,
-                                serverKey
-                                );
-
-        if (result)
-        {
-            butil_log(1, "serverKey sha failed\n");
-            return -1;
-        }
-        printf("serverKey=\n");
-        for (i = 0; i < 20; i++)
-        {
-            printf("%02X", (uint8_t)serverKey[i]);
-        }
-        printf("\n");
-
-        //serverSignature = HMAC-SHA-1(serverKey, authMessage)
-        //
-        result = iostream_sha1_hmac(
-                                serverKey,
-                                20,
-                                authMessage,
-                                authmessage_len,
-                                serverSignature
-                                );
-
-        if (result)
-        {
-            butil_log(1, "serverSignature sha failed\n");
-            return -1;
-        }
-        printf("serverSignature=\n");
-        for (i = 0; i < 20; i++)
-        {
-            printf("%02X", (uint8_t)serverSignature[i]);
-        }
-        printf("\n");
-
-        //clientFinalMessage = clientFinalMessageBare .. ",p=" .. base64(clientProof)
-        //
-        len = clientfinalmessagebare_len;
-        memcpy(clientFinalMessage, clientFinalMessageBare, len);
-        clientFinalMessage[len++] = ',';
-        clientFinalMessage[len++] = 'p';
-        clientFinalMessage[len++] = '=';
-        clientFinalMessage[len] = '\0';
-        len += butil_base64_encode((char*)clientFinalMessage + len,
-                            BXMPP_MAX_AUTHLEN - len,
-                            clientProof, 20, false, false);
-        printf("clientFinalMessage=\n");
-        for (i = 0; i < len; i++)
-        {
-            printf("%c", clientFinalMessage[i]);
-        }
-        printf("\n");
-
-        butil_base64_encode(bxp->abuf, bxp->out.size, clientFinalMessage, len, false, false);
-
         // Send sasl auth
         //
         result = bxml_format_element(
@@ -491,20 +113,12 @@ static int bxmpp_finish_authentication(bxmpp_t *bxp, const char *challenge)
                                 (size_t*)&bxp->out.count,
                                 false,
                                 "response",
-                                bxp->abuf,
+                                bxp->sasl->clientFinalMessage,
                                 1,
                                 "xmlns", "urn:ietf:params:xml:ns:xmpp-sasl"
                                 );
-        if (result)
-        {
-            return result;
-        }
         bxp->out.head = bxp->out.count;
-        break;
-
-    default:
-        BERROR("Not an auth");
-        return -1;
+        return result;
     }
     return 0;
 }
@@ -559,23 +173,6 @@ static void bxmpp_pop_state(bxmpp_t *bxp)
     bxp->next_state = bxmppInit;
 }
 
-static int test_sha1(bxmpp_t *bxp)
-{
-    const char *s_challenge = "r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92,i=4096";
-    char cb[128];
-    int result;
-
-    butil_base64_encode(cb, sizeof(cb), (uint8_t*)s_challenge, strlen(s_challenge), false, false);
-
-    memcpy(bxp->nonce, "fyko+d2lbbFgONRv9qkxdawL", BXMPP_NONCE_SIZE);
-    bxp->authtype = bxmppAuthSCRAMSHA1;
-    strcpy(bxp->user, "user");
-    strcpy(bxp->pass, "pencil");
-
-    result = bxmpp_finish_authentication(bxp, cb);
-    return result;
-}
-
 int bxmpp_setup(bxmpp_t *bxp)
 {
     iostream_t *stream;
@@ -589,11 +186,6 @@ int bxmpp_setup(bxmpp_t *bxp)
     static bxmpp_state_t oldstate;
 
     result = -1;
-
-//    if (test_sha1(bxp))
-//        return -1;
-//    else
-//        return -1;
 
     if (bxp->state != oldstate || bxp->in.count != oldincount)
     {
@@ -743,7 +335,7 @@ int bxmpp_setup(bxmpp_t *bxp)
 
                             // match auth avail to auth configured
                             //
-                            if (bxp->authtype == bxmppAuthNone)
+                            if (bxp->authtype == bsaslAuthNone)
                             {
                                 for (j = 0; j < BXMPP_NUM_AUTHS; j++)
                                 {
@@ -906,7 +498,7 @@ int bxmpp_setup(bxmpp_t *bxp)
         {
             // for scram type auth schemes we expect a challenge here
             //
-            if (bxp->authtype == bxmppAuthSCRAMSHA1)
+            if (bxp->authtype == bsaslAuthSCRAMSHA1)
             {
                 // check for challenge
                 //
@@ -934,7 +526,7 @@ int bxmpp_setup(bxmpp_t *bxp)
             result = bxml_find_element(bxp->pxp, "success", '\0', 0, &ptag);
             if (! result)
             {
-                if (bxp->authtype == bxmppAuthSCRAMSHA1)
+                if (bxp->authtype == bsaslAuthSCRAMSHA1)
                 {
                     // get the value of the success element
                     //
@@ -1053,7 +645,7 @@ int bxmpp_setup(bxmpp_t *bxp)
         }
         bxp->out.head = bxp->out.count;
 
-        // go to output phase, then to sasl reply if ok
+        // go to output phase, then to bind reply if ok
         //
         bxmpp_push_state(bxp, bxmppOutPhase, bxmppBindReply);
         result = 0;
@@ -1072,6 +664,15 @@ int bxmpp_setup(bxmpp_t *bxp)
         bxp->in.count = 0;
         bxp->in.head = bxp->in.tail = 0;
 
+        // no longer needing sasl auth context
+        //
+        if (bxp->sasl)
+        {
+            bsasl_auth_context_destroy(bxp->sasl);
+            bxp->sasl = NULL;
+        }
+        // assume error
+        //
         bxp->state = bxmppDone;
 
         // check for errors from server
@@ -1221,6 +822,11 @@ int bxmpp_setup(bxmpp_t *bxp)
         {
             bxp->stream->close(bxp->stream);
             bxp->stream = NULL;
+        }
+        if (bxp->sasl)
+        {
+            bsasl_auth_context_destroy(bxp->sasl);
+            bxp->sasl = NULL;
         }
         result = 0;
         break;
@@ -1390,7 +996,8 @@ bxmpp_t *bxmpp_create(
         bxp->out.head = 0;
         bxp->out.tail = 0;
         bxp->out.count = 0;
-        bxp->authtype = bxmppAuthNone;
+        bxp->authtype = bsaslAuthNone;
+        bxp->sasl = NULL;
         strcpy(bxp->host, host);
         bxp->port = port;
         strcpy(bxp->user, user);
@@ -1412,6 +1019,11 @@ int bxmpp_destroy(bxmpp_t *bxp)
         {
             bxp->stream->close(bxp->stream);
             bxp->stream = NULL;
+        }
+        if (bxp->sasl)
+        {
+            bsasl_auth_context_destroy(bxp->sasl);
+            bxp->sasl = NULL;
         }
         free(bxp);
         return 0;

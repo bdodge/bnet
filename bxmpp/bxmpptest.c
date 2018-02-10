@@ -1,9 +1,8 @@
 #include "bxmpp.h"
 
-//const char *s_username = "bnet_test_account@xmpp.jp";
 const char *s_username = "bnet_test_account";
-const char *s_server   = "xmpp.jp";
-//const char *s_server   = "jwchat.org";
+//const char *s_server   = "xmpp.jp";
+const char *s_server   = "jwchat.org";
 const char *s_password = "jabberwocky";
 
 int main(int argc, char **argv)

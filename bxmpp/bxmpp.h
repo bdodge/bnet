@@ -2,27 +2,18 @@
 #define BXMPP_H 1
 
 #include "bnetheaders.h"
+#include "bstreamio.h"
 #include "butil.h"
 #include "bxml.h"
-#include "bstreamio.h"
+#include "bsasl.h"
 
 #define BXMPP_PORT 5222
 
 #define BXMPP_IO_SIZE 1436
-#define BXMPP_NONCE_SIZE 24
 
 #define BXMPP_MAX_HOST  256
 #define BXMPP_MAX_ADDR  128
 #define BXMPP_MAX_JID   128
-
-typedef enum
-{
-    bxmppAuthNone,
-    bxmppAuthPLAIN,
-    bxmppAuthOAUTH2,
-    bxmppAuthSCRAMSHA1
-}
-bxmpp_auth_type_t;
 
 typedef enum
 {
@@ -67,10 +58,10 @@ typedef struct
     bxmpp_layer_t   layer;
     bxmpp_state_t   state;
     bxmpp_state_t   next_state;
-    bxmpp_auth_type_t authtype;
+    bsasl_auth_type_t authtype;
+    bsasl_auth_t   *sasl;
     bxml_parser_t   xmlparser;
     bxml_parser_t  *pxp;
-    uint8_t         nonce[BXMPP_NONCE_SIZE];
     char            abuf[BXMPP_IO_SIZE];
     char            ibuf[BXMPP_IO_SIZE];
     char            obuf[BXMPP_IO_SIZE];

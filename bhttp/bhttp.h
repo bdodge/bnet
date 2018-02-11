@@ -25,17 +25,6 @@ http_transport_t;
 
 typedef enum
 {
-    httpHTTP,
-    httpWS,
-    httpSIP,
-    httpHTTPS,
-    httpWSS,
-    httpSIPS,
-}
-http_scheme_t;
-
-typedef enum
-{
     httpUnsupported,
     httpOptions,
     httpGet,
@@ -211,7 +200,7 @@ typedef struct http_client
     uint16_t            response;
     bool                keepalive;
     bool                use100;
-    http_scheme_t       scheme;
+    butil_url_scheme_t  scheme;
     char                host[HTTP_MAX_HOSTNAME];
     uint16_t            port;
     char                path[HTTP_MAX_LINE];

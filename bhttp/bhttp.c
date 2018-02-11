@@ -140,7 +140,7 @@ void http_client_reinit(http_client_t *client, bool newstream)
             client->stream->close(client->stream);
             client->stream = NULL;
         }
-        client->scheme = httpHTTP;
+        client->scheme = schemeHTTP;
         client->host[0] = '\0';
         client->port = 0;
         client->path[0] = '\0';
@@ -776,7 +776,7 @@ static int http_process_header(http_client_t *client, char *header)
             return -1;
         }
         #if 1 // assume move on server
-        http_parse_url(value, NULL, NULL, NULL, client->dav_findpath);
+        butil_parse_url(value, NULL, NULL, 0, NULL, client->dav_findpath, sizeof(client->dav_findpath));
         #else
         strcpy(client->dav_findpath, value);
         #endif
@@ -883,7 +883,7 @@ static int http_process_header(http_client_t *client, char *header)
     #if HTTP_SUPPORT_SIP || HTTP_SUPPORT_WEBDAV
     else if (! http_ncasecmp(header, "depth:"))
     {
-        if (client->scheme == httpHTTP || client->scheme == httpHTTPS)
+        if (client->scheme == schemeHTTP || client->scheme == schemeHTTPS)
         {
            client->dav_depth_in = (int)strtol(value, &value, 10);
            client->dav_no_root = false;
@@ -898,7 +898,7 @@ static int http_process_header(http_client_t *client, char *header)
             {
                 if (! http_ncasecmp(value, "infinity"))
                 {
-                    if (client->scheme == httpHTTP || client->scheme == httpHTTPS)
+                    if (client->scheme == schemeHTTP || client->scheme == schemeHTTPS)
                     {
                         client->dav_depth_in = HTTP_MAX_WEBDAV_DEPTH - 1;
                     }
@@ -1120,12 +1120,12 @@ int http_client_slice(http_client_t *client)
         // upgrade to TLS if indicated (scheme already checkd for support)
         //
         if (
-                client->scheme == httpHTTPS
+                client->scheme == schemeHTTPS
     #if HTTP_SUPPORT_WEBSOCKET
-            ||  client->scheme == httpWSS
+            ||  client->scheme == schemeWSS
     #endif
     #if HTTP_SUPPORT_SIP
-            ||  client->scheme == httpSIPS
+            ||  client->scheme == schemeSIPS
     #endif
         )
         {
@@ -1329,7 +1329,7 @@ int http_client_slice(http_client_t *client)
         if (! http_ncasecmp(pline, "HTTP/"))
         {
             pline += 5;
-            client->scheme = httpHTTP;
+            client->scheme = schemeHTTP;
             client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
             if (*pline)
             {
@@ -1341,7 +1341,7 @@ int http_client_slice(http_client_t *client)
         if (! http_ncasecmp(pline, "SIP/"))
         {
             pline += 4;
-            client->scheme = httpSIP;
+            client->scheme = schemeSIP;
             client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
             if (*pline)
             {
@@ -1436,7 +1436,7 @@ int http_client_slice(http_client_t *client)
                 }
                 if (client->response >= 300 && client->response < 400)
                 {
-                    http_scheme_t newscheme;
+                    butil_url_scheme_t newscheme;
                     char newhost[HTTP_MAX_HOSTNAME];
                     uint16_t newport;
                     char newpath[HTTP_MAX_PATH];
@@ -1455,16 +1455,20 @@ int http_client_slice(http_client_t *client)
                     //
                     if (client->location[0] == '/')
                     {
-                        result = http_paste_url(newurl, client->scheme,
-                               client->host, client->port, client->location + 1);
-                        result |= http_parse_url(client->location, &newscheme,
-                                newhost, &newport, newpath);
+                        result = butil_paste_url(newurl, HTTP_MAX_URL,
+                                client->scheme, client->host, client->port,
+                                client->location + 1);
+                        result |= butil_parse_url(client->location, &newscheme,
+                                newhost, HTTP_MAX_HOSTNAME, &newport,
+                                newpath, HTTP_MAX_PATH);
                     }
                     else
                     {
-                        result = http_parse_url(client->location, &newscheme,
-                                newhost, &newport, newpath);
-                        result += http_paste_url(newurl, newscheme, newhost, newport, newpath);
+                        result = butil_parse_url(client->location, &newscheme,
+                                newhost, HTTP_MAX_HOSTNAME, &newport,
+                                newpath, HTTP_MAX_PATH);
+                        result += butil_paste_url(newurl, HTTP_MAX_URL,
+                                newscheme, newhost, newport, newpath);
                     }
                     if (result)
                     {
@@ -1483,8 +1487,9 @@ int http_client_slice(http_client_t *client)
                     //
                     http_client_reinit(client, true);
 
-                    result = http_parse_url(newurl, &client->scheme, client->host,
-                            &client->port, client->path);
+                    result = butil_parse_url(newurl, &client->scheme,
+                            client->host, sizeof(client->host), &client->port,
+                            client->path, sizeof(client->path));
                     if (result)
                     {
                         HTTP_ERROR("Bad url");
@@ -2755,7 +2760,9 @@ int http_client_request(
     client->vmaj = 1;
     client->vmin = 1;
 
-    result = http_parse_url(url, &client->scheme, client->host, &client->port, client->path);
+    result = butil_parse_url(url, &client->scheme,
+            client->host, sizeof(client->host), &client->port,
+            client->path, sizeof(client->path));
     if (result)
     {
         HTTP_ERROR("Bad url");
@@ -2763,12 +2770,12 @@ int http_client_request(
     }
 #if ! HTTP_SUPPORT_TLS
     if (
-            client->scheme == httpHTTPS
+            client->scheme == schemeHTTPS
 #if HTTP_SUPPORT_WEBSOCKET
-            client->scheme == httpWSS
+            client->scheme == schemeWSS
 #endif
 #if HTTP_SUPPORT_SIP
-        ||  client->scheme == httpSIPS
+        ||  client->scheme == schemeSIPS
 #endif
     )
     {

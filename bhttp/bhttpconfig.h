@@ -33,7 +33,7 @@
 
 /// Size of IO buffer (need at least one packet for udp)
 //
-#define HTTP_IO_SIZE    (1024*2)
+#define HTTP_IO_SIZE    (1436*2)
 
 /// Always assure these many bytes can fit in the IO buffer
 //  (e.g. TLS block size)

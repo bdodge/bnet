@@ -196,16 +196,16 @@ static inline int base64_hexencode_byte(char *out, uint8_t byte)
 }
 
 int butil_base64_encode(
-						char 		   *out,
-						size_t 			outsize,
-						const uint8_t  *src,
-						size_t 			srcbytes,
-						bool 			urlencode,
-						bool 			hexescape
-					  )
+                      char           *out,
+                      size_t          outsize,
+                      const uint8_t  *src,
+                      size_t          srcbytes,
+                      bool            urlencode,
+                      bool            hexescape
+                    )
 {
     char *base = out;
-	const char *alphabet;
+  const char *alphabet;
     uint8_t  b1, b2, b3;
     uint32_t d;
     size_t j = 0, k = 0;
@@ -216,14 +216,14 @@ int butil_base64_encode(
     static const char *s_alphabet64_url =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
-	if (urlencode)
-	{
-		alphabet = s_alphabet64_url;
-	}
-	else
-	{
-		alphabet = s_alphabet64_base;
-	}
+  if (urlencode)
+  {
+      alphabet = s_alphabet64_url;
+  }
+  else
+  {
+      alphabet = s_alphabet64_base;
+  }
     while (j < (outsize - 4) && k < srcbytes)
     {
         b1 = src[k];
@@ -275,22 +275,22 @@ int butil_base64_encode(
             *out++ = alphabet[((d>>18)        )];
             *out++ = alphabet[((d>>12) & 0x3f )];
 
-			if (k + 1 < srcbytes)
-			{
-	            *out++ = alphabet[((d>> 6) & 0x3f )];
-			}
-			else if (! urlencode)
-			{
-				*out++ = '=';
-			}
-			if (k + 2 < srcbytes)
-			{
-	            *out++ = alphabet[((d) & 0x3f )];
-			}
-			else if (! urlencode)
-			{
-				*out++ = '=';
-			}
+          if (k + 1 < srcbytes)
+          {
+              *out++ = alphabet[((d>> 6) & 0x3f )];
+          }
+          else if (! urlencode)
+          {
+              *out++ = '=';
+          }
+          if (k + 2 < srcbytes)
+          {
+              *out++ = alphabet[((d) & 0x3f )];
+          }
+          else if (! urlencode)
+          {
+              *out++ = '=';
+          }
             j += 4;
         }
         k+= 3;
@@ -299,4 +299,247 @@ int butil_base64_encode(
     return (k < srcbytes) ? -1 : (out - base);
 }
 
+const char *butil_scheme_name(butil_url_scheme_t scheme)
+{
+    switch (scheme)
+    {
+    case schemeFTP:     return "FTP";
+    case schemeFTPS:      return "FTPS";
+    case schemeHTTP:    return "HTTP";
+    case schemeHTTPS:   return "HTTPS";
+    case schemeWS:      return "WS";
+    case schemeWSS:     return "WSS";
+    case schemeSIP:     return "SIP";
+    case schemeSIPS:    return "SIPS";
+    default:            return "";
+    }
+}
+
+int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
+{
+    if (! strcasecmp(name, "https"))
+    {
+        *scheme = schemeHTTPS;
+        return 0;
+    }
+    if (! strcasecmp(name, "http"))
+    {
+        *scheme = schemeHTTP;
+        return 0;
+    }
+    if (! strcasecmp(name, "ftps"))
+    {
+        *scheme = schemeFTPS;
+        return 0;
+    }
+    if (! strcasecmp(name, "ftp"))
+    {
+        *scheme = schemeFTP;
+        return 0;
+    }
+    if (! strcasecmp(name, "wss"))
+    {
+        *scheme = schemeWSS;
+        return 0;
+    }
+    if (! strcasecmp(name, "ws"))
+    {
+        *scheme = schemeWS;
+        return 0;
+    }
+    if (! strcasecmp(name, "sips"))
+    {
+        *scheme = schemeHTTPS;
+        return 0;
+    }
+    if (! strcasecmp(name, "sip"))
+    {
+        *scheme = schemeHTTP;
+        return 0;
+    }
+    return -1;
+}
+
+int butil_parse_url(
+                    const char           *url,
+                    butil_url_scheme_t *scheme,
+                    char             *host,
+                  size_t              nhost,
+                    short                *port,
+                    char             *path,
+                  size_t              npath
+                  )
+{
+    const char *ps, *pe;
+    uint16_t portnum = 80;
+    size_t len;
+
+    if (scheme)
+    {
+        *scheme = schemeHTTP;
+    }
+    if (host)
+    {
+        *host = '\0';
+    }
+    if (port)
+    {
+        *port = portnum;
+    }
+    if (path)
+    {
+        *path = '\0';
+    }
+    if (! url)
+    {
+        BERROR("Invalid Parameter");
+        return -1;
+    }
+    // search forward for ://
+    ps = url;
+    pe = strstr(ps, "://");
+    if (pe)
+    {
+        len = pe - ps;
+        pe += 3;
+
+        if ((len == 5) && ! strncasecmp(ps, "https", len))
+        {
+            portnum = 443;
+        }
+    }
+    else
+    {
+        pe = ps;
+        ps = "http";
+        len = 4;
+    }
+    if (len >= BUTIL_MAX_URL_SCHEME)
+    {
+        BERROR("Scheme too long");
+        return -1;
+    }
+    if (scheme)
+    {
+        char schemestr[BUTIL_MAX_URL_SCHEME];
+
+        strncpy(schemestr, ps, len);
+        schemestr[len] = '\0';
+
+        if (butil_scheme_from_name(schemestr, scheme))
+        {
+            BERROR("Unknown Scheme");
+            return -1;
+        }
+    }
+    // extract hostname
+    ps = pe;
+    pe = strchr(ps, ':');
+    if (! pe)
+    {
+        pe = strchr(ps, '/');
+        if (! pe)
+        {
+            // remainder of string is hostname
+            pe = ps + strlen(ps);
+        }
+    }
+    len = pe - ps;
+    if (len >= nhost)
+    {
+        BERROR("Hostname too long");
+        return -1;
+    }
+    if (host)
+    {
+        strncpy(host, ps, len);
+        host[len] = '\0';
+    }
+    ps = pe;
+    if (*ps == ':')
+    {
+        // port is specified
+        portnum = (uint16_t)strtoul(ps + 1, (char **)&pe, 10);
+        len = pe - ps;
+        if (len > BUTIL_MAX_PORTSPEC)
+        {
+            BERROR("Malformed port number");
+            return -1;
+        }
+        ps = pe;
+    }
+    if (port)
+    {
+        *port = portnum;
+    }
+    if (*ps != '/' && *ps)
+    {
+        BERROR("Malformed path");
+        return -1;
+    }
+    len = strlen(ps);
+    if (len >= npath)
+    {
+        BERROR("Path too long");
+        return -1;
+    }
+    if (! len)
+    {
+        ps = "/";
+        len = 1;
+    }
+    if (path && len)
+    {
+        strncpy(path, ps, len);
+        path[len] = '\0';
+    }
+    return 0;
+}
+
+int butil_paste_url(
+                   char               *url,
+                   size_t              nurl,
+                   const butil_url_scheme_t scheme,
+                   const char         *host,
+                   const uint16_t      port,
+                   const char         *path
+                  )
+{
+    size_t len;
+    uint16_t useport = port;
+    const char *schemestr;
+
+    if (! url)
+    {
+        BERROR("Invalid Parameter");
+        return -1;
+    }
+    schemestr = butil_scheme_name(scheme);
+    if (! schemestr)
+    {
+        BERROR("Invalid Scheme");
+        return -1;
+    }
+    if (! host)
+    {
+        BERROR("Missing Hostname");
+        return -1;
+    }
+    if (! useport)
+    {
+        useport = strcasecmp(schemestr, "https") ? 443 : 80;
+    }
+    if (! path)
+    {
+        path = "";
+    }
+    len = snprintf(url, nurl,
+            "%s://%s:%u/%s", schemestr, host, useport, path);
+    if (len < 0 || len >= nurl)
+    {
+        BERROR("Pasted url too long");
+        return -1;
+    }
+    return 0;
+}
 

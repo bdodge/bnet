@@ -7,79 +7,22 @@ int http_ncasecmp(const char *haystack, const char *needle)
     return strncasecmp(haystack, needle, len);
 }
 
-const char *http_scheme_name(http_scheme_t scheme)
+const char *http_scheme_base_name(butil_url_scheme_t scheme)
 {
     switch (scheme)
     {
-    case httpHTTP:      return "HTTP";
-    case httpHTTPS:     return "HTTPS";
+    case schemeHTTP:      return "HTTP";
+    case schemeHTTPS:     return "HTTP";
     #if HTTP_SUPPORT_WEBSOCKET
-    case httpWSS:       return "WSS";
-    case httpWS:        return "WS";
+    case schemeWS:        return "HTTP";
+    case schemeWSS:       return "HTTP";
     #endif
     #if HTTP_SUPPORT_SIP
-    case httpSIP:       return "SIP";
-    case httpSIPS:      return "SIPS";
+    case schemeSIP:       return "SIP";
+    case schemeSIPS:      return "SIP";
     #endif
     default:            return "";
     }
-}
-
-const char *http_scheme_base_name(http_scheme_t scheme)
-{
-    switch (scheme)
-    {
-    case httpHTTP:      return "HTTP";
-    case httpHTTPS:     return "HTTP";
-    #if HTTP_SUPPORT_WEBSOCKET
-    case httpWS:        return "HTTP";
-    case httpWSS:       return "HTTP";
-    #endif
-    #if HTTP_SUPPORT_SIP
-    case httpSIP:       return "SIP";
-    case httpSIPS:      return "SIP";
-    #endif
-    default:            return "";
-    }
-}
-
-int http_scheme_from_name(const char *name, http_scheme_t *scheme)
-{
-    if (! strcasecmp(name, "https"))
-    {
-        *scheme = httpHTTPS;
-        return 0;
-    }
-    if (! strcasecmp(name, "http"))
-    {
-        *scheme = httpHTTP;
-        return 0;
-    }
-    #if HTTP_SUPPORT_WEBSOCKET
-    if (! strcasecmp(name, "wss"))
-    {
-        *scheme = httpWSS;
-        return 0;
-    }
-    if (! strcasecmp(name, "ws"))
-    {
-        *scheme = httpWS;
-        return 0;
-    }
-    #endif
-    #if HTTP_SUPPORT_SIP
-    if (! strcasecmp(name, "sips"))
-    {
-        *scheme = httpHTTPS;
-        return 0;
-    }
-    if (! strcasecmp(name, "sip"))
-    {
-        *scheme = httpHTTP;
-        return 0;
-    }
-    #endif
-    return -1;
 }
 
 const char *http_method_name(http_method_t method)
@@ -407,186 +350,6 @@ int http_join_path(char *path, size_t room, const char *root, const char *base, 
                 path[filepos + remlen] = '\0';
             }
         }
-    }
-    return 0;
-}
-
-int http_parse_url(
-                    const char *url,
-                    http_scheme_t *scheme,
-                    char *host,
-                    short *port,
-                    char *path
-                  )
-{
-    const char *ps, *pe;
-    uint16_t portnum = 80;
-    size_t len;
-
-    if (scheme)
-    {
-        *scheme = httpHTTP;
-    }
-    if (host)
-    {
-        *host = '\0';
-    }
-    if (port)
-    {
-        *port = portnum;
-    }
-    if (path)
-    {
-        *path = '\0';
-    }
-    if (! url)
-    {
-        HTTP_ERROR("Invalid Parameter");
-        return -1;
-    }
-    // search forward for ://
-    ps = url;
-    pe = strstr(ps, "://");
-    if (pe)
-    {
-        len = pe - ps;
-        pe += 3;
-
-        if ((len == 5) && ! strncasecmp(ps, "https", len))
-        {
-            portnum = 443;
-        }
-    }
-    else
-    {
-        pe = ps;
-        ps = "http";
-        len = 4;
-    }
-    if (len >= HTTP_MAX_SCHEME)
-    {
-        HTTP_ERROR("Scheme too long");
-        return -1;
-    }
-    if (scheme)
-    {
-        char schemestr[HTTP_MAX_SCHEME];
-
-        strncpy(schemestr, ps, len);
-        schemestr[len] = '\0';
-
-        if (http_scheme_from_name(schemestr, scheme))
-        {
-            HTTP_ERROR("Bad Scheme");
-            return -1;
-        }
-    }
-    // extract hostname
-    ps = pe;
-    pe = strchr(ps, ':');
-    if (! pe)
-    {
-        pe = strchr(ps, '/');
-        if (! pe)
-        {
-            // remainder of string is hostname
-            pe = ps + strlen(ps);
-        }
-    }
-    len = pe - ps;
-    if (len >= HTTP_MAX_HOSTNAME)
-    {
-        HTTP_ERROR("Hostname too long");
-        return -1;
-    }
-    if (host)
-    {
-        strncpy(host, ps, len);
-        host[len] = '\0';
-    }
-    ps = pe;
-    if (*ps == ':')
-    {
-        // port is specified
-        portnum = (uint16_t)strtoul(ps + 1, (char **)&pe, 10);
-        len = pe - ps;
-        if (len > HTTP_MAX_PORTSPEC)
-        {
-            HTTP_ERROR("Malformed port number");
-            return -1;
-        }
-        ps = pe;
-    }
-    if (port)
-    {
-        *port = portnum;
-    }
-    if (*ps != '/' && *ps)
-    {
-        HTTP_ERROR("Malformed path");
-        return -1;
-    }
-    len = strlen(ps);
-    if (len >= HTTP_MAX_PATH)
-    {
-        HTTP_ERROR("Path too long");
-        return -1;
-    }
-    if (! len)
-    {
-        ps = "/";
-        len = 1;
-    }
-    if (path && len)
-    {
-        strncpy(path, ps, len);
-        path[len] = '\0';
-    }
-    return 0;
-}
-
-int http_paste_url(
-                    char *url,
-                    const http_scheme_t scheme,
-                    const char *host,
-                    const uint16_t port,
-                    const char *path
-                  )
-{
-    size_t len;
-    uint16_t useport = port;
-    const char *schemestr;
-
-    if (! url)
-    {
-        HTTP_ERROR("Invalid Parameter");
-        return -1;
-    }
-    schemestr = http_scheme_name(scheme);
-    if (! schemestr)
-    {
-        HTTP_ERROR("Invalid Scheme");
-        return -1;
-    }
-    if (! host)
-    {
-        HTTP_ERROR("Missing Hostname");
-        return -1;
-    }
-    if (! useport)
-    {
-        useport = strcasecmp(schemestr, "https") ? 443 : 80;
-    }
-    if (! path)
-    {
-        path = "";
-    }
-    len = snprintf(url, HTTP_MAX_URL,
-            "%s://%s:%u/%s", schemestr, host, useport, path);
-    if (len < 0 || len >= HTTP_MAX_URL)
-    {
-        HTTP_ERROR("Pasted url too long");
-        return -1;
     }
     return 0;
 }

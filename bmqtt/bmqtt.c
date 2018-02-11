@@ -1515,7 +1515,8 @@ mqcontext_t *mqtt_client_create(
             mqtt_client_free(mqx);
             return NULL;
         }
-        http_paste_url(mqx->url, (transport == mqtWSS) ? httpWSS : httpWS, server, port, "mqtt");
+        butil_paste_url(mqx->url, sizeof(mqx->url),
+				(transport == mqtWSS) ? schemeWSS : schemeWS, server, port, "mqtt");
 
         mqx->client = http_client_create(NULL, true);
         if (! mqx->client)

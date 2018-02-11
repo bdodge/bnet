@@ -11,6 +11,7 @@ SASL_PATH=$(SRCROOT)/bsasl
 JSON_PATH=$(SRCROOT)/bjson
 OSAL_PATH=$(SRCROOT)/bosal
 HTTP_PATH=$(SRCROOT)/bhttp
+FTP_PATH=$(SRCROOT)/bftp
 XMPP_PATH=$(SRCROOT)/bxmpp
 MQTT_PATH=$(SRCROOT)/bmqtt
 
@@ -21,6 +22,7 @@ SASLLIB=$(SASL_PATH)/bsasllib.a
 OSALLIB=$(OSAL_PATH)/bosallib.a
 JSONLIB=$(IO_PATH)/bjsonlib.a
 HTTPLIB=$(HTTP_PATH)/bhttplib.a
+FTPLIB=$(FTP_PATH)/bftplib.a
 XMPPLIB=$(XMPP_PATH)/bxmpplib.a
 MQTTLIB=$(MQTT_PATH)/bmqttlib.a
 

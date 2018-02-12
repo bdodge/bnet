@@ -30,7 +30,7 @@ static int bftp_check_response_check(bftpcontext_t *bftp)
         bftp->state = bftpDone;
         return -1;
     }
-    bftp->last_code = strtoul(bftp->io.data + bftp->io.tail, NULL, 0);
+    bftp->last_code = strtoul((char*)bftp->io.data + bftp->io.tail, NULL, 0);
 
     for (i = 0; i < bftp->num_codes && i < BFTP_MAX_EXPECTED_CODES; i++)
     {
@@ -51,7 +51,7 @@ static int bftp_check_response_check(bftpcontext_t *bftp)
 
 static int bftp_send_command(bftpcontext_t *bftp, bftp_state_t next_state, const char *cmd, const char *data)
 {
-    size_t len;
+    int len;
 
     len = snprintf((char *)bftp->io.data, bftp->io.size,
             "%s%s%s\r\n", cmd,
@@ -183,6 +183,67 @@ static int bftp_begin_passive(bftpcontext_t *bftp)
         return -1;
     }
     return 0;
+}
+
+int sbftp_list_items(bftpcontext_t *bftp)
+{
+    char item[BFTP_MAX_LIST_ITEM];
+    size_t i;
+    char c;
+    int result;
+
+    result = 0;
+
+    while (bftp->io.count > 0)
+    {
+        for (i = 0; bftp->io.count > 0;)
+        {
+            if (i >= BFTP_MAX_LIST_ITEM)
+            {
+                BERROR("item overflow");
+                return -1;
+            }
+            c = (char)bftp->io.data[bftp->io.tail];
+            if (c == '\n')
+            {
+                if (i > 0)
+                {
+                    item[i] = '\0';
+                    if (bftp->callback)
+                    {
+                        result = bftp->callback(item, bftp->priv);
+                    }
+                    break;
+                }
+            }
+            else if (c != '\r')
+            {
+                item[i++] = c;
+            }
+            bftp->io.tail++;
+            if (bftp->io.tail >= bftp->io.size)
+            {
+                bftp->io.tail = 0;
+            }
+            bftp->io.count--;
+        }
+    }
+    // if not a complete line, push back into io ring (rare if ever)
+    //
+    while (i > 0)
+    {
+        if (bftp->io.tail == 0)
+        {
+            bftp->io.tail = bftp->io.size - 1;
+        }
+        else
+        {
+            bftp->io.tail--;
+        }
+        bftp->io.data[bftp->io.tail] = item[--i];
+        bftp->io.count++;
+    }
+    return result;
 }
 
 const char *bftp_state_name(bftp_state_t state)
@@ -610,14 +671,14 @@ int bftp_slice(bftpcontext_t *bftp)
             }
             bftp->xfer_data_total += result;
         }
-        // testing only
-        bftp->io.data[bftp->io.head] = '\0';
-        butil_log(4, "List:\n%s\n", bftp->io.data);
-        bftp->xfer_file_total += bftp->io.count;
-        bftp->io.count = 0;
-        bftp->io.head = 0;
-        bftp->io.tail = 0;
-        result = 0;
+        if (bftp->io.count > 0)
+        {
+            result = sbftp_list_items(bftp);
+        }
+        else
+        {
+            result = 0;
+        }
         break;
 
     case bftpDownload:
@@ -981,7 +1042,9 @@ int bftp_put_file(
 int bftp_list_directory(
                     const char  *remotepath,
                     const char  *username,
-                    const char  *password
+                    const char  *password,
+                    bftp_listing_cb_t *callback,
+                    void        *priv
                  )
 {
     bftpcontext_t *bftp;
@@ -1012,6 +1075,9 @@ int bftp_list_directory(
 
     strcpy(bftp->username, username);
     strcpy(bftp->password, password);
+
+    bftp->callback = callback;
+    bftp->priv = priv;
 
     // split remote path up
     //
@@ -1139,10 +1205,13 @@ bftpcontext_t *bftp_client_create()
     bftp = (bftpcontext_t *)malloc(sizeof(bftpcontext_t));
     if (bftp)
     {
-        memset(bftp, 0, sizeof(bftp));
+        memset(bftp, 0, sizeof(bftpcontext_t));
 
         bftp->method = bftpGet;
         bftp->usepassive = true;
+
+        bftp->callback = NULL;
+        bftp->priv = NULL;
 
         bftp->io.data = bftp->iobuf;
         bftp->io.size = sizeof(bftp->iobuf);

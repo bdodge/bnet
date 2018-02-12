@@ -1,6 +1,24 @@
 
 #include "bftp.h"
 
+static int on_listed_item(const char *item)
+{
+    butil_log(5, "%s\n", item);
+    return 0;
+}
+
+static int on_listed_item_not_present(const char *item, void *priv)
+{
+    on_listed_item(item);
+    return 0;
+}
+
+static int on_listed_item_present(const char *item, void *priv)
+{
+    on_listed_item(item);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     bftpcontext_t *bftp;
@@ -34,7 +52,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Can't get file\n");
     }
     #endif
-    #if 1
+    #if 0
     result = bftp_put_file(
                     "ftp://ftp.driveHQ.com/testret.jpg",
                     "fromremote.jpg",
@@ -50,7 +68,9 @@ int main(int argc, char **argv)
     result = bftp_list_directory(
                     "ftp://ftp.driveHQ.com/.",
                     "bnet_test_account",
-                    "jabberwocky"
+                    "jabberwocky",
+                    on_listed_item_not_present,
+                    (void*)"testret.jpg"
                     );
     if (result)
     {
@@ -66,6 +86,19 @@ int main(int argc, char **argv)
     if (result)
     {
         fprintf(stderr, "Can't delete file\n");
+    }
+    #endif
+    #if 1
+    result = bftp_list_directory(
+                    "ftp://ftp.driveHQ.com/.",
+                    "bnet_test_account",
+                    "jabberwocky",
+                    on_listed_item_not_present,
+                    (void*)"testret.jpg"
+                    );
+    if (result)
+    {
+        fprintf(stderr, "Can't put file\n");
     }
     #endif
     return result;

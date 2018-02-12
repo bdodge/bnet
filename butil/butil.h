@@ -55,7 +55,7 @@ int butil_parse_url(
                         butil_url_scheme_t *scheme,
                         char               *host,
                         size_t              nhost,
-                        short              *port,
+                        uint16_t           *port,
                         char               *path,
                         size_t              npath
                         );

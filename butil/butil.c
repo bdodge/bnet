@@ -304,7 +304,7 @@ const char *butil_scheme_name(butil_url_scheme_t scheme)
     switch (scheme)
     {
     case schemeFTP:     return "FTP";
-    case schemeFTPS:      return "FTPS";
+    case schemeSFTP:    return "SFTP";
     case schemeHTTP:    return "HTTP";
     case schemeHTTPS:   return "HTTPS";
     case schemeWS:      return "WS";
@@ -327,9 +327,9 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
         *scheme = schemeHTTP;
         return 0;
     }
-    if (! strcasecmp(name, "ftps"))
+    if (! strcasecmp(name, "sftp"))
     {
-        *scheme = schemeFTPS;
+        *scheme = schemeSFTP;
         return 0;
     }
     if (! strcasecmp(name, "ftp"))
@@ -361,15 +361,17 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
 }
 
 int butil_parse_url(
-                    const char           *url,
+                    const char         *url,
                     butil_url_scheme_t *scheme,
-                    char             *host,
-                  size_t              nhost,
-                    short                *port,
-                    char             *path,
-                  size_t              npath
+                    char               *host,
+                    size_t              nhost,
+                    short              *port,
+                    char               *path,
+                    size_t              npath
                   )
 {
+    char schemestr[BUTIL_MAX_URL_SCHEME];
+    butil_url_scheme_t localscheme;
     const char *ps, *pe;
     uint16_t portnum = 80;
     size_t len;
@@ -400,16 +402,15 @@ int butil_parse_url(
     pe = strstr(ps, "://");
     if (pe)
     {
+        // schemem present
+        //
         len = pe - ps;
         pe += 3;
-
-        if ((len == 5) && ! strncasecmp(ps, "https", len))
-        {
-            portnum = 443;
-        }
     }
     else
     {
+        // no scheme found, assume http
+        //
         pe = ps;
         ps = "http";
         len = 4;
@@ -419,18 +420,41 @@ int butil_parse_url(
         BERROR("Scheme too long");
         return -1;
     }
-    if (scheme)
+    if (! scheme)
     {
-        char schemestr[BUTIL_MAX_URL_SCHEME];
+        scheme = &localscheme;
+    }
+    strncpy(schemestr, ps, len);
+    schemestr[len] = '\0';
 
-        strncpy(schemestr, ps, len);
-        schemestr[len] = '\0';
-
-        if (butil_scheme_from_name(schemestr, scheme))
-        {
-            BERROR("Unknown Scheme");
-            return -1;
-        }
+    if (butil_scheme_from_name(schemestr, scheme))
+    {
+        BERROR("Unknown Scheme");
+        return -1;
+    }
+    // set default port based on scheme
+    //
+    switch (*scheme)
+    {
+    case schemeFTP:
+        portnum = 21;
+        break;
+    case schemeSFTP:
+        portnum = 23;
+        break;
+    case schemeHTTPS:
+        portnum = 443;
+        break;
+    case schemeSIP:
+        portnum = 5061;
+        break;
+    case schemeSIPS:
+        portnum = 5062;
+        break;
+    case schemeHTTP:
+    default:
+        portnum = 80;
+        break;
     }
     // extract hostname
     ps = pe;

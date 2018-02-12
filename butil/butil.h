@@ -31,7 +31,7 @@ int butil_base64_encode(
 typedef enum
 {
     schemeFTP,
-    schemeFTPS,
+    schemeSFTP,
     schemeHTTP,
     schemeHTTPS,
     schemeWS,

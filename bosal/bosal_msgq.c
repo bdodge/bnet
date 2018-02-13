@@ -8,7 +8,7 @@ typedef struct tag_msgq
 	uint32_t   		tag;
 	sem_t  			sem;
 	pthread_mutex_t lock;
-	bos_msg_t  	   *pool;
+	bosal_msg_t  	*pool;
 	size_t    		size;
 	size_t    		head;
 	size_t 			tail;
@@ -16,7 +16,7 @@ typedef struct tag_msgq
 }
 bmsgq_t;
 
-bos_msgq_t bosal_msgq_create(size_t max_count)
+bosal_msgq_t bosal_msgq_create(size_t max_count)
 {
 	bmsgq_t *q;
 	int result;
@@ -30,7 +30,7 @@ bos_msgq_t bosal_msgq_create(size_t max_count)
 	{
 		return NULL;
 	}
-	q->pool = (bos_msg_t *)malloc(max_count * sizeof(bos_msg_t));
+	q->pool = (bosal_msg_t *)malloc(max_count * sizeof(bosal_msg_t));
 	if (! q->pool)
 	{
 		free(q);
@@ -80,7 +80,7 @@ bos_msgq_t bosal_msgq_create(size_t max_count)
 	return (void*)q;
 }
 
-int bosal_msgq_destroy(bos_msgq_t msgq)
+int bosal_msgq_destroy(bosal_msgq_t msgq)
 {
 	bmsgq_t *q;
 
@@ -108,10 +108,10 @@ int bosal_msgq_destroy(bos_msgq_t msgq)
 	return 0;
 }
 
-int bosal_msgq_send(bos_msgq_t msgq, bos_msg_t *msg)
+int bosal_msgq_send(bosal_msgq_t msgq, bosal_msg_t *msg)
 {
 	bmsgq_t *q;
-	bos_msg_t *m;
+	bosal_msg_t *m;
 	int result;
 
 	if (! msgq || ! msg)
@@ -153,10 +153,10 @@ int bosal_msgq_send(bos_msgq_t msgq, bos_msg_t *msg)
 	return result;
 }
 
-int bosal_msgq_receive(bos_msgq_t msgq, bos_msg_t *msg, int tosecs, int tousecs)
+int bosal_msgq_receive(bosal_msgq_t msgq, bosal_msg_t *msg, int tosecs, int tousecs)
 {
 	bmsgq_t *q;
-	bos_msg_t *m;
+	bosal_msg_t *m;
 	int result;
 
 	if (! msgq || ! msg)
@@ -222,10 +222,10 @@ int bosal_msgq_receive(bos_msgq_t msgq, bos_msg_t *msg, int tosecs, int tousecs)
 	return result ? -1 : 0;
 }
 
-size_t bosal_msgq_count(bos_msgq_t msgq)
+size_t bosal_msgq_count(bosal_msgq_t msgq)
 {
 	bmsgq_t *q;
-	bos_msg_t *m;
+	bosal_msg_t *m;
 	int result;
 
 	if (! msgq)

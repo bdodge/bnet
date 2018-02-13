@@ -2,17 +2,17 @@
 #include "bosal_msgq.h"
 
 static pthread_t thread1, thread2;
-static bos_msgq_t msgq;
+static bosal_msgq_t msgq;
 static sem_t xsem;
 
 void *t1func(void *arg)
 {
-    bos_msgq_t msgq;
-    bos_msg_t  msg;
+    bosal_msgq_t msgq;
+    bosal_msg_t  msg;
     int counter = 0;
     int result;
 
-    msgq = (bos_msgq_t)arg;
+    msgq = (bosal_msgq_t)arg;
 
     while (1)
     {
@@ -31,11 +31,11 @@ void *t1func(void *arg)
 
 void *t2func(void *arg)
 {
-    bos_msgq_t msgq;
-    bos_msg_t  msg;
+    bosal_msgq_t msgq;
+    bosal_msg_t  msg;
     int result;
 
-    msgq = (bos_msgq_t)arg;
+    msgq = (bosal_msgq_t)arg;
 
     while (1)
     {

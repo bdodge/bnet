@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     program = *argv++;
     argc--;
 
-    #if 0
+    #if 1
     result = bftp_get_file(
                     "ftp://ftp.driveHQ.com/test.jpg",
                     "fromremote.jpg",
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Can't get file\n");
     }
     #endif
-    #if 0
+    #if 1
     result = bftp_put_file(
                     "ftp://ftp.driveHQ.com/testret.jpg",
                     "fromremote.jpg",

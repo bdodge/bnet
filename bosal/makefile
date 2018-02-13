@@ -4,7 +4,7 @@ include $(SRCROOT)/common/makecommon.mk
 
 LIBS+=-lpthread
 
-SOURCES=$(SRCDIR)/bosal.c $(SRCDIR)/bosalposix.o
+SOURCES=$(SRCDIR)/bosal_msgq.c
 HEADERS=$(SOURCES:%.c=%.h) $(SRCROOT)/common/bnetheaders.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
@@ -22,8 +22,7 @@ $(OSALLIB): $(OBJECTS)
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS)
 
-$(OBJDIR)/bosal.o: $(SRCDIR)/bosal.c $(HEADERS)
-$(OBJDIR)/bosalposix.o: $(SRCDIR)/bosalposix.c $(HEADERS)
+$(OBJDIR)/bosal_msgq.o: $(SRCDIR)/bosal_msgq.c $(HEADERS)
 $(OBJDIR)/bosaltest.o: $(SRCDIR)/bosaltest.c $(HEADERS)
 
 

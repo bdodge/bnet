@@ -1,5 +1,5 @@
 #include "bnetheaders.h"
-#include "bosal_msgq.h"
+#include "bosal.h"
 
 static pthread_t thread1, thread2;
 static bosal_msgq_t msgq;
@@ -75,6 +75,7 @@ int main(int argc, char **argv)
     // create semaphore
     //
     result = sem_init(&xsem, PTHREAD_PROCESS_PRIVATE, 0);
+
     if (result)
     {
         fprintf(stderr, "No sem\n");
@@ -134,6 +135,7 @@ int main(int argc, char **argv)
         }
         printf("Sleepy..\n");
     }
+    sem_destroy(&xsem);
     return 0;
 }
 

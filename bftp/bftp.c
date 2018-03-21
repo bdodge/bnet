@@ -1226,7 +1226,7 @@ bftpcontext_t *bftp_client_create()
         bftp->ctrl_stream = NULL;
         bftp->data_stream = NULL;
         bftp->file_stream = NULL;
-            }
+    }
     return bftp;
 }
 

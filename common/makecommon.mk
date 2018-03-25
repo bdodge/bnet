@@ -6,6 +6,7 @@ MBEDTLS_LIBS= mbedtls mbedx509 mbedcrypto
 
 UTIL_PATH=$(SRCROOT)/butil
 IO_PATH=$(SRCROOT)/bstreamio
+MEM_PATH=$(SRCROOT)/bmem
 XML_PATH=$(SRCROOT)/bxml
 SASL_PATH=$(SRCROOT)/bsasl
 JSON_PATH=$(SRCROOT)/bjson
@@ -17,6 +18,7 @@ MQTT_PATH=$(SRCROOT)/bmqtt
 
 UTILLIB=$(UTIL_PATH)/butillib.a
 IOLIB=$(IO_PATH)/bstreamio.a
+MEMLIB=$(MEM_PATH)/bmemlib.a
 XMLLIB=$(XML_PATH)/bxmllib.a
 SASLLIB=$(SASL_PATH)/bsasllib.a
 OSALLIB=$(OSAL_PATH)/bosallib.a

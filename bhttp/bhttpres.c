@@ -204,7 +204,8 @@ int http_file_callback(
             }
             if (! client->isclient)
             {
-                modtime = fstat.st_mtim.tv_sec;
+                //modtime = fstat.st_mtim.tv_sec;
+                modtime = fstat.st_mtime;
 
                 client->modifiedwhen = modtime;
 

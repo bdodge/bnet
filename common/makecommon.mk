@@ -1,3 +1,18 @@
+#
+# Copyright 2019 Brian Dodge
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 SRCROOT ?= ..
 
@@ -22,7 +37,7 @@ MEMLIB=$(MEM_PATH)/bmemlib.a
 XMLLIB=$(XML_PATH)/bxmllib.a
 SASLLIB=$(SASL_PATH)/bsasllib.a
 OSALLIB=$(OSAL_PATH)/bosallib.a
-JSONLIB=$(IO_PATH)/bjsonlib.a
+JSONLIB=$(JSON_PATH)/bjsonlib.a
 HTTPLIB=$(HTTP_PATH)/bhttplib.a
 FTPLIB=$(FTP_PATH)/bftplib.a
 XMPPLIB=$(XMPP_PATH)/bxmpplib.a

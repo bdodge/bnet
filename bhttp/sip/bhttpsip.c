@@ -4,6 +4,172 @@
 
 #define HTTP_MAX_SIP_SDP 1024
 
+#if 0
+// code moved out of bhttp
+
+    #if HTTP_SUPPORT_SIP
+    client->sip_via[0] = '\0';
+    client->sip_from[0] = '\0';
+    client->sip_to[0] = '\0';
+    client->sip_contact[0] = '\0';
+    client->sip_callid[0] = '\0';
+    client->sip_depth = 0;
+    client->sip_cseq = 0;
+    #endif
+
+	
+    #if HTTP_SUPPORT_SIP
+    else if (! http_ncasecmp(header, "via:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_via))
+        {
+            HTTP_ERROR("VIA len");
+            return -1;
+        }
+        strcpy(client->sip_via, value);
+    }
+    else if (! http_ncasecmp(header, "from:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_from))
+        {
+            HTTP_ERROR("from len");
+            return -1;
+        }
+        strcpy(client->sip_from, value);
+    }
+    else if (! http_ncasecmp(header, "to:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_to))
+        {
+            HTTP_ERROR("to len");
+            return -1;
+        }
+        strcpy(client->sip_to, value);
+    }
+    else if (! http_ncasecmp(header, "contact:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_contact))
+        {
+            HTTP_ERROR("contact len");
+            return -1;
+        }
+        strcpy(client->sip_contact, value);
+    }
+    else if (! http_ncasecmp(header, "call-id:"))
+    {
+        if (strlen(value) >= sizeof(client->sip_contact))
+        {
+            HTTP_ERROR("call-id len");
+            return -1;
+        }
+        strcpy(client->sip_callid, value);
+    }
+    else if (! http_ncasecmp(header, "cseq:"))
+    {
+        client->sip_cseq = strtoul(value, NULL, 10);
+    }
+    #endif
+        else
+        {
+            client->sip_depth = (int)strtol(value, &value, 10);
+        }
+                    else
+                    {
+                        client->sip_depth = -2;
+                    }
+	
+#if HTTP_SUPPORT_SIP
+        ||  client->scheme == schemeSIPS
+#endif
+
+    case httpSipSlice:
+    #if HTTP_SUPPORT_SIP
+        result = http_sip_slice(client);
+        if (result)
+        {
+            // any errors that don't format a reply go to done state
+            //
+            if (client->state == httpSipSlice)
+            {
+                client->state = httpDone;
+            }
+            result = 0;
+        }
+    #endif
+        break;
+		
+            #if HTTP_SUPPORT_SIP
+            case httpInvite:
+            case httpAck:
+            case httpPrack:
+            case httpCancel:
+            case httpUpdate:
+            case httpInfo:
+            case httpSubscribe:
+            case httpNotify:
+            case httpRefer:
+            case httpMessage:
+            case httpRegister:
+            case httpBye:
+                if (! client->resource)
+                {
+                    HTTP_ERROR("No SIP resource");
+                    result = http_error_reply(client, 405, "Bad Request", false);
+                    if (result)
+                    {
+                        return http_slice_fatal(client, result);
+                    }
+                    return 0;
+                }
+                result = http_sip_request(client);
+                if (result)
+                {
+                    // any errors that don't format a reply go to done state, else
+                    // assume the request handler sent a specific reply already
+                    //
+                    if (client->state != httpSendReply)
+                    {
+                        client->state = httpDone;
+                    }
+                    result = 0;
+                }
+                break;
+            #endif
+
+		
+        #if HTTP_SUPPORT_SIP
+        if (! http_ncasecmp(pline, "SIP/"))
+        {
+            pline += 4;
+            client->scheme = schemeSIP;
+            client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
+            if (*pline)
+            {
+                pline++;
+                client->vmin = (uint8_t)strtoul(pline, &pline, 10);
+            }
+        }
+        #endif
+        #if HTTP_SUPPORT_SIP
+        case httpInvite:
+        case httpAck:
+        case httpPrack:
+        case httpCancel:
+        case httpUpdate:
+        case httpInfo:
+        case httpSubscribe:
+        case httpNotify:
+        case httpRefer:
+        case httpMessage:
+        case httpRegister:
+        case httpBye:
+        #endif
+    else if (isphone)
+    {
+        result = sip_phone(argc, argv);
+    }
+#endif
+
 typedef enum
 {
 	sipIdle,

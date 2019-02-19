@@ -1,6 +1,4 @@
-#include "bnetheaders.h"
 #include "bstreamio.h"
-#include "bstreamtls.h"
 
 #if IOSTREAM_SUPPORT_TLS
 

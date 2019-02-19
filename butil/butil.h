@@ -1,6 +1,8 @@
 #ifndef BUTIL_H
 #define BUTIL_H 1
 
+#include "bnetheaders.h"
+
 #define BUTIL_MAX_URL_SCHEME 8
 #define BUTIL_MAX_PORTSPEC   5
 

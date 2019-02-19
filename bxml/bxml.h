@@ -1,6 +1,8 @@
 #ifndef BXML_H
 #define BXML_H 1
 
+#include "bnetheaders.h"
+
 typedef enum
 {
     bxml_ok = 0,

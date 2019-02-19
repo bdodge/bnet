@@ -1,4 +1,5 @@
 #include "bsasl.h"
+#include "bstreamio.h"
 
 /* Username:	*/
 static const char *s_username = "user";

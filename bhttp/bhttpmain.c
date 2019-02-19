@@ -79,7 +79,6 @@ int echo_callback(
 int main(int argc, char **argv)
 {
     bool isserver;
-    bool isphone;
     uint16_t port;
     char url[HTTP_MAX_LINE];
     const char *program, *arg;
@@ -112,14 +111,13 @@ int main(int argc, char **argv)
     argc--;
 
     isserver = true;
-    isphone = false;
 
     port = 8080;
     url[0] = '\0';
     method = httpGet;
     result = 0;
 
-    while (argc > 0 && ! result && ! isphone)
+    while (argc > 0 && ! result)
     {
         arg = *argv++;
         argc--;
@@ -147,9 +145,6 @@ int main(int argc, char **argv)
             case 'u':
             case 't':
                 isserver = false;
-                isphone = true;
-                // roll back args cause sip_phone call
-                // absorbs any other args
                 argc--;
                 argv--;
                 break;
@@ -255,7 +250,7 @@ int main(int argc, char **argv)
         }
         http_server_cleanup(&server);
     }
-    else if (! isphone)
+    else
     {
         uint16_t port;
         http_client_t *client;
@@ -305,10 +300,6 @@ int main(int argc, char **argv)
 
         http_log(1, "client ends\n");
         http_client_free(client);
-    }
-    else if (isphone)
-    {
-        result = sip_phone(argc, argv);
     }
     return result;
 }

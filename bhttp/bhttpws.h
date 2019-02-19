@@ -1,5 +1,5 @@
-#ifndef HTTP_WS_H
-#define HTTP_WS_H 1
+#ifndef HTTPWS_H
+#define HTTPWS_H 1
 
 #define HTTP_MAX_WEBSOCKET_KEY  32
 #define HTTP_MAX_WEBSOCKET_PROTOCOL  32

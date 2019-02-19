@@ -1,4 +1,6 @@
 #include "bsasl.h"
+#include "bstreamio.h"
+#include "butil.h"
 
 const char *bsasl_method_name(bsasl_auth_type_t type)
 {

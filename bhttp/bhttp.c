@@ -123,15 +123,6 @@ void http_client_reinit(http_client_t *client, bool newstream)
         client->ws_stream = NULL;
     }
     #endif
-    #if HTTP_SUPPORT_SIP
-    client->sip_via[0] = '\0';
-    client->sip_from[0] = '\0';
-    client->sip_to[0] = '\0';
-    client->sip_contact[0] = '\0';
-    client->sip_callid[0] = '\0';
-    client->sip_depth = 0;
-    client->sip_cseq = 0;
-    #endif
 
     if (newstream)
     {
@@ -829,68 +820,13 @@ static int http_process_header(http_client_t *client, char *header)
         strcpy(client->ws_proto, value);
     }
     #endif
-    #if HTTP_SUPPORT_SIP
-    else if (! http_ncasecmp(header, "via:"))
-    {
-        if (strlen(value) >= sizeof(client->sip_via))
-        {
-            HTTP_ERROR("VIA len");
-            return -1;
-        }
-        strcpy(client->sip_via, value);
-    }
-    else if (! http_ncasecmp(header, "from:"))
-    {
-        if (strlen(value) >= sizeof(client->sip_from))
-        {
-            HTTP_ERROR("from len");
-            return -1;
-        }
-        strcpy(client->sip_from, value);
-    }
-    else if (! http_ncasecmp(header, "to:"))
-    {
-        if (strlen(value) >= sizeof(client->sip_to))
-        {
-            HTTP_ERROR("to len");
-            return -1;
-        }
-        strcpy(client->sip_to, value);
-    }
-    else if (! http_ncasecmp(header, "contact:"))
-    {
-        if (strlen(value) >= sizeof(client->sip_contact))
-        {
-            HTTP_ERROR("contact len");
-            return -1;
-        }
-        strcpy(client->sip_contact, value);
-    }
-    else if (! http_ncasecmp(header, "call-id:"))
-    {
-        if (strlen(value) >= sizeof(client->sip_contact))
-        {
-            HTTP_ERROR("call-id len");
-            return -1;
-        }
-        strcpy(client->sip_callid, value);
-    }
-    else if (! http_ncasecmp(header, "cseq:"))
-    {
-        client->sip_cseq = strtoul(value, NULL, 10);
-    }
-    #endif
-    #if HTTP_SUPPORT_SIP || HTTP_SUPPORT_WEBDAV
+    #if HTTP_SUPPORT_WEBDAV
     else if (! http_ncasecmp(header, "depth:"))
     {
         if (client->scheme == schemeHTTP || client->scheme == schemeHTTPS)
         {
            client->dav_depth_in = (int)strtol(value, &value, 10);
            client->dav_no_root = false;
-        }
-        else
-        {
-            client->sip_depth = (int)strtol(value, &value, 10);
         }
         if (value[0])
         {
@@ -902,10 +838,6 @@ static int http_process_header(http_client_t *client, char *header)
                     {
                         client->dav_depth_in = HTTP_MAX_WEBDAV_DEPTH - 1;
                     }
-                    else
-                    {
-                        client->sip_depth = -2;
-                    }
                     value += 8;
                 }
                 else
@@ -913,7 +845,6 @@ static int http_process_header(http_client_t *client, char *header)
                     HTTP_ERROR("Bad depth header");
                 }
             }
-            #if HTTP_SUPPORT_SIP
             if (value[0] == ',')
             {
                 value = http_skip_white(value);
@@ -922,7 +853,6 @@ static int http_process_header(http_client_t *client, char *header)
                     client->dav_no_root = true;
                 }
             }
-            #endif
         }
     }
     #endif
@@ -1028,7 +958,6 @@ static const char *http_state_name(http_state_t state)
     case httpBodyUpload:        return "Body (send)";
     case httpSendReply:         return "Reply (send)";
     case httpPropFindEnumerate: return "Enumerate (find)";
-    case httpSipSlice:          return "Sip";
     case httpKeepAlive:         return "KeepAlive";
     case httpDone:              return "Done";
     default:                    return "- bad state -";
@@ -1123,9 +1052,6 @@ int http_client_slice(http_client_t *client)
                 client->scheme == schemeHTTPS
     #if HTTP_SUPPORT_WEBSOCKET
             ||  client->scheme == schemeWSS
-    #endif
-    #if HTTP_SUPPORT_SIP
-            ||  client->scheme == schemeSIPS
     #endif
         )
         {
@@ -1337,19 +1263,6 @@ int http_client_slice(http_client_t *client)
                 client->vmin = (uint8_t)strtoul(pline, &pline, 10);
             }
         }
-        #if HTTP_SUPPORT_SIP
-        if (! http_ncasecmp(pline, "SIP/"))
-        {
-            pline += 4;
-            client->scheme = schemeSIP;
-            client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
-            if (*pline)
-            {
-                pline++;
-                client->vmin = (uint8_t)strtoul(pline, &pline, 10);
-            }
-        }
-        #endif
         http_log(3, "cl:%u %s %s %s/%u.%u\n", client->id,
                 http_method_name(client->method),
                 client->path,
@@ -1380,20 +1293,6 @@ int http_client_slice(http_client_t *client)
                 vmin = (uint8_t)strtoul(pline, &pline, 10);
             }
         }
-        #if HTTP_SUPPORT_SIP
-        if (! http_ncasecmp(pline, "SIP/"))
-        {
-            uint8_t vmaj, vmin;
-
-            pline += 4;
-            vmaj = (uint8_t)strtoul(pline, &pline, 10);
-            if (*pline)
-            {
-                pline++;
-                vmin = (uint8_t)strtoul(pline, &pline, 10);
-            }
-        }
-        #endif
         pline = http_skip_nonwhite(pline);
         pline = http_skip_white(pline);
 
@@ -1612,20 +1511,6 @@ int http_client_slice(http_client_t *client)
         case httpMove:
         case httpLock:
         case httpUnlock:
-        #endif
-        #if HTTP_SUPPORT_SIP
-        case httpInvite:
-        case httpAck:
-        case httpPrack:
-        case httpCancel:
-        case httpUpdate:
-        case httpInfo:
-        case httpSubscribe:
-        case httpNotify:
-        case httpRefer:
-        case httpMessage:
-        case httpRegister:
-        case httpBye:
         #endif
             client->resource = http_find_resource(client->resources, client->path, client->method);
             if (! client->resource || ! client->resource->callback)
@@ -2036,44 +1921,6 @@ int http_client_slice(http_client_t *client)
                     return http_slice_fatal(client, result);
                 }
                 break;
-
-            #if HTTP_SUPPORT_SIP
-            case httpInvite:
-            case httpAck:
-            case httpPrack:
-            case httpCancel:
-            case httpUpdate:
-            case httpInfo:
-            case httpSubscribe:
-            case httpNotify:
-            case httpRefer:
-            case httpMessage:
-            case httpRegister:
-            case httpBye:
-                if (! client->resource)
-                {
-                    HTTP_ERROR("No SIP resource");
-                    result = http_error_reply(client, 405, "Bad Request", false);
-                    if (result)
-                    {
-                        return http_slice_fatal(client, result);
-                    }
-                    return 0;
-                }
-                result = http_sip_request(client);
-                if (result)
-                {
-                    // any errors that don't format a reply go to done state, else
-                    // assume the request handler sent a specific reply already
-                    //
-                    if (client->state != httpSendReply)
-                    {
-                        client->state = httpDone;
-                    }
-                    result = 0;
-                }
-                break;
-            #endif
 
             case httpUnsupported:
                 http_log(1, "Unsupported request\n");
@@ -2610,22 +2457,6 @@ int http_client_slice(http_client_t *client)
     #endif
         break;
 
-    case httpSipSlice:
-    #if HTTP_SUPPORT_SIP
-        result = http_sip_slice(client);
-        if (result)
-        {
-            // any errors that don't format a reply go to done state
-            //
-            if (client->state == httpSipSlice)
-            {
-                client->state = httpDone;
-            }
-            result = 0;
-        }
-    #endif
-        break;
-
     case httpKeepAlive:
         // if keep-alive, restart this, and set initial input timeout
         // as the keep-alive timeout
@@ -2773,9 +2604,6 @@ int http_client_request(
             client->scheme == schemeHTTPS
 #if HTTP_SUPPORT_WEBSOCKET
             client->scheme == schemeWSS
-#endif
-#if HTTP_SUPPORT_SIP
-        ||  client->scheme == schemeSIPS
 #endif
     )
     {

@@ -1,6 +1,4 @@
-#include "bnetheaders.h"
 #include "bstreamio.h"
-#include "bstreamtls.h"
 
 iostream_t *iostream_alloc(void)
 {

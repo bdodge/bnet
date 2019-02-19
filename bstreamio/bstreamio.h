@@ -1,5 +1,8 @@
-#ifndef HTTPIO_H
-#define HTTPIO_H 1
+#ifndef BSTREAMIO_H
+#define BSTREAMIO_H 1
+
+#include "bnetheaders.h"
+#include "bstreamtls.h"
 
 typedef struct ioring
 {

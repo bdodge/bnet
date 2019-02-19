@@ -1,6 +1,9 @@
 #ifndef BJSON_H
 #define BJSON_H 1
 
+#include "bnetheaders.h"
+#include "butil.h"
+
 /// max depth of array/object nesting. parsing over values
 /// needs a stack of up to this size. it is allocated in
 /// the parser object to avoid large automatic variables

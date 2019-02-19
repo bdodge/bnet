@@ -2,14 +2,16 @@
 #define HTTP_H 1
 
 #include "bnetheaders.h"
-
 #include "bhttpconfig.h"
+
 #include "butil/butil.h"
 #include "bstreamio/bstreamio.h"
+#if HTTP_SUPPORT_WEBDAV
 #include "bhttpdav.h"
+#endif
+#if HTTP_SUPPORT_WEBSOCKET
 #include "bhttpws.h"
-#include "bhttpsip.h"
-
+#endif
 
 #define HTTP_ERROR BERROR
 
@@ -169,7 +171,6 @@ typedef enum
     httpBodyUpload,
     httpSendReply,
     httpPropFindEnumerate,
-    httpSipSlice,
     httpKeepAlive,
     httpDone
 }
@@ -229,15 +230,6 @@ typedef struct http_client
     char                ws_key[HTTP_MAX_WEBSOCKET_KEY];
     char                ws_proto[HTTP_MAX_WEBSOCKET_PROTOCOL];
     iostream_t         *ws_stream;
-    #endif
-    #if HTTP_SUPPORT_SIP
-    char                sip_via[HTTP_MAX_SIP_VIA];
-    char                sip_from[HTTP_MAX_SIP_ADDR];
-    char                sip_to[HTTP_MAX_SIP_ADDR];
-    char                sip_contact[HTTP_MAX_SIP_ADDR];
-    char                sip_callid[HTTP_MAX_SIP_ADDR];
-    int                 sip_depth;
-    uint32_t            sip_cseq;
     #endif
     http_resource_t    *resource;
     bool                resource_open;

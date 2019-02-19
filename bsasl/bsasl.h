@@ -2,8 +2,6 @@
 #define BSASL_H 1
 
 #include "bnetheaders.h"
-#include "bstreamio.h"
-#include "butil.h"
 
 #define BSASL_NONCE_SIZE    24
 #define BSASL_MAX_NONCE     128

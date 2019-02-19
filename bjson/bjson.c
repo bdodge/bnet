@@ -2,8 +2,6 @@
 //define this to use memmem not our own version of it
 //#define _GNU_SOURCE
 
-#include "bnetheaders.h"
-#include "butil.h"
 #include "bjson.h"
 
 static int bjson_is_delimiter(char ch)

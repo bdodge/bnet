@@ -198,7 +198,7 @@ int main(int argc, char **argv)
         char *cannedindex = "<h2>hello world</h2>";
 
         result = http_add_canned_resource(&resources, "/canned.html",
-                    NULL, htmthtml, cannedindex, strlen(cannedindex));
+                    NULL, htmthtml, (uint8_t*)cannedindex, strlen(cannedindex));
         if (result)
         {
             HTTP_ERROR("can't make resource");

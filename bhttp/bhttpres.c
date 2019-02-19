@@ -204,8 +204,11 @@ int http_file_callback(
             }
             if (! client->isclient)
             {
-                //modtime = fstat.st_mtim.tv_sec;
+                #ifdef __APPLE__
                 modtime = fstat.st_mtime;
+                #else
+                modtime = fstat.st_mtim.tv_sec;
+                #endif
 
                 client->modifiedwhen = modtime;
 

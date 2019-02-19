@@ -740,7 +740,7 @@ static int http_process_header(http_client_t *client, char *header)
             switch (client->auth_type)
             {
             case httpAuthBasic:
-                if (butil_base64_decode(client->auth_creds, sizeof(client->auth_creds), value) < 0)
+                if (butil_base64_decode((uint8_t*)client->auth_creds, sizeof(client->auth_creds), value) < 0)
                 {
                     HTTP_ERROR("Authorization encoding");
                     return -1;
@@ -1245,7 +1245,7 @@ int http_client_slice(http_client_t *client)
         client->vmin = 1;
 
         // extract request
-        pline = client->line;
+        pline = (char*)client->line;
         pline = http_skip_white(pline);
         if (http_method_from_name(pline, &client->method))
         {
@@ -1292,7 +1292,7 @@ int http_client_slice(http_client_t *client)
         break;
 
     case httpReadReply:
-        pline = client->line;
+        pline = (char*)client->line;
         pline = http_skip_white(pline);
 
         // extract version
@@ -1434,7 +1434,7 @@ int http_client_slice(http_client_t *client)
             }
             break;
         }
-        result = http_process_header(client, client->line);
+        result = http_process_header(client, (char*)client->line);
         if (result < 0)
         {
             result = http_error_reply(client, 500, "Header error", true);
@@ -1459,7 +1459,7 @@ int http_client_slice(http_client_t *client)
 
     case httpMultipartHeaders:
         // multipart headers count against content length
-        i = strlen(client->line) + 2;
+        i = strlen((char*)client->line) + 2;
         if (i <= client->in_content_length)
         {
             client->in_content_length -= i;
@@ -1474,7 +1474,7 @@ int http_client_slice(http_client_t *client)
             client->state = httpHandleReadRequest;
             break;
         }
-        result = http_process_multipart_header(client, client->line);
+        result = http_process_multipart_header(client, (char*)client->line);
         if (result < 0)
         {
             result =http_error_reply(client, 500, "Multipart Header error", true);
@@ -1719,7 +1719,7 @@ int http_client_slice(http_client_t *client)
             http_get_line(client, httpReadChunkCount);
             break;
         }
-        client->in_content_length = (size_t)strtoul(client->line, NULL, 16);
+        client->in_content_length = (size_t)strtoul((char*)client->line, NULL, 16);
         http_log(3, "cl:%u: next chunk %u\n", client->id, client->in_content_length);
         if (client->in_content_length == 0)
         {
@@ -1991,7 +1991,7 @@ int http_client_slice(http_client_t *client)
             &&  (client->boundary[0] != '\1')
             &&  (client->in.data[0] == client->boundary[0])
             &&  (client->in.count >= (client->boundary_length + 2))
-            &&  ! strncmp(client->in.data, client->boundary, client->boundary_length)
+            &&  ! strncmp((char*)client->in.data, client->boundary, client->boundary_length)
         )
         {
             // this is a boundary. complete previous xfer state and parse headers
@@ -2364,7 +2364,7 @@ int http_client_slice(http_client_t *client)
                 if (count > 0 && client->out_transfer_type == httpChunked)
                 {
                     // back annotate chunk count
-                    snprintf(content - 8, 8, "\r\n%04X\r", i);
+                    snprintf((char *)content - 8, 8, "\r\n%04X\r", i);
                     content[-1] = '\n';
                     i += 8;
                 }
@@ -2741,7 +2741,7 @@ socket_t http_create_server_socket(http_transport_t transport, uint16_t port)
 static socket_t http_get_client_connection(socket_t sock)
 {
     struct sockaddr_in cli_addr;
-    int clilen;
+    socklen_t clilen;
     socket_t clientsock;
 
     clilen = sizeof(cli_addr);
@@ -3198,5 +3198,7 @@ int http_serve(http_server_t *servers)
         }
     }
     while (! result);
+
+    return result;
 }
 

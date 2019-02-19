@@ -1,3 +1,6 @@
+
+--- original setup
+
 mkdir bnet
 cd bnet
 bed README.md
@@ -8,3 +11,8 @@ git remote add origin https://github.com/bdodge/bnet.git
 git push -u origin master
 git submodule add https://github.com/ARMmbed/mbedtls.git mbedtls
 
+--- cloning
+
+git clone https://github.com/bdodge/bnet.git
+git submodule init
+git submodule update --recursive

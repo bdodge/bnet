@@ -62,7 +62,7 @@ else
         CFLAGS += -D Linux -m32
     endif
     ifeq ($(UNAME_S),Darwin)
-        CFLAGS += -D OSX -m32
+        CFLAGS += -D OSX
     endif
     UNAME_P := $(shell uname -p)
     ifeq ($(UNAME_P),x86_64)

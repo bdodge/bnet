@@ -248,8 +248,13 @@ static int webdav_file_info(webdav_file_info_t *info)
     }
     info->isdir         = ((fstat.st_mode & S_IFMT) == S_IFDIR) ? true : false;
     info->size          = fstat.st_size;
+    #ifdef __APPLE__
+    info->create_time   = fstat.st_ctime;
+    info->mod_time      = fstat.st_mtime;
+    #else
     info->create_time   = fstat.st_ctim.tv_sec;
     info->mod_time      = fstat.st_mtim.tv_sec;
+    #endif
     return 0;
 }
 
@@ -320,7 +325,7 @@ static int http_webdav_add_dir_entry(http_client_t *client, webdav_file_info_t *
     }
     // format xml
     //
-    len = snprintf(client->out.data + client->out.head, room,
+    len = snprintf((char*)client->out.data + client->out.head, room,
                         s_directory_entry, pdroot, purl, "", "");
     if (len < 0 || len >= room)
     {
@@ -328,7 +333,7 @@ static int http_webdav_add_dir_entry(http_client_t *client, webdav_file_info_t *
         return len;
     }
     // back annotate chunk count
-    snprintf(client->out.data + client->out.head + 2, 6, "%04X", len - 8);
+    snprintf((char*)client->out.data + client->out.head + 2, 6, "%04X", len - 8);
     client->out.data[client->out.head + 6] = '\r';
 
     client->out.head += len;
@@ -397,7 +402,7 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
 
     // format xml
     //
-    len = snprintf(client->out.data + client->out.head, room,
+    len = snprintf((char *)client->out.data + client->out.head, room,
                         s_file_entry, pdroot, purl, pname, info->size, pmime, cdate, mdate, "");
     if (len < 0 || len >= room)
     {
@@ -405,7 +410,7 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
         return -1;
     }
     // back annotate chunk count
-    snprintf(client->out.data + client->out.head + 2, 6, "%04X", len - 8);
+    snprintf((char*)(client->out.data + client->out.head + 2), 6, "%04X", len - 8);
     client->out.data[client->out.head + 6] = '\r';
 
     client->out.head += len;
@@ -419,10 +424,7 @@ static int http_webdav_add_contents_of_entry(http_client_t *client, const char *
     int result;
 
     result = webdav_push_dir(client, path);
-    if (result)
-    {
-        return result;
-    }
+    return result;
 }
 
 static int http_webdav_add_boiler(http_client_t *client, const char *boiler)
@@ -446,7 +448,7 @@ static int http_webdav_add_boiler(http_client_t *client, const char *boiler)
         HTTP_ERROR("No room for header");
         return -1;
     }
-    len = snprintf(client->out.data + client->out.head,
+    len = snprintf((char *)(client->out.data + client->out.head),
                     client->out.size - client->out.count - 1, boiler, len - 8);
     if (len < 0)
     {

@@ -790,12 +790,12 @@ int http_websocket_upgrade_reply(http_client_t *client)
         return -1;
     }
     // copy key to buffer area
-    strncpy(key_buffer, client->ws_key, key_room);
-    key_len = strlen(key_buffer);
+    strncpy((char*)key_buffer, client->ws_key, key_room);
+    key_len = strlen((char *)key_buffer);
 
     // append uuid to key (key remains base64 encoded)
-    strncpy(key_buffer + key_len, HTTP_WEBSOCKET_KEY_UUID, key_room - key_len);
-    key_len = strlen(key_buffer);
+    strncpy((char *)key_buffer + key_len, HTTP_WEBSOCKET_KEY_UUID, key_room - key_len);
+    key_len = strlen((char *)key_buffer);
     if (key_len >= key_room)
     {
         HTTP_ERROR("No room for keys");

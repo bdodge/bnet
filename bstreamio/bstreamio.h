@@ -69,6 +69,7 @@ iostream_t *iostream_create_from_tcp_connection(
                                             uint16_t port
                                               );
 
+#if BNET_TLS
 int iostream_sha1_hash(uint8_t *result, uint8_t *source, size_t bytes);
 int iostream_pkcs5_pbkdf2_hmac(
                                 uint8_t *key,
@@ -92,6 +93,7 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *stream, bool isclient)
 
 int iostream_tls_prolog(void);
 int iostream_tls_epilog(void);
+#endif
 
 #endif
 

@@ -23,10 +23,19 @@
 // by various internet components, about 2k bytes for some
 // browsers.  These can be adjusted as needed for size
 //
-#define HTTP_MAX_SCHEME     8
-#define HTTP_MAX_HOSTNAME   64
-#define HTTP_MAX_PORTSPEC   5
-#define HTTP_MAX_PATH       203
+#ifndef HTTP_MAX_SCHEME
+#define HTTP_MAX_SCHEME     (8)
+#endif
+#ifndef HTTP_MAX_HOSTNAME
+#define HTTP_MAX_HOSTNAME   (64)
+#endif
+#ifndef HTTP_MAX_PORTSPEC
+#define HTTP_MAX_PORTSPEC   (5)
+#endif
+#ifndef HTTP_MAX_PATH
+#define HTTP_MAX_PATH       (256)
+#endif
+
 #define HTTP_MAX_URL        (   \
                             HTTP_MAX_SCHEME +       \
                             HTTP_MAX_HOSTNAME +     \
@@ -36,72 +45,100 @@
 
 /// Longest basic-authentication user/password string accepted
 //
-#define HTTP_MAX_AUTH_STRING 64
+#ifndef HTTP_MAX_AUTH_STRING
+#define HTTP_MAX_AUTH_STRING (64)
+#endif
 
 /// How many clients, per server, can be connected
 //
-#define HTTP_MAX_CLIENT_CONNECTIONS 8
+#ifndef HTTP_MAX_CLIENT_CONNECTIONS
+#define HTTP_MAX_CLIENT_CONNECTIONS (8)
+#endif
 
 /// Max line in HTTP header
 //
-#define HTTP_MAX_LINE   256
+#ifndef HTTP_MAX_LINE
+#define HTTP_MAX_LINE   HTTP_MAX_URL
+#endif
 
 /// Size of IO buffer (need at least one packet for udp)
 //
+#ifndef HTTP_IO_SIZE
 #define HTTP_IO_SIZE    (1436*2)
+#endif
 
 /// Always assure these many bytes can fit in the IO buffer
 //  (e.g. TLS block size)
 //
-#define HTTP_IO_MIN_ROOM    32
+#ifndef HTTP_IO_MIN_ROOM
+#define HTTP_IO_MIN_ROOM    (32)
+#endif
 
 /// Timeout for I/O (seconds)
 //
-#define HTTP_LONG_TIMEOUT   50
+#ifndef HTTP_LONG_TIMEOUT
+#define HTTP_LONG_TIMEOUT   (50)
+#endif
 
 /// Timeout for I/O (seconds)
 //
-#define HTTP_KEEPALIVE_TIMEOUT 5
+#ifndef HTTP_KEEPALIVE_TIMEOUT
+#define HTTP_KEEPALIVE_TIMEOUT (5)
+#endif
 
 /// Is HTTP on UDP supported (needed for SIP, for example)
 //
-#define HTTP_SUPPORT_UDP 1
+#ifndef HTTP_SUPPORT_UDP
+#define HTTP_SUPPORT_UDP (0)
+#endif
 
 /// Is TLS supported
 //
-#define HTTP_SUPPORT_TLS 1
+#ifndef HTTP_SUPPORT_TLS
+#define HTTP_SUPPORT_TLS (1)
+#endif
 
 /// Is BASIC authentication supported
 //
-#define HTTP_SUPPORT_AUTH_BASIC 1
+#ifndef HTTP_SUPPORT_AUTH_BASIC
+#define HTTP_SUPPORT_AUTH_BASIC (1)
+#endif
 
 /// Is DIGEST authentication supported (needs TLS)
 //
-#define HTTP_SUPPORT_AUTH_DIGEST 1
+#ifndef HTTP_SUPPORT_AUTH_DIGEST
+#define HTTP_SUPPORT_AUTH_DIGEST (1)
+#endif
 
 /// Is multipart form-data supported
 //
-#define HTTP_SUPPORT_MULTIPART 1
+#ifndef HTTP_SUPPORT_MULTIPART
+#define HTTP_SUPPORT_MULTIPART (1)
+#endif
 
 /// Support a larger set of mime types (more strings space)
 //
-#define HTTP_SUPPORT_EXTENDED_MIME_TYPES 1
+#ifndef HTTP_SUPPORT_EXTENDED_MIME_TYPES
+#define HTTP_SUPPORT_EXTENDED_MIME_TYPES (1)
+#endif
 
 /// Is byte-range supported
 //
-#define HTTP_SUPPORT_RANGES 1
+#ifndef HTTP_SUPPORT_RANGES
+#define HTTP_SUPPORT_RANGES (1)
+#endif
 
 /// Is DAV supported
 //
-#define HTTP_SUPPORT_WEBDAV 1
-
-/// Is SIP supported
-//
-#define HTTP_SUPPORT_SIP 1
+#ifndef HTTP_SUPPORT_WEBDAV
+#define HTTP_SUPPORT_WEBDAV (1)
+#endif
 
 /// Is WebSockets supported (needs TLS)
 //
-#define HTTP_SUPPORT_WEBSOCKET  1
+#ifndef HTTP_SUPPORT_WEBSOCKET
+#define HTTP_SUPPORT_WEBSOCKET  HTTP_SUPPORT_TLS
+#endif
 
 /// Maximum depth of directory traversal in DAV PROPFIND
 /// Most DAV clients mine one level at a time so it
@@ -109,21 +146,33 @@
 /// client will get a stack of find states this deep
 /// and a find state is system dependent in size
 //
-#define HTTP_MAX_WEBDAV_DEPTH   16
+#ifndef HTTP_MAX_WEBDAV_DEPTH
+#define HTTP_MAX_WEBDAV_DEPTH   (16)
+#endif
 
 /// permission mask used to create directories (webdav mkcol)
 //
-#define HTTP_WEBDAV_PERMISSION_MASK 0775
+#ifndef HTTP_WEBDAV_PERMISSION_MASK
+#define HTTP_WEBDAV_PERMISSION_MASK (0775)
+#endif
 
-#define HTTP_FORCE_1_0 0
+/// Force HTTP 1.0 semantics
+//
+#ifndef HTTP_FORCE_1_0
+#define HTTP_FORCE_1_0 (0)
+#endif
 
 /// Path character for local file paths
 //
+#ifndef HTTP_LOCAL_PATH_CHAR
 #define HTTP_LOCAL_PATH_CHAR    '/'
+#endif
 
 /// Default file mime type
 //
+#ifndef HTTP_DEFAULT_MIME
 #define HTTP_DEFAULT_MIME       "text/html; charset=utf-8"
                                 /*"application/octet-stream"*/
+#endif
 
 #endif

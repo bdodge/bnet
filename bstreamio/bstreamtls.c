@@ -15,7 +15,7 @@
  */
 #include "bstreamio.h"
 
-#if IOSTREAM_SUPPORT_TLS
+#if BNET_TLS
 
 #include "mbedtls/config.h"
 #include "mbedtls/ssl.h"

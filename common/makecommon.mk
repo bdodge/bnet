@@ -80,14 +80,19 @@ else
     endif
     endif
     endif
-	ifndef NO_MBED_TLS
-		TLSLIBS=-L$(MBEDTLS_PATH)/library $(MBEDTLS_LIBS:%=-l%)
-		TLSDEPS=$(MBEDTLS_LIBS:%=$(MBEDTLS_PATH)/library/lib%.a$)
-		CFLAGS+=-I$(MBEDTLS_PATH)/include
-	else
-		TLSLIBS=
-		TLSDEPS=
-	endif
+endif
+
+ifndef BNET_TLS
+	BNET_TLS=1
+endif
+ifneq ($(BNET_TLS),0)
+	TLSLIBS=-L$(MBEDTLS_PATH)/library $(MBEDTLS_LIBS:%=-l%)
+	TLSDEPS=$(MBEDTLS_LIBS:%=$(MBEDTLS_PATH)/library/lib%.a$)
+	CFLAGS+=-I$(MBEDTLS_PATH)/include -DBNET_TLS=1
+else
+	TLSLIBS=
+	TLSDEPS=
+	CFLAGS+=-DBNET_TLS=0
 endif
 
 SRCDIR=.

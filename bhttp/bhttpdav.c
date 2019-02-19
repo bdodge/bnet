@@ -90,6 +90,15 @@ typedef struct
 }
 webdav_file_info_t;
 
+#ifdef IOS_HACK
+extern DIR *bridgeOpenDir(const char *);
+struct dirent *bridgeReadDir(DIR *d);
+void bridgeCloseDir(DIR *d);
+#define opendir bridgeOpenDir
+#define readdir bridgeReadDir
+#define closedir bridgeCloseDir
+#endif
+
 void http_webdav_findstate_init(http_client_t *client)
 {
     int i;

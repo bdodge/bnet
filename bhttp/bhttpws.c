@@ -15,6 +15,8 @@
  */
 #include "bhttp.h"
 
+#if HTTP_SUPPORT_WEBSOCKET
+
 // first byte
 #define WSBIT_FIN   0x80
 #define WSBIT_OPC   0x0F
@@ -824,4 +826,7 @@ int http_websocket_upgrade_reply(http_client_t *client)
     }
     return http_send_out_data(client, httpSendReply, httpWebSocketUpgrade);
 }
+
+#endif
+
 

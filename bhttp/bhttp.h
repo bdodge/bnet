@@ -19,8 +19,9 @@
 #include "bnetheaders.h"
 #include "bhttpconfig.h"
 
-#include "butil/butil.h"
-#include "bstreamio/bstreamio.h"
+#include "butil.h"
+#include "bstreamio.h"
+
 #if HTTP_SUPPORT_WEBDAV
 #include "bhttpdav.h"
 #endif

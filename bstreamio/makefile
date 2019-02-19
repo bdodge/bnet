@@ -24,10 +24,6 @@ SOURCES=$(SRCDIR)/bstreamio.c $(SRCDIR)/bstreamtls.c
 HEADERS=$(SOURCES:%.c=%.h)
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-ifndef NO_MBED_TLS
-	CFLAGS+=-DIOSTREAM_SUPPORT_TLS
-endif
-
 PROGSOURCES=$(SRCDIR)/bstreamiotest.c
 PROGOBJECTS=$(OBJDIR)/bstreamiotest.o
 

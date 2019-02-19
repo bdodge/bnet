@@ -338,8 +338,12 @@ int http_send_data(http_client_t *client, const uint8_t *data, int count)
     }
     else
     {
+        #if HTTP_SUPPORT_UDP
         wc = iostream_socket_sendto(client->stream, (uint8_t *)data, count,
                 client->out_host, client->out_port);
+        #else
+        return -1;
+        #endif
     }
     return wc;
 }
@@ -616,6 +620,7 @@ static int http_process_header(http_client_t *client, char *header)
     if (! http_ncasecmp(header, "content-length:"))
     {
         client->in_content_length = strtoul(value, NULL, 10);
+        client->in_transfer_type = httpLength;
     }
     else if (! http_ncasecmp(header, "transfer-encoding:"))
     {
@@ -992,6 +997,7 @@ int http_client_slice(http_client_t *client)
     int result;
     int i;
     int incount;
+    size_t bodyCount;
     bool isauthorized;
 
     if (client->prev_state != client->state)
@@ -1732,6 +1738,10 @@ int http_client_slice(http_client_t *client)
     case httpBodyDownload:
         if (client->in_transfer_type == httpNone)
         {
+            // If NO content-length specifying method was in the headers
+            // then assume its "till connection is over" except in those
+            // cases where http required a length (put/post)
+            //
             #if HTTP_SUPPORT_WEBSOCKET
             if (client->ws_upgrade)
             {
@@ -2161,10 +2171,10 @@ int http_client_slice(http_client_t *client)
         // give body data to callback, buffer is contiguous here, limit
         // length to remaining content_length or amount available
         //
-        i = client->in_content_length;
-        if (i > incount)
+        bodyCount = client->in_content_length;
+        if (bodyCount > incount)
         {
-            i = incount;
+            bodyCount = incount;
         }
         if (client->resource && client->resource->callback)
         {
@@ -2173,7 +2183,7 @@ int http_client_slice(http_client_t *client)
                                                 client->resource,
                                                 httpDownloadData,
                                                 &client->in.data,
-                                                &i
+                                                &bodyCount
                                                 );
             if (result)
             {
@@ -2188,9 +2198,9 @@ int http_client_slice(http_client_t *client)
         // take amount of data absorbed by callback away from input
         // (which is all avail data if no callback supplied)
         //
-        client->in_transferred += i;
-        client->in.count -= i;
-        client->in.tail += i;
+        client->in_transferred += bodyCount;
+        client->in.count -= bodyCount;
+        client->in.tail += bodyCount;
         if (client->in.tail >= client->in.size)
         {
             client->in.tail = 0;
@@ -2618,7 +2628,7 @@ int http_client_request(
     if (
             client->scheme == schemeHTTPS
 #if HTTP_SUPPORT_WEBSOCKET
-            client->scheme == schemeWSS
+        ||  client->scheme == schemeWSS
 #endif
     )
     {
@@ -3049,6 +3059,9 @@ int http_wait_for_server_event(http_server_t *servers)
     FD_ZERO(&rfds);
     FD_ZERO(&wfds);
     FD_ZERO(&efds);
+
+    nfds = 0;
+    client_count = 0;
 
     to_secs = 10;
     to_usecs = 250000;

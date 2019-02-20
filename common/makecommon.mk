@@ -71,8 +71,11 @@ ifeq ($(OS),iOS)
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
-        CFLAGS += -DLinux -m32
+        CFLAGS += -DLinux
 		OS=Linux
+		ifdef FORCE32
+			CFLAGS += -m32
+		endif
     endif
     ifeq ($(UNAME_S),Darwin)
         CFLAGS += -DOSX
@@ -160,6 +163,6 @@ $(MQTT_PATH)/%.a:
 	make -C $(MQTT_PATH) library
 
 $(MBEDTLS_PATH)/library/%.a:
-	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS)
+	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
 
 

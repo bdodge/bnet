@@ -1,3 +1,17 @@
+bftp/bftptest
+bftp/fromremote.jpg
+bhttp/bhttp
+bhttp/media/
+bjson/bjsontest
+bmem/bmemtest
+bmqtt/mqtt
+bosal/bosaltest
+bsasl/bsasltest
+bstreamio/bstreamiotest
+butil/butiltest
+bxml/bxmltest
+bxmpp/bxmpp
+    
 # Prerequisites
 *.d
 

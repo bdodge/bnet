@@ -27,7 +27,7 @@ PROGOBJECTS=$(OBJDIR)/bxmpptest.o
 CFLAGS+=-I$(IO_PATH) -I$(XML_PATH) -I$(SASL_PATH) -I$(UTIL_PATH)
 
 bxmpp: $(PROGOBJECTS) $(OBJECTS) $(XMLLIB) $(SASLLIB) $(IOLIB) $(UTILLIB) $(TLSDEPS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(XMPPLIB)
 

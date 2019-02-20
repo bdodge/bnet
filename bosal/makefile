@@ -27,7 +27,7 @@ PROGSOURCES=$(SRCDIR)/bosaltest.c
 PROGOBJECTS=$(OBJDIR)/bosaltest.o
 
 bosaltest: $(PROGOBJECTS) $(OSALLIB)
-	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(OSALLIB) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(OSALLIB)
 

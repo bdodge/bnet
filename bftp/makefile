@@ -27,7 +27,7 @@ PROGOBJECTS=$(OBJDIR)/bftptest.o
 CFLAGS+=-I$(UTIL_PATH) -I$(IO_PATH)
 
 bftptest: $(PROGOBJECTS) $(FTPLIB) $(IOLIB) $(UTILLIB)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(FTPLIB)
 

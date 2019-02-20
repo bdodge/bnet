@@ -43,7 +43,7 @@ PROGSOURCES=$(SRCDIR)/bhttpmain.c
 PROGOBJECTS=$(OBJDIR)/bhttpmain.o
 
 bhttp: $(PROGOBJECTS) $(HTTPLIB) $(LIBS) $(TLSDEPS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(HTTPLIB)
 

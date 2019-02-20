@@ -17,7 +17,6 @@
 #define BSTREAMIO_H 1
 
 #include "bnetheaders.h"
-#include "bstreamtls.h"
 
 typedef struct ioring
 {

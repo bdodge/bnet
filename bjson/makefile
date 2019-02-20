@@ -28,7 +28,7 @@ CFLAGS+=-I$(UTIL_PATH)
 
 LIBS+=$(UTILLIB)
 
-bjsontest: $(PROGOBJECTS) $(JSONLIB) $(LIBS)
+bjsontest: $(PROGOBJECTS) $(JSONLIB) $(SYSLIBS)
 	$(CC) $(CFLAGS) -o $@ $^
 
 library: $(JSONLIB)

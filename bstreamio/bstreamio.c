@@ -463,7 +463,7 @@ iostream_t *iostream_create_from_tcp_connection(
     //
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
-    result = connect(sock, (void*)&serv_addr, sizeof(serv_addr));
+    result = connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (result < 0)
     {
         // this is non blocking, so expect error.

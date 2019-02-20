@@ -25,7 +25,7 @@ PROGSOURCES=$(SRCDIR)/bxmltest.c
 PROGOBJECTS=$(OBJDIR)/bxmltest.o
 
 bxmltest: $(PROGOBJECTS) $(XMLLIB)
-	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(XMLLIB) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(XMLLIB)
 

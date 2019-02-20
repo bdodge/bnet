@@ -26,8 +26,8 @@ PROGOBJECTS=$(OBJDIR)/bsasltest.o
 
 CFLAGS+=-I$(UTIL_PATH) -I$(IO_PATH)
 
-bsasltest: $(PROGOBJECTS) $(OBJECTS) $(SASLLIB) $(IOLIB) $(UTILLIB) $(TLSDEPS) $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+bsasltest: $(PROGOBJECTS) $(OBJECTS) $(SASLLIB) $(IOLIB) $(UTILLIB) $(TLSDEPS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(SASLLIB)
 

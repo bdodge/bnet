@@ -25,7 +25,7 @@ PROGSOURCES=$(SRCDIR)/butiltest.c
 PROGOBJECTS=$(OBJDIR)/butiltest.o
 
 butiltest: $(PROGOBJECTS) $(UTILLIB)
-	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(UTILLIB) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(UTILLIB) $(SYSLIBS)
 
 library: $(UTILLIB)
 

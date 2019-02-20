@@ -27,7 +27,7 @@ PROGOBJECTS=$(OBJDIR)/bmemtest.o
 CFLAGS+=-I$(HTTP_PATH) -I$(OSAL_PATH) -I$(UTIL_PATH)
 
 bmemtest: $(PROGOBJECTS) $(MEMLIB) $(OSALLIB) $(UTILLIB)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(MEMIB)
 

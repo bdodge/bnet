@@ -31,56 +31,92 @@ FTP_PATH=$(SRCROOT)/bftp
 XMPP_PATH=$(SRCROOT)/bxmpp
 MQTT_PATH=$(SRCROOT)/bmqtt
 
-UTILLIB=$(UTIL_PATH)/butillib.a
-IOLIB=$(IO_PATH)/bstreamio.a
-MEMLIB=$(MEM_PATH)/bmemlib.a
-XMLLIB=$(XML_PATH)/bxmllib.a
-SASLLIB=$(SASL_PATH)/bsasllib.a
-OSALLIB=$(OSAL_PATH)/bosallib.a
-JSONLIB=$(JSON_PATH)/bjsonlib.a
-HTTPLIB=$(HTTP_PATH)/bhttplib.a
-FTPLIB=$(FTP_PATH)/bftplib.a
-XMPPLIB=$(XMPP_PATH)/bxmpplib.a
-MQTTLIB=$(MQTT_PATH)/bmqttlib.a
+CC=gcc
+CFLAGS+=-g -fno-diagnostics-color
+
+AR=ar
+ARFLAGS=-r
+
+LD=ld
 
 CFLAGS += -I$(SRCROOT) -I$(SRCROOT)/common
 
+SYLIBS=
+
 ifeq ($(OS),Windows_NT)
-    CFLAGS += -D WIN32
+    CFLAGS += -DWIN32
  	CFLAGS += -Wl,--subsystem,console
 	ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-        CFLAGS += -D AMD64 -m32
+        CFLAGS += -DAMD64 -m32
+		ARCH=x86_64
     endif
     ifeq ($(PROCESSOR_ARCHITECTURE),x86)
-        CFLAGS += -D IA32
+        CFLAGS += -DIA32
+		ARCH=x86_32
     endif
-	LIBS=-lws2_32
+	SYSLIBS +=-lws2_32
 else
-	LIBS=
+ifeq ($(OS),iOS)
+	CC=clang
+	AR=libtool
+	ARFLAGS=-static -o
+    CFLAGS += -DIOS -arch armv7 -arch arm64	\
+                -fmessage-length=0 -fdiagnostics-show-note-include-stack \
+                -fmacro-backtrace-limit=0 -Wno-trigraphs \
+                -fpascal-strings -fno-common -Wno-missing-field-initializers \
+                -fstrict-aliasing -Wprotocol -Wdeprecated-declarations -miphoneos-version-min=9.0 \
+				-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS12.1.sdk \
+				-Wno-sign-conversion -fembed-bitcode-marker
+	ARCH=arm
+else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
-        CFLAGS += -D Linux -m32
+        CFLAGS += -DLinux -m32
+		OS=Linux
     endif
     ifeq ($(UNAME_S),Darwin)
-        CFLAGS += -D OSX
+        CFLAGS += -DOSX
+		OS=OSX
     endif
-    UNAME_P := $(shell uname -p)
-    ifeq ($(UNAME_P),x86_64)
-        CFLAGS += -D AMD64
+    UNAME_M := $(shell uname -m)
+    ifeq ($(UNAME_M),x86_64)
+        CFLAGS += -DAMD64
+		ARCH=x86_64
     else
-    ifeq ($(UNAME_P),i386)
-        CFLAGS += -D AMD64
+    ifeq ($(UNAME_M),i386)
+        CFLAGS += -DAMD64
+		ARCH=x86_32
     else
-    ifneq ($(filter %86,$(UNAME_P)),)
-        CFLAGS += -D IA32
+    ifneq ($(filter %86,$(UNAME_M)),)
+        CFLAGS += -DIA32
+		ARCH=IA32
     else
-    ifneq ($(filter arm%,$(UNAME_P)),)
-        CFLAGS += -D ARM
+    ifneq ($(filter arm%,$(UNAME_M)),)
+        CFLAGS += -DARM
+		ARCH=arm
+	else
+		ARCH=unkown
     endif
     endif
     endif
     endif
 endif
+endif
+
+SRCDIR=.
+OBJDIR=.obj$(OS)$(ARCH)
+
+UTILLIB=$(UTIL_PATH)/$(OBJDIR)/libbutil.a
+IOLIB=$(IO_PATH)/$(OBJDIR)/libbstreamio.a
+MEMLIB=$(MEM_PATH)/$(OBJDIR)/libbmem.a
+XMLLIB=$(XML_PATH)/$(OBJDIR)/libbxml.a
+SASLLIB=$(SASL_PATH)/$(OBJDIR)/libbsasl.a
+OSALLIB=$(OSAL_PATH)/$(OBJDIR)/libbosal.a
+JSONLIB=$(JSON_PATH)/$(OBJDIR)/libbjson.a
+HTTPLIB=$(HTTP_PATH)/$(OBJDIR)/libbhttp.a
+FTPLIB=$(FTP_PATH)/$(OBJDIR)/libbftp.a
+XMPPLIB=$(XMPP_PATH)/$(OBJDIR)/libbxmpp.a
+MQTTLIB=$(MQTT_PATH)/$(OBJDIR)/libbmqtt.a
 
 ifndef BNET_TLS
 	BNET_TLS=1
@@ -94,15 +130,6 @@ else
 	TLSDEPS=
 	CFLAGS+=-DBNET_TLS=0
 endif
-
-SRCDIR=.
-OBJDIR=.obj
-
-CC=gcc
-CFLAGS+=-g -fno-diagnostics-color
-
-AR=ar
-ARFLAGS=-r
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(OBJDIR)
@@ -133,6 +160,6 @@ $(MQTT_PATH)/%.a:
 	make -C $(MQTT_PATH) library
 
 $(MBEDTLS_PATH)/library/%.a:
-	make -C $(MBEDTLS_PATH) lib CC="$(CC)" CFLAGS="$(CFLAGS)"
+	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS)
 
 

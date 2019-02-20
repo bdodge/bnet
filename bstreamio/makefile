@@ -28,7 +28,7 @@ PROGSOURCES=$(SRCDIR)/bstreamiotest.c
 PROGOBJECTS=$(OBJDIR)/bstreamiotest.o
 
 bstreamiotest: $(PROGOBJECTS) $(IOLIB)
-	$(CC) $(CFLAGS) -o $@ $(PROGOBJECTS) $(IOLIB) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(IOLIB)
 

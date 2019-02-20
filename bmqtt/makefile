@@ -27,7 +27,7 @@ PROGOBJECTS=$(OBJDIR)/bmqttmain.o
 CFLAGS+=-I$(HTTP_PATH) -I$(UTIL_PATH) -I$(IO_PATH)
 
 mqtt: $(PROGOBJECTS) $(MQTTLIB) $(HTTPLIB) $(IOLIB) $(UTILLIB) $(TLSDEPS)
-	$(CC) $(CFLAGS) -o $@ $^ $(TLSLIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(MQTTLIB)
 

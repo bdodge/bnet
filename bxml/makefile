@@ -30,7 +30,7 @@ bxmltest: $(PROGOBJECTS) $(XMLLIB)
 library: $(XMLLIB)
 
 $(XMLLIB): $(OBJECTS)
-	$(AR) $(ARFLAGS) bxmllib.a $^
+	$(AR) $(ARFLAGS) $@ $^
 
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS) $(XMLLIB)

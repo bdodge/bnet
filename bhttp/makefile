@@ -48,7 +48,7 @@ bhttp: $(PROGOBJECTS) $(HTTPLIB) $(LIBS) $(TLSDEPS)
 library: $(HTTPLIB)
 
 $(HTTPLIB): $(OBJECTS)
-	$(AR) $(ARFLAGS) $(HTTPLIB) $^
+	$(AR) $(ARFLAGS) $@ $^
 
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)

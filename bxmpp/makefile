@@ -35,7 +35,7 @@ $(XMPPLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(XMPPLIB) $^
 
 clean:
-	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
+	rm $(PROGOBJECTS) $(OBJECTS) $(XMPPLIB)
 
 $(OBJDIR)/bxmpptest.o: $(SRCDIR)/bxmpptest.c $(HEADERS)
 $(OBJDIR)/bxmpp.o: $(SRCDIR)/bxmpp.c $(HEADERS)

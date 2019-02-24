@@ -108,6 +108,17 @@ void iostream_normalize_ring(ioring_t *ring, uint8_t *temp)
     }
 }
 
+void iostream_reset_ring(ioring_t *ring)
+{
+    if (! ring)
+    {
+        return;
+    }
+    ring->head = 0;
+    ring->tail = 0;
+    ring->count = 0;
+}
+
 static int iostream_file_write(iostream_t *stream, uint8_t *buf, int len)
 {
     int fileno;
@@ -263,6 +274,53 @@ socket_t iostream_create_udp_socket()
         return INVALID_SOCKET;
     }
     return sock;
+}
+
+int iostream_bind_socket(socket_t sock, uint16_t port)
+{
+    struct sockaddr_in serv_addr;
+    #ifdef Windows
+    unsigned long nonblock;
+    #else
+    uint32_t nonblock;
+    #endif
+    int enable;
+    int result;
+
+    enable = 1;
+    result = setsockopt(
+                    sock,
+                    SOL_SOCKET,
+                    SO_REUSEADDR,
+                    (char*)&enable,
+                    sizeof(enable)
+                  );
+    if (result < 0)
+    {
+        return result;
+    }
+    nonblock = 1;
+    result = ioctl_socket(sock, FIONBIO, &nonblock);
+    if (result < 0)
+    {
+        return result;
+    }
+    memset((char *)&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(port);
+
+    result = bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    if (result < 0)
+    {
+        return result;
+    }
+    return 0;
+}
+
+int iostream_listen_socket(socket_t sock, int max_connections)
+{
+    return listen(sock, max_connections);
 }
 
 iostream_t *iostream_create_reader_from_file(const char *filename)

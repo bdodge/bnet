@@ -50,6 +50,7 @@ typedef struct iostream
 iostream_t;
 
 void iostream_normalize_ring(ioring_t *ring, uint8_t *temp);
+void iostream_reset_ring(ioring_t *ring);
 
 iostream_t *iostream_alloc(void);
 void iostream_free(iostream_t *stream);
@@ -61,6 +62,8 @@ int iostream_socket_sendto(iostream_t *stream, uint8_t *buf, int len, const char
 
 socket_t iostream_create_tcp_socket(void);
 socket_t iostream_create_udp_socket(void);
+int iostream_bind_socket(socket_t sock, uint16_t port);
+int iostream_listen_socket(socket_t sock, int max_connections);
 
 iostream_t *iostream_create_from_socket(socket_t socket);
 iostream_t *iostream_create_from_tcp_connection(

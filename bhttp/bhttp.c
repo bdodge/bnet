@@ -2691,6 +2691,7 @@ socket_t http_create_server_socket(http_transport_t transport, uint16_t port)
 {
     struct sockaddr_in serv_addr;
     socket_t sock;
+    int result;
 
     sock = socket(AF_INET, (transport == httpTCP) ? SOCK_STREAM : SOCK_DGRAM, 0);
     if (sock < 0)
@@ -2698,35 +2699,8 @@ socket_t http_create_server_socket(http_transport_t transport, uint16_t port)
         HTTP_ERROR("Can't create socket");
         return INVALID_SOCKET;
     }
-    {
-        #ifdef Windows
-        unsigned long nonblock;
-        #else
-        uint32_t nonblock;
-        #endif
-        int enable;
-
-        enable = 1;
-        if (setsockopt(sock, SOL_SOCKET,
-                    SO_REUSEADDR, (char*)&enable, sizeof(int)) < 0)
-        {
-            HTTP_ERROR("SO_REUSEADDR failed");
-            close_socket(sock);
-            return INVALID_SOCKET;
-        }
-        nonblock = 1;
-        if (ioctl_socket(sock, FIONBIO, &nonblock) < 0)
-        {
-            HTTP_ERROR("Can't make nonblocking");
-            close_socket(sock);
-            return INVALID_SOCKET;
-        }
-    }
-    memset((char *)&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(port);
-    if (bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    result = iostream_bind_socket(sock, port);
+    if (result)
     {
         HTTP_ERROR("Can't bind server socket");
         close_socket(sock);
@@ -2738,7 +2712,8 @@ socket_t http_create_server_socket(http_transport_t transport, uint16_t port)
         // two separate queues for connections giving clients false hopes
         // if you see streams of failed requests consider upping the count
         //
-        if (listen(sock, HTTP_MAX_CLIENT_CONNECTIONS) < 0)
+        result = iostream_listen_socket(sock, HTTP_MAX_CLIENT_CONNECTIONS);
+        if (result < 0)
         {
             HTTP_ERROR("Can't listen on server socket");
             close_socket(sock);

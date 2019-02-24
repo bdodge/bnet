@@ -11,7 +11,8 @@ bstreamio/bstreamiotest
 butil/butiltest
 bxml/bxmltest
 bxmpp/bxmpp
-    
+bsnmp/bsnmp
+
 # Prerequisites
 *.d
 

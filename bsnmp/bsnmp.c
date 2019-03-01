@@ -16,69 +16,11 @@
 #include "bsnmp.h"
 #include "bsnmpber.h"
 #include "bsnmputils.h"
+#include "bsnmpvar.h"
 #include "bsnmpio.h"
 #include "butil.h"
 
-static bsnmp_var_t *bsnmp_var_create()
-{
-    bsnmp_var_t *var;
-    var = (bsnmp_var_t*)malloc(sizeof(bsnmp_var_t));
-    if (var)
-    {
-        var->type = SNMP_NULL;
-        var->len  = 0;
-        var->alloc_len = 0;
-        var->next = NULL;
-    }
-    else
-    {
-        butil_log(0, "VB: Alloc var\n");
-    }
-    return var;
-}
-
-static void bsnmp_var_destroy(bsnmp_var_t *var)
-{
-    if (var)
-    {
-        if (var->alloc_len)
-        {
-            switch (var->type)
-            {
-            case SNMP_OCTET_STRING:
-                if (var->val.sVal)
-                {
-                    free(var->val.sVal);
-                }
-                break;
-            case SNMP_OBJECT_ID:
-                if (var->val.oVal)
-                {
-                    free(var->val.oVal);
-                }
-                break;
-            default:
-                butil_log(0, "VD: alloced for non string type?\n");
-                break;
-            }
-        }
-        free(var);
-    }
-}
-
-static void bsnmp_varlist_cleanup(bsnmp_var_t *varlist)
-{
-    bsnmp_var_t *nv;
-
-    while (varlist)
-    {
-        nv = varlist->next;
-        bsnmp_var_destroy(varlist);
-        varlist = nv;
-    }
-}
-
-static int bsnmp_process_varbind_reply(bsnmp_server_t *server, bsnmp_var_t *var)
+static int bsnmp_format_varbind_reply(bsnmp_server_t *server, bsnmp_var_t *var)
 {
     ioring_t varbind_dex;
     int result;
@@ -129,7 +71,7 @@ static int bsnmp_process_varbind_reply(bsnmp_server_t *server, bsnmp_var_t *var)
         result = bsnmp_ber_from_string(server, var->val.sVal, var->len);
         break;
     case SNMP_OBJECT_ID:
-        result = bsnmp_ber_from_oid(server, &var->oid);
+        result = bsnmp_ber_from_oid(server, var->val.oVal);
         break;
     case SNMP_PRINTABLE_STR:
     case SNMP_UTC_TIME:
@@ -160,7 +102,7 @@ static int bsnmp_process_varbind_reply(bsnmp_server_t *server, bsnmp_var_t *var)
     return result;
 }
 
-static int bsnmp_process_reply(bsnmp_server_t *server, bsnmp_request_t *req)
+static int bsnmp_format_reply(bsnmp_server_t *server, bsnmp_request_t *req)
 {
     bsnmp_var_t *var;
 
@@ -257,7 +199,7 @@ static int bsnmp_process_reply(bsnmp_server_t *server, bsnmp_request_t *req)
     }
     for (var = req->values; var; var = var->next)
     {
-        result = bsnmp_process_varbind_reply(server, var);
+        result = bsnmp_format_varbind_reply(server, var);
         if (result)
         {
             return result;
@@ -289,6 +231,8 @@ static int bsnmp_process_reply(bsnmp_server_t *server, bsnmp_request_t *req)
 static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_oid_t *oid)
 {
     bsnmp_var_t *var;
+    bsnmp_type_t type;
+    bval_t       val;
     ioring_t svin;
     int result;
 
@@ -339,8 +283,7 @@ static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, b
         bsnmp_stream_restore_in_state(server, &svin);
         if (result)
         {
-            bsnmp_var_destroy(var);
-            return result;
+            break;
         }
         // alloc len needed
         var->alloc_len = var->len + 2;
@@ -348,15 +291,14 @@ static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, b
         if (! var->val.sVal)
         {
             butil_log(0, "VB: Can't alloc\n");
-            return -1;
+            break;
         }
         result = bsnmp_string_from_ber(server, var->val.sVal, var->alloc_len, &var->len);
         if (result)
         {
             free(var->val.sVal);
             var->val.sVal = NULL;
-            bsnmp_var_destroy(var);
-            return -1;
+            break;
         }
         break;
     case SNMP_OBJECT_ID:
@@ -365,8 +307,7 @@ static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, b
         bsnmp_stream_restore_in_state(server, &svin);
         if (result)
         {
-            bsnmp_var_destroy(var);
-            return result;
+            break;
         }
         // alloc len needed
         var->alloc_len = var->len + 2;
@@ -374,16 +315,14 @@ static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, b
         if (! var->val.oVal)
         {
             butil_log(0, "VB: Can't alloc\n");
-            bsnmp_var_destroy(var);
-            return -1;
+            break;
         }
         result = bsnmp_oid_from_ber(server, var->val.oVal);
         if (result)
         {
             free(var->val.oVal);
             var->val.oVal = NULL;
-            bsnmp_var_destroy(var);
-            return -1;
+            break;
         }
         break;
     case SNMP_PRINTABLE_STR:
@@ -399,13 +338,18 @@ static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, b
     case SNMP_FLOAT64:
     case SNMP_FLOAT128:
         butil_log(0, "VB: type not supported: %u\n", var->type);
-        bsnmp_var_destroy(var);
-        return -1;
+        result = -1;
+        break;
 
     default:
         butil_log(0, "VB: not a type: %u\n", var->type);
+        result = -1;
+        break;
+    }
+    if (result)
+    {
         bsnmp_var_destroy(var);
-        return -1;
+        return result;
     }
     // callback to process var
     //
@@ -420,12 +364,11 @@ static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, b
         }
     }
     // success, append var to results list
-    var->next = req->values;
-    req->values = var;
+    req->values = bsnmp_varlist_appendvar(req->values, var);
     return 0;
 }
 
-static int bsnmp_process_varbinds(bsnmp_server_t *server, bsnmp_request_t *req)
+static int bsnmp_process_req_varbinds(bsnmp_server_t *server, bsnmp_request_t *req)
 {
     bsnmp_var_t var;
     bsnmp_oid_t oid;
@@ -485,7 +428,7 @@ static int bsnmp_process_varbinds(bsnmp_server_t *server, bsnmp_request_t *req)
     return result;
 }
 
-static int bsnmp_process_request(bsnmp_server_t *server, bsnmp_request_t *req)
+static int bsnmp_process_req_header(bsnmp_server_t *server, bsnmp_request_t *req)
 {
     int result;
     uint8_t b;
@@ -494,16 +437,6 @@ static int bsnmp_process_request(bsnmp_server_t *server, bsnmp_request_t *req)
     int32_t  ival;
     uint32_t stringlen;
 
-    result = 0;
-    req->values = NULL;
-    req->errmsg = SNMP_ErrNoError;
-    req->errdex = 0;
-    server->last_error = SNMP_OK;
-
-    if (server->in.count == 0)
-    {
-        return 0;
-    }
     // Expect a struct(len) { pdu }
     //
     result = bsnmp_next_byte(server, &b);
@@ -559,6 +492,12 @@ static int bsnmp_process_request(bsnmp_server_t *server, bsnmp_request_t *req)
         return -1;
     }
     butil_log(5, "  - ver:%s community:%s\n", bsnmp_version_string(req->version), req->community);
+    return 0;    
+}
+
+static int bsnmp_process_req_pdu(bsnmp_server_t *server, bsnmp_request_t *req)
+{
+    int result;
 
     // PDU request type
     //
@@ -620,6 +559,8 @@ static int bsnmp_process_request(bsnmp_server_t *server, bsnmp_request_t *req)
     }
     if (req->code != SNMP_GETBULK)
     {
+        int32_t ival;
+        
         result = bsnmp_int32_from_ber(server, &ival);
         if (result)
         {
@@ -651,7 +592,40 @@ static int bsnmp_process_request(bsnmp_server_t *server, bsnmp_request_t *req)
             return result;
         }
     }
-    result = bsnmp_process_varbinds(server, req);
+    return 0;
+}
+
+static int bsnmp_process_request(bsnmp_server_t *server, bsnmp_request_t *req)
+{
+    int result;
+    uint32_t uval;
+
+    result = 0;
+
+    req->values = NULL;
+    req->errmsg = SNMP_ErrNoError;
+    req->errdex = 0;
+    server->last_error = SNMP_OK;
+
+    if (server->in.count == 0)
+    {
+        return 0;
+    }
+    result = bsnmp_process_req_header(server, req);
+    if (result)
+    {
+        return result;
+    }
+    result = bsnmp_process_req_pdu(server, req);
+    if (result)
+    {
+        return result;
+    }    
+    result = bsnmp_process_req_varbinds(server, req);
+    if (result)
+    {
+        return result;
+    }    
     return result;
 }
 
@@ -701,9 +675,13 @@ int bsnmp_serve(bsnmp_server_t *server)
                 case SNMP_GETBULK:
                     if (result)
                     {
+                        // something failed in processing request or reply
+                        // so make sure the responce has an errmsg and
+                        // no varbinds. if errmsg set, use it, if not
+                        // use last_error in the context, else set generr
+                        //
                         if (req.errmsg == SNMP_ErrNoError)
                         {
-                            // use any set error, or generr in response if now req error
                             if (server->last_error != SNMP_ErrNoError)
                             {
                                 req.errmsg = server->last_error;
@@ -717,7 +695,7 @@ int bsnmp_serve(bsnmp_server_t *server)
                         bsnmp_varlist_cleanup(req.values);
                         req.values = NULL;
                     }
-                    result = bsnmp_process_reply(server, &req);
+                    result = bsnmp_format_reply(server, &req);
                     break;
                 default:
                     break;

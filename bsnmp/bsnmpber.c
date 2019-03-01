@@ -547,6 +547,7 @@ int bsnmp_bytes_from_ber(bsnmp_server_t *server, uint8_t *val, uint32_t maxlen, 
     if (vallen == 0)
     {
         *val = 0;
+        *lenout = 0;
         return 0;
     }
     // VALUE
@@ -564,7 +565,7 @@ int bsnmp_bytes_from_ber(bsnmp_server_t *server, uint8_t *val, uint32_t maxlen, 
     {
         val[i] = 0;
     }
-    *lenout = vallen;
+    *lenout = i;
     return 0;
 }
 
@@ -802,6 +803,16 @@ int bsnmp_ber_from_oid(bsnmp_server_t *server, const bsnmp_oid_t *oid)
     int oiddex;
     int result;
 
+    if (! oid)
+    {
+        server->last_error = SNMP_ErrBadValue;
+        return 1;
+    }
+    if (oid->len >= SNMP_MAX_OID)
+    {
+        server->last_error = SNMP_ErrTooBig;
+        return 1;
+    }
     result = bsnmp_ber_from_typecode(server, SNMP_OBJECT_ID);
     if (result)
     {

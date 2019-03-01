@@ -157,33 +157,35 @@ bsnmp_oid_t;
 
 /// variant type to hold snmp values
 //
+typedef union
+{
+    int8_t      cVal;
+    uint8_t     ucVal;
+    int16_t     wVal;
+    uint16_t    uwVal;
+    int32_t     iVal;
+    uint32_t    uVal;
+    int64_t     llVal;
+    uint64_t    ullVal;
+    float       fVal;
+    double      lfVal;
+
+    char        *sVal;
+    uint8_t     *bVal;
+    bsnmp_oid_t *oVal;
+}
+bval_t;
+
 typedef struct tag_snmp_variant
 {
-	struct tag_snmp_variant *next;
+    struct tag_snmp_variant *next;
 
     bsnmp_type_t type;
     bsnmp_oid_t  oid;
     uint32_t     len;
     uint32_t     alloc_len;
 
-    union
-    {
-        int8_t      cVal;
-        uint8_t     ucVal;
-        int16_t     wVal;
-        uint16_t    uwVal;
-        int32_t     iVal;
-        uint32_t    uVal;
-        int64_t     llVal;
-        uint64_t    ullVal;
-        float       fVal;
-        double      lfVal;
-
-        char        *sVal;
-        uint8_t     *bVal;
-        bsnmp_oid_t *oVal;
-    }
-    val;
+    bval_t      val;
 }
 bsnmp_var_t;
 
@@ -236,7 +238,6 @@ int bsnmp_server_init           (
                                 uint16_t port,
                                 bsnmp_callback_t callback
                                 );
-int bsnmp_format_reply          (bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *var);
 int bsnmp_serve                 (bsnmp_server_t *server);
 int bsnmp_server_cleanup        (bsnmp_server_t *server);
 

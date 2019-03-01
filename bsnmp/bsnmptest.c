@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 #include "bsnmp.h"
+#include "bsnmpvar.h"
 #include "bsnmputils.h"
 #include "butil.h"
 #include "bnetheaders.h"
 
 static bsnmp_oid_t s_test_oid1 = { 3, { 0, 1, 2 } };
+static uint32_t s_test_val1 = 1234;
+
+static bsnmp_oid_t s_test_oid2 = { 3, { 0, 1, 3 } };
+static char s_test_val2[32] = "This is a test";
+
+static bsnmp_oid_t s_test_oid3 = { 3, { 0, 1, 4 } };
+static bsnmp_oid_t s_test_val3 = { 4, { 9, 10, 65531, 1 } };
 
 static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *var)
 {
@@ -39,15 +47,79 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
         case SNMP_GET:
             req->errmsg = SNMP_ErrNoError;
             var->type = SNMP_UNSIGNED;
-            var->val.uVal = 4567;
+            var->val.uVal = s_test_val1;
             break;
         case SNMP_SET:
-            req->errmsg = SNMP_ErrReadOnly;
+            req->errmsg = SNMP_ErrNoError;
+            s_test_val1 = var->val.uVal;
             break;
         default:
             req->errmsg = SNMP_ErrNoAccess;
             break;
         }
+    }
+    else if (bsnmp_oidcmp(&var->oid, &s_test_oid2, NULL) == snmpCmpExact)
+    {
+        switch (req->code)
+        {
+        case SNMP_GET:
+            req->errmsg = SNMP_ErrNoError;
+            var->type = SNMP_OCTET_STRING;
+            var->val.sVal = s_test_val2;
+            var->len = strlen(s_test_val2);
+            var->alloc_len = 0;
+            break;
+        case SNMP_SET:
+            if (var->type != SNMP_OCTET_STRING)
+            {
+                req->errmsg = SNMP_ErrWrongType;
+            }
+            else if (var->len >= sizeof s_test_val2)
+            {
+                req->errmsg= SNMP_ErrTooBig;
+            }
+            else
+            {
+                req->errmsg = SNMP_ErrNoError;
+                memcpy(s_test_val2, var->val.sVal, var->len);
+                s_test_val2[var->len] = 0;
+            }
+            break;
+        default:
+            req->errmsg = SNMP_ErrNoAccess;
+            break;
+        }
+    }
+    else if (bsnmp_oidcmp(&var->oid, &s_test_oid3, NULL) == snmpCmpExact)
+    {
+        switch (req->code)
+        {
+        case SNMP_GET:
+            req->errmsg = SNMP_ErrNoError;
+            var->type = SNMP_OBJECT_ID;
+            var->val.oVal = &s_test_val3;
+            var->len = s_test_val3.len;
+            var->alloc_len = 0;
+            break;
+        case SNMP_SET:
+            if (var->type != SNMP_OBJECT_ID)
+            {
+                req->errmsg = SNMP_ErrWrongType;
+            }
+            else
+            {
+                req->errmsg = SNMP_ErrNoError;
+                bsnmp_oid_copy(&s_test_val3, var->val.oVal);
+            }
+            break;
+        default:
+            req->errmsg = SNMP_ErrNoAccess;
+            break;
+        }
+    }
+    else
+    {
+        return -1;
     }
     return 0;
 }

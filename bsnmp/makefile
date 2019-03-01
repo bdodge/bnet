@@ -19,6 +19,7 @@ include $(SRCROOT)/common/makecommon.mk
 
 SOURCES=$(SRCDIR)/bsnmp.c \
 		$(SRCDIR)/bsnmpio.c \
+		$(SRCDIR)/bsnmpvar.c \
 		$(SRCDIR)/bsnmpber.c \
 		$(SRCDIR)/bsnmputils.c		
 HEADERS=$(SOURCES:%.c=%.h)
@@ -42,6 +43,7 @@ clean:
 
 $(OBJDIR)/bsnmptest.o: $(SRCDIR)/bsnmptest.c $(HEADERS)
 $(OBJDIR)/bsnmp.o: $(SRCDIR)/bsnmp.c $(HEADERS)
+$(OBJDIR)/bsnmpvar.o: $(SRCDIR)/bsnmpvar.c $(HEADERS)
 $(OBJDIR)/bsnmpio.o: $(SRCDIR)/bsnmpio.c $(HEADERS)
 $(OBJDIR)/bsnmpber.o: $(SRCDIR)/bsnmpber.c $(HEADERS)
 $(OBJDIR)/bsnmputils.o: $(SRCDIR)/bsnmputils.c $(HEADERS)

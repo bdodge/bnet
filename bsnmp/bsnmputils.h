@@ -30,11 +30,9 @@ typedef enum
 bsnmp_oidcmp_t;
 
 int            bsnmp_oid_copy(bsnmp_oid_t *dst, bsnmp_oid_t *src);
-int            bsnmp_var_init(bsnmp_var_t *var, bsnmp_oid_t *oid, bsnmp_type_t type);
 int            bsnmp_oid_from_string(bsnmp_oid_t *oid, const char *str);
 const char    *bsnmp_oid_string(bsnmp_oid_t *oid, char *buffer, int nBuffer);
 bsnmp_oidcmp_t bsnmp_oidcmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index);
-const char    *bsnmp_var_string(bsnmp_var_t *var, char *buffer, int nBuffer);
 const char    *bsnmp_version_string(int32_t version);
 const char    *bsnmp_type_string(bsnmp_type_t type);
 const char    *bsnmp_opcode_string(bsnmp_opcode_t code);

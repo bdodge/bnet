@@ -13,7 +13,7 @@ snmpMIB MODULE-IDENTITY
 
         DESCRIPTION
             "Copyright (C) The Internet Society 2010. This version of
-            this MIB module is part of RFC 1450; see the RFC itself for           
+            this MIB module is part of RFC 1450; see the RFC itself for
             full legal notices."
 
     LAST-UPDATED "9511090000Z"
@@ -181,12 +181,12 @@ sysOREntry OBJECT-TYPE
     INDEX      { sysORIndex }
     ::= { sysORTable 1 }
 
---SysOREntry ::= SEQUENCE {
---    sysORIndex     INTEGER,
---    sysORID        OBJECT IDENTIFIER,
---    sysORDescr     DisplayString,
---    sysORUpTime    TimeStamp
---}
+SysOREntry ::= SEQUENCE {
+    sysORIndex     INTEGER,
+    sysORID        OBJECT IDENTIFIER,
+    sysORDescr     DisplayString,
+    sysORUpTime    TimeStamp
+}
 
 sysORIndex OBJECT-TYPE
     SYNTAX     INTEGER (1..2147483647)

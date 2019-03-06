@@ -22,6 +22,7 @@ int main(int argc, char **argv)
 	size_t pool_1_size, pool_1_chunk;
 	size_t size;
 	uint8_t *ptr;
+	uint8_t *ptr1;
 
     butil_set_log_level(5);
 
@@ -43,6 +44,11 @@ int main(int argc, char **argv)
 
 	size = pool_1_chunk;
 	ptr = bmem_alloc(size);
+
+	size = pool_1_chunk;
+	ptr1 = bmem_alloc(size);
+
+	bmem_free(ptr1);
 	bmem_free(ptr);
 
 	size = pool_1_chunk + 1;

@@ -59,8 +59,19 @@ typedef struct
 }
 bmemfr_t;
 
+typedef struct tag_alloc_rec
+{
+    void *ptr;
+    size_t size;
+    size_t frec;
+}
+bmemar_t;
+
 #ifndef BMEM_MAX_FRECS
-#define BMEM_MAX_FRECS 32
+#define BMEM_MAX_FRECS (128)
+#endif
+#ifndef BMEM_MAX_ARECS
+#define BMEM_MAX_ARECS (1024*16)
 #endif
 #endif
 
@@ -80,7 +91,9 @@ typedef struct tag_mpool
     #if BMEM_TRACE_ALLOCS
     size_t   maxalloc;      ///< high water mark, this pool
     size_t   nfrecs;        ///< number of tracked file alloc records
+    size_t   narecs;        ///< number of tracked alloc records
     bmemfr_t frecs[BMEM_MAX_FRECS]; ///< file-line alloc records
+    bmemar_t arecs[BMEM_MAX_ARECS]; ///< individual alloc records
     #endif
 }
 bmempool_t;
@@ -141,7 +154,7 @@ int bmem_add_pool(void *base, size_t bytes, size_t blocksize)
 
             s_pooltab[hash] = base;
 
-            base = BMEM_ALIGN_ADDR((pp + sizeof(bmempool_t)));
+            base = BMEM_ALIGN_ADDR(((uint8_t*)pp + sizeof(bmempool_t)));
             bytes -= sizeof(bmempool_t);
 
             // use the next-lower portion of memory for a bitfield to track allocs,
@@ -166,14 +179,14 @@ int bmem_add_pool(void *base, size_t bytes, size_t blocksize)
 
             // place alloc areana, aligned, after these bytes
             //
-            pp->base_phys = BMEM_ALIGN_ADDR(pp->bits + entry_bytes);
+            pp->base_phys = BMEM_ALIGN_ADDR((uint8_t*)pp->bits + entry_bytes);
             pp->base_virt = pp->base_phys;
 
             // re-calculate based on where things ended up
             //
             actual_bytes = bytes - ((uint8_t*)pp->base_phys - (uint8_t*)pp->orig_base);
-            pp->blocks = actual_bytes / pp->blocksize;
-            pp->bytes   = pp->blocks * blocksize;
+            pp->blocks   = actual_bytes / pp->blocksize;
+            pp->bytes    = pp->blocks * blocksize;
 
             entry_bytes = (pp->blocks + 7) / 8;
             pp->entries = (entry_bytes + sizeof(bmapf_t) - 1) / sizeof(bmapf_t);
@@ -209,6 +222,8 @@ int bmem_add_pool(void *base, size_t bytes, size_t blocksize)
             pp->firstfree = 0;
 
             #if BMEM_TRACE_ALLOCS
+            pp->nfrecs = 0;
+            pp->narecs = 0;
             pp->maxalloc = 0;
             #endif
 
@@ -242,6 +257,15 @@ static void bmem_trace_alloc(bmempool_t *pool, void *ptr, size_t bytes, const ch
 
     butil_log(7, "Alloc %p = %zu from Pool %p from %s:%zu\n", ptr, bytes, pool, file, line);
 
+    // log the actual alloc
+    if (pool->narecs < BMEM_MAX_ARECS)
+    {
+        pool->arecs[pool->narecs].ptr  = ptr;
+        pool->arecs[pool->narecs].size = bytes;
+        pool->arecs[pool->narecs].frec = BMEM_MAX_FRECS;
+        pool->narecs++;
+    }
+    // log the file/line the alloc was made from
     for (rec = 0, tracked = false; rec < pool->nfrecs; rec++)
     {
         if (pool->frecs[rec].line == line && ! strcmp(pool->frecs[rec].file, file))
@@ -254,6 +278,7 @@ static void bmem_trace_alloc(bmempool_t *pool, void *ptr, size_t bytes, const ch
     {
         if (pool->nfrecs >= BMEM_MAX_FRECS)
         {
+            butil_log(5, "Can't log file for alloc\n");
             return;
         }
         rec = pool->nfrecs++;
@@ -272,6 +297,11 @@ static void bmem_trace_alloc(bmempool_t *pool, void *ptr, size_t bytes, const ch
     {
         pool->maxalloc = used;
     }
+    // back annotate the frec used in the arec
+    if (BMEM_MAX_ARECS > 0)
+    {
+        pool->arecs[pool->narecs - 1].frec = rec;
+    }
 }
 
 static void bmem_trace_free(bmempool_t *pool, void *ptr)
@@ -280,6 +310,26 @@ static void bmem_trace_free(bmempool_t *pool, void *ptr)
     bool tracked;
 
     butil_log(7, "Free %p from Pool %p\n", ptr, pool);
+
+    // de-log the actual alloc
+    for (rec = 0; rec < pool->narecs; rec++)
+    {
+        if (pool->arecs[rec].ptr == ptr && pool->arecs[rec].size != 0)
+        {
+            // remove this many bytes from file/line record
+            if (pool->arecs[rec].frec < pool->nfrecs)
+            {
+                pool->frecs[pool->arecs[rec].frec].total -=
+                        pool->arecs[rec].size;
+            }
+            pool->arecs[rec].size = 0;
+            return;
+        }
+    }
+    if (BMEM_MAX_ARECS > 0)
+    {
+        butil_log(1, "Freeing unlogged ptr %p\n", ptr);
+    }
 }
 
 #endif
@@ -294,7 +344,7 @@ void bmem_stats()
         pp = s_pooltab[hash];
         if (pp)
         {
-            butil_log(2, "POOL %zu  %zu bytes in %zu blocks. Used:%zu",
+            butil_log(2, "POOL %p  %zu bytes in %zu blocks. Used:%zu ",
                     pp, pp->bytes, pp->blocks, pp->bytes - pp->remain);
 #if BMEM_TRACE_ALLOCS
             butil_log(2, "MaxUsed:%zu\n", pp->maxalloc);
@@ -303,8 +353,40 @@ void bmem_stats()
 
             for (rec = 0; rec < pp->nfrecs; rec++)
             {
-                butil_log(2, "%20s:%-8zu %8zu %8zu\n", pp->frecs[rec].file, pp->frecs[rec].line,
+                butil_log(2, "%20s:%-8zu %8zu %8zu\n",
+                    pp->frecs[rec].file, pp->frecs[rec].line,
                     pp->frecs[rec].total, pp->frecs[rec].max);
+            }
+            if (pp->narecs > 0)
+            {
+                size_t nallocs;
+
+                for (rec = 0, nallocs = 0; rec < pp->narecs; rec++)
+                {
+                    if (pp->arecs[rec].size > 0)
+                    {
+                        nallocs++;
+                    }
+                }
+                if (nallocs > 0)
+                {
+                    butil_log(2, " List of %zu current allocations in pool %p\n", nallocs, pp);
+                    for (rec = 0; rec < pp->narecs; rec++)
+                    {
+                        if (pp->arecs[rec].size > 0)
+                        {
+                            butil_log(2, "  %20s:%-8zu  %p %zu bytes\n",
+                                    pp->frecs[pp->arecs[rec].frec].file,
+                                    pp->frecs[pp->arecs[rec].frec].line,
+                                    pp->arecs[rec].ptr,
+                                    pp->arecs[rec].size);
+                        }
+                    }
+                }
+                else
+                {
+                    butil_log(2, "  No allocations in pool %p\n", pp);
+                }
             }
 #else
             butil_log(2, "\n");
@@ -340,10 +422,16 @@ static void *bmem_alloc_from_pool(bmempool_t *pool, size_t bytes)
                         break;
                     }
             }
+            if ((uint8_t*)&pool->bits[ent_offset] >= (uint8_t*)pool->base_phys)
+            {
+                volatile int a = ent_offset;
+                volatile int b = a;
+            }
             pool->bits[ent_offset] |= bit_mask;
-            ptr = pool->base_phys +
+            ptr = (uint8_t*)pool->base_phys +
                         ((ent_offset * bits_per + bit_offset) * pool->blocksize);
             pool->remain -= pool->blocksize;
+            memset(ptr, 0, pool->blocksize);
             return (void*)ptr;
         }
     }
@@ -355,12 +443,23 @@ static void bmem_free_from_pool(bmempool_t *pool, void *ptr)
     bmapf_t bit_offset;
     bmapf_t ent_offset;
 
-    bit_offset = (uint8_t *)ptr - (uint8_t *)pool->base_phys;
+    bit_offset = ((uint8_t *)ptr - (uint8_t *)pool->base_phys) / pool->blocksize;
     ent_offset = bit_offset >> BMEM_BITFIELD_SHIFT;
     bit_offset &= BMEM_BITFIELD_MASK;
-
+    #if 0
+    if ((uint8_t*)pool->base_phys + (((ent_offset << BMEM_BITFIELD_SHIFT) + bit_offset) * pool->blocksize) != ptr)
+    {
+        butil_log(0, "ptr has offset, not freeing\n");
+        return;
+    }
+    #endif
     // clear the bit corresponding to the block
-    pool->bits[ent_offset] &= ~(1 << bit_offset);
+    if (!(pool->bits[ent_offset] & ((bmapf_t)1 << bit_offset)))
+    {
+        butil_log(0, "Attempt to free %p from [%u].%u which is not alloced\n",
+                ent_offset, bit_offset);
+    }
+    pool->bits[ent_offset] &= ~((bmapf_t)1 << bit_offset);
     pool->remain += pool->blocksize;
     if (ent_offset < pool->firstfree)
     {
@@ -388,8 +487,8 @@ void *bmem_alloc_x(size_t bytes)
         {
             if (pp->remain >= bytes)
             {
-                    ptr = bmem_alloc_from_pool(pp, bytes);
-                    break;
+                ptr = bmem_alloc_from_pool(pp, bytes);
+                break;
             }
         }
     }
@@ -424,7 +523,10 @@ void bmem_free_x(void *ptr)
         pp = s_pooltab[hash];
         if (pp)
         {
-            if (pp->base_phys <= ptr && ptr < pp->base_phys + pp->bytes)
+            if (
+                    (uint8_t *)pp->base_phys <= (uint8_t *)ptr
+                 && (uint8_t *)ptr < ((uint8_t*)pp->base_phys + pp->bytes)
+            )
             {
                 bmem_free_from_pool(pp, ptr);
                 #if BMEM_TRACE_ALLOCS

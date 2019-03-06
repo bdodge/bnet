@@ -20,7 +20,7 @@
 #include "butil.h"
 #include "bosal.h"
 
-#if defined(__IA64__) || defined(_WIN64) || defined(_M_IA64) || defined(_M_X64)
+#if defined(__IA64__) || defined(_WIN64) || defined(_M_IA64) || defined(_M_X64) || defined(AMD64) || defined(X86_64)
     // 64 bit CPU, ptrs and longs are 8 bytes, ints are 4
     #define BMEM_PTR_SIZE    8
 #else

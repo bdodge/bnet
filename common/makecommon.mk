@@ -146,6 +146,9 @@ $(UTIL_PATH)/%.a:
 $(IO_PATH)/%.a:
 	make -C $(IO_PATH) library
 
+$(MEM_PATH)/%.a:
+	make -C $(MEM_PATH) library
+
 $(XML_PATH)/%.a:
 	make -C $(XML_PATH) library
 
@@ -169,5 +172,4 @@ $(SNMP_PATH)/%.a:
 
 $(MBEDTLS_PATH)/library/%.a:
 	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
-
 

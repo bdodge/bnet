@@ -15,8 +15,6 @@
  */
 #include "bmem.h"
 
-#define BMEM_MULTITREADED 0
-
 // bitfield uses native type for int
 //
 #if (BMEM_PTR_SIZE == 8)
@@ -37,7 +35,7 @@
 // this defined the power of 2 for chunk alignment
 //
 #ifndef BMEM_ALIGNMENT
-#define BMEM_ALIGNMENT 5 /* 32 byte alignment */
+    #define BMEM_ALIGNMENT (BMEM_BITFIELD_SHIFT) /* 32/64 byte alignment */
 #endif
 
 typedef BMEM_BITFIELD_TYPE bmapf_t;
@@ -50,6 +48,9 @@ typedef BMEM_BITFIELD_TYPE bmapf_t;
 #define BMEM_BITS_PER_ENTRY (8 * sizeof(bmapf_t))
 
 #if BMEM_TRACE_ALLOCS
+
+/// Record of allocs done at a specific spot
+//
 typedef struct
 {
     const char *file;       ///< file name where alloc took place
@@ -59,11 +60,13 @@ typedef struct
 }
 bmemfr_t;
 
+/// Record of a single alloc
+//
 typedef struct tag_alloc_rec
 {
-    void *ptr;
-    size_t size;
-    size_t frec;
+    void *ptr;              ///< ptr that was allocated
+    size_t size;            ///< bytes allocated
+    size_t frec;            ///< file rec used at alloc
 }
 bmemar_t;
 
@@ -114,8 +117,8 @@ static bmempool_t *s_pztab;
 
 #if BMEM_MULTITHREADED
 static pthread_mutex_t s_memlock;
-#define MEM_LOCK()     pthread_mutex_lock(s_memlock)
-#define MEM_UNLOCK()   pthread_mutex_unlock(s_memlock)
+#define MEM_LOCK()     pthread_mutex_lock(&s_memlock)
+#define MEM_UNLOCK()   pthread_mutex_unlock(&s_memlock)
 #else
 #define MEM_LOCK()     do { } while(0)
 #define MEM_UNLOCK()   do { } while(0)
@@ -331,7 +334,6 @@ static void bmem_trace_free(bmempool_t *pool, void *ptr)
         butil_log(1, "Freeing unlogged ptr %p\n", ptr);
     }
 }
-
 #endif
 
 void bmem_stats()

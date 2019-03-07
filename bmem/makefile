@@ -29,7 +29,7 @@ CFLAGS+=-I$(HTTP_PATH) -I$(OSAL_PATH) -I$(UTIL_PATH)
 bmemtest: $(PROGOBJECTS) $(MEMLIB) $(OSALLIB) $(UTILLIB)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
-library: $(MEMIB)
+library: $(MEMLIB)
 
 $(MEMLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^

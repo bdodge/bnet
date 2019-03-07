@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	ptr = bmem_alloc(size);
 	bmem_free(ptr);
 
-	bmem_stats();
+	bmem_stats(5);
 
 	result = bmem_deinit();
 	if (result)

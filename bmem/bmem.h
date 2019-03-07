@@ -34,7 +34,7 @@
 #endif
 
 int     bmem_add_pool   (void *base, size_t bytes, size_t blocksize);
-void    bmem_stats      (void);
+void    bmem_stats      (int log_level);
 int     bmem_init       (void);
 int     bmem_deinit     (void);
 

@@ -336,7 +336,7 @@ static void bmem_trace_free(bmempool_t *pool, void *ptr)
 }
 #endif
 
-void bmem_stats()
+void bmem_stats(int log_level)
 {
     bmempool_t *pp;
     size_t hash, rec;
@@ -346,16 +346,16 @@ void bmem_stats()
         pp = s_pooltab[hash];
         if (pp)
         {
-            butil_log(2, "POOL %p  %zu bytes in %zu blocks. Used:%zu ",
+            butil_log(log_level, "POOL %p  %zu bytes in %zu blocks. Used:%zu ",
                     pp, pp->bytes, pp->blocks, pp->bytes - pp->remain);
 #if BMEM_TRACE_ALLOCS
-            butil_log(2, "MaxUsed:%zu\n", pp->maxalloc);
+            butil_log(log_level, "MaxUsed:%zu\n", pp->maxalloc);
 
-            butil_log(2, "%20s %-8s    Total     Max\n", "File", "Line");
+            butil_log(log_level, "%20s %-8s    Total     Max\n", "File", "Line");
 
             for (rec = 0; rec < pp->nfrecs; rec++)
             {
-                butil_log(2, "%20s:%-8zu %8zu %8zu\n",
+                butil_log(log_level, "%20s:%-8zu %8zu %8zu\n",
                     pp->frecs[rec].file, pp->frecs[rec].line,
                     pp->frecs[rec].total, pp->frecs[rec].max);
             }
@@ -372,12 +372,12 @@ void bmem_stats()
                 }
                 if (nallocs > 0)
                 {
-                    butil_log(2, " List of %zu current allocations in pool %p\n", nallocs, pp);
+                    butil_log(log_level, " List of %zu current allocations in pool %p\n", nallocs, pp);
                     for (rec = 0; rec < pp->narecs; rec++)
                     {
                         if (pp->arecs[rec].size > 0)
                         {
-                            butil_log(2, "  %20s:%-8zu  %p %zu bytes\n",
+                            butil_log(log_level, "  %20s:%-8zu  %p %zu bytes\n",
                                     pp->frecs[pp->arecs[rec].frec].file,
                                     pp->frecs[pp->arecs[rec].frec].line,
                                     pp->arecs[rec].ptr,
@@ -387,11 +387,11 @@ void bmem_stats()
                 }
                 else
                 {
-                    butil_log(2, "  No allocations in pool %p\n", pp);
+                    butil_log(log_level, "  No allocations in pool %p\n", pp);
                 }
             }
 #else
-            butil_log(2, "\n");
+            butil_log(log_level, "\n");
 #endif
         }
     }
@@ -549,7 +549,7 @@ void bmem_free_x(void *ptr)
     }
     while (hash != init_hash);
     MEM_UNLOCK();
-    BERROR("ptr not in any pool");
+    butil_log(0, "Freeing ptr %p is not in any pool", ptr);
     return;
 }
 

@@ -12,6 +12,8 @@ butil/butiltest
 bxml/bxmltest
 bxmpp/bxmpp
 bsnmp/bsnmp
+bsnmp/bmibc/bmibc
+bsnmp/bmibc/crap.*
 
 # Prerequisites
 *.d

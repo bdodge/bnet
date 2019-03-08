@@ -1,7 +1,7 @@
 SNMPv2-TC DEFINITIONS ::= BEGIN
 
 -- Copyright (C) The Internet Society 2010. This version of
--- this MIB module is part of RFC (unknown); see the RFC itself for           
+-- this MIB module is part of RFC (unknown); see the RFC itself for
 -- full legal notices.
 
 IMPORTS

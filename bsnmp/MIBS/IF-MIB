@@ -16,7 +16,7 @@ ifMIB MODULE-IDENTITY
 
         DESCRIPTION
             "Copyright (C) The Internet Society 2010. This version of
-            this MIB module is part of RFC 1573; see the RFC itself for           
+            this MIB module is part of RFC 1573; see the RFC itself for
             full legal notices."
 
     LAST-UPDATED "200006140000Z"
@@ -1019,98 +1019,98 @@ ifStackLastChange OBJECT-TYPE
 
 --[?if 0]
 --bdd these use IPADDRESS types as indexes which I can't deal with
---
+
 --   Generic Receive Address Table
---
+
 -- This group of objects is mandatory for all types of
 -- interfaces which can receive packets/frames addressed to
 -- more than one address.
---
+
 -- This table replaces the ifExtnsRcvAddr table.  The main
 -- difference is that this table makes use of the RowStatus
 -- textual convention, while ifExtnsRcvAddr did not.
 
---ifRcvAddressTable  OBJECT-TYPE
---    SYNTAX      SEQUENCE OF IfRcvAddressEntry
---    MAX-ACCESS  not-accessible
---    STATUS      current
---    DESCRIPTION
---            "This table contains an entry for each address (broadcast,
---            multicast, or uni-cast) for which the system will receive
---            packets/frames on a particular interface, except as follows:
---
---            - for an interface operating in promiscuous mode, entries
---            are only required for those addresses for which the system
---            would receive frames were it not operating in promiscuous
---            mode.
---
---            - for 802.5 functional addresses, only one entry is
---            required, for the address which has the functional address
---            bit ANDed with the bit mask of all functional addresses for
---            which the interface will accept frames.
---
---            A system is normally able to use any unicast address which
---            corresponds to an entry in this table as a source address."
---    ::= { ifMIBObjects 4 }
---
---ifRcvAddressEntry  OBJECT-TYPE
---    SYNTAX      IfRcvAddressEntry
---    MAX-ACCESS  not-accessible
---    STATUS      current
---    DESCRIPTION
---            "A list of objects identifying an address for which the
---            system will accept packets/frames on the particular
---            interface identified by the index value ifIndex."
---    INDEX  { ifIndex, ifRcvAddressAddress }
---    ::= { ifRcvAddressTable 1 }
---
---IfRcvAddressEntry ::=
---    SEQUENCE {
---        ifRcvAddressAddress   PhysAddress,
---        ifRcvAddressStatus    RowStatus,
---        ifRcvAddressType      INTEGER
---    }
---
---ifRcvAddressAddress OBJECT-TYPE
---    SYNTAX      PhysAddress
---    MAX-ACCESS  not-accessible
---    STATUS      current
---    DESCRIPTION
---            "An address for which the system will accept packets/frames
---            on this entry's interface."
---    ::= { ifRcvAddressEntry 1 }
---
---ifRcvAddressStatus OBJECT-TYPE
---    SYNTAX      RowStatus
---    MAX-ACCESS  read-create
---    STATUS      current
---    DESCRIPTION
---            "This object is used to create and delete rows in the
---            ifRcvAddressTable."
---    ::= { ifRcvAddressEntry 2 }
---
---ifRcvAddressType OBJECT-TYPE
---    SYNTAX      INTEGER {
---
---                    other(1),
---                    volatile(2),
---                    nonVolatile(3)
---                }
---    MAX-ACCESS  read-create
---    STATUS      current
---    DESCRIPTION
---            "This object has the value nonVolatile(3) for those entries
---            in the table which are valid and will not be deleted by the
---            next restart of the managed system.  Entries having the
---            value volatile(2) are valid and exist, but have not been
---            saved, so that will not exist after the next restart of the
---            managed system.  Entries having the value other(1) are valid
---            and exist but are not classified as to whether they will
---            continue to exist after the next restart."
---    DEFVAL  { volatile }
---    ::= { ifRcvAddressEntry 3 }
---
-    
+ifRcvAddressTable  OBJECT-TYPE
+    SYNTAX      SEQUENCE OF IfRcvAddressEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "This table contains an entry for each address (broadcast,
+            multicast, or uni-cast) for which the system will receive
+            packets/frames on a particular interface, except as follows:
+
+            - for an interface operating in promiscuous mode, entries
+            are only required for those addresses for which the system
+            would receive frames were it not operating in promiscuous
+            mode.
+
+            - for 802.5 functional addresses, only one entry is
+            required, for the address which has the functional address
+            bit ANDed with the bit mask of all functional addresses for
+            which the interface will accept frames.
+
+            A system is normally able to use any unicast address which
+            corresponds to an entry in this table as a source address."
+    ::= { ifMIBObjects 4 }
+
+ifRcvAddressEntry  OBJECT-TYPE
+    SYNTAX      IfRcvAddressEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "A list of objects identifying an address for which the
+            system will accept packets/frames on the particular
+            interface identified by the index value ifIndex."
+    INDEX  { ifIndex, ifRcvAddressAddress }
+    ::= { ifRcvAddressTable 1 }
+
+IfRcvAddressEntry ::=
+    SEQUENCE {
+        ifRcvAddressAddress   PhysAddress,
+        ifRcvAddressStatus    RowStatus,
+        ifRcvAddressType      INTEGER
+    }
+
+ifRcvAddressAddress OBJECT-TYPE
+    SYNTAX      PhysAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "An address for which the system will accept packets/frames
+            on this entry's interface."
+    ::= { ifRcvAddressEntry 1 }
+
+ifRcvAddressStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+            "This object is used to create and delete rows in the
+            ifRcvAddressTable."
+    ::= { ifRcvAddressEntry 2 }
+
+ifRcvAddressType OBJECT-TYPE
+    SYNTAX      INTEGER {
+
+                    other(1),
+                    volatile(2),
+                    nonVolatile(3)
+                }
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+            "This object has the value nonVolatile(3) for those entries
+            in the table which are valid and will not be deleted by the
+            next restart of the managed system.  Entries having the
+            value volatile(2) are valid and exist, but have not been
+            saved, so that will not exist after the next restart of the
+            managed system.  Entries having the value other(1) are valid
+            and exist but are not classified as to whether they will
+            continue to exist after the next restart."
+    DEFVAL  { volatile }
+    ::= { ifRcvAddressEntry 3 }
+
+
 -- definition of interface-related traps.
 
 linkDown NOTIFICATION-TYPE
@@ -1820,5 +1820,5 @@ ifCompliance2 MODULE-COMPLIANCE
         DESCRIPTION
             "Write access is not required."
     ::= { ifCompliances 2 }
-
+--[?endif]
 END

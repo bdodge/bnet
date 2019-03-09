@@ -642,7 +642,7 @@ int bsnmp_ber_from_typecode(bsnmp_server_t *server, const bsnmp_type_t typecode)
 int bsnmp_ber_from_typelen(bsnmp_server_t *server, const bsnmp_type_t typecode, const uint32_t lenin, uint32_t *lenout)
 {
     int result;
-    int outlen;
+    uint32_t outlen;
 
     result = bsnmp_out_byte(server, (const uint8_t)typecode);
     if (result)
@@ -712,7 +712,7 @@ int bsnmp_ber_from_uint32(bsnmp_server_t *server, const bsnmp_type_t type, const
     uint32_t bytes;
     int result;
 
-    for (bytes = (uint32_t)val, bytesneeded = 4; bytes; bytesneeded--)
+    for (bytes = val, bytesneeded = 4; bytes; bytesneeded--)
     {
         if ((bytes & 0xFF000000) != 0)
         {
@@ -739,10 +739,83 @@ int bsnmp_ber_from_uint32(bsnmp_server_t *server, const bsnmp_type_t type, const
 
 int bsnmp_ber_from_int64(bsnmp_server_t *server, const bsnmp_type_t type, const int64_t val)
 {
+    uint32_t bytesneeded;
+    uint32_t bytesout;
+    uint64_t bytes;
+    int result;
+
+    if (val == 0)
+    {
+        bytesneeded = 1;
+    }
+    else if (val < 0)
+    {
+        for (bytes = (uint64_t)val, bytesneeded = 8; bytes; bytesneeded--)
+        {
+            if ((bytes & 0xFF80000000000000) != 0xFF80000000000000)
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        for (bytes = (uint64_t)val, bytesneeded = 8; bytes; bytesneeded--)
+        {
+            if ((bytes & 0xFF00000000000000) != 0)
+            {
+                break;
+            }
+            bytes <<= 8;
+        }
+    }
+    result = bsnmp_ber_from_typelen(server, type, bytesneeded, &bytesout);
+    if (result)
+    {
+        return result;
+    }
+    while (bytesneeded > 0)
+    {
+        result = bsnmp_out_byte(server, (const uint8_t)(val >> (8 * (bytesneeded - 1))));
+        if (result)
+        {
+            return result;
+        }
+        bytesneeded--;
+    }
+    return result;
 }
 
 int bsnmp_ber_from_uint64(bsnmp_server_t *server, const bsnmp_type_t type, const uint64_t val)
 {
+    uint32_t bytesneeded;
+    uint32_t bytesout;
+    uint64_t bytes;
+    int result;
+
+    for (bytes = val, bytesneeded = 4; bytes; bytesneeded--)
+    {
+        if ((bytes & 0xFF00000000000000) != 0)
+        {
+            break;
+        }
+        bytes <<= 8;
+    }
+    result = bsnmp_ber_from_typelen(server, type, bytesneeded, &bytesout);
+    if (result)
+    {
+        return result;
+    }
+    while (bytesneeded > 0)
+    {
+        result = bsnmp_out_byte(server, (const uint8_t)(val >> (8 * (bytesneeded - 1))));
+        if (result)
+        {
+            return result;
+        }
+        bytesneeded--;
+    }
+    return result;
 }
 
 static int bsnmp_ber_from_single_oid(bsnmp_server_t *server, boid_t oidb)

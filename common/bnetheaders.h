@@ -52,6 +52,18 @@ typedef int socket_t;
 #define ioctl_socket ioctl
 #endif
 
+// format strings for int64 types
+#if defined(__IA64__) || defined(_WIN64) || defined(_M_IA64) || \
+        defined(_M_X64) || defined(__x86_64__) || defined(X86_64) || defined(AMD64)
+    // 64 bit CPU, ptrs and longs are 8 bytes, ints are 4
+#include <inttypes.h>
+#define LIFS    PRId64
+#define LUFS    PRIu64
+#else
+#define LIFS    "ld"
+#define LUFS    "lu"
+#endif
+
 #define BERROR(m) \
     fprintf(stderr, "%s %d: " m "\n", __FUNCTION__, __LINE__)
 

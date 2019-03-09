@@ -197,7 +197,7 @@ typedef struct tag_snmp_request
     int32_t             version;
     char                community[SNMP_MAX_COMMUNITY];
     bsnmp_opcode_t      code;
-    uint32_t            id;
+    int32_t             id;
     int32_t             non_repeaters;
     int32_t             max_repeating;
     bsnmp_errcode_t     errmsg;

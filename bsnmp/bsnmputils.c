@@ -54,7 +54,7 @@ int bsnmp_oid_from_string(bsnmp_oid_t *oid, const char *str)
             return SNMP_ErrTooBig;
         }
         oid->oid[i] = n;
-        
+
         if (*str && *str != '.')
         {
             SNMP_ERROR("OID Not-dot");
@@ -99,14 +99,14 @@ bsnmp_oidcmp_t bsnmp_oidcmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index)
     size_t i;
     size_t lena;
     size_t lenb;
-    
+
     if (! a || ! b)
     {
         return snmpCmpError;
     }
     lena = a->len;
     lenb = b->len;
-    
+
     for (i = 0; i <= SNMP_MAX_OID; i++)
     {
         if (lena == 0)
@@ -158,6 +158,34 @@ bsnmp_oidcmp_t bsnmp_oidcmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index)
     // can't get here with valid oids
     //
     return snmpCmpError;
+}
+
+int bsnmp_oid_pad_to_index(bsnmp_oid_t *oid, bsnmp_oid_t *baseoid, int index)
+{
+    if ((baseoid->len + index) >= SNMP_MAX_OID)
+    {
+        return -1;
+    }
+    while (oid->len < baseoid->len)
+    {
+        oid->oid[oid->len] = baseoid->oid[oid->len];
+        oid->len++;
+    }
+    if (index == 0)
+    {
+        // insure the resultant object is
+        // a scalar if there's no index
+        //
+        if (oid->oid[oid->len] != 0)
+        {
+            index = 1;
+        }
+    }
+    while (index-- > 0)
+    {
+        oid->oid[oid->len++] = 0;
+    }
+    return 0;
 }
 
 const char *bsnmp_type_string(bsnmp_type_t type)

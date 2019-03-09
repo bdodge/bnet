@@ -224,7 +224,7 @@ int bsnmp_stream_read(bsnmp_server_t *server, int tos, int tous)
         }
         #if 1
         socket_t fd = (socket_t)(intptr_t)server->stream->priv;
-        int srclen = sizeof(server->srcaddr);
+        socklen_t srclen = sizeof(server->srcaddr);
         count = recvfrom(fd, server->in.data + server->in.head, room, 0, (struct sockaddr *)&server->srcaddr, &srclen);
         #else
         count = server->stream->read(server->stream, server->in.data + server->in.head, room);

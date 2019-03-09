@@ -275,7 +275,7 @@ static int bsnmp_process_varbind(bsnmp_server_t *server, bsnmp_request_t *req, b
         result = bsnmp_uint64_from_ber(server, &var->val.ullVal);
         break;
     case SNMP_INTEGER64:
-        result = bsnmp_uint64_from_ber(server, &var->val.llVal);
+        result = bsnmp_int64_from_ber(server, &var->val.llVal);
         break;
     case SNMP_OCTET_STRING:
         bsnmp_stream_save_in_state(server, &svin);
@@ -492,7 +492,7 @@ static int bsnmp_process_req_header(bsnmp_server_t *server, bsnmp_request_t *req
         return -1;
     }
     butil_log(5, "  - ver:%s community:%s\n", bsnmp_version_string(req->version), req->community);
-    return 0;    
+    return 0;
 }
 
 static int bsnmp_process_req_pdu(bsnmp_server_t *server, bsnmp_request_t *req)
@@ -560,7 +560,7 @@ static int bsnmp_process_req_pdu(bsnmp_server_t *server, bsnmp_request_t *req)
     if (req->code != SNMP_GETBULK)
     {
         int32_t ival;
-        
+
         result = bsnmp_int32_from_ber(server, &ival);
         if (result)
         {
@@ -620,12 +620,12 @@ static int bsnmp_process_request(bsnmp_server_t *server, bsnmp_request_t *req)
     if (result)
     {
         return result;
-    }    
+    }
     result = bsnmp_process_req_varbinds(server, req);
     if (result)
     {
         return result;
-    }    
+    }
     return result;
 }
 
@@ -694,6 +694,9 @@ int bsnmp_serve(bsnmp_server_t *server)
                         // remove any vars in response
                         bsnmp_varlist_cleanup(req.values);
                         req.values = NULL;
+                    }
+                    else
+                    {
                     }
                     result = bsnmp_format_reply(server, &req);
                     break;

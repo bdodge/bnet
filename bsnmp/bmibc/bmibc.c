@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "bmibc.h"
+#include "bsnmp.h"
 #include "butil.h"
 
 bmib_node_t     *s_nodes       = NULL;
@@ -2232,7 +2233,7 @@ int main(int argc, char **argv)
                 return bmibc_useage_blurb(progname);
             }
         }
-        if (argv[0][1] == 'l')
+        else if (argv[0][1] == 'l')
         {
             if (argv[0][2] == '\0')
             {
@@ -2577,6 +2578,15 @@ int main(int argc, char **argv)
     fprintf(hdrfile, "#ifndef _BMIBC_GENERATED_H\n");
     fprintf(hdrfile, "#define _BMIBC_GENERATED_H 1\n\n");
 
+    fprintf(hdrfile, "#ifndef BSNMPOBJECT_H\n");
+    #ifdef BSNMPOBJECT_H
+    // inherit object record type from snmp library
+    fprintf(hdrfile, "%s\n%s\n%s\n%s\n",
+         BMIBC_VALUE_TYPE_STR,
+         BMIBC_ACCESS_METHOD_STR,
+         BMIBC_ACCESS_PERM_STR,
+         BMIBC_OBJECT_RECORD_STR);
+    #else
     fprintf(hdrfile, "typedef enum {\n");
     fprintf(hdrfile, "    BMIBC_VOID,\n");
     fprintf(hdrfile, "    BMIBC_ENUM,\n    BMIBC_INT,\n    BMIBC_INT32,\n");
@@ -2594,22 +2604,26 @@ int main(int argc, char **argv)
     fprintf(hdrfile, "    BMIBC_WRITE = 2,\n");
     fprintf(hdrfile, "    BMIBC_READWRITE = 3,\n");
     fprintf(hdrfile, "    BMIBC_PASSWORD = 4\n");
-    fprintf(hdrfile, "} bmibc_access_type_t;\n\n");
+    fprintf(hdrfile, "} bmibc_access_perm_t;\n\n");
 
     fprintf(hdrfile, "typedef struct {\n    const char *name;\n");
     fprintf(hdrfile, "    int minv;\n    int maxv;\n    int dim;\n");
     fprintf(hdrfile, "    size_t offset;\n    size_t bits;\n");
     fprintf(hdrfile, "    bmibc_value_type_t type;\n    bmibc_access_method_t method;\n");
-    fprintf(hdrfile, "    bmibc_access_type_t access;\n    void *subs;\n");
+    fprintf(hdrfile, "    bmibc_access_perm_t access;\n    void *subs;\n");
     fprintf(hdrfile, "    void *factory_value;\n    void *value;\n} bmibc_record_t;\n\n");
+    #endif
+    fprintf(hdrfile, "#endif\n");
 
     fprintf(hdrfile, "/* Number of precompiled object records\n*/\n");
     fprintf(hdrfile, "#define BMIBC_NUM_RECORDS %d\n", nleafs);
     fprintf(hdrfile, "\nextern bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS];\n\n\n");
 
 #ifndef NO_INCLUDE_INCLUDES
+    fprintf(srcfile, "#ifndef BSNMPOBJECT_H\n");
     fprintf(srcfile, "#include <stdio.h>\n");
     fprintf(srcfile, "#include <stdint.h>\n");
+    fprintf(srcfile, "#endif\n");
     fprintf(srcfile, "#include \"%s\"\n\n", hdrfilename);
 #endif
 

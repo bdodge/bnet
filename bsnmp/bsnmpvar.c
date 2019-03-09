@@ -71,7 +71,7 @@ void bsnmp_var_destroy(bsnmp_var_t *var)
 int bsnmp_var_init(bsnmp_var_t *var, bsnmp_oid_t *oid, bsnmp_type_t type)
 {
     int result;
-    
+
     if (! var)
     {
         return -1;
@@ -109,7 +109,7 @@ int bsnmp_var_setvalue(bsnmp_var_t *var, bval_t *val)
 bsnmp_var_t *bsnmp_varlist_appendvar(bsnmp_var_t *varlist, bsnmp_var_t *var)
 {
 	var->next = NULL;
-	
+
 	if (! varlist)
 	{
 		varlist = var;
@@ -152,10 +152,10 @@ const char *bsnmp_var_string(bsnmp_var_t *var, char *buffer, int nBuffer)
     {
     default:
     case SNMP_NULL:
-        
+
         buffer[0] = '\0';
         break;
-        
+
     case SNMP_INTEGER:
 
         snprintf(buffer, room, "%d", var->val.iVal);
@@ -203,12 +203,12 @@ const char *bsnmp_var_string(bsnmp_var_t *var, char *buffer, int nBuffer)
 
     case SNMP_INTEGER64:
 
-        snprintf(buffer, room, "%ld", var->val.llVal);
+        snprintf(buffer, room, "%"PRId64, var->val.llVal);
         break;
 
     case SNMP_COUNTER64:
 
-        snprintf(buffer, room, "%lu", var->val.ullVal);
+        snprintf(buffer, room, "%"PRIu64, var->val.ullVal);
         break;
 
     case SNMP_FLOAT:

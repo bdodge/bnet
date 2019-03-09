@@ -16,6 +16,7 @@
 #include "bsnmp.h"
 #include "bsnmpvar.h"
 #include "bsnmputils.h"
+#include "bsnmpobject.h"
 #include "butil.h"
 #include "bnetheaders.h"
 
@@ -31,6 +32,7 @@ static bsnmp_oid_t s_test_val3 = { 4, { 9, 10, 65531, 1 } };
 static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *var)
 {
     char debug_buffer[128];
+    int result;
 
     butil_log(5, "  - %s %ub %s\n", bsnmp_opcode_string(req->code),
             req->len, bsnmp_oid_string(&var->oid, debug_buffer, sizeof(debug_buffer)));
@@ -119,6 +121,23 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
     }
     else
     {
+        switch (req->code)
+        {
+        case SNMP_GET:
+            req->errmsg = SNMP_ErrNoError;
+            result = bsnmp_get_object_value(&var->oid, var, &req->errmsg);
+            break;
+        case SNMP_GETNEXT:
+            req->errmsg = SNMP_ErrNoError;
+            result = bsnmp_get_next_object_value(&var->oid, var, &req->errmsg);
+            break;
+        case SNMP_SET:
+            req->errmsg = SNMP_ErrNoAccess;
+            break;
+        default:
+            req->errmsg = SNMP_ErrNoAccess;
+            break;
+        }
         return -1;
     }
     return 0;

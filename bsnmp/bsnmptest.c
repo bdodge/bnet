@@ -20,6 +20,9 @@
 #include "butil.h"
 #include "bnetheaders.h"
 
+#include "mibc_generated.h"
+
+
 static bsnmp_oid_t s_test_oid1 = { 3, { 0, 1, 2 } };
 static uint32_t s_test_val1 = 1234;
 
@@ -145,6 +148,64 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
     return 0;
 }
 
+int snmp_test_records(void)
+{
+    size_t      rec;
+    size_t      recdex;
+    bsnmp_oid_t recoid;
+    size_t      ndim;
+    size_t      ntot;
+    size_t      indices[BMIBC_MAX_NODE_INDEX];
+    char        dbg_buffer[64];
+    int         result;
+
+    for (rec = 0; rec < BMIBC_NUM_RECORDS; rec++)
+    {
+        // compose an oid from the actual record's oid straight
+        //
+        result = bsnmp_oid_from_string(&recoid, g_oidxreftab[rec].oidstr);
+        if (result)
+        {
+            butil_log(0, "oid from string failed oid[%zu] %s\n",
+                    rec, g_oidxreftab[rec].oidstr);
+            return result;
+        }
+        // look it up verbatim, and make sure it fails
+        //
+        result = bsnmp_find_record(&recoid, true, &recdex);
+        if (! result)
+        {
+            butil_log(0, "Expected exact oid lookup of %s to fail with base oid[%zu] %s\n",
+                    bsnmp_oid_string(&recoid, dbg_buffer, sizeof(dbg_buffer)),
+                    rec, g_oidxreftab[rec].oidstr);
+            return -1;
+        }
+        // look it up to get closest fitting record and make sure it passes
+        //
+        result = bsnmp_find_record(&recoid, false, &recdex);
+        if (result)
+        {
+            butil_log(0, "Expected base oid lookup of %s to work with base oid[%zu] %s, got %d\n",
+                    bsnmp_oid_string(&recoid, dbg_buffer, sizeof(dbg_buffer)),
+                    rec, g_oidxreftab[rec].oidstr, result);
+            return result;
+        }
+        // expect the result to be the same record passed in
+        //
+        if (recdex != rec)
+        {
+            butil_log(0, "Expected searched oid %s to match returned base oid[%zu] %s\n",
+                    bsnmp_oid_string(&recoid, dbg_buffer, sizeof(dbg_buffer)),
+                    rec, g_oidxreftab[rec].oidstr);
+            return -1;
+        }
+        // get the dimensionality of the record
+        //
+        result = bsnmp_get_object_dimensionality(recdex, &ndim, &ntot, indices);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     bsnmp_server_t server;
@@ -153,6 +214,15 @@ int main(int argc, char **argv)
 
     butil_set_log_level(5);
 
+    // make sure all oids are addressable
+    //
+    result = snmp_test_records();
+    if (result)
+    {
+        return result;
+    }
+    // run a server
+    //
     port = SNMP_AGENT_PORT;
     result = bsnmp_server_init(&server, SNMP_V2C, port, callback);
     if (result)

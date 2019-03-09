@@ -24,6 +24,73 @@
 #include "mibc_generated.h"
 #include "mibc_generated.c"
 
+int bsnmp_get_object_dimensionality(
+									size_t rec,
+									size_t *ndim,
+									size_t *ntotal,
+									size_t indices[BMIBC_MAX_NODE_INDEX]
+								  )
+{
+	const bmibc_oid_xref_t   *obxref;
+	const bmibc_oid_xref_t   *dexref;
+	bmibc_record_t 	   *objrecord;
+	bmibc_record_t 	   *dexrecord;
+
+	size_t index;
+	size_t dex;
+	size_t dexrec;
+	size_t dexdim;
+	size_t count;
+
+	if (rec >= BMIBC_NUM_RECORDS || ! ndim)
+	{
+		return -1;
+	}
+	obxref    = &g_oidxreftab[rec];
+	objrecord = &g_mib_objects[obxref->record_index];
+
+	if (objrecord->dim == 0)
+	{
+		// not indexable, 0 dimensiond an 1 possible value
+		//
+		*ndim = 0;
+		*ntotal = 1;
+		return 0;
+	}
+	// count indices of record
+	//
+	for (index = 0; index < BMIBC_MAX_NODE_INDEX; index++)
+	{
+		if (! obxref->indices[index])
+		{
+			break;
+		}
+	}
+	// this many total dimensions (indexes possible)
+	//
+	*ndim = index;
+
+	// for each index, lookup the indexer and how many dim values
+	// it can have (dim count is set by DEFVALs specified in MIB)
+	//
+	for (dex = 0, count = objrecord->dim; dex < index; dex++)
+	{
+		dexrec = obxref->indices[dex];
+		if (dexrec >= BMIBC_NUM_RECORDS)
+		{
+			butil_log(0, "Invalid index record %zu\n", dexrec);
+			return -1;
+		}
+		indices[dex] = dexrec;
+		dexref = &g_oidxreftab[dexrec];
+		dexrecord = &g_mib_objects[dexref->record_index];
+		dexdim = dexrecord->dim;
+		count *= dexdim;
+	}
+	*ntotal = count;
+	return 0;
+}
+
 #if 1 // faster binary search
 int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *recdex)
 {
@@ -81,7 +148,7 @@ int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *recdex)
 
 			// record oid is above incoming oid, so move it even more lower
 			//
-			cmpdex = (cmpdex + mindex + 1) / 2;
+			cmpdex = (cmpdex + mindex) / 2;
 
 			if (cmpdex == prev_cmpdex)
 			{
@@ -105,13 +172,13 @@ int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *recdex)
 
 			// lower record oid is clear below incoming oid, move it up half way
 			//
-			cmpdex = (cmpdex + maxdex) / 2;
+			cmpdex = (cmpdex + maxdex + 1) / 2;
 
 			if (cmpdex == prev_cmpdex)
 			{
 				// moving up didn't happen, at the upper limit
 				//
-				if (maxdex >= (BMIBC_NUM_RECORDS - 1))
+				if (maxdex > (BMIBC_NUM_RECORDS - 1))
 				{
 					butil_log(3, "Object %s is after the last object record[%zu] %s\n",
 							bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
@@ -124,26 +191,53 @@ int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *recdex)
 		}
 		else if (cmp == snmpCmpAinB)
 		{
+			size_t ndim;
+			size_t ntot;
+			size_t indices[BMIBC_MAX_NODE_INDEX];
+
 			butil_log(5, "Object %s is super-oid of object record[%zu] %s\n",
 					bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
 					cmpdex,	g_oidxreftab[cmpdex].oidstr);
 
-			// Look at how far inside A is in B, and make sure the dimensionality
-			// is a match if wanting an exact match, else found
-			//
-			size_t lendiff = oid->len - recoid.len;
-
-			if (exact && (lendiff != index))
+			*recdex = cmpdex;
+			if (! exact)
 			{
-				butil_log(3, "Object %s has %d indices, but record[%zu] %s specifies %d\n",
-						bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
-						index, recdex,
-						g_oidxreftab[cmpdex].oidstr,
-						lendiff);
-				result = -1;
 				break;
 			}
-			*recdex = cmpdex;
+			// Look at how far inside A is in B, and make sure the dimensionality
+			// is a match if wanting an exact match, else we already found it
+			//
+			result = bsnmp_get_object_dimensionality(cmpdex, &ndim, &ntot, indices);
+			if (result)
+			{
+				break;
+			}
+			if (ndim == 0)
+			{
+				// if record is scalar, allow ONLY a ".0" after
+				//
+				if ((oid->len != recoid.len + 1) || (oid->oid[oid->len - 1] != 0))
+				{
+					butil_log(3, "Object %s attempts to index scaler object %s\n",
+						bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
+						g_oidxreftab[cmpdex].oidstr);
+					result = -1;
+				}
+				break;
+			}
+			else
+			{
+				if (oid->len != (recoid.len + ndim))
+				{
+					butil_log(3, "Object %s has %d indices for record[%zu] %s, which has %d\n",
+							bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
+							index, cmpdex,
+							g_oidxreftab[cmpdex].oidstr,
+							ndim);
+					result = -1;
+				}
+				break;
+			}
 			break;
 		}
 		else if (cmp == snmpCmpExact)
@@ -173,7 +267,7 @@ int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *recdex)
 			}
 			cmp = bsnmp_oidcmp(&recoid, oid, &index);
 			prev_cmpdex = cmpdex;
-			butil_log(7, "cur=%zu min=%zu max=%zu\n", cmpdex, mindex, maxdex);
+			butil_log(5, "cur=%zu min=%zu max=%zu\n", cmpdex, mindex, maxdex);
 		}
 		else
 		{
@@ -261,22 +355,48 @@ int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *lower_dex)
 			cmp = bsnmp_oidcmp(&recoid, oid, &index);
 			if (cmp == snmpCmpAinB)
 			{
-				// Look at how far inside A is in B, and make sure the dimensionality
-				// is a match if wanting an exact match, else found
-				//
-				size_t lendiff = oid->len - recoid.len;
+				size_t ndim;
+				size_t ntot;
+				size_t indices[BMIBC_MAX_NODE_INDEX];
 
-				if (exact && (lendiff != index))
+				if (! exact)
 				{
-					butil_log(3, "Object %s has %d indices, but record[%zu] %s specifies %d\n",
-							bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
-							index, recdex,
-							g_oidxreftab[recdex].oidstr,
-							lendiff);
-					return -1;
+					*lower_dex = recdex;
+					return 0;
 				}
-				butil_log(3, "Object %s with %d indices is matched at %d\n",
-						bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)), recdex);
+				// Look at how far inside A is in B, and make sure the dimensionality
+				// is a match if wanting an exact match, else we already found it
+				//
+				result = bsnmp_get_object_dimensionality(recdex, &ndim, &ntot, indices);
+				if (result)
+				{
+					break;
+				}
+				if (ndim == 0)
+				{
+					// if record is scalar, allow ONLY a ".0" after
+					//
+					if ((oid->len != recoid.len + 1) || (oid->oid[oid->len - 1] != 0))
+					{
+						butil_log(3, "Object %s attempts to index scaler object %s\n",
+							bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
+							g_oidxreftab[recdex].oidstr);
+						result = -1;
+					}
+					break;
+				}
+				else
+				{
+					if (oid->len != (recoid.len + ndim))
+					{
+						butil_log(3, "Object %s has %d indices for record[%zu] %s, which has %d\n",
+								bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
+								index, recdex,
+								g_oidxreftab[recdex].oidstr,
+								ndim);
+						return -1;
+					}
+				}
 				*lower_dex = recdex;
 				return 0;
 			}
@@ -324,7 +444,7 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
 		return result;
 	}
 	cmp = bsnmp_oidcmp(&recoid, oid, &index);
-	if (cmp != snmpCmpExact && cmp != snmpCmpBinA)
+	if (cmp != snmpCmpExact && cmp != snmpCmpAinB)
 	{
 		butil_log(0, "find_record failed?\n");
 		return -1;

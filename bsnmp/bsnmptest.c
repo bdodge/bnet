@@ -133,12 +133,14 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
             break;
         case SNMP_SET:
             req->errmsg = SNMP_ErrNoAccess;
+            result = 0;
             break;
         default:
             req->errmsg = SNMP_ErrNoAccess;
+            result = 0;
             break;
         }
-        return -1;
+        return result;
     }
     return 0;
 }

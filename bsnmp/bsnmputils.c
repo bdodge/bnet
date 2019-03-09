@@ -55,10 +55,14 @@ int bsnmp_oid_from_string(bsnmp_oid_t *oid, const char *str)
         }
         oid->oid[i] = n;
 
-        if (*str && *str != '.')
+        if (*str)
         {
-            SNMP_ERROR("OID Not-dot");
-            return SNMP_ErrWrongEncoding;
+            if (*str != '.')
+            {
+                SNMP_ERROR("OID Not-dot");
+                return SNMP_ErrWrongEncoding;
+            }
+            str++;
         }
     }
     if (i >= SNMP_MAX_OID && *str)
@@ -113,6 +117,7 @@ bsnmp_oidcmp_t bsnmp_oidcmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index)
         {
             if (lenb == 0)
             {
+                *index = 0;
                 return snmpCmpExact;
             }
             else

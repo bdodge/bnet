@@ -45,7 +45,7 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
     req->errmsg = SNMP_ErrNoSuchName;
     req->errdex = 0;
 
-    if (bsnmp_oidcmp(&var->oid, &s_test_oid1, NULL) == snmpCmpExact)
+    if (bsnmp_oid_cmp(&var->oid, &s_test_oid1, NULL) == snmpCmpExact)
     {
         switch (req->code)
         {
@@ -63,7 +63,7 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
             break;
         }
     }
-    else if (bsnmp_oidcmp(&var->oid, &s_test_oid2, NULL) == snmpCmpExact)
+    else if (bsnmp_oid_cmp(&var->oid, &s_test_oid2, NULL) == snmpCmpExact)
     {
         switch (req->code)
         {
@@ -95,7 +95,7 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
             break;
         }
     }
-    else if (bsnmp_oidcmp(&var->oid, &s_test_oid3, NULL) == snmpCmpExact)
+    else if (bsnmp_oid_cmp(&var->oid, &s_test_oid3, NULL) == snmpCmpExact)
     {
         switch (req->code)
         {

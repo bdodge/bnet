@@ -98,7 +98,7 @@ const char *bsnmp_oid_string(bsnmp_oid_t *oid, char *buffer, int nBuffer)
     return buffer;
 }
 
-bsnmp_oidcmp_t bsnmp_oidcmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index)
+bsnmp_oidcmp_t bsnmp_oid_cmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index)
 {
     size_t i;
     size_t lena;
@@ -117,7 +117,10 @@ bsnmp_oidcmp_t bsnmp_oidcmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index)
         {
             if (lenb == 0)
             {
-                *index = 0;
+                if (index)
+                {
+                    *index = 0;
+                }
                 return snmpCmpExact;
             }
             else

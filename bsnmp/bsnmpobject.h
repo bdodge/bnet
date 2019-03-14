@@ -150,6 +150,33 @@ int bsnmp_get_next_object_value     (
                                     bsnmp_var_t *var,
                                     bsnmp_errcode_t *err
                                     );
+int bsnmp_set_object_value          (
+                                    bsnmp_var_t *var,
+                                    size_t num_indices,
+                                    size_t indices[BSNMP_MAX_DIMENSIONS],
+                                    bsnmp_errcode_t *err
+                                    );
+int bsnmp_set_string_value          (
+                                    const char *oidstr,
+                                    const char *str,
+                                    size_t num_indices,
+                                    size_t indices[BSNMP_MAX_DIMENSIONS],
+                                    bsnmp_errcode_t *err
+                                    );
+int bsnmp_set_uint_value            (
+                                    const char *oidstr,
+                                    uint32_t uval,
+                                    size_t num_indices,
+                                    size_t indices[BSNMP_MAX_DIMENSIONS],
+                                    bsnmp_errcode_t *err
+                                    );
+int bsnmp_set_int_value             (
+                                    const char *oidstr,
+                                    int32_t ival,
+                                    size_t num_indices,
+                                    size_t indices[BSNMP_MAX_DIMENSIONS],
+                                    bsnmp_errcode_t *err
+                                    );
 int bsnmp_init_objects              (
                                     bmibc_record_t *records,
                                     const bmibc_oid_xref_t *xrefs,

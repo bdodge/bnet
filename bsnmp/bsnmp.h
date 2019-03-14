@@ -227,7 +227,7 @@ typedef struct tag_snmp_server
     iostream_t         *stream;
     ioring_t            in;
     ioring_t            out;
-	struct sockaddr_in  srcaddr;
+  struct sockaddr_in  srcaddr;
 }
 bsnmp_server_t;
 

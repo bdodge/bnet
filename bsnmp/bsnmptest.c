@@ -209,37 +209,28 @@ int snmp_test_records(void)
 
 int snmp_setup_records()
 {
-    bsnmp_oid_t oid;
     bsnmp_oid_t oidval;
     bsnmp_var_t var;
+    bsnmp_errcode_t err;
+    size_t indices[BSNMP_MAX_DIMENSIONS];
     int result;
 
-    result = bsnmp_oid_from_string(&oid, "1.3.6.1.2.1.1.1.0");
+    result = bsnmp_set_string_value("1.3.6.1.2.1.1.1.0", "Test of BSNMP", 0, indices, &err);
     if (result)
     {
         return result;
     }
-    result = bsnmp_set_object_string_value(&oid, "Test of BSMP");
+    result = bsnmp_set_string_value("1.3.6.1.2.1.1.5.0", "bsnmp", 0, indices, &err);
     if (result)
     {
         return result;
     }
-    result = bsnmp_oid_from_string(&oid, "1.3.6.1.2.1.1.5.0");
+    result = bsnmp_oid_from_string(&var.oid,  "1.3.6.1.2.1.1.2.0");
     if (result)
     {
         return result;
     }
-    result = bsnmp_set_object_string_value(&oid, "bsnmp");
-    if (result)
-    {
-        return result;
-    }
-    result = bsnmp_oid_from_string(&oid,  "1.3.6.1.2.1.1.2.0");
-    if (result)
-    {
-        return result;
-    }
-    result = bsnmp_oid_from_string(&oidval,   "1.3.6.1.2.1.43.5.1.1.1");
+    result = bsnmp_oid_from_string(&oidval, "1.3.6.1.2.1.43.5.1.1.1");
     if (result)
     {
         return result;
@@ -249,7 +240,7 @@ int snmp_setup_records()
     var.alloc_len = 0;
     var.val.oVal = &oidval;
 
-    result = bsnmp_set_object_value(&oid, &var);
+    result = bsnmp_set_object_value(&var, 0, indices, &err);
     if (result)
     {
         return result;

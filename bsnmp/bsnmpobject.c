@@ -86,10 +86,10 @@ int bsnmp_get_object_dimensionality(
         dexdim = dexrecord->dim;
         count *= dexdim;
     }
-	while (dex < BSNMP_MAX_DIMENSIONS)
-	{
-		indices[dex++] = 0;
-	}
+    while (dex < BSNMP_MAX_DIMENSIONS)
+    {
+        indices[dex++] = 0;
+    }
     *ntotal = count;
     return 0;
 }
@@ -97,20 +97,20 @@ int bsnmp_get_object_dimensionality(
 #if BMIBC_HAVE_OBJECT_NAMES
 int bsnmp_oid_from_name(const char *name, bsnmp_oid_t *oid)
 {
-	size_t recdex;
+    size_t recdex;
 
-	if (! name || ! oid)
-	{
-		return -1;
-	}
-	for (recdex = 0; recdex < s_num_records; recdex++)
-	{
-		if (! strcmp(s_xrefs[recdex].name, name))
-		{
-			return bsnmp_oid_from_string(oid, s_xrefs[recdex].oidstr);
-		}
-	}
-	return -1;
+    if (! name || ! oid)
+    {
+        return -1;
+    }
+    for (recdex = 0; recdex < s_num_records; recdex++)
+    {
+        if (! strcmp(s_xrefs[recdex].name, name))
+        {
+            return bsnmp_oid_from_string(oid, s_xrefs[recdex].oidstr);
+        }
+    }
+    return -1;
 }
 #endif
 
@@ -371,28 +371,28 @@ int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *lower_dex)
 
     for (recdex = 0; recdex <= s_num_records; recdex++)
     {
-		if (recdex < s_num_records)
-		{
-	        // convert record's oid string to an actual oid. this might
-	        // be cachable, but it would be a large table, so doing it
-	        // (over and over, kind of slowly) this way saves space
-	        //
-	        result = bsnmp_oid_from_string(&recoid, s_xrefs[recdex].oidstr);
-	        if (result)
-	        {
-	            return result;
-	        }
-	        cmp = bsnmp_oid_cmp(&recoid, oid, &index);
+        if (recdex < s_num_records)
+        {
+            // convert record's oid string to an actual oid. this might
+            // be cachable, but it would be a large table, so doing it
+            // (over and over, kind of slowly) this way saves space
+            //
+            result = bsnmp_oid_from_string(&recoid, s_xrefs[recdex].oidstr);
+            if (result)
+            {
+                return result;
+            }
+            cmp = bsnmp_oid_cmp(&recoid, oid, &index);
 
-			butil_log(5, "Compare object %s to object record[%zu] %s gets %s, prev=%s\n",
-	                bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
-	                recdex, s_xrefs[recdex].oidstr,
-	                bsnmp_cmp_str(cmp), bsnmp_cmp_str(prevcmp));
-		}
-		else
-		{
-			cmp = snmpCmpAafterB;
-		}
+            butil_log(5, "Compare object %s to object record[%zu] %s gets %s, prev=%s\n",
+                    bsnmp_oid_string(oid, dbg_buffer, sizeof(dbg_buffer)),
+                    recdex, s_xrefs[recdex].oidstr,
+                    bsnmp_cmp_str(cmp), bsnmp_cmp_str(prevcmp));
+        }
+        else
+        {
+            cmp = snmpCmpAafterB;
+        }
         // compare the record A to incoming oid B until gone past (AbeforeB)
         //
         if (cmp == snmpCmpExact)
@@ -580,7 +580,7 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
             if (recdex >= (s_num_records - 1))
             {
                 butil_log(3, "find_next: past last record\n");
-		        *err = SNMP_ErrNoSuchName;
+                *err = SNMP_ErrNoSuchName;
                 return -1;
             }
             // next record
@@ -650,14 +650,14 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         // incoming specifies more indices than can be used. decide here
         // if this means return the next object or an error
         //
-	    butil_log(5, "find_next: oid over-indexed, expect %zu, got %zu\n",
-	            ndim, index);
+        butil_log(5, "find_next: oid over-indexed, expect %zu, got %zu\n",
+                ndim, index);
         *err = SNMP_ErrNoSuchName;
         return -1;
     }
     // now the fun part, increment the indices
     //
-	butil_log(5, "find_next: increment index in indexed oid\n");
+    butil_log(5, "find_next: increment index in indexed oid\n");
 
     // increment the right most index until it reaches the total
     // number of values it can have, then wrap it to 0 and increment
@@ -673,14 +673,14 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         if ((oid->oid[oid->len - index] + 1) >= obj->dim)
         {
             // reached limit on this index, if this is
-			// the last index to left, this object can't
-			// be indexed any further
+            // the last index to left, this object can't
+            // be indexed any further
             //
-			if (index == ndim)
-			{
-				index++;
-				break;
-			}
+            if (index == ndim)
+            {
+                index++;
+                break;
+            }
             oid->oid[oid->len - index] = 0;
         }
         else
@@ -698,7 +698,7 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         if (recdex >= (s_num_records - 1))
         {
             butil_log(3, "find_next: past last record\n");
-	        *err = SNMP_ErrNoSuchName;
+            *err = SNMP_ErrNoSuchName;
             return -1;
         }
         // next record
@@ -725,12 +725,12 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         butil_log(5, "find_next: past indexed limits next oid[%zu] = %s\n",
                     recdex, s_xrefs[recdex].oidstr);
     }
-	else
-	{
-		bsnmp_oid_copy(nextoid, oid);
+    else
+    {
+        bsnmp_oid_copy(nextoid, oid);
 
-	    butil_log(5, "find_next: incremented %zu dimensions\n", ndim);
-	}
+        butil_log(5, "find_next: incremented %zu dimensions\n", ndim);
+    }
     *err = SNMP_ErrNoError;
     return 0;
 }
@@ -863,23 +863,23 @@ int bsnmp_get_next_object_value(bsnmp_oid_t *oid, bsnmp_var_t *var, bsnmp_errcod
     return bsnmp_get_object_value(&nextoid, var, err);
 }
 
-int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var)
+int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var, bsnmp_errcode_t *err)
 {
     bmibc_record_t *rec;
     bsnmp_type_t    type;
     bool            isstr;
 
-	if (! xref || ! var)
-	{
-		return -1;
-	}
+    if (! xref || ! var)
+    {
+        return -1;
+    }
     rec = &s_records[xref->record_index];
 
     isstr = (xref->asntype & 0x80) ? true : false;
 
     type = (bsnmp_type_t)(xref->asntype & ~0x80);
 
-	switch (type)
+    switch (type)
     {
     case SNMP_NULL:
         break;
@@ -904,29 +904,30 @@ int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var)
     case SNMP_OCTET_STRING:
         if (!isstr)
         {
-	        *(uint8_t *)(intptr_t)&rec->value = (uint32_t)var->val.ucVal;
+            *(uint8_t *)(intptr_t)&rec->value = (uint32_t)var->val.ucVal;
         }
         else
         {
-			size_t len;
+            size_t len;
 
-			len = strlen(var->val.sVal);
-			if (len >= (rec->maxv - 2))
-			{
-				butil_log(0, "String set overflow %s\n", var->val.sVal);
-				len = rec->maxv - 2;
-			}
-	        strncpy((char *)(intptr_t)rec->value + 1, var->val.sVal, len);
-			*(((char*)(intptr_t)rec->value) + len + 1) = '\0';
-			*(uint8_t*)(intptr_t)rec->value = (uint8_t)len;
+            len = strlen(var->val.sVal);
+            if (len >= (rec->maxv - 2))
+            {
+                butil_log(0, "String set overflow %s\n", var->val.sVal);
+                len = rec->maxv - 2;
+            }
+            strncpy((char *)(intptr_t)rec->value + 1, var->val.sVal, len);
+            *(((char*)(intptr_t)rec->value) + len + 1) = '\0';
+            *(uint8_t*)(intptr_t)rec->value = (uint8_t)len;
         }
         break;
     case SNMP_OBJECT_ID:
-		if (var->val.oVal->len >= (rec->maxv - 2))
-		{
-			butil_log(0, "OID set overflow\n");
-			return -1;
-		}
+        if (var->val.oVal->len >= (rec->maxv - 2))
+        {
+            butil_log(0, "OID set overflow\n");
+            *err = SNMP_ErrTooBig;
+            return -1;
+        }
         memcpy((char *)(intptr_t)rec->value, var->val.oVal, sizeof(bsnmp_oid_t));
         break;
     case SNMP_PRINTABLE_STR:
@@ -941,89 +942,120 @@ int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var)
     case SNMP_FLOAT32:
     case SNMP_FLOAT64:
     case SNMP_FLOAT128:
+        *err = SNMP_ErrWrongType;
         butil_log(0, "Type not supported: %u\n", var->type);
         return -1;
 
     default:
+        *err = SNMP_ErrWrongType;
         butil_log(0, "Not a type: %u\n", var->type);
         return -1;
     }
-	return 0;
+    return 0;
 }
 
-int bsnmp_set_object_value(bsnmp_oid_t *oid, bsnmp_var_t *var)
+int bsnmp_set_object_value(
+                            bsnmp_var_t *var,
+                            size_t num_indices,
+                            size_t indices[BSNMP_MAX_DIMENSIONS],
+                            bsnmp_errcode_t *err
+                          )
 {
-	size_t recdex;
-	int result;
+    size_t recdex;
+    int result;
 
-	result = bsnmp_find_record(oid, true, &recdex);
-	if (result)
-	{
-		return result;
-	}
-    return bsnmp_record_from_var(&s_xrefs[recdex], var);
+    result = bsnmp_find_record(&var->oid, true, &recdex);
+    if (result)
+    {
+        *err = SNMP_ErrNoSuchName;
+        return result;
+    }
+    return bsnmp_record_from_var(&s_xrefs[recdex], var, err);
 }
 
-int bsnmp_set_object_string_value(bsnmp_oid_t *oid, const char *str)
+int bsnmp_set_string_value(
+                            const char *oidstr,
+                            const char *str,
+                            size_t num_indices,
+                            size_t indices[BSNMP_MAX_DIMENSIONS],
+                            bsnmp_errcode_t *err
+                          )
 {
-	bsnmp_var_t var;
+    bsnmp_var_t var;
+    int result;
 
-	var.len = 0;
-	var.alloc_len = 0;
-	var.type = SNMP_OCTET_STRING;
-	var.val.sVal = (char*)str;
+    result = bsnmp_oid_from_string(&var.oid, oidstr);
+    if (result)
+    {
+        *err = SNMP_ErrNoSuchName;
+        return result;
+    }
+    var.len = 0;
+    var.alloc_len = 0;
+    var.type = SNMP_OCTET_STRING;
+    var.val.sVal = (char*)str;
 
-	return bsnmp_set_object_value(oid, &var);
+    return bsnmp_set_object_value(&var, num_indices, indices, err);
 }
 
-#if BMIBC_HAVE_OBJECT_NAMES
-int bsnmp_set_named_object_string_value(const char *name, const char *str)
+int bsnmp_set_uint_value(
+                            const char *oidstr,
+                            uint32_t uval,
+                            size_t num_indices,
+                            size_t indices[BSNMP_MAX_DIMENSIONS],
+                            bsnmp_errcode_t *err
+                          )
 {
-	bsnmp_oid_t oid;
-	int result;
+    bsnmp_var_t var;
+    int result;
 
-	result = bsnmp_oid_from_name(name, &oid);
-	if (result)
-	{
-		return result;
-	}
-	return bsnmp_set_object_string_value(&oid, str);
-}
-#endif
+    result = bsnmp_oid_from_string(&var.oid, oidstr);
+    if (result)
+    {
+        *err = SNMP_ErrNoSuchName;
+        return result;
+    }
+    var.len = 0;
+    var.alloc_len = 0;
+    var.type = SNMP_UNSIGNED32;
+    var.val.uVal = uval;
 
-int bsnmp_set_object_uint_value(bsnmp_oid_t *oid, uint32_t uval)
-{
-	bsnmp_var_t var;
-
-	var.len = 0;
-	var.alloc_len = 0;
-	var.type = SNMP_UNSIGNED32;
-	var.val.uVal = uval;
-
-	return bsnmp_set_object_value(oid, &var);
+    return bsnmp_set_object_value(&var, num_indices, indices, err);
 }
 
-int bsnmp_set_object_int_value(bsnmp_oid_t *oid, uint32_t ival)
+int bsnmp_set_int_value(
+                            const char *oidstr,
+                            int32_t ival,
+                            size_t num_indices,
+                            size_t indices[BSNMP_MAX_DIMENSIONS],
+                            bsnmp_errcode_t *err
+                          )
 {
-	bsnmp_var_t var;
+    bsnmp_var_t var;
+    int result;
 
-	var.len = 0;
-	var.alloc_len = 0;
-	var.type = SNMP_INTEGER;
-	var.val.iVal = ival;
+    result = bsnmp_oid_from_string(&var.oid, oidstr);
+    if (result)
+    {
+        return result;
+    }
+    var.len = 0;
+    var.alloc_len = 0;
+    var.type = SNMP_INTEGER;
+    var.val.iVal = ival;
 
-	return bsnmp_set_object_value(oid, &var);
+    return bsnmp_set_object_value(&var, num_indices, indices, err);
 }
 
 int bsnmp_init_objects(bmibc_record_t *records, const bmibc_oid_xref_t *xrefs, size_t num_records)
 {
-	if (! records || ! xrefs || ! num_records)
-	{
-		return -1;
-	}
-	s_num_records = num_records;
-	s_records = records;
-	s_xrefs = xrefs;
-	return 0;
+    if (! records || ! xrefs || ! num_records)
+    {
+        return -1;
+    }
+    s_num_records = num_records;
+    s_records = records;
+    s_xrefs = xrefs;
+    return 0;
 }
 

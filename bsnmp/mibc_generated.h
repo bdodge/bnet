@@ -561,7 +561,7 @@ typedef enum {
 			IANAifType_atmVciEndPt = 194,
 			IANAifType_opticalChannel = 195,
 			IANAifType_opticalTransport = 196,
-			IANAifType_propAtm = 197 
+			IANAifType_propAtm = 197
 }
 e_IANAifType;
 
@@ -775,7 +775,7 @@ extern int ve_IANAifType[197];
 typedef enum {
 			ifAdminStatus_up = 1,
 			ifAdminStatus_down = 2,
-			ifAdminStatus_testing = 3 
+			ifAdminStatus_testing = 3
 }
 e_ifAdminStatus;
 
@@ -799,7 +799,7 @@ typedef enum {
 			ifOperStatus_unknown = 4,
 			ifOperStatus_dormant = 5,
 			ifOperStatus_notPresent = 6,
-			ifOperStatus_lowerLayerDown = 7 
+			ifOperStatus_lowerLayerDown = 7
 }
 e_ifOperStatus;
 
@@ -822,7 +822,7 @@ extern int ve_ifOperStatus[7];
 */
 typedef enum {
 			snmpEnableAuthenTraps_enabled = 1,
-			snmpEnableAuthenTraps_disabled = 2 
+			snmpEnableAuthenTraps_disabled = 2
 }
 e_snmpEnableAuthenTraps;
 
@@ -843,7 +843,7 @@ typedef enum {
 			hrDeviceStatus_running = 2,
 			hrDeviceStatus_warning = 3,
 			hrDeviceStatus_testing = 4,
-			hrDeviceStatus_down = 5 
+			hrDeviceStatus_down = 5
 }
 e_hrDeviceStatus;
 
@@ -867,7 +867,7 @@ typedef enum {
 			hrPrinterStatus_unknown = 2,
 			hrPrinterStatus_idle = 3,
 			hrPrinterStatus_printing = 4,
-			hrPrinterStatus_warmup = 5 
+			hrPrinterStatus_warmup = 5
 }
 e_hrPrinterStatus;
 
@@ -888,7 +888,7 @@ extern int ve_hrPrinterStatus[5];
 */
 typedef enum {
 			hrDiskStorageAccess_readWrite = 1,
-			hrDiskStorageAccess_readOnly = 2 
+			hrDiskStorageAccess_readOnly = 2
 }
 e_hrDiskStorageAccess;
 
@@ -912,7 +912,7 @@ typedef enum {
 			hrDiskStorageMedia_opticalDiskROM = 5,
 			hrDiskStorageMedia_opticalDiskWORM = 6,
 			hrDiskStorageMedia_opticalDiskRW = 7,
-			hrDiskStorageMedia_ramDisk = 8 
+			hrDiskStorageMedia_ramDisk = 8
 }
 e_hrDiskStorageMedia;
 
@@ -936,7 +936,7 @@ extern int ve_hrDiskStorageMedia[8];
 */
 typedef enum {
 			TruthValue_true = 1,
-			TruthValue_false = 2 
+			TruthValue_false = 2
 }
 e_TruthValue;
 
@@ -954,7 +954,7 @@ extern int ve_TruthValue[2];
 */
 typedef enum {
 			hrFSAccess_readWrite = 1,
-			hrFSAccess_readOnly = 2 
+			hrFSAccess_readOnly = 2
 }
 e_hrFSAccess;
 
@@ -974,7 +974,7 @@ typedef enum {
 			hrSWRunType_unknown = 1,
 			hrSWRunType_operatingSystem = 2,
 			hrSWRunType_deviceDriver = 3,
-			hrSWRunType_application = 4 
+			hrSWRunType_application = 4
 }
 e_hrSWRunType;
 
@@ -996,7 +996,7 @@ typedef enum {
 			hrSWRunStatus_running = 1,
 			hrSWRunStatus_runnable = 2,
 			hrSWRunStatus_notRunnable = 3,
-			hrSWRunStatus_invalid = 4 
+			hrSWRunStatus_invalid = 4
 }
 e_hrSWRunStatus;
 
@@ -1018,7 +1018,7 @@ typedef enum {
 			hrSWInstalledType_unknown = 1,
 			hrSWInstalledType_operatingSystem = 2,
 			hrSWInstalledType_deviceDriver = 3,
-			hrSWInstalledType_application = 4 
+			hrSWInstalledType_application = 4
 }
 e_hrSWInstalledType;
 
@@ -1038,7 +1038,7 @@ extern int ve_hrSWInstalledType[4];
 */
 typedef enum {
 			ifLinkUpDownTrapEnable_enabled = 1,
-			ifLinkUpDownTrapEnable_disabled = 2 
+			ifLinkUpDownTrapEnable_disabled = 2
 }
 e_ifLinkUpDownTrapEnable;
 
@@ -1060,7 +1060,7 @@ typedef enum {
 			RowStatus_notReady = 3,
 			RowStatus_createAndGo = 4,
 			RowStatus_createAndWait = 5,
-			RowStatus_destroy = 6 
+			RowStatus_destroy = 6
 }
 e_RowStatus;
 
@@ -1084,7 +1084,7 @@ typedef enum {
 			prtGeneralReset_notResetting = 3,
 			prtGeneralReset_powerCycleReset = 4,
 			prtGeneralReset_resetToNVRAM = 5,
-			prtGeneralReset_resetToFactoryDefaults = 6 
+			prtGeneralReset_resetToFactoryDefaults = 6
 }
 e_prtGeneralReset;
 
@@ -1104,7 +1104,7 @@ extern int ve_prtGeneralReset[4];
 */
 typedef enum {
 			prtConsoleDisable_enabled = 3,
-			prtConsoleDisable_disabled = 4 
+			prtConsoleDisable_disabled = 4
 }
 e_prtConsoleDisable;
 
@@ -1125,7 +1125,7 @@ typedef enum {
 			prtCoverStatus_doorOpen = 3,
 			prtCoverStatus_doorClosed = 4,
 			prtCoverStatus_interlockOpen = 5,
-			prtCoverStatus_interlockClosed = 6 
+			prtCoverStatus_interlockClosed = 6
 }
 e_prtCoverStatus;
 
@@ -1145,7 +1145,7 @@ extern int ve_prtCoverStatus[5];
 /* enumeration for CodedCharSet ----------------------------
 */
 typedef enum {
-			CodedCharSet_other = 1 
+			CodedCharSet_other = 1
 }
 e_CodedCharSet;
 
@@ -1167,7 +1167,7 @@ typedef enum {
 			prtInputType_sheetFeedAutoNonRemovableTray = 4,
 			prtInputType_sheetFeedManual = 5,
 			prtInputType_continuousRoll = 6,
-			prtInputType_continuousFanFold = 7 
+			prtInputType_continuousFanFold = 7
 }
 e_prtInputType;
 
@@ -1190,7 +1190,7 @@ extern int ve_prtInputType[7];
 */
 typedef enum {
 			MediaUnit_tenThousandthsOfInches = 3,
-			MediaUnit_micrometers = 4 
+			MediaUnit_micrometers = 4
 }
 e_MediaUnit;
 
@@ -1211,7 +1211,7 @@ typedef enum {
 			CapacityUnit_micrometers = 4,
 			CapacityUnit_sheets = 8,
 			CapacityUnit_feet = 16,
-			CapacityUnit_meters = 17 
+			CapacityUnit_meters = 17
 }
 e_CapacityUnit;
 
@@ -1234,7 +1234,7 @@ typedef enum {
 			PresentOnOff_other = 1,
 			PresentOnOff_on = 3,
 			PresentOnOff_off = 4,
-			PresentOnOff_notPresent = 5 
+			PresentOnOff_notPresent = 5
 }
 e_PresentOnOff;
 
@@ -1259,7 +1259,7 @@ typedef enum {
 			prtOutputType_unRemovableBin = 4,
 			prtOutputType_continuousRollDevice = 5,
 			prtOutputType_mailBox = 6,
-			prtOutputType_continuousFanFold = 7 
+			prtOutputType_continuousFanFold = 7
 }
 e_prtOutputType;
 
@@ -1283,7 +1283,7 @@ extern int ve_prtOutputType[7];
 typedef enum {
 			prtOutputStackingOrder_unknown = 2,
 			prtOutputStackingOrder_firstToLast = 3,
-			prtOutputStackingOrder_lastToFirst = 4 
+			prtOutputStackingOrder_lastToFirst = 4
 }
 e_prtOutputStackingOrder;
 
@@ -1302,7 +1302,7 @@ extern int ve_prtOutputStackingOrder[3];
 */
 typedef enum {
 			prtOutputPageDeliveryOrientation_faceUp = 3,
-			prtOutputPageDeliveryOrientation_faceDown = 4 
+			prtOutputPageDeliveryOrientation_faceDown = 4
 }
 e_prtOutputPageDeliveryOrientation;
 
@@ -1345,7 +1345,7 @@ typedef enum {
 			prtMarkerMarkTech_photographicOther = 24,
 			prtMarkerMarkTech_ionDeposition = 25,
 			prtMarkerMarkTech_eBeam = 26,
-			prtMarkerMarkTech_typesetter = 27 
+			prtMarkerMarkTech_typesetter = 27
 }
 e_prtMarkerMarkTech;
 
@@ -1396,7 +1396,7 @@ typedef enum {
 			prtMarkerCounterUnit_dotRow = 9,
 			prtMarkerCounterUnit_hours = 11,
 			prtMarkerCounterUnit_feet = 16,
-			prtMarkerCounterUnit_meters = 17 
+			prtMarkerCounterUnit_meters = 17
 }
 e_prtMarkerCounterUnit;
 
@@ -1422,7 +1422,7 @@ extern int ve_prtMarkerCounterUnit[10];
 */
 typedef enum {
 			prtMarkerAddressabilityUnit_tenThousandthsOfInches = 3,
-			prtMarkerAddressabilityUnit_micrometers = 4 
+			prtMarkerAddressabilityUnit_micrometers = 4
 }
 e_prtMarkerAddressabilityUnit;
 
@@ -1441,7 +1441,7 @@ extern int ve_prtMarkerAddressabilityUnit[2];
 typedef enum {
 			prtMarkerSuppliesClass_other = 1,
 			prtMarkerSuppliesClass_supplyThatIsConsumed = 3,
-			prtMarkerSuppliesClass_receptacleThatIsFilled = 4 
+			prtMarkerSuppliesClass_receptacleThatIsFilled = 4
 }
 e_prtMarkerSuppliesClass;
 
@@ -1472,7 +1472,7 @@ typedef enum {
 			prtMarkerSuppliesType_fuserOil = 11,
 			prtMarkerSuppliesType_solidWax = 12,
 			prtMarkerSuppliesType_ribbonWax = 13,
-			prtMarkerSuppliesType_wasteWax = 14 
+			prtMarkerSuppliesType_wasteWax = 14
 }
 e_prtMarkerSuppliesType;
 
@@ -1506,7 +1506,7 @@ typedef enum {
 			prtMarkerSuppliesSupplyUnit_thousandthsOfOunces = 12,
 			prtMarkerSuppliesSupplyUnit_tenthsOfGrams = 13,
 			prtMarkerSuppliesSupplyUnit_hundrethsOfFluidOunces = 14,
-			prtMarkerSuppliesSupplyUnit_tenthsOfMilliliters = 15 
+			prtMarkerSuppliesSupplyUnit_tenthsOfMilliliters = 15
 }
 e_prtMarkerSuppliesSupplyUnit;
 
@@ -1529,7 +1529,7 @@ extern int ve_prtMarkerSuppliesSupplyUnit[6];
 typedef enum {
 			prtMarkerColorantRole_other = 1,
 			prtMarkerColorantRole_process = 3,
-			prtMarkerColorantRole_spot = 4 
+			prtMarkerColorantRole_spot = 4
 }
 e_prtMarkerColorantRole;
 
@@ -1555,7 +1555,7 @@ typedef enum {
 			prtMediaPathMaxSpeedPrintUnit_sheetsPerHour = 8,
 			prtMediaPathMaxSpeedPrintUnit_dotRowPerHour = 9,
 			prtMediaPathMaxSpeedPrintUnit_feetPerHour = 16,
-			prtMediaPathMaxSpeedPrintUnit_metersPerHour = 17 
+			prtMediaPathMaxSpeedPrintUnit_metersPerHour = 17
 }
 e_prtMediaPathMaxSpeedPrintUnit;
 
@@ -1583,7 +1583,7 @@ typedef enum {
 			prtMediaPathType_unknown = 2,
 			prtMediaPathType_longEdgeBindingDuplex = 3,
 			prtMediaPathType_shortEdgeBindingDuplex = 4,
-			prtMediaPathType_simplex = 5 
+			prtMediaPathType_simplex = 5
 }
 e_prtMediaPathType;
 
@@ -1634,7 +1634,7 @@ typedef enum {
 			prtChannelType_chVxDAPI = 30,
 			prtChannelType_chSystemObjectManager = 31,
 			prtChannelType_chDECLAT = 32,
-			prtChannelType_chNPAP = 33 
+			prtChannelType_chNPAP = 33
 }
 e_prtChannelType;
 
@@ -1683,7 +1683,7 @@ extern int ve_prtChannelType[32];
 typedef enum {
 			prtChannelState_other = 1,
 			prtChannelState_printDataAccepted = 3,
-			prtChannelState_noDataAccepted = 4 
+			prtChannelState_noDataAccepted = 4
 }
 e_prtChannelState;
 
@@ -1745,7 +1745,7 @@ typedef enum {
 			prtInterpreterLangFamily_langCaPSL = 43,
 			prtInterpreterLangFamily_langEXCL = 44,
 			prtInterpreterLangFamily_langLCDS = 45,
-			prtInterpreterLangFamily_langXES = 46 
+			prtInterpreterLangFamily_langXES = 46
 }
 e_prtInterpreterLangFamily;
 
@@ -1807,7 +1807,7 @@ extern int ve_prtInterpreterLangFamily[45];
 typedef enum {
 			prtInterpreterDefaultOrientation_other = 1,
 			prtInterpreterDefaultOrientation_portrait = 3,
-			prtInterpreterDefaultOrientation_landscape = 4 
+			prtInterpreterDefaultOrientation_landscape = 4
 }
 e_prtInterpreterDefaultOrientation;
 
@@ -1826,7 +1826,7 @@ extern int ve_prtInterpreterDefaultOrientation[3];
 */
 typedef enum {
 			prtInterpreterTwoWay_yes = 3,
-			prtInterpreterTwoWay_no = 4 
+			prtInterpreterTwoWay_no = 4
 }
 e_prtInterpreterTwoWay;
 
@@ -1851,7 +1851,7 @@ typedef enum {
 			prtConsoleColor_blue = 6,
 			prtConsoleColor_cyan = 7,
 			prtConsoleColor_magenta = 8,
-			prtConsoleColor_yellow = 9 
+			prtConsoleColor_yellow = 9
 }
 e_prtConsoleColor;
 
@@ -1877,7 +1877,7 @@ extern int ve_prtConsoleColor[9];
 typedef enum {
 			prtAlertSeverityLevel_other = 1,
 			prtAlertSeverityLevel_critical = 3,
-			prtAlertSeverityLevel_warning = 4 
+			prtAlertSeverityLevel_warning = 4
 }
 e_prtAlertSeverityLevel;
 
@@ -1900,7 +1900,7 @@ typedef enum {
 			prtAlertTrainingLevel_untrained = 3,
 			prtAlertTrainingLevel_trained = 4,
 			prtAlertTrainingLevel_fieldService = 5,
-			prtAlertTrainingLevel_management = 6 
+			prtAlertTrainingLevel_management = 6
 }
 e_prtAlertTrainingLevel;
 
@@ -1936,7 +1936,7 @@ typedef enum {
 			prtAlertGroup_channel = 14,
 			prtAlertGroup_interpreter = 15,
 			prtAlertGroup_consoleDisplayBuffer = 16,
-			prtAlertGroup_consoleLights = 17 
+			prtAlertGroup_consoleLights = 17
 }
 e_prtAlertGroup;
 
@@ -2015,7 +2015,7 @@ typedef enum {
 			prtAlertCode_interpreterCartridgeDeleted = 1504,
 			prtAlertCode_interpreterResourceAdded = 1505,
 			prtAlertCode_interpreterResourceDeleted = 1506,
-			prtAlertCode_interpreterResourceUnavailable = 1507 
+			prtAlertCode_interpreterResourceUnavailable = 1507
 }
 e_prtAlertCode;
 

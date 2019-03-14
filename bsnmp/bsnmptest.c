@@ -16,12 +16,13 @@
 #include "bsnmp.h"
 #include "bsnmpvar.h"
 #include "bsnmputils.h"
-#include "bsnmpobject.h"
 #include "butil.h"
 #include "bnetheaders.h"
 
 #include "mibc_generated.h"
+#include "mibc_generated.c"
 
+#include "bsnmpobject.h"
 
 static bsnmp_oid_t s_test_oid1 = { 3, { 0, 1, 2 } };
 static uint32_t s_test_val1 = 1234;
@@ -155,7 +156,7 @@ int snmp_test_records(void)
     bsnmp_oid_t recoid;
     size_t      ndim;
     size_t      ntot;
-    size_t      indices[BMIBC_MAX_NODE_INDEX];
+    size_t      indices[BSNMP_MAX_DIMENSIONS];
     char        dbg_buffer[64];
     int         result;
 
@@ -206,6 +207,56 @@ int snmp_test_records(void)
     return 0;
 }
 
+int snmp_setup_records()
+{
+    bsnmp_oid_t oid;
+    bsnmp_oid_t oidval;
+    bsnmp_var_t var;
+    int result;
+
+    result = bsnmp_oid_from_string(&oid, "1.3.6.1.2.1.1.1.0");
+    if (result)
+    {
+        return result;
+    }
+    result = bsnmp_set_object_string_value(&oid, "Test of BSMP");
+    if (result)
+    {
+        return result;
+    }
+    result = bsnmp_oid_from_string(&oid, "1.3.6.1.2.1.1.5.0");
+    if (result)
+    {
+        return result;
+    }
+    result = bsnmp_set_object_string_value(&oid, "bsnmp");
+    if (result)
+    {
+        return result;
+    }
+    result = bsnmp_oid_from_string(&oid,  "1.3.6.1.2.1.1.2.0");
+    if (result)
+    {
+        return result;
+    }
+    result = bsnmp_oid_from_string(&oidval,   "1.3.6.1.2.1.43.5.1.1.1");
+    if (result)
+    {
+        return result;
+    }
+    var.type = SNMP_OBJECT_ID;
+    var.len = 0;
+    var.alloc_len = 0;
+    var.val.oVal = &oidval;
+
+    result = bsnmp_set_object_value(&oid, &var);
+    if (result)
+    {
+        return result;
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     bsnmp_server_t server;
@@ -214,6 +265,20 @@ int main(int argc, char **argv)
 
     butil_set_log_level(5);
 
+    // init object system
+    //
+    result = bsnmp_init_objects(g_mib_objects, g_oidxreftab, BMIBC_NUM_RECORDS);
+    if (result)
+    {
+        return result;
+    }
+    // set up object values
+    //
+    result = snmp_setup_records();
+    if (result)
+    {
+        return result;
+    }
     // make sure all oids are addressable
     //
     result = snmp_test_records();

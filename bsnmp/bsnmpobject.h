@@ -19,6 +19,12 @@
 #include "bnetheaders.h"
 #include "bsnmp.h"
 
+// max expected simensionality (index count)
+//
+#define BSNMP_MAX_DIMENSIONS 3
+
+#ifndef _BMIBC_GENERATED_H
+
 /// Types pointable to in the generated records
 //
 typedef enum {
@@ -114,7 +120,40 @@ typedef struct {
 "    void *value;\n"  \
 "} bmibc_record_t;\n"
 
-int bsnmp_get_object_value(bsnmp_oid_t *oid, bsnmp_var_t *var, bsnmp_errcode_t *err);
-int bsnmp_get_next_object_value(bsnmp_oid_t *oid, bsnmp_var_t *var, bsnmp_errcode_t *err);
+typedef struct {
+    const char *oidstr;
+    size_t record_index;
+    uint8_t asntype;
+    size_t indices[BSNMP_MAX_DIMENSIONS];
+} bmibc_oid_xref_t;
+
+#endif
+
+int bsnmp_get_object_dimensionality (
+                                    size_t rec,
+                                    size_t *ndim,
+                                    size_t *ntotal,
+                                    size_t *indices
+                                    );
+int bsnmp_find_record               (
+                                    bsnmp_oid_t *oid,
+                                    bool exact,
+                                    size_t *recdex
+                                    );
+int bsnmp_get_object_value          (
+                                    bsnmp_oid_t *oid,
+                                    bsnmp_var_t *var,
+                                    bsnmp_errcode_t *err
+                                    );
+int bsnmp_get_next_object_value     (
+                                    bsnmp_oid_t *oid,
+                                    bsnmp_var_t *var,
+                                    bsnmp_errcode_t *err
+                                    );
+int bsnmp_init_objects              (
+                                    bmibc_record_t *records,
+                                    const bmibc_oid_xref_t *xrefs,
+                                    size_t num_records
+                                    );
 
 #endif

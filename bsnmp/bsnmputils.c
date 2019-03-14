@@ -168,6 +168,27 @@ bsnmp_oidcmp_t bsnmp_oid_cmp(bsnmp_oid_t *a, bsnmp_oid_t *b, size_t *index)
     return snmpCmpError;
 }
 
+const char *bsnmp_cmp_str(bsnmp_oidcmp_t cmp)
+{
+    switch (cmp)
+    {
+    case snmpCmpError:
+        return "Error";
+    case snmpCmpAbeforeB:
+        return "A<B";
+    case snmpCmpBinA:
+        return "BinA";
+    case snmpCmpExact:
+        return "A==B";
+    case snmpCmpAinB:
+        return "AinB";
+    case snmpCmpAafterB:
+        return "A>B";
+    default:
+        return "???";
+    }
+}
+
 int bsnmp_oid_pad_to_index(bsnmp_oid_t *oid, bsnmp_oid_t *baseoid, int index)
 {
     if ((baseoid->len + index) >= SNMP_MAX_OID)
@@ -184,9 +205,12 @@ int bsnmp_oid_pad_to_index(bsnmp_oid_t *oid, bsnmp_oid_t *baseoid, int index)
         // insure the resultant object is
         // a scalar if there's no index
         //
-        if (oid->oid[oid->len] != 0)
+        if (oid->len > 0)
         {
-            index = 1;
+            if (oid->oid[oid->len - 1] != 0)
+            {
+                index = 1;
+            }
         }
     }
     while (index-- > 0)

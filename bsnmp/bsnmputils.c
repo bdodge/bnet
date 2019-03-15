@@ -191,6 +191,10 @@ const char *bsnmp_cmp_str(bsnmp_oidcmp_t cmp)
 
 int bsnmp_oid_pad_to_index(bsnmp_oid_t *oid, bsnmp_oid_t *baseoid, int index)
 {
+    if (! oid || ! baseoid)
+    {
+        return -1;
+    }
     if ((baseoid->len + index) >= SNMP_MAX_OID)
     {
         return -1;
@@ -202,20 +206,20 @@ int bsnmp_oid_pad_to_index(bsnmp_oid_t *oid, bsnmp_oid_t *baseoid, int index)
     }
     if (index == 0)
     {
-        // insure the resultant object is
-        // a scalar if there's no index
+        // scalar, ensure a .0 on the end of oid
         //
-        if (oid->len > 0)
+        if (oid->len == 0 || oid->oid[oid->len - 1] != 0)
         {
-            if (oid->oid[oid->len - 1] != 0)
+            if (oid->len >= SNMP_MAX_OID - 1)
             {
-                index = 1;
+                return -1;
             }
+            oid->oid[oid->len++] = 0;
         }
     }
     while (index-- > 0)
     {
-        oid->oid[oid->len++] = 0;
+        oid->oid[oid->len++] = 1;
     }
     return 0;
 }

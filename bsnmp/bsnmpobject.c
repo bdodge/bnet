@@ -619,7 +619,7 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         {
             return result;
         }
-        // add any .0's as needed to get to first index of object
+        // add any .0 or .1's as needed to get to first index of object
         result = bsnmp_oid_pad_to_index(nextoid, &recoid, ndim);
         if (result)
         {
@@ -657,6 +657,7 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         {
             butil_log(5, "find_next: pad out semi-indexed first val oid\n");
         }
+        // add any .0 or .1's as needed to get to first index of object
         result = bsnmp_oid_pad_to_index(nextoid, &recoid, ndim);
         if (result)
         {
@@ -690,7 +691,14 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         //
         obj = &s_records[xref->indices[ndim - index]];
 
-        if ((oid->oid[oid->len - index] + 1) >= obj->dim)
+        if ((oid->oid[oid->len - index] + 1) < 1)
+        {
+            // invalid index, not gonna do it
+            butil_log(3, "find_next: invalid 0 index\n");
+            *err = SNMP_ErrNoSuchName;
+            return -1;
+        }
+        if ((oid->oid[oid->len - index] + 1) > obj->dim)
         {
             // reached limit on this index, if this is
             // the last index to left, this object can't
@@ -736,7 +744,7 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
         {
             return result;
         }
-        // add any .0's as needed to get to first index of object
+        // add any .0 or .1 as needed to get to first index of object
         result = bsnmp_oid_pad_to_index(nextoid, &recoid, ndim);
         if (result)
         {
@@ -809,18 +817,18 @@ int bsnmp_get_dim_offset(size_t recdex, bsnmp_oid_t *varoid, size_t *offset)
             //
             indval = varoid->oid[varoid->len - index];
 
+            if (indval < 1 || indval > obj->dim)
+            {
+                butil_log(3, "get_dim: bad index value %zu at index %zu, range is 1-%zu\n",
+                        indval, ndim - index, obj->dim);
+                return -1;
+            }
             butil_log(6, "Index %zu is %zu using obj %s with range %zu-%zu\n",
                     ndim - index, indval,
                     s_xrefs[objdex].oidstr,
                     obj->minv, obj->maxv);
 
-            if (indval >= obj->dim)
-            {
-                butil_log(3, "get_dim: index %zu exceeds range %zu-%zu on index\n",
-                        indval, 0, obj->dim - 1);
-                return -1;
-            }
-            dim_offset += offsetmult * indval;
+            dim_offset += offsetmult * (indval - 1);
 
             // moving left, each index is multiplied
             // by this objects max dimensions

@@ -11,7 +11,7 @@ printmib MODULE-IDENTITY
 
         DESCRIPTION
             "Copyright (C) The Internet Society 2010. This version of
-            this MIB module is part of RFC (unknown); see the RFC itself for           
+            this MIB module is part of RFC (unknown); see the RFC itself for
             full legal notices."
 
     LAST-UPDATED "9411250000Z"
@@ -625,7 +625,6 @@ prtGeneralServicePerson OBJECT-TYPE
 --
 -- Implementation of every object in this group is mandatory.
 
-
 prtInput   OBJECT IDENTIFIER ::= { printmib 8 }
 
 prtInputDefaultIndex OBJECT-TYPE
@@ -697,6 +696,7 @@ prtInputIndex OBJECT-TYPE
         reconfiguration of the device (e.g. the addition of new
         input sub-units to the printer), values are expected to
         remain stable across successive printer power cycles."
+    DEFVAL { 1, 2, 3, 4 }
     ::= { prtInputEntry 1 }
 
 prtInputType OBJECT-TYPE
@@ -717,6 +717,7 @@ prtInputType OBJECT-TYPE
         feeder mechanism type) employed by the input sub-unit.  Note,
         the Optional Input Class provides for a descriptor field to
         further qualify the other choice."
+    DEFVAL { 3, 3, 3, 4 }
     ::= { prtInputEntry 2 }
 
 prtInputDimUnit OBJECT-TYPE
@@ -727,6 +728,7 @@ prtInputDimUnit OBJECT-TYPE
         "The unit of measurement for use calculating and relaying
 
         dimensional values for this input sub-unit."
+    DEFVAL { 3, 3, 3, 3 }
     ::= { prtInputEntry 3 }
 
 prtInputMediaDimFeedDirDeclared OBJECT-TYPE
@@ -877,6 +879,7 @@ prtInputMediaName OBJECT-TYPE
         prtInputMediaDimXFeedDirChosen, prtInputMediaWeight,
         prtInputMediaType). An example would be `legal tender bond
         paper'."
+    DEFVAL { "A4 plain", "Letter plain", "5x7 Photo", "Unknown" }
     ::= { prtInputEntry 12 }
 
 --               INPUT MEASUREMENT
@@ -904,6 +907,7 @@ prtInputName OBJECT-TYPE
     STATUS     current
     DESCRIPTION
         "The name assigned to this input sub-unit."
+    DEFVAL { "Lower Tray", "Middle Tray", "Photo Tray", "Manual Feed" }
     ::= { prtInputEntry 13 }
 
 prtInputVendorName OBJECT-TYPE
@@ -1531,6 +1535,7 @@ prtMarkerIndex OBJECT-TYPE
         reconfiguration of the device (e.g. the addition of new marking
         sub-units to the printer), values are expected to remain
         stable across successive printer power cycles."
+    DEFVAL { 1, 2, 3, 4 }
     ::= { prtMarkerEntry 1 }
 
 prtMarkerMarkTech OBJECT-TYPE
@@ -1569,6 +1574,7 @@ prtMarkerMarkTech OBJECT-TYPE
     STATUS     current
     DESCRIPTION
         "The type of marking technology used for this marking sub-unit."
+    DEFVAL { 4, 4, 4, 4 }
     ::= { prtMarkerEntry 2 }
 
 prtMarkerCounterUnit OBJECT-TYPE
@@ -1785,6 +1791,7 @@ prtMarkerSuppliesIndex OBJECT-TYPE
         reconfiguration of the device (e.g. the addition of new marker
         supplies to the printer), values are expected to remain stable
         across successive printer power cycles."
+    DEFVAL { 1, 2, 3, 4 }
     ::= { prtMarkerSuppliesEntry 1 }
 
 prtMarkerSuppliesMarkerIndex OBJECT-TYPE
@@ -1845,6 +1852,7 @@ prtMarkerSuppliesType OBJECT-TYPE
     STATUS     current
     DESCRIPTION
         "The type of this supply."
+    DEFVAL { 3, 3, 3, 3 }
     ::= { prtMarkerSuppliesEntry 5 }
 
 prtMarkerSuppliesDescription OBJECT-TYPE
@@ -1887,6 +1895,7 @@ prtMarkerSuppliesMaxCapacity OBJECT-TYPE
         other and specifically indicates that the sub-unit places
         no restrictions on this parameter. The value (-2) means
         unknown."
+    DEFVAL { 100, 100, 100, 100 }
     ::= { prtMarkerSuppliesEntry 8 }
 
 prtMarkerSuppliesLevel OBJECT-TYPE
@@ -1906,6 +1915,7 @@ prtMarkerSuppliesLevel OBJECT-TYPE
         The value (-2) means unknown.  A value of (-3) means that the
         printer knows that there is some supply/remaining space,
         respectively."
+    DEFVAL { 10, 20, 30, 40 }
     ::= { prtMarkerSuppliesEntry 9 }
 
 -- The Marker Colorant Group
@@ -1954,6 +1964,7 @@ prtMarkerColorantIndex OBJECT-TYPE
         reconfiguration of the device (e.g. the addition of new
         colorants to the printer), values are expected to remain
         stable across successive printer power cycles."
+    DEFVAL { 1, 2, 3, 4 }
     ::= { prtMarkerColorantEntry 1 }
 
 prtMarkerColorantMarkerIndex OBJECT-TYPE
@@ -2001,6 +2012,7 @@ prtMarkerColorantValue OBJECT-TYPE
         conventions in ISO 9070 are recommended in order to avoid
 
         potential name clashes"
+    DEFVAL {  "black", "cyan", "magenta", "yellow" }
     ::= { prtMarkerColorantEntry 4 }
 
 prtMarkerColorantTonality OBJECT-TYPE
@@ -3631,5 +3643,4 @@ prtAlertTimeGroup OBJECT-GROUP
 
 
 END
-
 

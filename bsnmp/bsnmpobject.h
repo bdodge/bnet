@@ -23,6 +23,11 @@
 //
 #define BSNMP_MAX_DIMENSIONS 3
 
+// whether object names are included in xref
+#ifndef BSNMP_OBJECT_NAMES
+#define BSNMP_OBJECT_NAMES 1
+#endif
+
 #ifndef _BMIBC_GENERATED_H
 
 /// Types pointable to in the generated records
@@ -90,7 +95,9 @@ typedef enum {
 ///  backing store pointers/value
 //
 typedef struct {
+    #if BSNMP_OBJECT_NAMES
     const char *name;
+    #endif
     int minv;
     int maxv;
     int dim;
@@ -104,6 +111,7 @@ typedef struct {
     void *value;
 } bmibc_record_t;
 
+#if BSNMP_OBJECT_NAMES
 #define BMIBC_OBJECT_RECORD_STR \
 "typedef struct {\n"  \
 "    const char *name;\n"  \
@@ -119,6 +127,21 @@ typedef struct {
 "    void *factory_value;\n"  \
 "    void *value;\n"  \
 "} bmibc_record_t;\n"
+#else
+"typedef struct {\n"  \
+"    int minv;\n"  \
+"    int maxv;\n"  \
+"    int dim;\n"  \
+"    size_t offset;\n"  \
+"    size_t bits;\n"  \
+"    bmibc_value_type_t type;\n"  \
+"    bmibc_access_method_t method;\n"  \
+"    bmibc_access_perm_t access;\n"  \
+"    void *subs;\n"  \
+"    void *factory_value;\n"  \
+"    void *value;\n"  \
+"} bmibc_record_t;\n"
+#endif
 
 typedef struct {
     const char *oidstr;
@@ -127,7 +150,15 @@ typedef struct {
     size_t indices[BSNMP_MAX_DIMENSIONS];
 } bmibc_oid_xref_t;
 
-#endif
+#define BMIBC_OID_XREF_STR \
+"typedef struct {\n"            \
+"    const char *oidstr;\n"     \
+"    size_t record_index;\n"    \
+"    uint8_t asntype;\n"        \
+"    size_t indices[BSNMP_MAX_DIMENSIONS];\n"  \
+"} bmibc_oid_xref_t;\n"
+
+#endif // _BMIBC_GENERATED
 
 int bsnmp_get_object_dimensionality (
                                     size_t rec,
@@ -152,29 +183,21 @@ int bsnmp_get_next_object_value     (
                                     );
 int bsnmp_set_object_value          (
                                     bsnmp_var_t *var,
-                                    size_t num_indices,
-                                    size_t indices[BSNMP_MAX_DIMENSIONS],
                                     bsnmp_errcode_t *err
                                     );
 int bsnmp_set_string_value          (
                                     const char *oidstr,
                                     const char *str,
-                                    size_t num_indices,
-                                    size_t indices[BSNMP_MAX_DIMENSIONS],
                                     bsnmp_errcode_t *err
                                     );
 int bsnmp_set_uint_value            (
                                     const char *oidstr,
                                     uint32_t uval,
-                                    size_t num_indices,
-                                    size_t indices[BSNMP_MAX_DIMENSIONS],
                                     bsnmp_errcode_t *err
                                     );
 int bsnmp_set_int_value             (
                                     const char *oidstr,
                                     int32_t ival,
-                                    size_t num_indices,
-                                    size_t indices[BSNMP_MAX_DIMENSIONS],
                                     bsnmp_errcode_t *err
                                     );
 int bsnmp_init_objects              (

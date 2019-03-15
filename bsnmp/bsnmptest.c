@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "bsnmp.h"
+#include "bsnmpobject.h"
 #include "bsnmpvar.h"
 #include "bsnmputils.h"
 #include "butil.h"
@@ -22,7 +23,6 @@
 #include "mibc_generated.h"
 #include "mibc_generated.c"
 
-#include "bsnmpobject.h"
 
 static bsnmp_oid_t s_test_oid1 = { 3, { 0, 1, 2 } };
 static uint32_t s_test_val1 = 1234;
@@ -136,7 +136,8 @@ static int callback(bsnmp_server_t *server, bsnmp_request_t *req, bsnmp_var_t *v
             result = bsnmp_get_next_object_value(&var->oid, var, &req->errmsg);
             break;
         case SNMP_SET:
-            req->errmsg = SNMP_ErrNoAccess;
+            req->errmsg = SNMP_ErrNoError;
+            result = bsnmp_set_object_value(var, &req->errmsg);
             result = 0;
             break;
         default:
@@ -215,12 +216,13 @@ int snmp_setup_records()
     size_t indices[BSNMP_MAX_DIMENSIONS];
     int result;
 
-    result = bsnmp_set_string_value("1.3.6.1.2.1.1.1.0", "Test of BSNMP", 0, indices, &err);
+    result = bsnmp_set_string_value("1.3.6.1.2.1.1.1.0", "Test of BSNMP", &err);
     if (result)
     {
         return result;
     }
-    result = bsnmp_set_string_value("1.3.6.1.2.1.1.5.0", "bsnmp", 0, indices, &err);
+//    result = bsnmp_set_string_value("1.3.6.1.2.1.1.5.0", "bsnmp", &err);
+    result = bsnmp_set_string_value("sysName", "bsnmp", &err);
     if (result)
     {
         return result;
@@ -240,7 +242,7 @@ int snmp_setup_records()
     var.alloc_len = 0;
     var.val.oVal = &oidval;
 
-    result = bsnmp_set_object_value(&var, 0, indices, &err);
+    result = bsnmp_set_object_value(&var, &err);
     if (result)
     {
         return result;

@@ -2820,7 +2820,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputIndex",
   /*min,max:*/ 1, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -2836,7 +2836,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputType",
   /*min,max:*/ 1, 7,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 3,
   /*   type:*/ BMIBC_ENUM,
@@ -2852,7 +2852,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputDimUnit",
   /*min,max:*/ 3, 4,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 1,
   /*   type:*/ BMIBC_ENUM,
@@ -2868,7 +2868,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaDimFeedDirDeclared",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -2884,7 +2884,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaDimXFeedDirDeclared",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -2900,7 +2900,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaDimFeedDirChosen",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -2916,7 +2916,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaDimXFeedDirChosen",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -2932,7 +2932,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputCapacityUnit",
   /*min,max:*/ 3, 17,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 4,
   /*   type:*/ BMIBC_ENUM,
@@ -2948,7 +2948,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMaxCapacity",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -2964,7 +2964,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputCurrentLevel",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -2980,7 +2980,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputStatus",
   /*min,max:*/ 0, 126,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 7,
   /*   type:*/ BMIBC_INT32,
@@ -2996,14 +2996,14 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaName",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
   /* method:*/ BMIBC_DIRECT,
   /* access:*/ BMIBC_READWRITE,
   /*subsrib:*/ NULL,
-  /*fac val:*/ (void*)NULL,
+  /*fac val:*/ (void*)_fvs_prtInputMediaName,
   /*vol val:*/ (void*)_vvs_prtInputMediaName
 },
 
@@ -3012,14 +3012,14 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputName",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
   /* method:*/ BMIBC_DIRECT,
   /* access:*/ BMIBC_READWRITE,
   /*subsrib:*/ NULL,
-  /*fac val:*/ (void*)NULL,
+  /*fac val:*/ (void*)_fvs_prtInputName,
   /*vol val:*/ (void*)_vvs_prtInputName
 },
 
@@ -3028,7 +3028,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputVendorName",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
@@ -3044,7 +3044,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputModel",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
@@ -3060,7 +3060,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputVersion",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
@@ -3076,7 +3076,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputSerialNumber",
   /*min,max:*/ 0, 32,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 264,
   /*   type:*/ BMIBC_OCTET,
@@ -3092,7 +3092,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputDescription",
   /*min,max:*/ 0, 255,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 2064,
   /*   type:*/ BMIBC_OCTET,
@@ -3108,7 +3108,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputSecurity",
   /*min,max:*/ 1, 5,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 3,
   /*   type:*/ BMIBC_ENUM,
@@ -3124,7 +3124,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaWeight",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3140,7 +3140,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaType",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
@@ -3156,7 +3156,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaColor",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
@@ -3172,7 +3172,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtInputMediaFormParts",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3572,7 +3572,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerIndex",
   /*min,max:*/ 1, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3588,7 +3588,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerMarkTech",
   /*min,max:*/ 1, 27,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 5,
   /*   type:*/ BMIBC_ENUM,
@@ -3604,7 +3604,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerCounterUnit",
   /*min,max:*/ 3, 17,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 4,
   /*   type:*/ BMIBC_ENUM,
@@ -3620,7 +3620,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerLifeCount",
   /*min,max:*/ 0UL, 4294967295UL,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_UINT32,
@@ -3636,7 +3636,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerPowerOnCount",
   /*min,max:*/ 0UL, 4294967295UL,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_UINT32,
@@ -3652,7 +3652,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerProcessColorants",
   /*min,max:*/ 0, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3668,7 +3668,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSpotColorants",
   /*min,max:*/ 0, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3684,7 +3684,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerAddressabilityUnit",
   /*min,max:*/ 3, 4,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 1,
   /*   type:*/ BMIBC_ENUM,
@@ -3700,7 +3700,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerAddressabilityFeedDir",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3716,7 +3716,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerAddressabilityXFeedDir",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3732,7 +3732,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerNorthMargin",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3748,7 +3748,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSouthMargin",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3764,7 +3764,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerWestMargin",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3780,7 +3780,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerEastMargin",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3796,7 +3796,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerStatus",
   /*min,max:*/ 0, 126,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 7,
   /*   type:*/ BMIBC_INT32,
@@ -3812,7 +3812,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesIndex",
   /*min,max:*/ 1, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3828,7 +3828,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesMarkerIndex",
   /*min,max:*/ 0, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3844,7 +3844,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesColorantIndex",
   /*min,max:*/ 0, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3860,7 +3860,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesClass",
   /*min,max:*/ 1, 4,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 2,
   /*   type:*/ BMIBC_ENUM,
@@ -3876,7 +3876,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesType",
   /*min,max:*/ 1, 14,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 4,
   /*   type:*/ BMIBC_ENUM,
@@ -3892,7 +3892,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesDescription",
   /*min,max:*/ 0, 255,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 2064,
   /*   type:*/ BMIBC_OCTET,
@@ -3908,7 +3908,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesSupplyUnit",
   /*min,max:*/ 3, 15,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 4,
   /*   type:*/ BMIBC_ENUM,
@@ -3924,7 +3924,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesMaxCapacity",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3940,7 +3940,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerSuppliesLevel",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -3956,7 +3956,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerColorantIndex",
   /*min,max:*/ 1, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3972,7 +3972,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerColorantMarkerIndex",
   /*min,max:*/ 0, 65535,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 16,
   /*   type:*/ BMIBC_INT32,
@@ -3988,7 +3988,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerColorantRole",
   /*min,max:*/ 1, 4,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 2,
   /*   type:*/ BMIBC_ENUM,
@@ -4004,14 +4004,14 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerColorantValue",
   /*min,max:*/ 0, 63,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 512,
   /*   type:*/ BMIBC_OCTET,
   /* method:*/ BMIBC_DIRECT,
   /* access:*/ BMIBC_READ,
   /*subsrib:*/ NULL,
-  /*fac val:*/ (void*)NULL,
+  /*fac val:*/ (void*)_fvs_prtMarkerColorantValue,
   /*vol val:*/ (void*)_vvs_prtMarkerColorantValue
 },
 
@@ -4020,7 +4020,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 {
   /*   name:*/ "prtMarkerColorantTonality",
   /*min,max:*/ 0x80000000UL /* min-int */, 2147483647,
-  /*    dim:*/ 1,
+  /*    dim:*/ 4,
   /* offset:*/ -1,
   /*encbits:*/ 32,
   /*   type:*/ BMIBC_INT32,
@@ -4837,7 +4837,7 @@ bmibc_record_t g_mib_objects[BMIBC_NUM_RECORDS] = {
 */
 /* enumerated values for IANAifType ------------------------
 */
-int ve_IANAifType[197] = {
+int32_t ve_IANAifType[197] = {
 			1,		/* IANAifType_other	*/
 			2,		/* IANAifType_regular1822	*/
 			3,		/* IANAifType_hdh1822	*/
@@ -5039,7 +5039,7 @@ int ve_IANAifType[197] = {
 
 /* enumerated values for ifAdminStatus ---------------------
 */
-int ve_ifAdminStatus[3] = {
+int32_t ve_ifAdminStatus[3] = {
 			1,		/* ifAdminStatus_up	*/
 			2,		/* ifAdminStatus_down	*/
 			3 		/* ifAdminStatus_testing	*/
@@ -5047,7 +5047,7 @@ int ve_ifAdminStatus[3] = {
 
 /* enumerated values for ifOperStatus ----------------------
 */
-int ve_ifOperStatus[7] = {
+int32_t ve_ifOperStatus[7] = {
 			1,		/* ifOperStatus_up	*/
 			2,		/* ifOperStatus_down	*/
 			3,		/* ifOperStatus_testing	*/
@@ -5059,14 +5059,14 @@ int ve_ifOperStatus[7] = {
 
 /* enumerated values for snmpEnableAuthenTraps -------------
 */
-int ve_snmpEnableAuthenTraps[2] = {
+int32_t ve_snmpEnableAuthenTraps[2] = {
 			1,		/* snmpEnableAuthenTraps_enabled	*/
 			2 		/* snmpEnableAuthenTraps_disabled	*/
 };
 
 /* enumerated values for hrDeviceStatus --------------------
 */
-int ve_hrDeviceStatus[5] = {
+int32_t ve_hrDeviceStatus[5] = {
 			1,		/* hrDeviceStatus_unknown	*/
 			2,		/* hrDeviceStatus_running	*/
 			3,		/* hrDeviceStatus_warning	*/
@@ -5076,7 +5076,7 @@ int ve_hrDeviceStatus[5] = {
 
 /* enumerated values for hrPrinterStatus -------------------
 */
-int ve_hrPrinterStatus[5] = {
+int32_t ve_hrPrinterStatus[5] = {
 			1,		/* hrPrinterStatus_other	*/
 			2,		/* hrPrinterStatus_unknown	*/
 			3,		/* hrPrinterStatus_idle	*/
@@ -5086,14 +5086,14 @@ int ve_hrPrinterStatus[5] = {
 
 /* enumerated values for hrDiskStorageAccess ---------------
 */
-int ve_hrDiskStorageAccess[2] = {
+int32_t ve_hrDiskStorageAccess[2] = {
 			1,		/* hrDiskStorageAccess_readWrite	*/
 			2 		/* hrDiskStorageAccess_readOnly	*/
 };
 
 /* enumerated values for hrDiskStorageMedia ----------------
 */
-int ve_hrDiskStorageMedia[8] = {
+int32_t ve_hrDiskStorageMedia[8] = {
 			1,		/* hrDiskStorageMedia_other	*/
 			2,		/* hrDiskStorageMedia_unknown	*/
 			3,		/* hrDiskStorageMedia_hardDisk	*/
@@ -5106,21 +5106,21 @@ int ve_hrDiskStorageMedia[8] = {
 
 /* enumerated values for TruthValue ------------------------
 */
-int ve_TruthValue[2] = {
+int32_t ve_TruthValue[2] = {
 			1,		/* TruthValue_true	*/
 			2 		/* TruthValue_false	*/
 };
 
 /* enumerated values for hrFSAccess ------------------------
 */
-int ve_hrFSAccess[2] = {
+int32_t ve_hrFSAccess[2] = {
 			1,		/* hrFSAccess_readWrite	*/
 			2 		/* hrFSAccess_readOnly	*/
 };
 
 /* enumerated values for hrSWRunType -----------------------
 */
-int ve_hrSWRunType[4] = {
+int32_t ve_hrSWRunType[4] = {
 			1,		/* hrSWRunType_unknown	*/
 			2,		/* hrSWRunType_operatingSystem	*/
 			3,		/* hrSWRunType_deviceDriver	*/
@@ -5129,7 +5129,7 @@ int ve_hrSWRunType[4] = {
 
 /* enumerated values for hrSWRunStatus ---------------------
 */
-int ve_hrSWRunStatus[4] = {
+int32_t ve_hrSWRunStatus[4] = {
 			1,		/* hrSWRunStatus_running	*/
 			2,		/* hrSWRunStatus_runnable	*/
 			3,		/* hrSWRunStatus_notRunnable	*/
@@ -5138,7 +5138,7 @@ int ve_hrSWRunStatus[4] = {
 
 /* enumerated values for hrSWInstalledType -----------------
 */
-int ve_hrSWInstalledType[4] = {
+int32_t ve_hrSWInstalledType[4] = {
 			1,		/* hrSWInstalledType_unknown	*/
 			2,		/* hrSWInstalledType_operatingSystem	*/
 			3,		/* hrSWInstalledType_deviceDriver	*/
@@ -5147,14 +5147,14 @@ int ve_hrSWInstalledType[4] = {
 
 /* enumerated values for ifLinkUpDownTrapEnable ------------
 */
-int ve_ifLinkUpDownTrapEnable[2] = {
+int32_t ve_ifLinkUpDownTrapEnable[2] = {
 			1,		/* ifLinkUpDownTrapEnable_enabled	*/
 			2 		/* ifLinkUpDownTrapEnable_disabled	*/
 };
 
 /* enumerated values for RowStatus -------------------------
 */
-int ve_RowStatus[6] = {
+int32_t ve_RowStatus[6] = {
 			1,		/* RowStatus_active	*/
 			2,		/* RowStatus_notInService	*/
 			3,		/* RowStatus_notReady	*/
@@ -5165,7 +5165,7 @@ int ve_RowStatus[6] = {
 
 /* enumerated values for prtGeneralReset -------------------
 */
-int ve_prtGeneralReset[4] = {
+int32_t ve_prtGeneralReset[4] = {
 			3,		/* prtGeneralReset_notResetting	*/
 			4,		/* prtGeneralReset_powerCycleReset	*/
 			5,		/* prtGeneralReset_resetToNVRAM	*/
@@ -5174,14 +5174,14 @@ int ve_prtGeneralReset[4] = {
 
 /* enumerated values for prtConsoleDisable -----------------
 */
-int ve_prtConsoleDisable[2] = {
+int32_t ve_prtConsoleDisable[2] = {
 			3,		/* prtConsoleDisable_enabled	*/
 			4 		/* prtConsoleDisable_disabled	*/
 };
 
 /* enumerated values for prtCoverStatus --------------------
 */
-int ve_prtCoverStatus[5] = {
+int32_t ve_prtCoverStatus[5] = {
 			1,		/* prtCoverStatus_other	*/
 			3,		/* prtCoverStatus_doorOpen	*/
 			4,		/* prtCoverStatus_doorClosed	*/
@@ -5191,13 +5191,13 @@ int ve_prtCoverStatus[5] = {
 
 /* enumerated values for CodedCharSet ----------------------
 */
-int ve_CodedCharSet[1] = {
+int32_t ve_CodedCharSet[1] = {
 			1 		/* CodedCharSet_other	*/
 };
 
 /* enumerated values for prtInputType ----------------------
 */
-int ve_prtInputType[7] = {
+int32_t ve_prtInputType[7] = {
 			1,		/* prtInputType_other	*/
 			2,		/* prtInputType_unknown	*/
 			3,		/* prtInputType_sheetFeedAutoRemovableTray	*/
@@ -5209,14 +5209,14 @@ int ve_prtInputType[7] = {
 
 /* enumerated values for MediaUnit -------------------------
 */
-int ve_MediaUnit[2] = {
+int32_t ve_MediaUnit[2] = {
 			3,		/* MediaUnit_tenThousandthsOfInches	*/
 			4 		/* MediaUnit_micrometers	*/
 };
 
 /* enumerated values for CapacityUnit ----------------------
 */
-int ve_CapacityUnit[5] = {
+int32_t ve_CapacityUnit[5] = {
 			3,		/* CapacityUnit_tenThousandthsOfInches	*/
 			4,		/* CapacityUnit_micrometers	*/
 			8,		/* CapacityUnit_sheets	*/
@@ -5226,7 +5226,7 @@ int ve_CapacityUnit[5] = {
 
 /* enumerated values for PresentOnOff ----------------------
 */
-int ve_PresentOnOff[4] = {
+int32_t ve_PresentOnOff[4] = {
 			1,		/* PresentOnOff_other	*/
 			3,		/* PresentOnOff_on	*/
 			4,		/* PresentOnOff_off	*/
@@ -5235,7 +5235,7 @@ int ve_PresentOnOff[4] = {
 
 /* enumerated values for prtOutputType ---------------------
 */
-int ve_prtOutputType[7] = {
+int32_t ve_prtOutputType[7] = {
 			1,		/* prtOutputType_other	*/
 			2,		/* prtOutputType_unknown	*/
 			3,		/* prtOutputType_removableBin	*/
@@ -5247,7 +5247,7 @@ int ve_prtOutputType[7] = {
 
 /* enumerated values for prtOutputStackingOrder ------------
 */
-int ve_prtOutputStackingOrder[3] = {
+int32_t ve_prtOutputStackingOrder[3] = {
 			2,		/* prtOutputStackingOrder_unknown	*/
 			3,		/* prtOutputStackingOrder_firstToLast	*/
 			4 		/* prtOutputStackingOrder_lastToFirst	*/
@@ -5255,14 +5255,14 @@ int ve_prtOutputStackingOrder[3] = {
 
 /* enumerated values for prtOutputPageDeliveryOrientation --
 */
-int ve_prtOutputPageDeliveryOrientation[2] = {
+int32_t ve_prtOutputPageDeliveryOrientation[2] = {
 			3,		/* prtOutputPageDeliveryOrientation_faceUp	*/
 			4 		/* prtOutputPageDeliveryOrientation_faceDown	*/
 };
 
 /* enumerated values for prtMarkerMarkTech -----------------
 */
-int ve_prtMarkerMarkTech[27] = {
+int32_t ve_prtMarkerMarkTech[27] = {
 			1,		/* prtMarkerMarkTech_other	*/
 			2,		/* prtMarkerMarkTech_unknown	*/
 			3,		/* prtMarkerMarkTech_electrophotographicLED	*/
@@ -5294,7 +5294,7 @@ int ve_prtMarkerMarkTech[27] = {
 
 /* enumerated values for prtMarkerCounterUnit --------------
 */
-int ve_prtMarkerCounterUnit[10] = {
+int32_t ve_prtMarkerCounterUnit[10] = {
 			3,		/* prtMarkerCounterUnit_tenThousandthsOfInches	*/
 			4,		/* prtMarkerCounterUnit_micrometers	*/
 			5,		/* prtMarkerCounterUnit_characters	*/
@@ -5309,14 +5309,14 @@ int ve_prtMarkerCounterUnit[10] = {
 
 /* enumerated values for prtMarkerAddressabilityUnit -------
 */
-int ve_prtMarkerAddressabilityUnit[2] = {
+int32_t ve_prtMarkerAddressabilityUnit[2] = {
 			3,		/* prtMarkerAddressabilityUnit_tenThousandthsOfInches	*/
 			4 		/* prtMarkerAddressabilityUnit_micrometers	*/
 };
 
 /* enumerated values for prtMarkerSuppliesClass ------------
 */
-int ve_prtMarkerSuppliesClass[3] = {
+int32_t ve_prtMarkerSuppliesClass[3] = {
 			1,		/* prtMarkerSuppliesClass_other	*/
 			3,		/* prtMarkerSuppliesClass_supplyThatIsConsumed	*/
 			4 		/* prtMarkerSuppliesClass_receptacleThatIsFilled	*/
@@ -5324,7 +5324,7 @@ int ve_prtMarkerSuppliesClass[3] = {
 
 /* enumerated values for prtMarkerSuppliesType -------------
 */
-int ve_prtMarkerSuppliesType[14] = {
+int32_t ve_prtMarkerSuppliesType[14] = {
 			1,		/* prtMarkerSuppliesType_other	*/
 			2,		/* prtMarkerSuppliesType_unknown	*/
 			3,		/* prtMarkerSuppliesType_toner	*/
@@ -5343,7 +5343,7 @@ int ve_prtMarkerSuppliesType[14] = {
 
 /* enumerated values for prtMarkerSuppliesSupplyUnit -------
 */
-int ve_prtMarkerSuppliesSupplyUnit[6] = {
+int32_t ve_prtMarkerSuppliesSupplyUnit[6] = {
 			3,		/* prtMarkerSuppliesSupplyUnit_tenThousandthsOfInches	*/
 			4,		/* prtMarkerSuppliesSupplyUnit_micrometers	*/
 			12,		/* prtMarkerSuppliesSupplyUnit_thousandthsOfOunces	*/
@@ -5354,7 +5354,7 @@ int ve_prtMarkerSuppliesSupplyUnit[6] = {
 
 /* enumerated values for prtMarkerColorantRole -------------
 */
-int ve_prtMarkerColorantRole[3] = {
+int32_t ve_prtMarkerColorantRole[3] = {
 			1,		/* prtMarkerColorantRole_other	*/
 			3,		/* prtMarkerColorantRole_process	*/
 			4 		/* prtMarkerColorantRole_spot	*/
@@ -5362,7 +5362,7 @@ int ve_prtMarkerColorantRole[3] = {
 
 /* enumerated values for prtMediaPathMaxSpeedPrintUnit -----
 */
-int ve_prtMediaPathMaxSpeedPrintUnit[9] = {
+int32_t ve_prtMediaPathMaxSpeedPrintUnit[9] = {
 			3,		/* prtMediaPathMaxSpeedPrintUnit_tenThousandthsOfInchesPerHour	*/
 			4,		/* prtMediaPathMaxSpeedPrintUnit_micrometersPerHour	*/
 			5,		/* prtMediaPathMaxSpeedPrintUnit_charactersPerHour	*/
@@ -5376,7 +5376,7 @@ int ve_prtMediaPathMaxSpeedPrintUnit[9] = {
 
 /* enumerated values for prtMediaPathType ------------------
 */
-int ve_prtMediaPathType[5] = {
+int32_t ve_prtMediaPathType[5] = {
 			1,		/* prtMediaPathType_other	*/
 			2,		/* prtMediaPathType_unknown	*/
 			3,		/* prtMediaPathType_longEdgeBindingDuplex	*/
@@ -5386,7 +5386,7 @@ int ve_prtMediaPathType[5] = {
 
 /* enumerated values for prtChannelType --------------------
 */
-int ve_prtChannelType[32] = {
+int32_t ve_prtChannelType[32] = {
 			1,		/* prtChannelType_other	*/
 			3,		/* prtChannelType_chSerialPort	*/
 			4,		/* prtChannelType_chParallelPort	*/
@@ -5423,7 +5423,7 @@ int ve_prtChannelType[32] = {
 
 /* enumerated values for prtChannelState -------------------
 */
-int ve_prtChannelState[3] = {
+int32_t ve_prtChannelState[3] = {
 			1,		/* prtChannelState_other	*/
 			3,		/* prtChannelState_printDataAccepted	*/
 			4 		/* prtChannelState_noDataAccepted	*/
@@ -5431,7 +5431,7 @@ int ve_prtChannelState[3] = {
 
 /* enumerated values for prtInterpreterLangFamily ----------
 */
-int ve_prtInterpreterLangFamily[45] = {
+int32_t ve_prtInterpreterLangFamily[45] = {
 			1,		/* prtInterpreterLangFamily_other	*/
 			3,		/* prtInterpreterLangFamily_langPCL	*/
 			4,		/* prtInterpreterLangFamily_langHPGL	*/
@@ -5481,7 +5481,7 @@ int ve_prtInterpreterLangFamily[45] = {
 
 /* enumerated values for prtInterpreterDefaultOrientation --
 */
-int ve_prtInterpreterDefaultOrientation[3] = {
+int32_t ve_prtInterpreterDefaultOrientation[3] = {
 			1,		/* prtInterpreterDefaultOrientation_other	*/
 			3,		/* prtInterpreterDefaultOrientation_portrait	*/
 			4 		/* prtInterpreterDefaultOrientation_landscape	*/
@@ -5489,14 +5489,14 @@ int ve_prtInterpreterDefaultOrientation[3] = {
 
 /* enumerated values for prtInterpreterTwoWay --------------
 */
-int ve_prtInterpreterTwoWay[2] = {
+int32_t ve_prtInterpreterTwoWay[2] = {
 			3,		/* prtInterpreterTwoWay_yes	*/
 			4 		/* prtInterpreterTwoWay_no	*/
 };
 
 /* enumerated values for prtConsoleColor -------------------
 */
-int ve_prtConsoleColor[9] = {
+int32_t ve_prtConsoleColor[9] = {
 			1,		/* prtConsoleColor_other	*/
 			2,		/* prtConsoleColor_unknown	*/
 			3,		/* prtConsoleColor_white	*/
@@ -5510,7 +5510,7 @@ int ve_prtConsoleColor[9] = {
 
 /* enumerated values for prtAlertSeverityLevel -------------
 */
-int ve_prtAlertSeverityLevel[3] = {
+int32_t ve_prtAlertSeverityLevel[3] = {
 			1,		/* prtAlertSeverityLevel_other	*/
 			3,		/* prtAlertSeverityLevel_critical	*/
 			4 		/* prtAlertSeverityLevel_warning	*/
@@ -5518,7 +5518,7 @@ int ve_prtAlertSeverityLevel[3] = {
 
 /* enumerated values for prtAlertTrainingLevel -------------
 */
-int ve_prtAlertTrainingLevel[6] = {
+int32_t ve_prtAlertTrainingLevel[6] = {
 			1,		/* prtAlertTrainingLevel_other	*/
 			2,		/* prtAlertTrainingLevel_unknown	*/
 			3,		/* prtAlertTrainingLevel_untrained	*/
@@ -5529,7 +5529,7 @@ int ve_prtAlertTrainingLevel[6] = {
 
 /* enumerated values for prtAlertGroup ---------------------
 */
-int ve_prtAlertGroup[16] = {
+int32_t ve_prtAlertGroup[16] = {
 			1,		/* prtAlertGroup_other	*/
 			3,		/* prtAlertGroup_hostResourcesMIBStorageTable	*/
 			4,		/* prtAlertGroup_hostResourcesMIBDeviceTable	*/
@@ -5550,7 +5550,7 @@ int ve_prtAlertGroup[16] = {
 
 /* enumerated values for prtAlertCode ----------------------
 */
-int ve_prtAlertCode[49] = {
+int32_t ve_prtAlertCode[49] = {
 			1,		/* prtAlertCode_other	*/
 			2,		/* prtAlertCode_unknown	*/
 			3,		/* prtAlertCode_coverOpen	*/
@@ -5917,7 +5917,7 @@ const bmib_enumvals_t g_mib_enums[BMIBC_NUM_RECORDS] = {
 */
 uint8_t _vvs_NVRAMSIGNATURE[33];
 const uint8_t _fvs_NVRAMSIGNATURE[/*max of 33*/] = {
-        "\x20NV-Fri Mar  8 18:05:11 2019     "
+        "\x20NV-Thu Mar 14 17:44:44 2019     "
 };
 
 /* storage for string value(s) for sysDescr
@@ -5947,8 +5947,8 @@ uint8_t _vvs_sysLocation[256];
 
 /* storage for multi-dimensional property sysORIndex
 */
-      int _vva_sysORIndex[1];
-const int _fva_sysORIndex[1] = { 1 };
+      int32_t _vva_sysORIndex[1];
+const int32_t _fva_sysORIndex[1] = { 1 };
 
 /* storage for string value(s) for sysORID
 */
@@ -5967,8 +5967,8 @@ const uint32_t _fva_sysORUpTime[1] = { };
 
 /* storage for multi-dimensional property ifIndex
 */
-      int _vva_ifIndex[1];
-const int _fva_ifIndex[1] = { 1 };
+      int32_t _vva_ifIndex[1];
+const int32_t _fva_ifIndex[1] = { 1 };
 
 /* storage for string value(s) for ifDescr
 */
@@ -5977,13 +5977,13 @@ uint8_t _vvs_ifDescr[256];
 
 /* storage for multi-dimensional property ifType
 */
-      int _vva_ifType[1];
-const int _fva_ifType[1] = { };
+      int32_t _vva_ifType[1];
+const int32_t _fva_ifType[1] = { };
 
 /* storage for multi-dimensional property ifMtu
 */
-      int _vva_ifMtu[1];
-const int _fva_ifMtu[1] = { };
+      int32_t _vva_ifMtu[1];
+const int32_t _fva_ifMtu[1] = { };
 
 /* storage for multi-dimensional property ifSpeed
 */
@@ -5997,13 +5997,13 @@ uint8_t _vvs_ifPhysAddress[256];
 
 /* storage for multi-dimensional property ifAdminStatus
 */
-      int _vva_ifAdminStatus[1];
-const int _fva_ifAdminStatus[1] = { };
+      int32_t _vva_ifAdminStatus[1];
+const int32_t _fva_ifAdminStatus[1] = { };
 
 /* storage for multi-dimensional property ifOperStatus
 */
-      int _vva_ifOperStatus[1];
-const int _fva_ifOperStatus[1] = { };
+      int32_t _vva_ifOperStatus[1];
+const int32_t _fva_ifOperStatus[1] = { };
 
 /* storage for multi-dimensional property ifLastChange
 */
@@ -6087,8 +6087,8 @@ uint8_t _vvs_hrSystemInitialLoadParameters[129];
 
 /* storage for multi-dimensional property hrStorageIndex
 */
-      int _vva_hrStorageIndex[1];
-const int _fva_hrStorageIndex[1] = { 1 };
+      int32_t _vva_hrStorageIndex[1];
+const int32_t _fva_hrStorageIndex[1] = { 1 };
 
 /* storage for string value(s) for hrStorageType
 */
@@ -6102,18 +6102,18 @@ uint8_t _vvs_hrStorageDescr[256];
 
 /* storage for multi-dimensional property hrStorageAllocationUnits
 */
-      int _vva_hrStorageAllocationUnits[1];
-const int _fva_hrStorageAllocationUnits[1] = { };
+      int32_t _vva_hrStorageAllocationUnits[1];
+const int32_t _fva_hrStorageAllocationUnits[1] = { };
 
 /* storage for multi-dimensional property hrStorageSize
 */
-      int _vva_hrStorageSize[1];
-const int _fva_hrStorageSize[1] = { };
+      int32_t _vva_hrStorageSize[1];
+const int32_t _fva_hrStorageSize[1] = { };
 
 /* storage for multi-dimensional property hrStorageUsed
 */
-      int _vva_hrStorageUsed[1];
-const int _fva_hrStorageUsed[1] = { };
+      int32_t _vva_hrStorageUsed[1];
+const int32_t _fva_hrStorageUsed[1] = { };
 
 /* storage for multi-dimensional property hrStorageAllocationFailures
 */
@@ -6122,8 +6122,8 @@ const uint32_t _fva_hrStorageAllocationFailures[1] = { };
 
 /* storage for multi-dimensional property hrDeviceIndex
 */
-      int _vva_hrDeviceIndex[1];
-const int _fva_hrDeviceIndex[1] = { 1 };
+      int32_t _vva_hrDeviceIndex[1];
+const int32_t _fva_hrDeviceIndex[1] = { 1 };
 
 /* storage for string value(s) for hrDeviceType
 */
@@ -6142,8 +6142,8 @@ uint8_t _vvs_hrDeviceID[256];
 
 /* storage for multi-dimensional property hrDeviceStatus
 */
-      int _vva_hrDeviceStatus[1];
-const int _fva_hrDeviceStatus[1] = { };
+      int32_t _vva_hrDeviceStatus[1];
+const int32_t _fva_hrDeviceStatus[1] = { };
 
 /* storage for multi-dimensional property hrDeviceErrors
 */
@@ -6157,18 +6157,18 @@ uint8_t _vvs_hrProcessorFrwID[256];
 
 /* storage for multi-dimensional property hrProcessorLoad
 */
-      int _vva_hrProcessorLoad[1];
-const int _fva_hrProcessorLoad[1] = { };
+      int32_t _vva_hrProcessorLoad[1];
+const int32_t _fva_hrProcessorLoad[1] = { };
 
 /* storage for multi-dimensional property hrNetworkIfIndex
 */
-      int _vva_hrNetworkIfIndex[1];
-const int _fva_hrNetworkIfIndex[1] = { };
+      int32_t _vva_hrNetworkIfIndex[1];
+const int32_t _fva_hrNetworkIfIndex[1] = { };
 
 /* storage for multi-dimensional property hrPrinterStatus
 */
-      int _vva_hrPrinterStatus[1];
-const int _fva_hrPrinterStatus[1] = { };
+      int32_t _vva_hrPrinterStatus[1];
+const int32_t _fva_hrPrinterStatus[1] = { };
 
 /* storage for string value(s) for hrPrinterDetectedErrorState
 */
@@ -6177,28 +6177,28 @@ uint8_t _vvs_hrPrinterDetectedErrorState[256];
 
 /* storage for multi-dimensional property hrDiskStorageAccess
 */
-      int _vva_hrDiskStorageAccess[1];
-const int _fva_hrDiskStorageAccess[1] = { };
+      int32_t _vva_hrDiskStorageAccess[1];
+const int32_t _fva_hrDiskStorageAccess[1] = { };
 
 /* storage for multi-dimensional property hrDiskStorageMedia
 */
-      int _vva_hrDiskStorageMedia[1];
-const int _fva_hrDiskStorageMedia[1] = { };
+      int32_t _vva_hrDiskStorageMedia[1];
+const int32_t _fva_hrDiskStorageMedia[1] = { };
 
 /* storage for multi-dimensional property hrDiskStorageRemoveble
 */
-      int _vva_hrDiskStorageRemoveble[1];
-const int _fva_hrDiskStorageRemoveble[1] = { };
+      int32_t _vva_hrDiskStorageRemoveble[1];
+const int32_t _fva_hrDiskStorageRemoveble[1] = { };
 
 /* storage for multi-dimensional property hrDiskStorageCapacity
 */
-      int _vva_hrDiskStorageCapacity[1];
-const int _fva_hrDiskStorageCapacity[1] = { };
+      int32_t _vva_hrDiskStorageCapacity[1];
+const int32_t _fva_hrDiskStorageCapacity[1] = { };
 
 /* storage for multi-dimensional property hrPartitionIndex
 */
-      int _vva_hrPartitionIndex[1];
-const int _fva_hrPartitionIndex[1] = { 1 };
+      int32_t _vva_hrPartitionIndex[1];
+const int32_t _fva_hrPartitionIndex[1] = { 1 };
 
 /* storage for string value(s) for hrPartitionLabel
 */
@@ -6212,18 +6212,18 @@ uint8_t _vvs_hrPartitionID[256];
 
 /* storage for multi-dimensional property hrPartitionSize
 */
-      int _vva_hrPartitionSize[1];
-const int _fva_hrPartitionSize[1] = { };
+      int32_t _vva_hrPartitionSize[1];
+const int32_t _fva_hrPartitionSize[1] = { };
 
 /* storage for multi-dimensional property hrPartitionFSIndex
 */
-      int _vva_hrPartitionFSIndex[1];
-const int _fva_hrPartitionFSIndex[1] = { };
+      int32_t _vva_hrPartitionFSIndex[1];
+const int32_t _fva_hrPartitionFSIndex[1] = { };
 
 /* storage for multi-dimensional property hrFSIndex
 */
-      int _vva_hrFSIndex[1];
-const int _fva_hrFSIndex[1] = { 1 };
+      int32_t _vva_hrFSIndex[1];
+const int32_t _fva_hrFSIndex[1] = { 1 };
 
 /* storage for string value(s) for hrFSMountPoint
 */
@@ -6242,18 +6242,18 @@ uint8_t _vvs_hrFSType[256];
 
 /* storage for multi-dimensional property hrFSAccess
 */
-      int _vva_hrFSAccess[1];
-const int _fva_hrFSAccess[1] = { };
+      int32_t _vva_hrFSAccess[1];
+const int32_t _fva_hrFSAccess[1] = { };
 
 /* storage for multi-dimensional property hrFSBootable
 */
-      int _vva_hrFSBootable[1];
-const int _fva_hrFSBootable[1] = { };
+      int32_t _vva_hrFSBootable[1];
+const int32_t _fva_hrFSBootable[1] = { };
 
 /* storage for multi-dimensional property hrFSStorageIndex
 */
-      int _vva_hrFSStorageIndex[1];
-const int _fva_hrFSStorageIndex[1] = { };
+      int32_t _vva_hrFSStorageIndex[1];
+const int32_t _fva_hrFSStorageIndex[1] = { };
 
 /* storage for string value(s) for hrFSLastFullBackupDate
 */
@@ -6267,8 +6267,8 @@ uint8_t _vvs_hrFSLastPartialBackupDate[12];
 
 /* storage for multi-dimensional property hrSWRunIndex
 */
-      int _vva_hrSWRunIndex[1];
-const int _fva_hrSWRunIndex[1] = { 1 };
+      int32_t _vva_hrSWRunIndex[1];
+const int32_t _fva_hrSWRunIndex[1] = { 1 };
 
 /* storage for string value(s) for hrSWRunName
 */
@@ -6292,18 +6292,18 @@ uint8_t _vvs_hrSWRunParameters[129];
 
 /* storage for multi-dimensional property hrSWRunType
 */
-      int _vva_hrSWRunType[1];
-const int _fva_hrSWRunType[1] = { };
+      int32_t _vva_hrSWRunType[1];
+const int32_t _fva_hrSWRunType[1] = { };
 
 /* storage for multi-dimensional property hrSWRunStatus
 */
-      int _vva_hrSWRunStatus[1];
-const int _fva_hrSWRunStatus[1] = { };
+      int32_t _vva_hrSWRunStatus[1];
+const int32_t _fva_hrSWRunStatus[1] = { };
 
 /* storage for multi-dimensional property hrSWInstalledIndex
 */
-      int _vva_hrSWInstalledIndex[1];
-const int _fva_hrSWInstalledIndex[1] = { 1 };
+      int32_t _vva_hrSWInstalledIndex[1];
+const int32_t _fva_hrSWInstalledIndex[1] = { 1 };
 
 /* storage for string value(s) for hrSWInstalledName
 */
@@ -6317,8 +6317,8 @@ uint8_t _vvs_hrSWInstalledID[256];
 
 /* storage for multi-dimensional property hrSWInstalledType
 */
-      int _vva_hrSWInstalledType[1];
-const int _fva_hrSWInstalledType[1] = { };
+      int32_t _vva_hrSWInstalledType[1];
+const int32_t _fva_hrSWInstalledType[1] = { };
 
 /* storage for string value(s) for hrSWInstalledDate
 */
@@ -6385,18 +6385,18 @@ uint8_t _vvs_ifAlias[65];
 
 /* storage for multi-dimensional property ifStackHigherLayer
 */
-      int _vva_ifStackHigherLayer[1];
-const int _fva_ifStackHigherLayer[1] = { 1 };
+      int32_t _vva_ifStackHigherLayer[1];
+const int32_t _fva_ifStackHigherLayer[1] = { 1 };
 
 /* storage for multi-dimensional property ifStackLowerLayer
 */
-      int _vva_ifStackLowerLayer[1];
-const int _fva_ifStackLowerLayer[1] = { 1 };
+      int32_t _vva_ifStackLowerLayer[1];
+const int32_t _fva_ifStackLowerLayer[1] = { 1 };
 
 /* storage for multi-dimensional property ifStackStatus
 */
-      int _vva_ifStackStatus[1];
-const int _fva_ifStackStatus[1] = { };
+      int32_t _vva_ifStackStatus[1];
+const int32_t _fva_ifStackStatus[1] = { };
 
 /* storage for multi-dimensional property prtGeneralConfigChanges
 */
@@ -6405,13 +6405,13 @@ const uint32_t _fva_prtGeneralConfigChanges[1] = { };
 
 /* storage for multi-dimensional property prtGeneralCurrentLocalization
 */
-      int _vva_prtGeneralCurrentLocalization[1];
-const int _fva_prtGeneralCurrentLocalization[1] = { };
+      int32_t _vva_prtGeneralCurrentLocalization[1];
+const int32_t _fva_prtGeneralCurrentLocalization[1] = { };
 
 /* storage for multi-dimensional property prtGeneralReset
 */
-      int _vva_prtGeneralReset[1];
-const int _fva_prtGeneralReset[1] = { };
+      int32_t _vva_prtGeneralReset[1];
+const int32_t _fva_prtGeneralReset[1] = { };
 
 /* storage for string value(s) for prtGeneralCurrentOperator
 */
@@ -6425,68 +6425,68 @@ uint8_t _vvs_prtGeneralServicePerson[128];
 
 /* storage for multi-dimensional property prtInputDefaultIndex
 */
-      int _vva_prtInputDefaultIndex[1];
-const int _fva_prtInputDefaultIndex[1] = { };
+      int32_t _vva_prtInputDefaultIndex[1];
+const int32_t _fva_prtInputDefaultIndex[1] = { };
 
 /* storage for multi-dimensional property prtOutputDefaultIndex
 */
-      int _vva_prtOutputDefaultIndex[1];
-const int _fva_prtOutputDefaultIndex[1] = { };
+      int32_t _vva_prtOutputDefaultIndex[1];
+const int32_t _fva_prtOutputDefaultIndex[1] = { };
 
 /* storage for multi-dimensional property prtMarkerDefaultIndex
 */
-      int _vva_prtMarkerDefaultIndex[1];
-const int _fva_prtMarkerDefaultIndex[1] = { };
+      int32_t _vva_prtMarkerDefaultIndex[1];
+const int32_t _fva_prtMarkerDefaultIndex[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathDefaultIndex
 */
-      int _vva_prtMediaPathDefaultIndex[1];
-const int _fva_prtMediaPathDefaultIndex[1] = { };
+      int32_t _vva_prtMediaPathDefaultIndex[1];
+const int32_t _fva_prtMediaPathDefaultIndex[1] = { };
 
 /* storage for multi-dimensional property prtConsoleLocalization
 */
-      int _vva_prtConsoleLocalization[1];
-const int _fva_prtConsoleLocalization[1] = { };
+      int32_t _vva_prtConsoleLocalization[1];
+const int32_t _fva_prtConsoleLocalization[1] = { };
 
 /* storage for multi-dimensional property prtConsoleNumberOfDisplayLines
 */
-      int _vva_prtConsoleNumberOfDisplayLines[1];
-const int _fva_prtConsoleNumberOfDisplayLines[1] = { };
+      int32_t _vva_prtConsoleNumberOfDisplayLines[1];
+const int32_t _fva_prtConsoleNumberOfDisplayLines[1] = { };
 
 /* storage for multi-dimensional property prtConsoleNumberOfDisplayChars
 */
-      int _vva_prtConsoleNumberOfDisplayChars[1];
-const int _fva_prtConsoleNumberOfDisplayChars[1] = { };
+      int32_t _vva_prtConsoleNumberOfDisplayChars[1];
+const int32_t _fva_prtConsoleNumberOfDisplayChars[1] = { };
 
 /* storage for multi-dimensional property prtConsoleDisable
 */
-      int _vva_prtConsoleDisable[1];
-const int _fva_prtConsoleDisable[1] = { };
+      int32_t _vva_prtConsoleDisable[1];
+const int32_t _fva_prtConsoleDisable[1] = { };
 
 /* storage for multi-dimensional property prtStorageRefSeqNumber
 */
-      int _vva_prtStorageRefSeqNumber[1];
-const int _fva_prtStorageRefSeqNumber[1] = { 1 };
+      int32_t _vva_prtStorageRefSeqNumber[1];
+const int32_t _fva_prtStorageRefSeqNumber[1] = { 1 };
 
 /* storage for multi-dimensional property prtStorageRefIndex
 */
-      int _vva_prtStorageRefIndex[1];
-const int _fva_prtStorageRefIndex[1] = { };
+      int32_t _vva_prtStorageRefIndex[1];
+const int32_t _fva_prtStorageRefIndex[1] = { };
 
 /* storage for multi-dimensional property prtDeviceRefSeqNumber
 */
-      int _vva_prtDeviceRefSeqNumber[1];
-const int _fva_prtDeviceRefSeqNumber[1] = { 1 };
+      int32_t _vva_prtDeviceRefSeqNumber[1];
+const int32_t _fva_prtDeviceRefSeqNumber[1] = { 1 };
 
 /* storage for multi-dimensional property prtDeviceRefIndex
 */
-      int _vva_prtDeviceRefIndex[1];
-const int _fva_prtDeviceRefIndex[1] = { };
+      int32_t _vva_prtDeviceRefIndex[1];
+const int32_t _fva_prtDeviceRefIndex[1] = { };
 
 /* storage for multi-dimensional property prtCoverIndex
 */
-      int _vva_prtCoverIndex[1];
-const int _fva_prtCoverIndex[1] = { 1 };
+      int32_t _vva_prtCoverIndex[1];
+const int32_t _fva_prtCoverIndex[1] = { 1 };
 
 /* storage for string value(s) for prtCoverDescription
 */
@@ -6495,13 +6495,13 @@ uint8_t _vvs_prtCoverDescription[256];
 
 /* storage for multi-dimensional property prtCoverStatus
 */
-      int _vva_prtCoverStatus[1];
-const int _fva_prtCoverStatus[1] = { };
+      int32_t _vva_prtCoverStatus[1];
+const int32_t _fva_prtCoverStatus[1] = { };
 
 /* storage for multi-dimensional property prtLocalizationIndex
 */
-      int _vva_prtLocalizationIndex[1];
-const int _fva_prtLocalizationIndex[1] = { 1 };
+      int32_t _vva_prtLocalizationIndex[1];
+const int32_t _fva_prtLocalizationIndex[1] = { 1 };
 
 /* storage for string value(s) for prtLocalizationLanguage
 */
@@ -6515,153 +6515,163 @@ uint8_t _vvs_prtLocalizationCountry[3];
 
 /* storage for multi-dimensional property prtLocalizationCharacterSet
 */
-      int _vva_prtLocalizationCharacterSet[1];
-const int _fva_prtLocalizationCharacterSet[1] = { };
+      int32_t _vva_prtLocalizationCharacterSet[1];
+const int32_t _fva_prtLocalizationCharacterSet[1] = { };
 
 /* storage for multi-dimensional property prtInputIndex
 */
-      int _vva_prtInputIndex[1];
-const int _fva_prtInputIndex[1] = { 1 };
+      int32_t _vva_prtInputIndex[4];
+const int32_t _fva_prtInputIndex[4] = { 1, 2, 3, 4 };
 
 /* storage for multi-dimensional property prtInputType
 */
-      int _vva_prtInputType[1];
-const int _fva_prtInputType[1] = { };
+      int32_t _vva_prtInputType[4];
+const int32_t _fva_prtInputType[4] = { 3, 3, 3, 4 };
 
 /* storage for multi-dimensional property prtInputDimUnit
 */
-      int _vva_prtInputDimUnit[1];
-const int _fva_prtInputDimUnit[1] = { };
+      int32_t _vva_prtInputDimUnit[4];
+const int32_t _fva_prtInputDimUnit[4] = { 3, 3, 3, 3 };
 
 /* storage for multi-dimensional property prtInputMediaDimFeedDirDeclared
 */
-      int _vva_prtInputMediaDimFeedDirDeclared[1];
-const int _fva_prtInputMediaDimFeedDirDeclared[1] = { };
+      int32_t _vva_prtInputMediaDimFeedDirDeclared[4];
+const int32_t _fva_prtInputMediaDimFeedDirDeclared[4] = { };
 
 /* storage for multi-dimensional property prtInputMediaDimXFeedDirDeclared
 */
-      int _vva_prtInputMediaDimXFeedDirDeclared[1];
-const int _fva_prtInputMediaDimXFeedDirDeclared[1] = { };
+      int32_t _vva_prtInputMediaDimXFeedDirDeclared[4];
+const int32_t _fva_prtInputMediaDimXFeedDirDeclared[4] = { };
 
 /* storage for multi-dimensional property prtInputMediaDimFeedDirChosen
 */
-      int _vva_prtInputMediaDimFeedDirChosen[1];
-const int _fva_prtInputMediaDimFeedDirChosen[1] = { };
+      int32_t _vva_prtInputMediaDimFeedDirChosen[4];
+const int32_t _fva_prtInputMediaDimFeedDirChosen[4] = { };
 
 /* storage for multi-dimensional property prtInputMediaDimXFeedDirChosen
 */
-      int _vva_prtInputMediaDimXFeedDirChosen[1];
-const int _fva_prtInputMediaDimXFeedDirChosen[1] = { };
+      int32_t _vva_prtInputMediaDimXFeedDirChosen[4];
+const int32_t _fva_prtInputMediaDimXFeedDirChosen[4] = { };
 
 /* storage for multi-dimensional property prtInputCapacityUnit
 */
-      int _vva_prtInputCapacityUnit[1];
-const int _fva_prtInputCapacityUnit[1] = { };
+      int32_t _vva_prtInputCapacityUnit[4];
+const int32_t _fva_prtInputCapacityUnit[4] = { };
 
 /* storage for multi-dimensional property prtInputMaxCapacity
 */
-      int _vva_prtInputMaxCapacity[1];
-const int _fva_prtInputMaxCapacity[1] = { };
+      int32_t _vva_prtInputMaxCapacity[4];
+const int32_t _fva_prtInputMaxCapacity[4] = { };
 
 /* storage for multi-dimensional property prtInputCurrentLevel
 */
-      int _vva_prtInputCurrentLevel[1];
-const int _fva_prtInputCurrentLevel[1] = { };
+      int32_t _vva_prtInputCurrentLevel[4];
+const int32_t _fva_prtInputCurrentLevel[4] = { };
 
 /* storage for multi-dimensional property prtInputStatus
 */
-      int _vva_prtInputStatus[1];
-const int _fva_prtInputStatus[1] = { };
+      int32_t _vva_prtInputStatus[4];
+const int32_t _fva_prtInputStatus[4] = { };
 
 /* storage for string value(s) for prtInputMediaName
 */
-uint8_t _vvs_prtInputMediaName[64];
-
+uint8_t _vvs_prtInputMediaName[256];
+const uint8_t _fvs_prtInputMediaName[/*max of 256*/] = {
+        "\x08\x41\x34 plain"
+        "\x0CLetter plain"
+        "\x09\x35x7 Photo"
+        "\x07Unknown"
+};
 
 /* storage for string value(s) for prtInputName
 */
-uint8_t _vvs_prtInputName[64];
-
+uint8_t _vvs_prtInputName[256];
+const uint8_t _fvs_prtInputName[/*max of 256*/] = {
+        "\x0ALower Tray"
+        "\x0BMiddle Tray"
+        "\x0APhoto Tray"
+        "\x0BManual Feed"
+};
 
 /* storage for string value(s) for prtInputVendorName
 */
-uint8_t _vvs_prtInputVendorName[64];
+uint8_t _vvs_prtInputVendorName[256];
 
 
 /* storage for string value(s) for prtInputModel
 */
-uint8_t _vvs_prtInputModel[64];
+uint8_t _vvs_prtInputModel[256];
 
 
 /* storage for string value(s) for prtInputVersion
 */
-uint8_t _vvs_prtInputVersion[64];
+uint8_t _vvs_prtInputVersion[256];
 
 
 /* storage for string value(s) for prtInputSerialNumber
 */
-uint8_t _vvs_prtInputSerialNumber[33];
+uint8_t _vvs_prtInputSerialNumber[132];
 
 
 /* storage for string value(s) for prtInputDescription
 */
-uint8_t _vvs_prtInputDescription[256];
+uint8_t _vvs_prtInputDescription[1024];
 
 
 /* storage for multi-dimensional property prtInputSecurity
 */
-      int _vva_prtInputSecurity[1];
-const int _fva_prtInputSecurity[1] = { };
+      int32_t _vva_prtInputSecurity[4];
+const int32_t _fva_prtInputSecurity[4] = { };
 
 /* storage for multi-dimensional property prtInputMediaWeight
 */
-      int _vva_prtInputMediaWeight[1];
-const int _fva_prtInputMediaWeight[1] = { };
+      int32_t _vva_prtInputMediaWeight[4];
+const int32_t _fva_prtInputMediaWeight[4] = { };
 
 /* storage for string value(s) for prtInputMediaType
 */
-uint8_t _vvs_prtInputMediaType[64];
+uint8_t _vvs_prtInputMediaType[256];
 
 
 /* storage for string value(s) for prtInputMediaColor
 */
-uint8_t _vvs_prtInputMediaColor[64];
+uint8_t _vvs_prtInputMediaColor[256];
 
 
 /* storage for multi-dimensional property prtInputMediaFormParts
 */
-      int _vva_prtInputMediaFormParts[1];
-const int _fva_prtInputMediaFormParts[1] = { };
+      int32_t _vva_prtInputMediaFormParts[4];
+const int32_t _fva_prtInputMediaFormParts[4] = { };
 
 /* storage for multi-dimensional property prtOutputIndex
 */
-      int _vva_prtOutputIndex[1];
-const int _fva_prtOutputIndex[1] = { 1 };
+      int32_t _vva_prtOutputIndex[1];
+const int32_t _fva_prtOutputIndex[1] = { 1 };
 
 /* storage for multi-dimensional property prtOutputType
 */
-      int _vva_prtOutputType[1];
-const int _fva_prtOutputType[1] = { };
+      int32_t _vva_prtOutputType[1];
+const int32_t _fva_prtOutputType[1] = { };
 
 /* storage for multi-dimensional property prtOutputCapacityUnit
 */
-      int _vva_prtOutputCapacityUnit[1];
-const int _fva_prtOutputCapacityUnit[1] = { };
+      int32_t _vva_prtOutputCapacityUnit[1];
+const int32_t _fva_prtOutputCapacityUnit[1] = { };
 
 /* storage for multi-dimensional property prtOutputMaxCapacity
 */
-      int _vva_prtOutputMaxCapacity[1];
-const int _fva_prtOutputMaxCapacity[1] = { };
+      int32_t _vva_prtOutputMaxCapacity[1];
+const int32_t _fva_prtOutputMaxCapacity[1] = { };
 
 /* storage for multi-dimensional property prtOutputRemainingCapacity
 */
-      int _vva_prtOutputRemainingCapacity[1];
-const int _fva_prtOutputRemainingCapacity[1] = { };
+      int32_t _vva_prtOutputRemainingCapacity[1];
+const int32_t _fva_prtOutputRemainingCapacity[1] = { };
 
 /* storage for multi-dimensional property prtOutputStatus
 */
-      int _vva_prtOutputStatus[1];
-const int _fva_prtOutputStatus[1] = { };
+      int32_t _vva_prtOutputStatus[1];
+const int32_t _fva_prtOutputStatus[1] = { };
 
 /* storage for string value(s) for prtOutputName
 */
@@ -6695,253 +6705,258 @@ uint8_t _vvs_prtOutputDescription[256];
 
 /* storage for multi-dimensional property prtOutputSecurity
 */
-      int _vva_prtOutputSecurity[1];
-const int _fva_prtOutputSecurity[1] = { };
+      int32_t _vva_prtOutputSecurity[1];
+const int32_t _fva_prtOutputSecurity[1] = { };
 
 /* storage for multi-dimensional property prtOutputDimUnit
 */
-      int _vva_prtOutputDimUnit[1];
-const int _fva_prtOutputDimUnit[1] = { };
+      int32_t _vva_prtOutputDimUnit[1];
+const int32_t _fva_prtOutputDimUnit[1] = { };
 
 /* storage for multi-dimensional property prtOutputMaxDimFeedDir
 */
-      int _vva_prtOutputMaxDimFeedDir[1];
-const int _fva_prtOutputMaxDimFeedDir[1] = { };
+      int32_t _vva_prtOutputMaxDimFeedDir[1];
+const int32_t _fva_prtOutputMaxDimFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtOutputMaxDimXFeedDir
 */
-      int _vva_prtOutputMaxDimXFeedDir[1];
-const int _fva_prtOutputMaxDimXFeedDir[1] = { };
+      int32_t _vva_prtOutputMaxDimXFeedDir[1];
+const int32_t _fva_prtOutputMaxDimXFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtOutputMinDimFeedDir
 */
-      int _vva_prtOutputMinDimFeedDir[1];
-const int _fva_prtOutputMinDimFeedDir[1] = { };
+      int32_t _vva_prtOutputMinDimFeedDir[1];
+const int32_t _fva_prtOutputMinDimFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtOutputMinDimXFeedDir
 */
-      int _vva_prtOutputMinDimXFeedDir[1];
-const int _fva_prtOutputMinDimXFeedDir[1] = { };
+      int32_t _vva_prtOutputMinDimXFeedDir[1];
+const int32_t _fva_prtOutputMinDimXFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtOutputStackingOrder
 */
-      int _vva_prtOutputStackingOrder[1];
-const int _fva_prtOutputStackingOrder[1] = { };
+      int32_t _vva_prtOutputStackingOrder[1];
+const int32_t _fva_prtOutputStackingOrder[1] = { };
 
 /* storage for multi-dimensional property prtOutputPageDeliveryOrientation
 */
-      int _vva_prtOutputPageDeliveryOrientation[1];
-const int _fva_prtOutputPageDeliveryOrientation[1] = { };
+      int32_t _vva_prtOutputPageDeliveryOrientation[1];
+const int32_t _fva_prtOutputPageDeliveryOrientation[1] = { };
 
 /* storage for multi-dimensional property prtOutputBursting
 */
-      int _vva_prtOutputBursting[1];
-const int _fva_prtOutputBursting[1] = { };
+      int32_t _vva_prtOutputBursting[1];
+const int32_t _fva_prtOutputBursting[1] = { };
 
 /* storage for multi-dimensional property prtOutputDecollating
 */
-      int _vva_prtOutputDecollating[1];
-const int _fva_prtOutputDecollating[1] = { };
+      int32_t _vva_prtOutputDecollating[1];
+const int32_t _fva_prtOutputDecollating[1] = { };
 
 /* storage for multi-dimensional property prtOutputPageCollated
 */
-      int _vva_prtOutputPageCollated[1];
-const int _fva_prtOutputPageCollated[1] = { };
+      int32_t _vva_prtOutputPageCollated[1];
+const int32_t _fva_prtOutputPageCollated[1] = { };
 
 /* storage for multi-dimensional property prtOutputOffsetStacking
 */
-      int _vva_prtOutputOffsetStacking[1];
-const int _fva_prtOutputOffsetStacking[1] = { };
+      int32_t _vva_prtOutputOffsetStacking[1];
+const int32_t _fva_prtOutputOffsetStacking[1] = { };
 
 /* storage for multi-dimensional property prtMarkerIndex
 */
-      int _vva_prtMarkerIndex[1];
-const int _fva_prtMarkerIndex[1] = { 1 };
+      int32_t _vva_prtMarkerIndex[4];
+const int32_t _fva_prtMarkerIndex[4] = { 1, 2, 3, 4 };
 
 /* storage for multi-dimensional property prtMarkerMarkTech
 */
-      int _vva_prtMarkerMarkTech[1];
-const int _fva_prtMarkerMarkTech[1] = { };
+      int32_t _vva_prtMarkerMarkTech[4];
+const int32_t _fva_prtMarkerMarkTech[4] = { 4, 4, 4, 4 };
 
 /* storage for multi-dimensional property prtMarkerCounterUnit
 */
-      int _vva_prtMarkerCounterUnit[1];
-const int _fva_prtMarkerCounterUnit[1] = { };
+      int32_t _vva_prtMarkerCounterUnit[4];
+const int32_t _fva_prtMarkerCounterUnit[4] = { };
 
 /* storage for multi-dimensional property prtMarkerLifeCount
 */
-      uint32_t _vva_prtMarkerLifeCount[1];
-const uint32_t _fva_prtMarkerLifeCount[1] = { };
+      uint32_t _vva_prtMarkerLifeCount[4];
+const uint32_t _fva_prtMarkerLifeCount[4] = { };
 
 /* storage for multi-dimensional property prtMarkerPowerOnCount
 */
-      uint32_t _vva_prtMarkerPowerOnCount[1];
-const uint32_t _fva_prtMarkerPowerOnCount[1] = { };
+      uint32_t _vva_prtMarkerPowerOnCount[4];
+const uint32_t _fva_prtMarkerPowerOnCount[4] = { };
 
 /* storage for multi-dimensional property prtMarkerProcessColorants
 */
-      int _vva_prtMarkerProcessColorants[1];
-const int _fva_prtMarkerProcessColorants[1] = { };
+      int32_t _vva_prtMarkerProcessColorants[4];
+const int32_t _fva_prtMarkerProcessColorants[4] = { };
 
 /* storage for multi-dimensional property prtMarkerSpotColorants
 */
-      int _vva_prtMarkerSpotColorants[1];
-const int _fva_prtMarkerSpotColorants[1] = { };
+      int32_t _vva_prtMarkerSpotColorants[4];
+const int32_t _fva_prtMarkerSpotColorants[4] = { };
 
 /* storage for multi-dimensional property prtMarkerAddressabilityUnit
 */
-      int _vva_prtMarkerAddressabilityUnit[1];
-const int _fva_prtMarkerAddressabilityUnit[1] = { };
+      int32_t _vva_prtMarkerAddressabilityUnit[4];
+const int32_t _fva_prtMarkerAddressabilityUnit[4] = { };
 
 /* storage for multi-dimensional property prtMarkerAddressabilityFeedDir
 */
-      int _vva_prtMarkerAddressabilityFeedDir[1];
-const int _fva_prtMarkerAddressabilityFeedDir[1] = { };
+      int32_t _vva_prtMarkerAddressabilityFeedDir[4];
+const int32_t _fva_prtMarkerAddressabilityFeedDir[4] = { };
 
 /* storage for multi-dimensional property prtMarkerAddressabilityXFeedDir
 */
-      int _vva_prtMarkerAddressabilityXFeedDir[1];
-const int _fva_prtMarkerAddressabilityXFeedDir[1] = { };
+      int32_t _vva_prtMarkerAddressabilityXFeedDir[4];
+const int32_t _fva_prtMarkerAddressabilityXFeedDir[4] = { };
 
 /* storage for multi-dimensional property prtMarkerNorthMargin
 */
-      int _vva_prtMarkerNorthMargin[1];
-const int _fva_prtMarkerNorthMargin[1] = { };
+      int32_t _vva_prtMarkerNorthMargin[4];
+const int32_t _fva_prtMarkerNorthMargin[4] = { };
 
 /* storage for multi-dimensional property prtMarkerSouthMargin
 */
-      int _vva_prtMarkerSouthMargin[1];
-const int _fva_prtMarkerSouthMargin[1] = { };
+      int32_t _vva_prtMarkerSouthMargin[4];
+const int32_t _fva_prtMarkerSouthMargin[4] = { };
 
 /* storage for multi-dimensional property prtMarkerWestMargin
 */
-      int _vva_prtMarkerWestMargin[1];
-const int _fva_prtMarkerWestMargin[1] = { };
+      int32_t _vva_prtMarkerWestMargin[4];
+const int32_t _fva_prtMarkerWestMargin[4] = { };
 
 /* storage for multi-dimensional property prtMarkerEastMargin
 */
-      int _vva_prtMarkerEastMargin[1];
-const int _fva_prtMarkerEastMargin[1] = { };
+      int32_t _vva_prtMarkerEastMargin[4];
+const int32_t _fva_prtMarkerEastMargin[4] = { };
 
 /* storage for multi-dimensional property prtMarkerStatus
 */
-      int _vva_prtMarkerStatus[1];
-const int _fva_prtMarkerStatus[1] = { };
+      int32_t _vva_prtMarkerStatus[4];
+const int32_t _fva_prtMarkerStatus[4] = { };
 
 /* storage for multi-dimensional property prtMarkerSuppliesIndex
 */
-      int _vva_prtMarkerSuppliesIndex[1];
-const int _fva_prtMarkerSuppliesIndex[1] = { 1 };
+      int32_t _vva_prtMarkerSuppliesIndex[4];
+const int32_t _fva_prtMarkerSuppliesIndex[4] = { 1, 2, 3, 4 };
 
 /* storage for multi-dimensional property prtMarkerSuppliesMarkerIndex
 */
-      int _vva_prtMarkerSuppliesMarkerIndex[1];
-const int _fva_prtMarkerSuppliesMarkerIndex[1] = { };
+      int32_t _vva_prtMarkerSuppliesMarkerIndex[4];
+const int32_t _fva_prtMarkerSuppliesMarkerIndex[4] = { };
 
 /* storage for multi-dimensional property prtMarkerSuppliesColorantIndex
 */
-      int _vva_prtMarkerSuppliesColorantIndex[1];
-const int _fva_prtMarkerSuppliesColorantIndex[1] = { };
+      int32_t _vva_prtMarkerSuppliesColorantIndex[4];
+const int32_t _fva_prtMarkerSuppliesColorantIndex[4] = { };
 
 /* storage for multi-dimensional property prtMarkerSuppliesClass
 */
-      int _vva_prtMarkerSuppliesClass[1];
-const int _fva_prtMarkerSuppliesClass[1] = { };
+      int32_t _vva_prtMarkerSuppliesClass[4];
+const int32_t _fva_prtMarkerSuppliesClass[4] = { };
 
 /* storage for multi-dimensional property prtMarkerSuppliesType
 */
-      int _vva_prtMarkerSuppliesType[1];
-const int _fva_prtMarkerSuppliesType[1] = { };
+      int32_t _vva_prtMarkerSuppliesType[4];
+const int32_t _fva_prtMarkerSuppliesType[4] = { 3, 3, 3, 3 };
 
 /* storage for string value(s) for prtMarkerSuppliesDescription
 */
-uint8_t _vvs_prtMarkerSuppliesDescription[256];
+uint8_t _vvs_prtMarkerSuppliesDescription[1024];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesSupplyUnit
 */
-      int _vva_prtMarkerSuppliesSupplyUnit[1];
-const int _fva_prtMarkerSuppliesSupplyUnit[1] = { };
+      int32_t _vva_prtMarkerSuppliesSupplyUnit[4];
+const int32_t _fva_prtMarkerSuppliesSupplyUnit[4] = { };
 
 /* storage for multi-dimensional property prtMarkerSuppliesMaxCapacity
 */
-      int _vva_prtMarkerSuppliesMaxCapacity[1];
-const int _fva_prtMarkerSuppliesMaxCapacity[1] = { };
+      int32_t _vva_prtMarkerSuppliesMaxCapacity[4];
+const int32_t _fva_prtMarkerSuppliesMaxCapacity[4] = { 100, 100, 100, 100 };
 
 /* storage for multi-dimensional property prtMarkerSuppliesLevel
 */
-      int _vva_prtMarkerSuppliesLevel[1];
-const int _fva_prtMarkerSuppliesLevel[1] = { };
+      int32_t _vva_prtMarkerSuppliesLevel[4];
+const int32_t _fva_prtMarkerSuppliesLevel[4] = { 10, 20, 30, 40 };
 
 /* storage for multi-dimensional property prtMarkerColorantIndex
 */
-      int _vva_prtMarkerColorantIndex[1];
-const int _fva_prtMarkerColorantIndex[1] = { 1 };
+      int32_t _vva_prtMarkerColorantIndex[4];
+const int32_t _fva_prtMarkerColorantIndex[4] = { 1, 2, 3, 4 };
 
 /* storage for multi-dimensional property prtMarkerColorantMarkerIndex
 */
-      int _vva_prtMarkerColorantMarkerIndex[1];
-const int _fva_prtMarkerColorantMarkerIndex[1] = { };
+      int32_t _vva_prtMarkerColorantMarkerIndex[4];
+const int32_t _fva_prtMarkerColorantMarkerIndex[4] = { };
 
 /* storage for multi-dimensional property prtMarkerColorantRole
 */
-      int _vva_prtMarkerColorantRole[1];
-const int _fva_prtMarkerColorantRole[1] = { };
+      int32_t _vva_prtMarkerColorantRole[4];
+const int32_t _fva_prtMarkerColorantRole[4] = { };
 
 /* storage for string value(s) for prtMarkerColorantValue
 */
-uint8_t _vvs_prtMarkerColorantValue[64];
-
+uint8_t _vvs_prtMarkerColorantValue[256];
+const uint8_t _fvs_prtMarkerColorantValue[/*max of 256*/] = {
+        "\x05\x62lack"
+        "\x04\x63yan"
+        "\x07magenta"
+        "\x06yellow"
+};
 
 /* storage for multi-dimensional property prtMarkerColorantTonality
 */
-      int _vva_prtMarkerColorantTonality[1];
-const int _fva_prtMarkerColorantTonality[1] = { };
+      int32_t _vva_prtMarkerColorantTonality[4];
+const int32_t _fva_prtMarkerColorantTonality[4] = { };
 
 /* storage for multi-dimensional property prtMediaPathIndex
 */
-      int _vva_prtMediaPathIndex[1];
-const int _fva_prtMediaPathIndex[1] = { 1 };
+      int32_t _vva_prtMediaPathIndex[1];
+const int32_t _fva_prtMediaPathIndex[1] = { 1 };
 
 /* storage for multi-dimensional property prtMediaPathMaxSpeedPrintUnit
 */
-      int _vva_prtMediaPathMaxSpeedPrintUnit[1];
-const int _fva_prtMediaPathMaxSpeedPrintUnit[1] = { };
+      int32_t _vva_prtMediaPathMaxSpeedPrintUnit[1];
+const int32_t _fva_prtMediaPathMaxSpeedPrintUnit[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathMediaSizeUnit
 */
-      int _vva_prtMediaPathMediaSizeUnit[1];
-const int _fva_prtMediaPathMediaSizeUnit[1] = { };
+      int32_t _vva_prtMediaPathMediaSizeUnit[1];
+const int32_t _fva_prtMediaPathMediaSizeUnit[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathMaxSpeed
 */
-      int _vva_prtMediaPathMaxSpeed[1];
-const int _fva_prtMediaPathMaxSpeed[1] = { };
+      int32_t _vva_prtMediaPathMaxSpeed[1];
+const int32_t _fva_prtMediaPathMaxSpeed[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathMaxMediaFeedDir
 */
-      int _vva_prtMediaPathMaxMediaFeedDir[1];
-const int _fva_prtMediaPathMaxMediaFeedDir[1] = { };
+      int32_t _vva_prtMediaPathMaxMediaFeedDir[1];
+const int32_t _fva_prtMediaPathMaxMediaFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathMaxMediaXFeedDir
 */
-      int _vva_prtMediaPathMaxMediaXFeedDir[1];
-const int _fva_prtMediaPathMaxMediaXFeedDir[1] = { };
+      int32_t _vva_prtMediaPathMaxMediaXFeedDir[1];
+const int32_t _fva_prtMediaPathMaxMediaXFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathMinMediaFeedDir
 */
-      int _vva_prtMediaPathMinMediaFeedDir[1];
-const int _fva_prtMediaPathMinMediaFeedDir[1] = { };
+      int32_t _vva_prtMediaPathMinMediaFeedDir[1];
+const int32_t _fva_prtMediaPathMinMediaFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathMinMediaXFeedDir
 */
-      int _vva_prtMediaPathMinMediaXFeedDir[1];
-const int _fva_prtMediaPathMinMediaXFeedDir[1] = { };
+      int32_t _vva_prtMediaPathMinMediaXFeedDir[1];
+const int32_t _fva_prtMediaPathMinMediaXFeedDir[1] = { };
 
 /* storage for multi-dimensional property prtMediaPathType
 */
-      int _vva_prtMediaPathType[1];
-const int _fva_prtMediaPathType[1] = { };
+      int32_t _vva_prtMediaPathType[1];
+const int32_t _fva_prtMediaPathType[1] = { };
 
 /* storage for string value(s) for prtMediaPathDescription
 */
@@ -6950,18 +6965,18 @@ uint8_t _vvs_prtMediaPathDescription[256];
 
 /* storage for multi-dimensional property prtMediaPathStatus
 */
-      int _vva_prtMediaPathStatus[1];
-const int _fva_prtMediaPathStatus[1] = { };
+      int32_t _vva_prtMediaPathStatus[1];
+const int32_t _fva_prtMediaPathStatus[1] = { };
 
 /* storage for multi-dimensional property prtChannelIndex
 */
-      int _vva_prtChannelIndex[1];
-const int _fva_prtChannelIndex[1] = { 1 };
+      int32_t _vva_prtChannelIndex[1];
+const int32_t _fva_prtChannelIndex[1] = { 1 };
 
 /* storage for multi-dimensional property prtChannelType
 */
-      int _vva_prtChannelType[1];
-const int _fva_prtChannelType[1] = { };
+      int32_t _vva_prtChannelType[1];
+const int32_t _fva_prtChannelType[1] = { };
 
 /* storage for string value(s) for prtChannelProtocolVersion
 */
@@ -6970,38 +6985,38 @@ uint8_t _vvs_prtChannelProtocolVersion[64];
 
 /* storage for multi-dimensional property prtChannelCurrentJobCntlLangIndex
 */
-      int _vva_prtChannelCurrentJobCntlLangIndex[1];
-const int _fva_prtChannelCurrentJobCntlLangIndex[1] = { };
+      int32_t _vva_prtChannelCurrentJobCntlLangIndex[1];
+const int32_t _fva_prtChannelCurrentJobCntlLangIndex[1] = { };
 
 /* storage for multi-dimensional property prtChannelDefaultPageDescLangIndex
 */
-      int _vva_prtChannelDefaultPageDescLangIndex[1];
-const int _fva_prtChannelDefaultPageDescLangIndex[1] = { };
+      int32_t _vva_prtChannelDefaultPageDescLangIndex[1];
+const int32_t _fva_prtChannelDefaultPageDescLangIndex[1] = { };
 
 /* storage for multi-dimensional property prtChannelState
 */
-      int _vva_prtChannelState[1];
-const int _fva_prtChannelState[1] = { };
+      int32_t _vva_prtChannelState[1];
+const int32_t _fva_prtChannelState[1] = { };
 
 /* storage for multi-dimensional property prtChannelIfIndex
 */
-      int _vva_prtChannelIfIndex[1];
-const int _fva_prtChannelIfIndex[1] = { };
+      int32_t _vva_prtChannelIfIndex[1];
+const int32_t _fva_prtChannelIfIndex[1] = { };
 
 /* storage for multi-dimensional property prtChannelStatus
 */
-      int _vva_prtChannelStatus[1];
-const int _fva_prtChannelStatus[1] = { };
+      int32_t _vva_prtChannelStatus[1];
+const int32_t _fva_prtChannelStatus[1] = { };
 
 /* storage for multi-dimensional property prtInterpreterIndex
 */
-      int _vva_prtInterpreterIndex[1];
-const int _fva_prtInterpreterIndex[1] = { 1 };
+      int32_t _vva_prtInterpreterIndex[1];
+const int32_t _fva_prtInterpreterIndex[1] = { 1 };
 
 /* storage for multi-dimensional property prtInterpreterLangFamily
 */
-      int _vva_prtInterpreterLangFamily[1];
-const int _fva_prtInterpreterLangFamily[1] = { };
+      int32_t _vva_prtInterpreterLangFamily[1];
+const int32_t _fva_prtInterpreterLangFamily[1] = { };
 
 /* storage for string value(s) for prtInterpreterLangLevel
 */
@@ -7025,38 +7040,38 @@ uint8_t _vvs_prtInterpreterVersion[32];
 
 /* storage for multi-dimensional property prtInterpreterDefaultOrientation
 */
-      int _vva_prtInterpreterDefaultOrientation[1];
-const int _fva_prtInterpreterDefaultOrientation[1] = { };
+      int32_t _vva_prtInterpreterDefaultOrientation[1];
+const int32_t _fva_prtInterpreterDefaultOrientation[1] = { };
 
 /* storage for multi-dimensional property prtInterpreterFeedAddressability
 */
-      int _vva_prtInterpreterFeedAddressability[1];
-const int _fva_prtInterpreterFeedAddressability[1] = { };
+      int32_t _vva_prtInterpreterFeedAddressability[1];
+const int32_t _fva_prtInterpreterFeedAddressability[1] = { };
 
 /* storage for multi-dimensional property prtInterpreterXFeedAddressability
 */
-      int _vva_prtInterpreterXFeedAddressability[1];
-const int _fva_prtInterpreterXFeedAddressability[1] = { };
+      int32_t _vva_prtInterpreterXFeedAddressability[1];
+const int32_t _fva_prtInterpreterXFeedAddressability[1] = { };
 
 /* storage for multi-dimensional property prtInterpreterDefaultCharSetIn
 */
-      int _vva_prtInterpreterDefaultCharSetIn[1];
-const int _fva_prtInterpreterDefaultCharSetIn[1] = { };
+      int32_t _vva_prtInterpreterDefaultCharSetIn[1];
+const int32_t _fva_prtInterpreterDefaultCharSetIn[1] = { };
 
 /* storage for multi-dimensional property prtInterpreterDefaultCharSetOut
 */
-      int _vva_prtInterpreterDefaultCharSetOut[1];
-const int _fva_prtInterpreterDefaultCharSetOut[1] = { };
+      int32_t _vva_prtInterpreterDefaultCharSetOut[1];
+const int32_t _fva_prtInterpreterDefaultCharSetOut[1] = { };
 
 /* storage for multi-dimensional property prtInterpreterTwoWay
 */
-      int _vva_prtInterpreterTwoWay[1];
-const int _fva_prtInterpreterTwoWay[1] = { };
+      int32_t _vva_prtInterpreterTwoWay[1];
+const int32_t _fva_prtInterpreterTwoWay[1] = { };
 
 /* storage for multi-dimensional property prtConsoleDisplayBufferIndex
 */
-      int _vva_prtConsoleDisplayBufferIndex[1];
-const int _fva_prtConsoleDisplayBufferIndex[1] = { 1 };
+      int32_t _vva_prtConsoleDisplayBufferIndex[1];
+const int32_t _fva_prtConsoleDisplayBufferIndex[1] = { 1 };
 
 /* storage for string value(s) for prtConsoleDisplayBufferText
 */
@@ -7065,23 +7080,23 @@ uint8_t _vvs_prtConsoleDisplayBufferText[256];
 
 /* storage for multi-dimensional property prtConsoleLightIndex
 */
-      int _vva_prtConsoleLightIndex[1];
-const int _fva_prtConsoleLightIndex[1] = { 1 };
+      int32_t _vva_prtConsoleLightIndex[1];
+const int32_t _fva_prtConsoleLightIndex[1] = { 1 };
 
 /* storage for multi-dimensional property prtConsoleOnTime
 */
-      int _vva_prtConsoleOnTime[1];
-const int _fva_prtConsoleOnTime[1] = { };
+      int32_t _vva_prtConsoleOnTime[1];
+const int32_t _fva_prtConsoleOnTime[1] = { };
 
 /* storage for multi-dimensional property prtConsoleOffTime
 */
-      int _vva_prtConsoleOffTime[1];
-const int _fva_prtConsoleOffTime[1] = { };
+      int32_t _vva_prtConsoleOffTime[1];
+const int32_t _fva_prtConsoleOffTime[1] = { };
 
 /* storage for multi-dimensional property prtConsoleColor
 */
-      int _vva_prtConsoleColor[1];
-const int _fva_prtConsoleColor[1] = { };
+      int32_t _vva_prtConsoleColor[1];
+const int32_t _fva_prtConsoleColor[1] = { };
 
 /* storage for string value(s) for prtConsoleDescription
 */
@@ -7090,38 +7105,38 @@ uint8_t _vvs_prtConsoleDescription[256];
 
 /* storage for multi-dimensional property prtAlertIndex
 */
-      int _vva_prtAlertIndex[1];
-const int _fva_prtAlertIndex[1] = { 1 };
+      int32_t _vva_prtAlertIndex[1];
+const int32_t _fva_prtAlertIndex[1] = { 1 };
 
 /* storage for multi-dimensional property prtAlertSeverityLevel
 */
-      int _vva_prtAlertSeverityLevel[1];
-const int _fva_prtAlertSeverityLevel[1] = { };
+      int32_t _vva_prtAlertSeverityLevel[1];
+const int32_t _fva_prtAlertSeverityLevel[1] = { };
 
 /* storage for multi-dimensional property prtAlertTrainingLevel
 */
-      int _vva_prtAlertTrainingLevel[1];
-const int _fva_prtAlertTrainingLevel[1] = { };
+      int32_t _vva_prtAlertTrainingLevel[1];
+const int32_t _fva_prtAlertTrainingLevel[1] = { };
 
 /* storage for multi-dimensional property prtAlertGroup
 */
-      int _vva_prtAlertGroup[1];
-const int _fva_prtAlertGroup[1] = { };
+      int32_t _vva_prtAlertGroup[1];
+const int32_t _fva_prtAlertGroup[1] = { };
 
 /* storage for multi-dimensional property prtAlertGroupIndex
 */
-      int _vva_prtAlertGroupIndex[1];
-const int _fva_prtAlertGroupIndex[1] = { };
+      int32_t _vva_prtAlertGroupIndex[1];
+const int32_t _fva_prtAlertGroupIndex[1] = { };
 
 /* storage for multi-dimensional property prtAlertLocation
 */
-      int _vva_prtAlertLocation[1];
-const int _fva_prtAlertLocation[1] = { };
+      int32_t _vva_prtAlertLocation[1];
+const int32_t _fva_prtAlertLocation[1] = { };
 
 /* storage for multi-dimensional property prtAlertCode
 */
-      int _vva_prtAlertCode[1];
-const int _fva_prtAlertCode[1] = { };
+      int32_t _vva_prtAlertCode[1];
+const int32_t _fva_prtAlertCode[1] = { };
 
 /* storage for string value(s) for prtAlertDescription
 */

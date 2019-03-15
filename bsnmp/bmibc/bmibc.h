@@ -18,6 +18,12 @@
 
 #include "bnetheaders.h"
 
+/// Include this file from snmp lib to use its definitions
+/// of internal structures and limits, etc.
+#if 1
+#include "bsnmpobject.h"
+#endif
+
 #if 0// define to include memory tracing debug
 #define BMEM_TRACE_ALLOCS 1
 #include "bmem.h"

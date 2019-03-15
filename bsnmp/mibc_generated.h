@@ -47,8 +47,8 @@ typedef struct {
     void *factory_value;
     void *value;
 } bmibc_record_t;
-
 #endif
+
 /* Number of precompiled object records
 */
 #define BMIBC_NUM_RECORDS 301
@@ -561,7 +561,7 @@ typedef enum {
 			IANAifType_atmVciEndPt = 194,
 			IANAifType_opticalChannel = 195,
 			IANAifType_opticalTransport = 196,
-			IANAifType_propAtm = 197
+			IANAifType_propAtm = 197 
 }
 e_IANAifType;
 
@@ -775,7 +775,7 @@ extern int ve_IANAifType[197];
 typedef enum {
 			ifAdminStatus_up = 1,
 			ifAdminStatus_down = 2,
-			ifAdminStatus_testing = 3
+			ifAdminStatus_testing = 3 
 }
 e_ifAdminStatus;
 
@@ -799,7 +799,7 @@ typedef enum {
 			ifOperStatus_unknown = 4,
 			ifOperStatus_dormant = 5,
 			ifOperStatus_notPresent = 6,
-			ifOperStatus_lowerLayerDown = 7
+			ifOperStatus_lowerLayerDown = 7 
 }
 e_ifOperStatus;
 
@@ -822,7 +822,7 @@ extern int ve_ifOperStatus[7];
 */
 typedef enum {
 			snmpEnableAuthenTraps_enabled = 1,
-			snmpEnableAuthenTraps_disabled = 2
+			snmpEnableAuthenTraps_disabled = 2 
 }
 e_snmpEnableAuthenTraps;
 
@@ -843,7 +843,7 @@ typedef enum {
 			hrDeviceStatus_running = 2,
 			hrDeviceStatus_warning = 3,
 			hrDeviceStatus_testing = 4,
-			hrDeviceStatus_down = 5
+			hrDeviceStatus_down = 5 
 }
 e_hrDeviceStatus;
 
@@ -867,7 +867,7 @@ typedef enum {
 			hrPrinterStatus_unknown = 2,
 			hrPrinterStatus_idle = 3,
 			hrPrinterStatus_printing = 4,
-			hrPrinterStatus_warmup = 5
+			hrPrinterStatus_warmup = 5 
 }
 e_hrPrinterStatus;
 
@@ -888,7 +888,7 @@ extern int ve_hrPrinterStatus[5];
 */
 typedef enum {
 			hrDiskStorageAccess_readWrite = 1,
-			hrDiskStorageAccess_readOnly = 2
+			hrDiskStorageAccess_readOnly = 2 
 }
 e_hrDiskStorageAccess;
 
@@ -912,7 +912,7 @@ typedef enum {
 			hrDiskStorageMedia_opticalDiskROM = 5,
 			hrDiskStorageMedia_opticalDiskWORM = 6,
 			hrDiskStorageMedia_opticalDiskRW = 7,
-			hrDiskStorageMedia_ramDisk = 8
+			hrDiskStorageMedia_ramDisk = 8 
 }
 e_hrDiskStorageMedia;
 
@@ -936,7 +936,7 @@ extern int ve_hrDiskStorageMedia[8];
 */
 typedef enum {
 			TruthValue_true = 1,
-			TruthValue_false = 2
+			TruthValue_false = 2 
 }
 e_TruthValue;
 
@@ -954,7 +954,7 @@ extern int ve_TruthValue[2];
 */
 typedef enum {
 			hrFSAccess_readWrite = 1,
-			hrFSAccess_readOnly = 2
+			hrFSAccess_readOnly = 2 
 }
 e_hrFSAccess;
 
@@ -974,7 +974,7 @@ typedef enum {
 			hrSWRunType_unknown = 1,
 			hrSWRunType_operatingSystem = 2,
 			hrSWRunType_deviceDriver = 3,
-			hrSWRunType_application = 4
+			hrSWRunType_application = 4 
 }
 e_hrSWRunType;
 
@@ -996,7 +996,7 @@ typedef enum {
 			hrSWRunStatus_running = 1,
 			hrSWRunStatus_runnable = 2,
 			hrSWRunStatus_notRunnable = 3,
-			hrSWRunStatus_invalid = 4
+			hrSWRunStatus_invalid = 4 
 }
 e_hrSWRunStatus;
 
@@ -1018,7 +1018,7 @@ typedef enum {
 			hrSWInstalledType_unknown = 1,
 			hrSWInstalledType_operatingSystem = 2,
 			hrSWInstalledType_deviceDriver = 3,
-			hrSWInstalledType_application = 4
+			hrSWInstalledType_application = 4 
 }
 e_hrSWInstalledType;
 
@@ -1038,7 +1038,7 @@ extern int ve_hrSWInstalledType[4];
 */
 typedef enum {
 			ifLinkUpDownTrapEnable_enabled = 1,
-			ifLinkUpDownTrapEnable_disabled = 2
+			ifLinkUpDownTrapEnable_disabled = 2 
 }
 e_ifLinkUpDownTrapEnable;
 
@@ -1060,7 +1060,7 @@ typedef enum {
 			RowStatus_notReady = 3,
 			RowStatus_createAndGo = 4,
 			RowStatus_createAndWait = 5,
-			RowStatus_destroy = 6
+			RowStatus_destroy = 6 
 }
 e_RowStatus;
 
@@ -1084,7 +1084,7 @@ typedef enum {
 			prtGeneralReset_notResetting = 3,
 			prtGeneralReset_powerCycleReset = 4,
 			prtGeneralReset_resetToNVRAM = 5,
-			prtGeneralReset_resetToFactoryDefaults = 6
+			prtGeneralReset_resetToFactoryDefaults = 6 
 }
 e_prtGeneralReset;
 
@@ -1104,7 +1104,7 @@ extern int ve_prtGeneralReset[4];
 */
 typedef enum {
 			prtConsoleDisable_enabled = 3,
-			prtConsoleDisable_disabled = 4
+			prtConsoleDisable_disabled = 4 
 }
 e_prtConsoleDisable;
 
@@ -1125,7 +1125,7 @@ typedef enum {
 			prtCoverStatus_doorOpen = 3,
 			prtCoverStatus_doorClosed = 4,
 			prtCoverStatus_interlockOpen = 5,
-			prtCoverStatus_interlockClosed = 6
+			prtCoverStatus_interlockClosed = 6 
 }
 e_prtCoverStatus;
 
@@ -1145,7 +1145,7 @@ extern int ve_prtCoverStatus[5];
 /* enumeration for CodedCharSet ----------------------------
 */
 typedef enum {
-			CodedCharSet_other = 1
+			CodedCharSet_other = 1 
 }
 e_CodedCharSet;
 
@@ -1167,7 +1167,7 @@ typedef enum {
 			prtInputType_sheetFeedAutoNonRemovableTray = 4,
 			prtInputType_sheetFeedManual = 5,
 			prtInputType_continuousRoll = 6,
-			prtInputType_continuousFanFold = 7
+			prtInputType_continuousFanFold = 7 
 }
 e_prtInputType;
 
@@ -1190,7 +1190,7 @@ extern int ve_prtInputType[7];
 */
 typedef enum {
 			MediaUnit_tenThousandthsOfInches = 3,
-			MediaUnit_micrometers = 4
+			MediaUnit_micrometers = 4 
 }
 e_MediaUnit;
 
@@ -1211,7 +1211,7 @@ typedef enum {
 			CapacityUnit_micrometers = 4,
 			CapacityUnit_sheets = 8,
 			CapacityUnit_feet = 16,
-			CapacityUnit_meters = 17
+			CapacityUnit_meters = 17 
 }
 e_CapacityUnit;
 
@@ -1234,7 +1234,7 @@ typedef enum {
 			PresentOnOff_other = 1,
 			PresentOnOff_on = 3,
 			PresentOnOff_off = 4,
-			PresentOnOff_notPresent = 5
+			PresentOnOff_notPresent = 5 
 }
 e_PresentOnOff;
 
@@ -1259,7 +1259,7 @@ typedef enum {
 			prtOutputType_unRemovableBin = 4,
 			prtOutputType_continuousRollDevice = 5,
 			prtOutputType_mailBox = 6,
-			prtOutputType_continuousFanFold = 7
+			prtOutputType_continuousFanFold = 7 
 }
 e_prtOutputType;
 
@@ -1283,7 +1283,7 @@ extern int ve_prtOutputType[7];
 typedef enum {
 			prtOutputStackingOrder_unknown = 2,
 			prtOutputStackingOrder_firstToLast = 3,
-			prtOutputStackingOrder_lastToFirst = 4
+			prtOutputStackingOrder_lastToFirst = 4 
 }
 e_prtOutputStackingOrder;
 
@@ -1302,7 +1302,7 @@ extern int ve_prtOutputStackingOrder[3];
 */
 typedef enum {
 			prtOutputPageDeliveryOrientation_faceUp = 3,
-			prtOutputPageDeliveryOrientation_faceDown = 4
+			prtOutputPageDeliveryOrientation_faceDown = 4 
 }
 e_prtOutputPageDeliveryOrientation;
 
@@ -1345,7 +1345,7 @@ typedef enum {
 			prtMarkerMarkTech_photographicOther = 24,
 			prtMarkerMarkTech_ionDeposition = 25,
 			prtMarkerMarkTech_eBeam = 26,
-			prtMarkerMarkTech_typesetter = 27
+			prtMarkerMarkTech_typesetter = 27 
 }
 e_prtMarkerMarkTech;
 
@@ -1396,7 +1396,7 @@ typedef enum {
 			prtMarkerCounterUnit_dotRow = 9,
 			prtMarkerCounterUnit_hours = 11,
 			prtMarkerCounterUnit_feet = 16,
-			prtMarkerCounterUnit_meters = 17
+			prtMarkerCounterUnit_meters = 17 
 }
 e_prtMarkerCounterUnit;
 
@@ -1422,7 +1422,7 @@ extern int ve_prtMarkerCounterUnit[10];
 */
 typedef enum {
 			prtMarkerAddressabilityUnit_tenThousandthsOfInches = 3,
-			prtMarkerAddressabilityUnit_micrometers = 4
+			prtMarkerAddressabilityUnit_micrometers = 4 
 }
 e_prtMarkerAddressabilityUnit;
 
@@ -1441,7 +1441,7 @@ extern int ve_prtMarkerAddressabilityUnit[2];
 typedef enum {
 			prtMarkerSuppliesClass_other = 1,
 			prtMarkerSuppliesClass_supplyThatIsConsumed = 3,
-			prtMarkerSuppliesClass_receptacleThatIsFilled = 4
+			prtMarkerSuppliesClass_receptacleThatIsFilled = 4 
 }
 e_prtMarkerSuppliesClass;
 
@@ -1472,7 +1472,7 @@ typedef enum {
 			prtMarkerSuppliesType_fuserOil = 11,
 			prtMarkerSuppliesType_solidWax = 12,
 			prtMarkerSuppliesType_ribbonWax = 13,
-			prtMarkerSuppliesType_wasteWax = 14
+			prtMarkerSuppliesType_wasteWax = 14 
 }
 e_prtMarkerSuppliesType;
 
@@ -1506,7 +1506,7 @@ typedef enum {
 			prtMarkerSuppliesSupplyUnit_thousandthsOfOunces = 12,
 			prtMarkerSuppliesSupplyUnit_tenthsOfGrams = 13,
 			prtMarkerSuppliesSupplyUnit_hundrethsOfFluidOunces = 14,
-			prtMarkerSuppliesSupplyUnit_tenthsOfMilliliters = 15
+			prtMarkerSuppliesSupplyUnit_tenthsOfMilliliters = 15 
 }
 e_prtMarkerSuppliesSupplyUnit;
 
@@ -1529,7 +1529,7 @@ extern int ve_prtMarkerSuppliesSupplyUnit[6];
 typedef enum {
 			prtMarkerColorantRole_other = 1,
 			prtMarkerColorantRole_process = 3,
-			prtMarkerColorantRole_spot = 4
+			prtMarkerColorantRole_spot = 4 
 }
 e_prtMarkerColorantRole;
 
@@ -1555,7 +1555,7 @@ typedef enum {
 			prtMediaPathMaxSpeedPrintUnit_sheetsPerHour = 8,
 			prtMediaPathMaxSpeedPrintUnit_dotRowPerHour = 9,
 			prtMediaPathMaxSpeedPrintUnit_feetPerHour = 16,
-			prtMediaPathMaxSpeedPrintUnit_metersPerHour = 17
+			prtMediaPathMaxSpeedPrintUnit_metersPerHour = 17 
 }
 e_prtMediaPathMaxSpeedPrintUnit;
 
@@ -1583,7 +1583,7 @@ typedef enum {
 			prtMediaPathType_unknown = 2,
 			prtMediaPathType_longEdgeBindingDuplex = 3,
 			prtMediaPathType_shortEdgeBindingDuplex = 4,
-			prtMediaPathType_simplex = 5
+			prtMediaPathType_simplex = 5 
 }
 e_prtMediaPathType;
 
@@ -1634,7 +1634,7 @@ typedef enum {
 			prtChannelType_chVxDAPI = 30,
 			prtChannelType_chSystemObjectManager = 31,
 			prtChannelType_chDECLAT = 32,
-			prtChannelType_chNPAP = 33
+			prtChannelType_chNPAP = 33 
 }
 e_prtChannelType;
 
@@ -1683,7 +1683,7 @@ extern int ve_prtChannelType[32];
 typedef enum {
 			prtChannelState_other = 1,
 			prtChannelState_printDataAccepted = 3,
-			prtChannelState_noDataAccepted = 4
+			prtChannelState_noDataAccepted = 4 
 }
 e_prtChannelState;
 
@@ -1745,7 +1745,7 @@ typedef enum {
 			prtInterpreterLangFamily_langCaPSL = 43,
 			prtInterpreterLangFamily_langEXCL = 44,
 			prtInterpreterLangFamily_langLCDS = 45,
-			prtInterpreterLangFamily_langXES = 46
+			prtInterpreterLangFamily_langXES = 46 
 }
 e_prtInterpreterLangFamily;
 
@@ -1807,7 +1807,7 @@ extern int ve_prtInterpreterLangFamily[45];
 typedef enum {
 			prtInterpreterDefaultOrientation_other = 1,
 			prtInterpreterDefaultOrientation_portrait = 3,
-			prtInterpreterDefaultOrientation_landscape = 4
+			prtInterpreterDefaultOrientation_landscape = 4 
 }
 e_prtInterpreterDefaultOrientation;
 
@@ -1826,7 +1826,7 @@ extern int ve_prtInterpreterDefaultOrientation[3];
 */
 typedef enum {
 			prtInterpreterTwoWay_yes = 3,
-			prtInterpreterTwoWay_no = 4
+			prtInterpreterTwoWay_no = 4 
 }
 e_prtInterpreterTwoWay;
 
@@ -1851,7 +1851,7 @@ typedef enum {
 			prtConsoleColor_blue = 6,
 			prtConsoleColor_cyan = 7,
 			prtConsoleColor_magenta = 8,
-			prtConsoleColor_yellow = 9
+			prtConsoleColor_yellow = 9 
 }
 e_prtConsoleColor;
 
@@ -1877,7 +1877,7 @@ extern int ve_prtConsoleColor[9];
 typedef enum {
 			prtAlertSeverityLevel_other = 1,
 			prtAlertSeverityLevel_critical = 3,
-			prtAlertSeverityLevel_warning = 4
+			prtAlertSeverityLevel_warning = 4 
 }
 e_prtAlertSeverityLevel;
 
@@ -1900,7 +1900,7 @@ typedef enum {
 			prtAlertTrainingLevel_untrained = 3,
 			prtAlertTrainingLevel_trained = 4,
 			prtAlertTrainingLevel_fieldService = 5,
-			prtAlertTrainingLevel_management = 6
+			prtAlertTrainingLevel_management = 6 
 }
 e_prtAlertTrainingLevel;
 
@@ -1936,7 +1936,7 @@ typedef enum {
 			prtAlertGroup_channel = 14,
 			prtAlertGroup_interpreter = 15,
 			prtAlertGroup_consoleDisplayBuffer = 16,
-			prtAlertGroup_consoleLights = 17
+			prtAlertGroup_consoleLights = 17 
 }
 e_prtAlertGroup;
 
@@ -2015,7 +2015,7 @@ typedef enum {
 			prtAlertCode_interpreterCartridgeDeleted = 1504,
 			prtAlertCode_interpreterResourceAdded = 1505,
 			prtAlertCode_interpreterResourceDeleted = 1506,
-			prtAlertCode_interpreterResourceUnavailable = 1507
+			prtAlertCode_interpreterResourceUnavailable = 1507 
 }
 e_prtAlertCode;
 
@@ -2123,8 +2123,8 @@ extern const uint8_t _fvs_sysLocation[/*max of 256*/];
 
 /* storage for multi-dimensional property sysORIndex
 */
-extern       int _vva_sysORIndex[1];
-extern const int _fva_sysORIndex[1];
+extern       int32_t _vva_sysORIndex[1];
+extern const int32_t _fva_sysORIndex[1];
 
 
 /* storage for string value(s) for sysORID
@@ -2149,8 +2149,8 @@ extern const uint32_t _fva_sysORUpTime[1];
 
 /* storage for multi-dimensional property ifIndex
 */
-extern       int _vva_ifIndex[1];
-extern const int _fva_ifIndex[1];
+extern       int32_t _vva_ifIndex[1];
+extern const int32_t _fva_ifIndex[1];
 
 
 /* storage for string value(s) for ifDescr
@@ -2162,14 +2162,14 @@ extern const uint8_t _fvs_ifDescr[/*max of 256*/];
 
 /* storage for multi-dimensional property ifType
 */
-extern       int _vva_ifType[1];
-extern const int _fva_ifType[1];
+extern       int32_t _vva_ifType[1];
+extern const int32_t _fva_ifType[1];
 
 
 /* storage for multi-dimensional property ifMtu
 */
-extern       int _vva_ifMtu[1];
-extern const int _fva_ifMtu[1];
+extern       int32_t _vva_ifMtu[1];
+extern const int32_t _fva_ifMtu[1];
 
 
 /* storage for multi-dimensional property ifSpeed
@@ -2187,14 +2187,14 @@ extern const uint8_t _fvs_ifPhysAddress[/*max of 256*/];
 
 /* storage for multi-dimensional property ifAdminStatus
 */
-extern       int _vva_ifAdminStatus[1];
-extern const int _fva_ifAdminStatus[1];
+extern       int32_t _vva_ifAdminStatus[1];
+extern const int32_t _fva_ifAdminStatus[1];
 
 
 /* storage for multi-dimensional property ifOperStatus
 */
-extern       int _vva_ifOperStatus[1];
-extern const int _fva_ifOperStatus[1];
+extern       int32_t _vva_ifOperStatus[1];
+extern const int32_t _fva_ifOperStatus[1];
 
 
 /* storage for multi-dimensional property ifLastChange
@@ -2298,8 +2298,8 @@ extern const uint8_t _fvs_hrSystemInitialLoadParameters[/*max of 129*/];
 
 /* storage for multi-dimensional property hrStorageIndex
 */
-extern       int _vva_hrStorageIndex[1];
-extern const int _fva_hrStorageIndex[1];
+extern       int32_t _vva_hrStorageIndex[1];
+extern const int32_t _fva_hrStorageIndex[1];
 
 
 /* storage for string value(s) for hrStorageType
@@ -2318,20 +2318,20 @@ extern const uint8_t _fvs_hrStorageDescr[/*max of 256*/];
 
 /* storage for multi-dimensional property hrStorageAllocationUnits
 */
-extern       int _vva_hrStorageAllocationUnits[1];
-extern const int _fva_hrStorageAllocationUnits[1];
+extern       int32_t _vva_hrStorageAllocationUnits[1];
+extern const int32_t _fva_hrStorageAllocationUnits[1];
 
 
 /* storage for multi-dimensional property hrStorageSize
 */
-extern       int _vva_hrStorageSize[1];
-extern const int _fva_hrStorageSize[1];
+extern       int32_t _vva_hrStorageSize[1];
+extern const int32_t _fva_hrStorageSize[1];
 
 
 /* storage for multi-dimensional property hrStorageUsed
 */
-extern       int _vva_hrStorageUsed[1];
-extern const int _fva_hrStorageUsed[1];
+extern       int32_t _vva_hrStorageUsed[1];
+extern const int32_t _fva_hrStorageUsed[1];
 
 
 /* storage for multi-dimensional property hrStorageAllocationFailures
@@ -2342,8 +2342,8 @@ extern const uint32_t _fva_hrStorageAllocationFailures[1];
 
 /* storage for multi-dimensional property hrDeviceIndex
 */
-extern       int _vva_hrDeviceIndex[1];
-extern const int _fva_hrDeviceIndex[1];
+extern       int32_t _vva_hrDeviceIndex[1];
+extern const int32_t _fva_hrDeviceIndex[1];
 
 
 /* storage for string value(s) for hrDeviceType
@@ -2369,8 +2369,8 @@ extern const uint8_t _fvs_hrDeviceID[/*max of 256*/];
 
 /* storage for multi-dimensional property hrDeviceStatus
 */
-extern       int _vva_hrDeviceStatus[1];
-extern const int _fva_hrDeviceStatus[1];
+extern       int32_t _vva_hrDeviceStatus[1];
+extern const int32_t _fva_hrDeviceStatus[1];
 
 
 /* storage for multi-dimensional property hrDeviceErrors
@@ -2388,20 +2388,20 @@ extern const uint8_t _fvs_hrProcessorFrwID[/*max of 256*/];
 
 /* storage for multi-dimensional property hrProcessorLoad
 */
-extern       int _vva_hrProcessorLoad[1];
-extern const int _fva_hrProcessorLoad[1];
+extern       int32_t _vva_hrProcessorLoad[1];
+extern const int32_t _fva_hrProcessorLoad[1];
 
 
 /* storage for multi-dimensional property hrNetworkIfIndex
 */
-extern       int _vva_hrNetworkIfIndex[1];
-extern const int _fva_hrNetworkIfIndex[1];
+extern       int32_t _vva_hrNetworkIfIndex[1];
+extern const int32_t _fva_hrNetworkIfIndex[1];
 
 
 /* storage for multi-dimensional property hrPrinterStatus
 */
-extern       int _vva_hrPrinterStatus[1];
-extern const int _fva_hrPrinterStatus[1];
+extern       int32_t _vva_hrPrinterStatus[1];
+extern const int32_t _fva_hrPrinterStatus[1];
 
 
 /* storage for string value(s) for hrPrinterDetectedErrorState
@@ -2413,32 +2413,32 @@ extern const uint8_t _fvs_hrPrinterDetectedErrorState[/*max of 256*/];
 
 /* storage for multi-dimensional property hrDiskStorageAccess
 */
-extern       int _vva_hrDiskStorageAccess[1];
-extern const int _fva_hrDiskStorageAccess[1];
+extern       int32_t _vva_hrDiskStorageAccess[1];
+extern const int32_t _fva_hrDiskStorageAccess[1];
 
 
 /* storage for multi-dimensional property hrDiskStorageMedia
 */
-extern       int _vva_hrDiskStorageMedia[1];
-extern const int _fva_hrDiskStorageMedia[1];
+extern       int32_t _vva_hrDiskStorageMedia[1];
+extern const int32_t _fva_hrDiskStorageMedia[1];
 
 
 /* storage for multi-dimensional property hrDiskStorageRemoveble
 */
-extern       int _vva_hrDiskStorageRemoveble[1];
-extern const int _fva_hrDiskStorageRemoveble[1];
+extern       int32_t _vva_hrDiskStorageRemoveble[1];
+extern const int32_t _fva_hrDiskStorageRemoveble[1];
 
 
 /* storage for multi-dimensional property hrDiskStorageCapacity
 */
-extern       int _vva_hrDiskStorageCapacity[1];
-extern const int _fva_hrDiskStorageCapacity[1];
+extern       int32_t _vva_hrDiskStorageCapacity[1];
+extern const int32_t _fva_hrDiskStorageCapacity[1];
 
 
 /* storage for multi-dimensional property hrPartitionIndex
 */
-extern       int _vva_hrPartitionIndex[1];
-extern const int _fva_hrPartitionIndex[1];
+extern       int32_t _vva_hrPartitionIndex[1];
+extern const int32_t _fva_hrPartitionIndex[1];
 
 
 /* storage for string value(s) for hrPartitionLabel
@@ -2457,20 +2457,20 @@ extern const uint8_t _fvs_hrPartitionID[/*max of 256*/];
 
 /* storage for multi-dimensional property hrPartitionSize
 */
-extern       int _vva_hrPartitionSize[1];
-extern const int _fva_hrPartitionSize[1];
+extern       int32_t _vva_hrPartitionSize[1];
+extern const int32_t _fva_hrPartitionSize[1];
 
 
 /* storage for multi-dimensional property hrPartitionFSIndex
 */
-extern       int _vva_hrPartitionFSIndex[1];
-extern const int _fva_hrPartitionFSIndex[1];
+extern       int32_t _vva_hrPartitionFSIndex[1];
+extern const int32_t _fva_hrPartitionFSIndex[1];
 
 
 /* storage for multi-dimensional property hrFSIndex
 */
-extern       int _vva_hrFSIndex[1];
-extern const int _fva_hrFSIndex[1];
+extern       int32_t _vva_hrFSIndex[1];
+extern const int32_t _fva_hrFSIndex[1];
 
 
 /* storage for string value(s) for hrFSMountPoint
@@ -2496,20 +2496,20 @@ extern const uint8_t _fvs_hrFSType[/*max of 256*/];
 
 /* storage for multi-dimensional property hrFSAccess
 */
-extern       int _vva_hrFSAccess[1];
-extern const int _fva_hrFSAccess[1];
+extern       int32_t _vva_hrFSAccess[1];
+extern const int32_t _fva_hrFSAccess[1];
 
 
 /* storage for multi-dimensional property hrFSBootable
 */
-extern       int _vva_hrFSBootable[1];
-extern const int _fva_hrFSBootable[1];
+extern       int32_t _vva_hrFSBootable[1];
+extern const int32_t _fva_hrFSBootable[1];
 
 
 /* storage for multi-dimensional property hrFSStorageIndex
 */
-extern       int _vva_hrFSStorageIndex[1];
-extern const int _fva_hrFSStorageIndex[1];
+extern       int32_t _vva_hrFSStorageIndex[1];
+extern const int32_t _fva_hrFSStorageIndex[1];
 
 
 /* storage for string value(s) for hrFSLastFullBackupDate
@@ -2528,8 +2528,8 @@ extern const uint8_t _fvs_hrFSLastPartialBackupDate[/*max of 12*/];
 
 /* storage for multi-dimensional property hrSWRunIndex
 */
-extern       int _vva_hrSWRunIndex[1];
-extern const int _fva_hrSWRunIndex[1];
+extern       int32_t _vva_hrSWRunIndex[1];
+extern const int32_t _fva_hrSWRunIndex[1];
 
 
 /* storage for string value(s) for hrSWRunName
@@ -2562,20 +2562,20 @@ extern const uint8_t _fvs_hrSWRunParameters[/*max of 129*/];
 
 /* storage for multi-dimensional property hrSWRunType
 */
-extern       int _vva_hrSWRunType[1];
-extern const int _fva_hrSWRunType[1];
+extern       int32_t _vva_hrSWRunType[1];
+extern const int32_t _fva_hrSWRunType[1];
 
 
 /* storage for multi-dimensional property hrSWRunStatus
 */
-extern       int _vva_hrSWRunStatus[1];
-extern const int _fva_hrSWRunStatus[1];
+extern       int32_t _vva_hrSWRunStatus[1];
+extern const int32_t _fva_hrSWRunStatus[1];
 
 
 /* storage for multi-dimensional property hrSWInstalledIndex
 */
-extern       int _vva_hrSWInstalledIndex[1];
-extern const int _fva_hrSWInstalledIndex[1];
+extern       int32_t _vva_hrSWInstalledIndex[1];
+extern const int32_t _fva_hrSWInstalledIndex[1];
 
 
 /* storage for string value(s) for hrSWInstalledName
@@ -2594,8 +2594,8 @@ extern const uint8_t _fvs_hrSWInstalledID[/*max of 256*/];
 
 /* storage for multi-dimensional property hrSWInstalledType
 */
-extern       int _vva_hrSWInstalledType[1];
-extern const int _fva_hrSWInstalledType[1];
+extern       int32_t _vva_hrSWInstalledType[1];
+extern const int32_t _fva_hrSWInstalledType[1];
 
 
 /* storage for string value(s) for hrSWInstalledDate
@@ -2669,20 +2669,20 @@ extern const uint8_t _fvs_ifAlias[/*max of 65*/];
 
 /* storage for multi-dimensional property ifStackHigherLayer
 */
-extern       int _vva_ifStackHigherLayer[1];
-extern const int _fva_ifStackHigherLayer[1];
+extern       int32_t _vva_ifStackHigherLayer[1];
+extern const int32_t _fva_ifStackHigherLayer[1];
 
 
 /* storage for multi-dimensional property ifStackLowerLayer
 */
-extern       int _vva_ifStackLowerLayer[1];
-extern const int _fva_ifStackLowerLayer[1];
+extern       int32_t _vva_ifStackLowerLayer[1];
+extern const int32_t _fva_ifStackLowerLayer[1];
 
 
 /* storage for multi-dimensional property ifStackStatus
 */
-extern       int _vva_ifStackStatus[1];
-extern const int _fva_ifStackStatus[1];
+extern       int32_t _vva_ifStackStatus[1];
+extern const int32_t _fva_ifStackStatus[1];
 
 
 /* storage for multi-dimensional property prtGeneralConfigChanges
@@ -2693,14 +2693,14 @@ extern const uint32_t _fva_prtGeneralConfigChanges[1];
 
 /* storage for multi-dimensional property prtGeneralCurrentLocalization
 */
-extern       int _vva_prtGeneralCurrentLocalization[1];
-extern const int _fva_prtGeneralCurrentLocalization[1];
+extern       int32_t _vva_prtGeneralCurrentLocalization[1];
+extern const int32_t _fva_prtGeneralCurrentLocalization[1];
 
 
 /* storage for multi-dimensional property prtGeneralReset
 */
-extern       int _vva_prtGeneralReset[1];
-extern const int _fva_prtGeneralReset[1];
+extern       int32_t _vva_prtGeneralReset[1];
+extern const int32_t _fva_prtGeneralReset[1];
 
 
 /* storage for string value(s) for prtGeneralCurrentOperator
@@ -2719,80 +2719,80 @@ extern const uint8_t _fvs_prtGeneralServicePerson[/*max of 128*/];
 
 /* storage for multi-dimensional property prtInputDefaultIndex
 */
-extern       int _vva_prtInputDefaultIndex[1];
-extern const int _fva_prtInputDefaultIndex[1];
+extern       int32_t _vva_prtInputDefaultIndex[1];
+extern const int32_t _fva_prtInputDefaultIndex[1];
 
 
 /* storage for multi-dimensional property prtOutputDefaultIndex
 */
-extern       int _vva_prtOutputDefaultIndex[1];
-extern const int _fva_prtOutputDefaultIndex[1];
+extern       int32_t _vva_prtOutputDefaultIndex[1];
+extern const int32_t _fva_prtOutputDefaultIndex[1];
 
 
 /* storage for multi-dimensional property prtMarkerDefaultIndex
 */
-extern       int _vva_prtMarkerDefaultIndex[1];
-extern const int _fva_prtMarkerDefaultIndex[1];
+extern       int32_t _vva_prtMarkerDefaultIndex[1];
+extern const int32_t _fva_prtMarkerDefaultIndex[1];
 
 
 /* storage for multi-dimensional property prtMediaPathDefaultIndex
 */
-extern       int _vva_prtMediaPathDefaultIndex[1];
-extern const int _fva_prtMediaPathDefaultIndex[1];
+extern       int32_t _vva_prtMediaPathDefaultIndex[1];
+extern const int32_t _fva_prtMediaPathDefaultIndex[1];
 
 
 /* storage for multi-dimensional property prtConsoleLocalization
 */
-extern       int _vva_prtConsoleLocalization[1];
-extern const int _fva_prtConsoleLocalization[1];
+extern       int32_t _vva_prtConsoleLocalization[1];
+extern const int32_t _fva_prtConsoleLocalization[1];
 
 
 /* storage for multi-dimensional property prtConsoleNumberOfDisplayLines
 */
-extern       int _vva_prtConsoleNumberOfDisplayLines[1];
-extern const int _fva_prtConsoleNumberOfDisplayLines[1];
+extern       int32_t _vva_prtConsoleNumberOfDisplayLines[1];
+extern const int32_t _fva_prtConsoleNumberOfDisplayLines[1];
 
 
 /* storage for multi-dimensional property prtConsoleNumberOfDisplayChars
 */
-extern       int _vva_prtConsoleNumberOfDisplayChars[1];
-extern const int _fva_prtConsoleNumberOfDisplayChars[1];
+extern       int32_t _vva_prtConsoleNumberOfDisplayChars[1];
+extern const int32_t _fva_prtConsoleNumberOfDisplayChars[1];
 
 
 /* storage for multi-dimensional property prtConsoleDisable
 */
-extern       int _vva_prtConsoleDisable[1];
-extern const int _fva_prtConsoleDisable[1];
+extern       int32_t _vva_prtConsoleDisable[1];
+extern const int32_t _fva_prtConsoleDisable[1];
 
 
 /* storage for multi-dimensional property prtStorageRefSeqNumber
 */
-extern       int _vva_prtStorageRefSeqNumber[1];
-extern const int _fva_prtStorageRefSeqNumber[1];
+extern       int32_t _vva_prtStorageRefSeqNumber[1];
+extern const int32_t _fva_prtStorageRefSeqNumber[1];
 
 
 /* storage for multi-dimensional property prtStorageRefIndex
 */
-extern       int _vva_prtStorageRefIndex[1];
-extern const int _fva_prtStorageRefIndex[1];
+extern       int32_t _vva_prtStorageRefIndex[1];
+extern const int32_t _fva_prtStorageRefIndex[1];
 
 
 /* storage for multi-dimensional property prtDeviceRefSeqNumber
 */
-extern       int _vva_prtDeviceRefSeqNumber[1];
-extern const int _fva_prtDeviceRefSeqNumber[1];
+extern       int32_t _vva_prtDeviceRefSeqNumber[1];
+extern const int32_t _fva_prtDeviceRefSeqNumber[1];
 
 
 /* storage for multi-dimensional property prtDeviceRefIndex
 */
-extern       int _vva_prtDeviceRefIndex[1];
-extern const int _fva_prtDeviceRefIndex[1];
+extern       int32_t _vva_prtDeviceRefIndex[1];
+extern const int32_t _fva_prtDeviceRefIndex[1];
 
 
 /* storage for multi-dimensional property prtCoverIndex
 */
-extern       int _vva_prtCoverIndex[1];
-extern const int _fva_prtCoverIndex[1];
+extern       int32_t _vva_prtCoverIndex[1];
+extern const int32_t _fva_prtCoverIndex[1];
 
 
 /* storage for string value(s) for prtCoverDescription
@@ -2804,14 +2804,14 @@ extern const uint8_t _fvs_prtCoverDescription[/*max of 256*/];
 
 /* storage for multi-dimensional property prtCoverStatus
 */
-extern       int _vva_prtCoverStatus[1];
-extern const int _fva_prtCoverStatus[1];
+extern       int32_t _vva_prtCoverStatus[1];
+extern const int32_t _fva_prtCoverStatus[1];
 
 
 /* storage for multi-dimensional property prtLocalizationIndex
 */
-extern       int _vva_prtLocalizationIndex[1];
-extern const int _fva_prtLocalizationIndex[1];
+extern       int32_t _vva_prtLocalizationIndex[1];
+extern const int32_t _fva_prtLocalizationIndex[1];
 
 
 /* storage for string value(s) for prtLocalizationLanguage
@@ -2830,191 +2830,191 @@ extern const uint8_t _fvs_prtLocalizationCountry[/*max of 3*/];
 
 /* storage for multi-dimensional property prtLocalizationCharacterSet
 */
-extern       int _vva_prtLocalizationCharacterSet[1];
-extern const int _fva_prtLocalizationCharacterSet[1];
+extern       int32_t _vva_prtLocalizationCharacterSet[1];
+extern const int32_t _fva_prtLocalizationCharacterSet[1];
 
 
 /* storage for multi-dimensional property prtInputIndex
 */
-extern       int _vva_prtInputIndex[1];
-extern const int _fva_prtInputIndex[1];
+extern       int32_t _vva_prtInputIndex[4];
+extern const int32_t _fva_prtInputIndex[4];
 
 
 /* storage for multi-dimensional property prtInputType
 */
-extern       int _vva_prtInputType[1];
-extern const int _fva_prtInputType[1];
+extern       int32_t _vva_prtInputType[4];
+extern const int32_t _fva_prtInputType[4];
 
 
 /* storage for multi-dimensional property prtInputDimUnit
 */
-extern       int _vva_prtInputDimUnit[1];
-extern const int _fva_prtInputDimUnit[1];
+extern       int32_t _vva_prtInputDimUnit[4];
+extern const int32_t _fva_prtInputDimUnit[4];
 
 
 /* storage for multi-dimensional property prtInputMediaDimFeedDirDeclared
 */
-extern       int _vva_prtInputMediaDimFeedDirDeclared[1];
-extern const int _fva_prtInputMediaDimFeedDirDeclared[1];
+extern       int32_t _vva_prtInputMediaDimFeedDirDeclared[4];
+extern const int32_t _fva_prtInputMediaDimFeedDirDeclared[4];
 
 
 /* storage for multi-dimensional property prtInputMediaDimXFeedDirDeclared
 */
-extern       int _vva_prtInputMediaDimXFeedDirDeclared[1];
-extern const int _fva_prtInputMediaDimXFeedDirDeclared[1];
+extern       int32_t _vva_prtInputMediaDimXFeedDirDeclared[4];
+extern const int32_t _fva_prtInputMediaDimXFeedDirDeclared[4];
 
 
 /* storage for multi-dimensional property prtInputMediaDimFeedDirChosen
 */
-extern       int _vva_prtInputMediaDimFeedDirChosen[1];
-extern const int _fva_prtInputMediaDimFeedDirChosen[1];
+extern       int32_t _vva_prtInputMediaDimFeedDirChosen[4];
+extern const int32_t _fva_prtInputMediaDimFeedDirChosen[4];
 
 
 /* storage for multi-dimensional property prtInputMediaDimXFeedDirChosen
 */
-extern       int _vva_prtInputMediaDimXFeedDirChosen[1];
-extern const int _fva_prtInputMediaDimXFeedDirChosen[1];
+extern       int32_t _vva_prtInputMediaDimXFeedDirChosen[4];
+extern const int32_t _fva_prtInputMediaDimXFeedDirChosen[4];
 
 
 /* storage for multi-dimensional property prtInputCapacityUnit
 */
-extern       int _vva_prtInputCapacityUnit[1];
-extern const int _fva_prtInputCapacityUnit[1];
+extern       int32_t _vva_prtInputCapacityUnit[4];
+extern const int32_t _fva_prtInputCapacityUnit[4];
 
 
 /* storage for multi-dimensional property prtInputMaxCapacity
 */
-extern       int _vva_prtInputMaxCapacity[1];
-extern const int _fva_prtInputMaxCapacity[1];
+extern       int32_t _vva_prtInputMaxCapacity[4];
+extern const int32_t _fva_prtInputMaxCapacity[4];
 
 
 /* storage for multi-dimensional property prtInputCurrentLevel
 */
-extern       int _vva_prtInputCurrentLevel[1];
-extern const int _fva_prtInputCurrentLevel[1];
+extern       int32_t _vva_prtInputCurrentLevel[4];
+extern const int32_t _fva_prtInputCurrentLevel[4];
 
 
 /* storage for multi-dimensional property prtInputStatus
 */
-extern       int _vva_prtInputStatus[1];
-extern const int _fva_prtInputStatus[1];
+extern       int32_t _vva_prtInputStatus[4];
+extern const int32_t _fva_prtInputStatus[4];
 
 
 /* storage for string value(s) for prtInputMediaName
 */
 #define MAX_prtInputMediaName_LEN		63
-extern       uint8_t _vvs_prtInputMediaName[64];
-extern const uint8_t _fvs_prtInputMediaName[/*max of 64*/];
+extern       uint8_t _vvs_prtInputMediaName[256];
+extern const uint8_t _fvs_prtInputMediaName[/*max of 256*/];
 
 
 /* storage for string value(s) for prtInputName
 */
 #define MAX_prtInputName_LEN		63
-extern       uint8_t _vvs_prtInputName[64];
-extern const uint8_t _fvs_prtInputName[/*max of 64*/];
+extern       uint8_t _vvs_prtInputName[256];
+extern const uint8_t _fvs_prtInputName[/*max of 256*/];
 
 
 /* storage for string value(s) for prtInputVendorName
 */
 #define MAX_prtInputVendorName_LEN		63
-extern       uint8_t _vvs_prtInputVendorName[64];
-extern const uint8_t _fvs_prtInputVendorName[/*max of 64*/];
+extern       uint8_t _vvs_prtInputVendorName[256];
+extern const uint8_t _fvs_prtInputVendorName[/*max of 256*/];
 
 
 /* storage for string value(s) for prtInputModel
 */
 #define MAX_prtInputModel_LEN		63
-extern       uint8_t _vvs_prtInputModel[64];
-extern const uint8_t _fvs_prtInputModel[/*max of 64*/];
+extern       uint8_t _vvs_prtInputModel[256];
+extern const uint8_t _fvs_prtInputModel[/*max of 256*/];
 
 
 /* storage for string value(s) for prtInputVersion
 */
 #define MAX_prtInputVersion_LEN		63
-extern       uint8_t _vvs_prtInputVersion[64];
-extern const uint8_t _fvs_prtInputVersion[/*max of 64*/];
+extern       uint8_t _vvs_prtInputVersion[256];
+extern const uint8_t _fvs_prtInputVersion[/*max of 256*/];
 
 
 /* storage for string value(s) for prtInputSerialNumber
 */
 #define MAX_prtInputSerialNumber_LEN		32
-extern       uint8_t _vvs_prtInputSerialNumber[33];
-extern const uint8_t _fvs_prtInputSerialNumber[/*max of 33*/];
+extern       uint8_t _vvs_prtInputSerialNumber[132];
+extern const uint8_t _fvs_prtInputSerialNumber[/*max of 132*/];
 
 
 /* storage for string value(s) for prtInputDescription
 */
 #define MAX_prtInputDescription_LEN		255
-extern       uint8_t _vvs_prtInputDescription[256];
-extern const uint8_t _fvs_prtInputDescription[/*max of 256*/];
+extern       uint8_t _vvs_prtInputDescription[1024];
+extern const uint8_t _fvs_prtInputDescription[/*max of 1024*/];
 
 
 /* storage for multi-dimensional property prtInputSecurity
 */
-extern       int _vva_prtInputSecurity[1];
-extern const int _fva_prtInputSecurity[1];
+extern       int32_t _vva_prtInputSecurity[4];
+extern const int32_t _fva_prtInputSecurity[4];
 
 
 /* storage for multi-dimensional property prtInputMediaWeight
 */
-extern       int _vva_prtInputMediaWeight[1];
-extern const int _fva_prtInputMediaWeight[1];
+extern       int32_t _vva_prtInputMediaWeight[4];
+extern const int32_t _fva_prtInputMediaWeight[4];
 
 
 /* storage for string value(s) for prtInputMediaType
 */
 #define MAX_prtInputMediaType_LEN		63
-extern       uint8_t _vvs_prtInputMediaType[64];
-extern const uint8_t _fvs_prtInputMediaType[/*max of 64*/];
+extern       uint8_t _vvs_prtInputMediaType[256];
+extern const uint8_t _fvs_prtInputMediaType[/*max of 256*/];
 
 
 /* storage for string value(s) for prtInputMediaColor
 */
 #define MAX_prtInputMediaColor_LEN		63
-extern       uint8_t _vvs_prtInputMediaColor[64];
-extern const uint8_t _fvs_prtInputMediaColor[/*max of 64*/];
+extern       uint8_t _vvs_prtInputMediaColor[256];
+extern const uint8_t _fvs_prtInputMediaColor[/*max of 256*/];
 
 
 /* storage for multi-dimensional property prtInputMediaFormParts
 */
-extern       int _vva_prtInputMediaFormParts[1];
-extern const int _fva_prtInputMediaFormParts[1];
+extern       int32_t _vva_prtInputMediaFormParts[4];
+extern const int32_t _fva_prtInputMediaFormParts[4];
 
 
 /* storage for multi-dimensional property prtOutputIndex
 */
-extern       int _vva_prtOutputIndex[1];
-extern const int _fva_prtOutputIndex[1];
+extern       int32_t _vva_prtOutputIndex[1];
+extern const int32_t _fva_prtOutputIndex[1];
 
 
 /* storage for multi-dimensional property prtOutputType
 */
-extern       int _vva_prtOutputType[1];
-extern const int _fva_prtOutputType[1];
+extern       int32_t _vva_prtOutputType[1];
+extern const int32_t _fva_prtOutputType[1];
 
 
 /* storage for multi-dimensional property prtOutputCapacityUnit
 */
-extern       int _vva_prtOutputCapacityUnit[1];
-extern const int _fva_prtOutputCapacityUnit[1];
+extern       int32_t _vva_prtOutputCapacityUnit[1];
+extern const int32_t _fva_prtOutputCapacityUnit[1];
 
 
 /* storage for multi-dimensional property prtOutputMaxCapacity
 */
-extern       int _vva_prtOutputMaxCapacity[1];
-extern const int _fva_prtOutputMaxCapacity[1];
+extern       int32_t _vva_prtOutputMaxCapacity[1];
+extern const int32_t _fva_prtOutputMaxCapacity[1];
 
 
 /* storage for multi-dimensional property prtOutputRemainingCapacity
 */
-extern       int _vva_prtOutputRemainingCapacity[1];
-extern const int _fva_prtOutputRemainingCapacity[1];
+extern       int32_t _vva_prtOutputRemainingCapacity[1];
+extern const int32_t _fva_prtOutputRemainingCapacity[1];
 
 
 /* storage for multi-dimensional property prtOutputStatus
 */
-extern       int _vva_prtOutputStatus[1];
-extern const int _fva_prtOutputStatus[1];
+extern       int32_t _vva_prtOutputStatus[1];
+extern const int32_t _fva_prtOutputStatus[1];
 
 
 /* storage for string value(s) for prtOutputName
@@ -3061,304 +3061,304 @@ extern const uint8_t _fvs_prtOutputDescription[/*max of 256*/];
 
 /* storage for multi-dimensional property prtOutputSecurity
 */
-extern       int _vva_prtOutputSecurity[1];
-extern const int _fva_prtOutputSecurity[1];
+extern       int32_t _vva_prtOutputSecurity[1];
+extern const int32_t _fva_prtOutputSecurity[1];
 
 
 /* storage for multi-dimensional property prtOutputDimUnit
 */
-extern       int _vva_prtOutputDimUnit[1];
-extern const int _fva_prtOutputDimUnit[1];
+extern       int32_t _vva_prtOutputDimUnit[1];
+extern const int32_t _fva_prtOutputDimUnit[1];
 
 
 /* storage for multi-dimensional property prtOutputMaxDimFeedDir
 */
-extern       int _vva_prtOutputMaxDimFeedDir[1];
-extern const int _fva_prtOutputMaxDimFeedDir[1];
+extern       int32_t _vva_prtOutputMaxDimFeedDir[1];
+extern const int32_t _fva_prtOutputMaxDimFeedDir[1];
 
 
 /* storage for multi-dimensional property prtOutputMaxDimXFeedDir
 */
-extern       int _vva_prtOutputMaxDimXFeedDir[1];
-extern const int _fva_prtOutputMaxDimXFeedDir[1];
+extern       int32_t _vva_prtOutputMaxDimXFeedDir[1];
+extern const int32_t _fva_prtOutputMaxDimXFeedDir[1];
 
 
 /* storage for multi-dimensional property prtOutputMinDimFeedDir
 */
-extern       int _vva_prtOutputMinDimFeedDir[1];
-extern const int _fva_prtOutputMinDimFeedDir[1];
+extern       int32_t _vva_prtOutputMinDimFeedDir[1];
+extern const int32_t _fva_prtOutputMinDimFeedDir[1];
 
 
 /* storage for multi-dimensional property prtOutputMinDimXFeedDir
 */
-extern       int _vva_prtOutputMinDimXFeedDir[1];
-extern const int _fva_prtOutputMinDimXFeedDir[1];
+extern       int32_t _vva_prtOutputMinDimXFeedDir[1];
+extern const int32_t _fva_prtOutputMinDimXFeedDir[1];
 
 
 /* storage for multi-dimensional property prtOutputStackingOrder
 */
-extern       int _vva_prtOutputStackingOrder[1];
-extern const int _fva_prtOutputStackingOrder[1];
+extern       int32_t _vva_prtOutputStackingOrder[1];
+extern const int32_t _fva_prtOutputStackingOrder[1];
 
 
 /* storage for multi-dimensional property prtOutputPageDeliveryOrientation
 */
-extern       int _vva_prtOutputPageDeliveryOrientation[1];
-extern const int _fva_prtOutputPageDeliveryOrientation[1];
+extern       int32_t _vva_prtOutputPageDeliveryOrientation[1];
+extern const int32_t _fva_prtOutputPageDeliveryOrientation[1];
 
 
 /* storage for multi-dimensional property prtOutputBursting
 */
-extern       int _vva_prtOutputBursting[1];
-extern const int _fva_prtOutputBursting[1];
+extern       int32_t _vva_prtOutputBursting[1];
+extern const int32_t _fva_prtOutputBursting[1];
 
 
 /* storage for multi-dimensional property prtOutputDecollating
 */
-extern       int _vva_prtOutputDecollating[1];
-extern const int _fva_prtOutputDecollating[1];
+extern       int32_t _vva_prtOutputDecollating[1];
+extern const int32_t _fva_prtOutputDecollating[1];
 
 
 /* storage for multi-dimensional property prtOutputPageCollated
 */
-extern       int _vva_prtOutputPageCollated[1];
-extern const int _fva_prtOutputPageCollated[1];
+extern       int32_t _vva_prtOutputPageCollated[1];
+extern const int32_t _fva_prtOutputPageCollated[1];
 
 
 /* storage for multi-dimensional property prtOutputOffsetStacking
 */
-extern       int _vva_prtOutputOffsetStacking[1];
-extern const int _fva_prtOutputOffsetStacking[1];
+extern       int32_t _vva_prtOutputOffsetStacking[1];
+extern const int32_t _fva_prtOutputOffsetStacking[1];
 
 
 /* storage for multi-dimensional property prtMarkerIndex
 */
-extern       int _vva_prtMarkerIndex[1];
-extern const int _fva_prtMarkerIndex[1];
+extern       int32_t _vva_prtMarkerIndex[4];
+extern const int32_t _fva_prtMarkerIndex[4];
 
 
 /* storage for multi-dimensional property prtMarkerMarkTech
 */
-extern       int _vva_prtMarkerMarkTech[1];
-extern const int _fva_prtMarkerMarkTech[1];
+extern       int32_t _vva_prtMarkerMarkTech[4];
+extern const int32_t _fva_prtMarkerMarkTech[4];
 
 
 /* storage for multi-dimensional property prtMarkerCounterUnit
 */
-extern       int _vva_prtMarkerCounterUnit[1];
-extern const int _fva_prtMarkerCounterUnit[1];
+extern       int32_t _vva_prtMarkerCounterUnit[4];
+extern const int32_t _fva_prtMarkerCounterUnit[4];
 
 
 /* storage for multi-dimensional property prtMarkerLifeCount
 */
-extern       uint32_t _vva_prtMarkerLifeCount[1];
-extern const uint32_t _fva_prtMarkerLifeCount[1];
+extern       uint32_t _vva_prtMarkerLifeCount[4];
+extern const uint32_t _fva_prtMarkerLifeCount[4];
 
 
 /* storage for multi-dimensional property prtMarkerPowerOnCount
 */
-extern       uint32_t _vva_prtMarkerPowerOnCount[1];
-extern const uint32_t _fva_prtMarkerPowerOnCount[1];
+extern       uint32_t _vva_prtMarkerPowerOnCount[4];
+extern const uint32_t _fva_prtMarkerPowerOnCount[4];
 
 
 /* storage for multi-dimensional property prtMarkerProcessColorants
 */
-extern       int _vva_prtMarkerProcessColorants[1];
-extern const int _fva_prtMarkerProcessColorants[1];
+extern       int32_t _vva_prtMarkerProcessColorants[4];
+extern const int32_t _fva_prtMarkerProcessColorants[4];
 
 
 /* storage for multi-dimensional property prtMarkerSpotColorants
 */
-extern       int _vva_prtMarkerSpotColorants[1];
-extern const int _fva_prtMarkerSpotColorants[1];
+extern       int32_t _vva_prtMarkerSpotColorants[4];
+extern const int32_t _fva_prtMarkerSpotColorants[4];
 
 
 /* storage for multi-dimensional property prtMarkerAddressabilityUnit
 */
-extern       int _vva_prtMarkerAddressabilityUnit[1];
-extern const int _fva_prtMarkerAddressabilityUnit[1];
+extern       int32_t _vva_prtMarkerAddressabilityUnit[4];
+extern const int32_t _fva_prtMarkerAddressabilityUnit[4];
 
 
 /* storage for multi-dimensional property prtMarkerAddressabilityFeedDir
 */
-extern       int _vva_prtMarkerAddressabilityFeedDir[1];
-extern const int _fva_prtMarkerAddressabilityFeedDir[1];
+extern       int32_t _vva_prtMarkerAddressabilityFeedDir[4];
+extern const int32_t _fva_prtMarkerAddressabilityFeedDir[4];
 
 
 /* storage for multi-dimensional property prtMarkerAddressabilityXFeedDir
 */
-extern       int _vva_prtMarkerAddressabilityXFeedDir[1];
-extern const int _fva_prtMarkerAddressabilityXFeedDir[1];
+extern       int32_t _vva_prtMarkerAddressabilityXFeedDir[4];
+extern const int32_t _fva_prtMarkerAddressabilityXFeedDir[4];
 
 
 /* storage for multi-dimensional property prtMarkerNorthMargin
 */
-extern       int _vva_prtMarkerNorthMargin[1];
-extern const int _fva_prtMarkerNorthMargin[1];
+extern       int32_t _vva_prtMarkerNorthMargin[4];
+extern const int32_t _fva_prtMarkerNorthMargin[4];
 
 
 /* storage for multi-dimensional property prtMarkerSouthMargin
 */
-extern       int _vva_prtMarkerSouthMargin[1];
-extern const int _fva_prtMarkerSouthMargin[1];
+extern       int32_t _vva_prtMarkerSouthMargin[4];
+extern const int32_t _fva_prtMarkerSouthMargin[4];
 
 
 /* storage for multi-dimensional property prtMarkerWestMargin
 */
-extern       int _vva_prtMarkerWestMargin[1];
-extern const int _fva_prtMarkerWestMargin[1];
+extern       int32_t _vva_prtMarkerWestMargin[4];
+extern const int32_t _fva_prtMarkerWestMargin[4];
 
 
 /* storage for multi-dimensional property prtMarkerEastMargin
 */
-extern       int _vva_prtMarkerEastMargin[1];
-extern const int _fva_prtMarkerEastMargin[1];
+extern       int32_t _vva_prtMarkerEastMargin[4];
+extern const int32_t _fva_prtMarkerEastMargin[4];
 
 
 /* storage for multi-dimensional property prtMarkerStatus
 */
-extern       int _vva_prtMarkerStatus[1];
-extern const int _fva_prtMarkerStatus[1];
+extern       int32_t _vva_prtMarkerStatus[4];
+extern const int32_t _fva_prtMarkerStatus[4];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesIndex
 */
-extern       int _vva_prtMarkerSuppliesIndex[1];
-extern const int _fva_prtMarkerSuppliesIndex[1];
+extern       int32_t _vva_prtMarkerSuppliesIndex[4];
+extern const int32_t _fva_prtMarkerSuppliesIndex[4];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesMarkerIndex
 */
-extern       int _vva_prtMarkerSuppliesMarkerIndex[1];
-extern const int _fva_prtMarkerSuppliesMarkerIndex[1];
+extern       int32_t _vva_prtMarkerSuppliesMarkerIndex[4];
+extern const int32_t _fva_prtMarkerSuppliesMarkerIndex[4];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesColorantIndex
 */
-extern       int _vva_prtMarkerSuppliesColorantIndex[1];
-extern const int _fva_prtMarkerSuppliesColorantIndex[1];
+extern       int32_t _vva_prtMarkerSuppliesColorantIndex[4];
+extern const int32_t _fva_prtMarkerSuppliesColorantIndex[4];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesClass
 */
-extern       int _vva_prtMarkerSuppliesClass[1];
-extern const int _fva_prtMarkerSuppliesClass[1];
+extern       int32_t _vva_prtMarkerSuppliesClass[4];
+extern const int32_t _fva_prtMarkerSuppliesClass[4];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesType
 */
-extern       int _vva_prtMarkerSuppliesType[1];
-extern const int _fva_prtMarkerSuppliesType[1];
+extern       int32_t _vva_prtMarkerSuppliesType[4];
+extern const int32_t _fva_prtMarkerSuppliesType[4];
 
 
 /* storage for string value(s) for prtMarkerSuppliesDescription
 */
 #define MAX_prtMarkerSuppliesDescription_LEN		255
-extern       uint8_t _vvs_prtMarkerSuppliesDescription[256];
-extern const uint8_t _fvs_prtMarkerSuppliesDescription[/*max of 256*/];
+extern       uint8_t _vvs_prtMarkerSuppliesDescription[1024];
+extern const uint8_t _fvs_prtMarkerSuppliesDescription[/*max of 1024*/];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesSupplyUnit
 */
-extern       int _vva_prtMarkerSuppliesSupplyUnit[1];
-extern const int _fva_prtMarkerSuppliesSupplyUnit[1];
+extern       int32_t _vva_prtMarkerSuppliesSupplyUnit[4];
+extern const int32_t _fva_prtMarkerSuppliesSupplyUnit[4];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesMaxCapacity
 */
-extern       int _vva_prtMarkerSuppliesMaxCapacity[1];
-extern const int _fva_prtMarkerSuppliesMaxCapacity[1];
+extern       int32_t _vva_prtMarkerSuppliesMaxCapacity[4];
+extern const int32_t _fva_prtMarkerSuppliesMaxCapacity[4];
 
 
 /* storage for multi-dimensional property prtMarkerSuppliesLevel
 */
-extern       int _vva_prtMarkerSuppliesLevel[1];
-extern const int _fva_prtMarkerSuppliesLevel[1];
+extern       int32_t _vva_prtMarkerSuppliesLevel[4];
+extern const int32_t _fva_prtMarkerSuppliesLevel[4];
 
 
 /* storage for multi-dimensional property prtMarkerColorantIndex
 */
-extern       int _vva_prtMarkerColorantIndex[1];
-extern const int _fva_prtMarkerColorantIndex[1];
+extern       int32_t _vva_prtMarkerColorantIndex[4];
+extern const int32_t _fva_prtMarkerColorantIndex[4];
 
 
 /* storage for multi-dimensional property prtMarkerColorantMarkerIndex
 */
-extern       int _vva_prtMarkerColorantMarkerIndex[1];
-extern const int _fva_prtMarkerColorantMarkerIndex[1];
+extern       int32_t _vva_prtMarkerColorantMarkerIndex[4];
+extern const int32_t _fva_prtMarkerColorantMarkerIndex[4];
 
 
 /* storage for multi-dimensional property prtMarkerColorantRole
 */
-extern       int _vva_prtMarkerColorantRole[1];
-extern const int _fva_prtMarkerColorantRole[1];
+extern       int32_t _vva_prtMarkerColorantRole[4];
+extern const int32_t _fva_prtMarkerColorantRole[4];
 
 
 /* storage for string value(s) for prtMarkerColorantValue
 */
 #define MAX_prtMarkerColorantValue_LEN		63
-extern       uint8_t _vvs_prtMarkerColorantValue[64];
-extern const uint8_t _fvs_prtMarkerColorantValue[/*max of 64*/];
+extern       uint8_t _vvs_prtMarkerColorantValue[256];
+extern const uint8_t _fvs_prtMarkerColorantValue[/*max of 256*/];
 
 
 /* storage for multi-dimensional property prtMarkerColorantTonality
 */
-extern       int _vva_prtMarkerColorantTonality[1];
-extern const int _fva_prtMarkerColorantTonality[1];
+extern       int32_t _vva_prtMarkerColorantTonality[4];
+extern const int32_t _fva_prtMarkerColorantTonality[4];
 
 
 /* storage for multi-dimensional property prtMediaPathIndex
 */
-extern       int _vva_prtMediaPathIndex[1];
-extern const int _fva_prtMediaPathIndex[1];
+extern       int32_t _vva_prtMediaPathIndex[1];
+extern const int32_t _fva_prtMediaPathIndex[1];
 
 
 /* storage for multi-dimensional property prtMediaPathMaxSpeedPrintUnit
 */
-extern       int _vva_prtMediaPathMaxSpeedPrintUnit[1];
-extern const int _fva_prtMediaPathMaxSpeedPrintUnit[1];
+extern       int32_t _vva_prtMediaPathMaxSpeedPrintUnit[1];
+extern const int32_t _fva_prtMediaPathMaxSpeedPrintUnit[1];
 
 
 /* storage for multi-dimensional property prtMediaPathMediaSizeUnit
 */
-extern       int _vva_prtMediaPathMediaSizeUnit[1];
-extern const int _fva_prtMediaPathMediaSizeUnit[1];
+extern       int32_t _vva_prtMediaPathMediaSizeUnit[1];
+extern const int32_t _fva_prtMediaPathMediaSizeUnit[1];
 
 
 /* storage for multi-dimensional property prtMediaPathMaxSpeed
 */
-extern       int _vva_prtMediaPathMaxSpeed[1];
-extern const int _fva_prtMediaPathMaxSpeed[1];
+extern       int32_t _vva_prtMediaPathMaxSpeed[1];
+extern const int32_t _fva_prtMediaPathMaxSpeed[1];
 
 
 /* storage for multi-dimensional property prtMediaPathMaxMediaFeedDir
 */
-extern       int _vva_prtMediaPathMaxMediaFeedDir[1];
-extern const int _fva_prtMediaPathMaxMediaFeedDir[1];
+extern       int32_t _vva_prtMediaPathMaxMediaFeedDir[1];
+extern const int32_t _fva_prtMediaPathMaxMediaFeedDir[1];
 
 
 /* storage for multi-dimensional property prtMediaPathMaxMediaXFeedDir
 */
-extern       int _vva_prtMediaPathMaxMediaXFeedDir[1];
-extern const int _fva_prtMediaPathMaxMediaXFeedDir[1];
+extern       int32_t _vva_prtMediaPathMaxMediaXFeedDir[1];
+extern const int32_t _fva_prtMediaPathMaxMediaXFeedDir[1];
 
 
 /* storage for multi-dimensional property prtMediaPathMinMediaFeedDir
 */
-extern       int _vva_prtMediaPathMinMediaFeedDir[1];
-extern const int _fva_prtMediaPathMinMediaFeedDir[1];
+extern       int32_t _vva_prtMediaPathMinMediaFeedDir[1];
+extern const int32_t _fva_prtMediaPathMinMediaFeedDir[1];
 
 
 /* storage for multi-dimensional property prtMediaPathMinMediaXFeedDir
 */
-extern       int _vva_prtMediaPathMinMediaXFeedDir[1];
-extern const int _fva_prtMediaPathMinMediaXFeedDir[1];
+extern       int32_t _vva_prtMediaPathMinMediaXFeedDir[1];
+extern const int32_t _fva_prtMediaPathMinMediaXFeedDir[1];
 
 
 /* storage for multi-dimensional property prtMediaPathType
 */
-extern       int _vva_prtMediaPathType[1];
-extern const int _fva_prtMediaPathType[1];
+extern       int32_t _vva_prtMediaPathType[1];
+extern const int32_t _fva_prtMediaPathType[1];
 
 
 /* storage for string value(s) for prtMediaPathDescription
@@ -3370,20 +3370,20 @@ extern const uint8_t _fvs_prtMediaPathDescription[/*max of 256*/];
 
 /* storage for multi-dimensional property prtMediaPathStatus
 */
-extern       int _vva_prtMediaPathStatus[1];
-extern const int _fva_prtMediaPathStatus[1];
+extern       int32_t _vva_prtMediaPathStatus[1];
+extern const int32_t _fva_prtMediaPathStatus[1];
 
 
 /* storage for multi-dimensional property prtChannelIndex
 */
-extern       int _vva_prtChannelIndex[1];
-extern const int _fva_prtChannelIndex[1];
+extern       int32_t _vva_prtChannelIndex[1];
+extern const int32_t _fva_prtChannelIndex[1];
 
 
 /* storage for multi-dimensional property prtChannelType
 */
-extern       int _vva_prtChannelType[1];
-extern const int _fva_prtChannelType[1];
+extern       int32_t _vva_prtChannelType[1];
+extern const int32_t _fva_prtChannelType[1];
 
 
 /* storage for string value(s) for prtChannelProtocolVersion
@@ -3395,44 +3395,44 @@ extern const uint8_t _fvs_prtChannelProtocolVersion[/*max of 64*/];
 
 /* storage for multi-dimensional property prtChannelCurrentJobCntlLangIndex
 */
-extern       int _vva_prtChannelCurrentJobCntlLangIndex[1];
-extern const int _fva_prtChannelCurrentJobCntlLangIndex[1];
+extern       int32_t _vva_prtChannelCurrentJobCntlLangIndex[1];
+extern const int32_t _fva_prtChannelCurrentJobCntlLangIndex[1];
 
 
 /* storage for multi-dimensional property prtChannelDefaultPageDescLangIndex
 */
-extern       int _vva_prtChannelDefaultPageDescLangIndex[1];
-extern const int _fva_prtChannelDefaultPageDescLangIndex[1];
+extern       int32_t _vva_prtChannelDefaultPageDescLangIndex[1];
+extern const int32_t _fva_prtChannelDefaultPageDescLangIndex[1];
 
 
 /* storage for multi-dimensional property prtChannelState
 */
-extern       int _vva_prtChannelState[1];
-extern const int _fva_prtChannelState[1];
+extern       int32_t _vva_prtChannelState[1];
+extern const int32_t _fva_prtChannelState[1];
 
 
 /* storage for multi-dimensional property prtChannelIfIndex
 */
-extern       int _vva_prtChannelIfIndex[1];
-extern const int _fva_prtChannelIfIndex[1];
+extern       int32_t _vva_prtChannelIfIndex[1];
+extern const int32_t _fva_prtChannelIfIndex[1];
 
 
 /* storage for multi-dimensional property prtChannelStatus
 */
-extern       int _vva_prtChannelStatus[1];
-extern const int _fva_prtChannelStatus[1];
+extern       int32_t _vva_prtChannelStatus[1];
+extern const int32_t _fva_prtChannelStatus[1];
 
 
 /* storage for multi-dimensional property prtInterpreterIndex
 */
-extern       int _vva_prtInterpreterIndex[1];
-extern const int _fva_prtInterpreterIndex[1];
+extern       int32_t _vva_prtInterpreterIndex[1];
+extern const int32_t _fva_prtInterpreterIndex[1];
 
 
 /* storage for multi-dimensional property prtInterpreterLangFamily
 */
-extern       int _vva_prtInterpreterLangFamily[1];
-extern const int _fva_prtInterpreterLangFamily[1];
+extern       int32_t _vva_prtInterpreterLangFamily[1];
+extern const int32_t _fva_prtInterpreterLangFamily[1];
 
 
 /* storage for string value(s) for prtInterpreterLangLevel
@@ -3465,44 +3465,44 @@ extern const uint8_t _fvs_prtInterpreterVersion[/*max of 32*/];
 
 /* storage for multi-dimensional property prtInterpreterDefaultOrientation
 */
-extern       int _vva_prtInterpreterDefaultOrientation[1];
-extern const int _fva_prtInterpreterDefaultOrientation[1];
+extern       int32_t _vva_prtInterpreterDefaultOrientation[1];
+extern const int32_t _fva_prtInterpreterDefaultOrientation[1];
 
 
 /* storage for multi-dimensional property prtInterpreterFeedAddressability
 */
-extern       int _vva_prtInterpreterFeedAddressability[1];
-extern const int _fva_prtInterpreterFeedAddressability[1];
+extern       int32_t _vva_prtInterpreterFeedAddressability[1];
+extern const int32_t _fva_prtInterpreterFeedAddressability[1];
 
 
 /* storage for multi-dimensional property prtInterpreterXFeedAddressability
 */
-extern       int _vva_prtInterpreterXFeedAddressability[1];
-extern const int _fva_prtInterpreterXFeedAddressability[1];
+extern       int32_t _vva_prtInterpreterXFeedAddressability[1];
+extern const int32_t _fva_prtInterpreterXFeedAddressability[1];
 
 
 /* storage for multi-dimensional property prtInterpreterDefaultCharSetIn
 */
-extern       int _vva_prtInterpreterDefaultCharSetIn[1];
-extern const int _fva_prtInterpreterDefaultCharSetIn[1];
+extern       int32_t _vva_prtInterpreterDefaultCharSetIn[1];
+extern const int32_t _fva_prtInterpreterDefaultCharSetIn[1];
 
 
 /* storage for multi-dimensional property prtInterpreterDefaultCharSetOut
 */
-extern       int _vva_prtInterpreterDefaultCharSetOut[1];
-extern const int _fva_prtInterpreterDefaultCharSetOut[1];
+extern       int32_t _vva_prtInterpreterDefaultCharSetOut[1];
+extern const int32_t _fva_prtInterpreterDefaultCharSetOut[1];
 
 
 /* storage for multi-dimensional property prtInterpreterTwoWay
 */
-extern       int _vva_prtInterpreterTwoWay[1];
-extern const int _fva_prtInterpreterTwoWay[1];
+extern       int32_t _vva_prtInterpreterTwoWay[1];
+extern const int32_t _fva_prtInterpreterTwoWay[1];
 
 
 /* storage for multi-dimensional property prtConsoleDisplayBufferIndex
 */
-extern       int _vva_prtConsoleDisplayBufferIndex[1];
-extern const int _fva_prtConsoleDisplayBufferIndex[1];
+extern       int32_t _vva_prtConsoleDisplayBufferIndex[1];
+extern const int32_t _fva_prtConsoleDisplayBufferIndex[1];
 
 
 /* storage for string value(s) for prtConsoleDisplayBufferText
@@ -3514,26 +3514,26 @@ extern const uint8_t _fvs_prtConsoleDisplayBufferText[/*max of 256*/];
 
 /* storage for multi-dimensional property prtConsoleLightIndex
 */
-extern       int _vva_prtConsoleLightIndex[1];
-extern const int _fva_prtConsoleLightIndex[1];
+extern       int32_t _vva_prtConsoleLightIndex[1];
+extern const int32_t _fva_prtConsoleLightIndex[1];
 
 
 /* storage for multi-dimensional property prtConsoleOnTime
 */
-extern       int _vva_prtConsoleOnTime[1];
-extern const int _fva_prtConsoleOnTime[1];
+extern       int32_t _vva_prtConsoleOnTime[1];
+extern const int32_t _fva_prtConsoleOnTime[1];
 
 
 /* storage for multi-dimensional property prtConsoleOffTime
 */
-extern       int _vva_prtConsoleOffTime[1];
-extern const int _fva_prtConsoleOffTime[1];
+extern       int32_t _vva_prtConsoleOffTime[1];
+extern const int32_t _fva_prtConsoleOffTime[1];
 
 
 /* storage for multi-dimensional property prtConsoleColor
 */
-extern       int _vva_prtConsoleColor[1];
-extern const int _fva_prtConsoleColor[1];
+extern       int32_t _vva_prtConsoleColor[1];
+extern const int32_t _fva_prtConsoleColor[1];
 
 
 /* storage for string value(s) for prtConsoleDescription
@@ -3545,44 +3545,44 @@ extern const uint8_t _fvs_prtConsoleDescription[/*max of 256*/];
 
 /* storage for multi-dimensional property prtAlertIndex
 */
-extern       int _vva_prtAlertIndex[1];
-extern const int _fva_prtAlertIndex[1];
+extern       int32_t _vva_prtAlertIndex[1];
+extern const int32_t _fva_prtAlertIndex[1];
 
 
 /* storage for multi-dimensional property prtAlertSeverityLevel
 */
-extern       int _vva_prtAlertSeverityLevel[1];
-extern const int _fva_prtAlertSeverityLevel[1];
+extern       int32_t _vva_prtAlertSeverityLevel[1];
+extern const int32_t _fva_prtAlertSeverityLevel[1];
 
 
 /* storage for multi-dimensional property prtAlertTrainingLevel
 */
-extern       int _vva_prtAlertTrainingLevel[1];
-extern const int _fva_prtAlertTrainingLevel[1];
+extern       int32_t _vva_prtAlertTrainingLevel[1];
+extern const int32_t _fva_prtAlertTrainingLevel[1];
 
 
 /* storage for multi-dimensional property prtAlertGroup
 */
-extern       int _vva_prtAlertGroup[1];
-extern const int _fva_prtAlertGroup[1];
+extern       int32_t _vva_prtAlertGroup[1];
+extern const int32_t _fva_prtAlertGroup[1];
 
 
 /* storage for multi-dimensional property prtAlertGroupIndex
 */
-extern       int _vva_prtAlertGroupIndex[1];
-extern const int _fva_prtAlertGroupIndex[1];
+extern       int32_t _vva_prtAlertGroupIndex[1];
+extern const int32_t _fva_prtAlertGroupIndex[1];
 
 
 /* storage for multi-dimensional property prtAlertLocation
 */
-extern       int _vva_prtAlertLocation[1];
-extern const int _fva_prtAlertLocation[1];
+extern       int32_t _vva_prtAlertLocation[1];
+extern const int32_t _fva_prtAlertLocation[1];
 
 
 /* storage for multi-dimensional property prtAlertCode
 */
-extern       int _vva_prtAlertCode[1];
-extern const int _fva_prtAlertCode[1];
+extern       int32_t _vva_prtAlertCode[1];
+extern const int32_t _fva_prtAlertCode[1];
 
 
 /* storage for string value(s) for prtAlertDescription
@@ -3632,16 +3632,14 @@ extern const bmib_enumvals_t g_mib_enums[BMIBC_NUM_RECORDS];
 #endif
 
 
-
-/* OID to obejct record index cross reference table
-*/
-#define BMIBC_MAX_NODE_INDEX 3 /* number of indices supported */
+#ifndef BSNMPOBJECT_H
 typedef struct {
     const char *oidstr;
     size_t record_index;
     uint8_t asntype;
-    size_t indices[BMIBC_MAX_NODE_INDEX];
+    size_t indices[BSNMP_MAX_DIMENSIONS];
 } bmibc_oid_xref_t;
+#endif
 
 
 extern const bmibc_oid_xref_t g_oidxreftab[BMIBC_NUM_RECORDS];

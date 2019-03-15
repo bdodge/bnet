@@ -94,10 +94,14 @@ int bsnmp_get_object_dimensionality(
     return 0;
 }
 
-#if BMIBC_HAVE_OBJECT_NAMES
-int bsnmp_oid_from_name(const char *name, bsnmp_oid_t *oid)
+int bsnmp_oid_from_name(bsnmp_oid_t *oid, const char *name)
 {
+#if BSNMP_OBJECT_NAMES
     size_t recdex;
+    size_t ndim;
+    size_t ntot;
+    size_t indices[BSNMP_MAX_DIMENSIONS];
+    int    result;
 
     if (! name || ! oid)
     {
@@ -105,14 +109,30 @@ int bsnmp_oid_from_name(const char *name, bsnmp_oid_t *oid)
     }
     for (recdex = 0; recdex < s_num_records; recdex++)
     {
-        if (! strcmp(s_xrefs[recdex].name, name))
+        if (! strcmp(s_records[recdex].name, name))
         {
-            return bsnmp_oid_from_string(oid, s_xrefs[recdex].oidstr);
+            result = bsnmp_oid_from_string(oid, s_xrefs[recdex].oidstr);
+            if (result)
+            {
+                return result;
+            }
+            // assume-unindex oid
+            result = bsnmp_get_object_dimensionality(recdex, &ndim, &ntot, indices);
+            if (result)
+            {
+                break;
+            }
+            result = bsnmp_oid_pad_to_index(oid, oid, ndim);
+            if (result)
+            {
+                return result;
+            }
+            return 0;
         }
     }
+#endif
     return -1;
 }
-#endif
 
 #if 1 // faster binary search
 int bsnmp_find_record(bsnmp_oid_t *oid, bool exact, size_t *recdex)
@@ -735,20 +755,98 @@ int bsnmp_find_next_oid(bsnmp_oid_t *oid, bsnmp_oid_t *nextoid, bsnmp_errcode_t 
     return 0;
 }
 
-int bsnmp_var_from_record(const bmibc_oid_xref_t *xref, bsnmp_var_t *var)
+int bsnmp_get_dim_offset(size_t recdex, bsnmp_oid_t *varoid, size_t *offset)
+{
+    bmibc_record_t *rec;
+    size_t      ndim;
+    size_t      ntot;
+    size_t      indices[BSNMP_MAX_DIMENSIONS];
+    size_t      dim_offset;
+    size_t      objdex;
+    int         result;
+
+    dim_offset = 0;
+    *offset = 0;
+
+    result = bsnmp_get_object_dimensionality(recdex, &ndim, &ntot, indices);
+    if (result)
+    {
+        return result;
+    }
+    if (ndim)
+    {
+        bmibc_record_t *obj;
+        bsnmp_oid_t recoid;
+        size_t index;
+        size_t indval;
+        size_t offsetmult;
+
+        result = bsnmp_oid_from_string(&recoid, s_xrefs[recdex].oidstr);
+        if (result)
+        {
+            return result;
+        }
+        if (varoid->len != recoid.len + ndim)
+        {
+            butil_log(3, "get_dim: bad index count on var oid\n");
+            return -1;
+        }
+        // each index is described by an object which has  0..dim
+        // as its range, so each index value is multiplied by all
+        // indexing dimensions to their right to get storage offset
+        //
+        offsetmult = 1;
+
+        for (index = 1; index <= ndim; index++)
+        {
+            // point to the record describing the index for
+            // current dimension (note going right to left)
+            //
+            objdex = s_xrefs[recdex].indices[ndim - index];
+            obj = &s_records[objdex];
+
+            // add the oids index to storage offset
+            //
+            indval = varoid->oid[varoid->len - index];
+
+            butil_log(6, "Index %zu is %zu using obj %s with range %zu-%zu\n",
+                    ndim - index, indval,
+                    s_xrefs[objdex].oidstr,
+                    obj->minv, obj->maxv);
+
+            if (indval >= obj->dim)
+            {
+                butil_log(3, "get_dim: index %zu exceeds range %zu-%zu on index\n",
+                        indval, 0, obj->dim - 1);
+                return -1;
+            }
+            dim_offset += offsetmult * indval;
+
+            // moving left, each index is multiplied
+            // by this objects max dimensions
+            //
+            offsetmult *= obj->dim;
+        }
+    }
+    *offset = dim_offset;
+    return 0;
+}
+
+int bsnmp_var_from_record(const bmibc_oid_xref_t *xref, bsnmp_var_t *var, bsnmp_errcode_t *err)
 {
     bmibc_record_t *rec;
     bsnmp_type_t    type;
+    int             result;
     bool            isstr;
+    size_t          dim_offset;
+    intptr_t        valptr;
 
     if (! xref || ! var)
     {
+        *err = SNMP_ErrGenErr;
         return -1;
     }
-    rec = &s_records[xref->record_index];
-
     isstr = (xref->asntype & 0x80) ? true : false;
-
     type = (bsnmp_type_t)(xref->asntype & ~0x80);
 
     var->type = type;
@@ -756,13 +854,33 @@ int bsnmp_var_from_record(const bmibc_oid_xref_t *xref, bsnmp_var_t *var)
     var->alloc_len = 0;
     var->val.llVal = 0;
 
+    result = bsnmp_get_dim_offset(xref->record_index, &var->oid, &dim_offset);
+    if (result)
+    {
+        *err = SNMP_ErrNoSuchName;
+        return result;
+    }
+    rec = &s_records[xref->record_index];
+
+    // if the record has dimensions, is a string type, or takes
+    // more than 32 bits, the value is stored outside the record
+    // else the val ptr field is used directly for value store
+    //
+    if (rec->dim || isstr || rec->bits > 32)
+    {
+        valptr = (intptr_t)rec->value;
+    }
+    else
+    {
+        valptr = (intptr_t)&rec->value;
+    }
     switch (var->type)
     {
     case SNMP_NULL:
         var->val.sVal = NULL;
         break;
     case SNMP_INTEGER:
-        var->val.iVal = (int32_t)(intptr_t)rec->value;
+        var->val.iVal = *((int32_t *)valptr + dim_offset);
         break;
     case SNMP_BOOLEAN:
     case SNMP_UNSIGNED:
@@ -770,28 +888,33 @@ int bsnmp_var_from_record(const bmibc_oid_xref_t *xref, bsnmp_var_t *var)
     case SNMP_IPADDRESS:
     case SNMP_COUNTER:
     case SNMP_TIMETICKS:
-        var->val.iVal = (uint32_t)(intptr_t)rec->value;
+        var->val.iVal = *((uint32_t *)valptr + dim_offset);
         break;
     case SNMP_COUNTER64:
     case SNMP_UNSIGNED64:
-        var->val.ullVal = *(uint64_t *)rec->value;
+        var->val.ullVal = *((uint64_t *)valptr + dim_offset);
         break;
     case SNMP_INTEGER64:
-        var->val.llVal = *(uint64_t *)rec->value;
+        var->val.llVal = *((int64_t *)valptr + dim_offset);
         break;
     case SNMP_OCTET_STRING:
         if (! isstr)
         {
-            var->val.ucVal = (uint8_t)(intptr_t)rec->value;
+            var->val.ucVal = *((uint8_t *)valptr + dim_offset);
         }
         else
         {
-            var->len = (uint32_t) *(uint8_t*)rec->value;
-            var->val.sVal = (char *)rec->value + 1;
+            // for strings, each is allocated up to maxv bytes
+            dim_offset *= (rec->maxv + 1);
+            var->val.sVal = (char *)valptr + dim_offset;
+
+            // first byte stores length of string
+            var->len = *var->val.sVal++;
         }
         break;
     case SNMP_OBJECT_ID:
-        var->val.oVal = (bsnmp_oid_t *)rec->value;
+        // for objects, each is allocated sizeof type
+        var->val.oVal = (bsnmp_oid_t *)valptr + dim_offset;
         var->len = var->val.oVal->len;
         break;
     case SNMP_PRINTABLE_STR:
@@ -813,6 +936,7 @@ int bsnmp_var_from_record(const bmibc_oid_xref_t *xref, bsnmp_var_t *var)
         butil_log(0, "Not a type: %u\n", var->type);
         return -1;
     }
+    *err = SNMP_ErrNoError;
     return 0;
 }
 
@@ -837,10 +961,9 @@ int bsnmp_get_object_value(bsnmp_oid_t *oid, bsnmp_var_t *var, bsnmp_errcode_t *
         return result;
     }
     xref = &s_xrefs[lower_dex];
-    result = bsnmp_var_from_record(xref, var);
+    result = bsnmp_var_from_record(xref, var, err);
     if (result)
     {
-        *err = SNMP_ErrBadValue;
         return result;
     }
     *err = SNMP_ErrNoError;
@@ -866,25 +989,55 @@ int bsnmp_get_next_object_value(bsnmp_oid_t *oid, bsnmp_var_t *var, bsnmp_errcod
 int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var, bsnmp_errcode_t *err)
 {
     bmibc_record_t *rec;
-    bsnmp_type_t    type;
-    bool            isstr;
+    bsnmp_type_t    rec_type;
+    bsnmp_type_t    var_type;
+    bool            rec_isstr;
+    bool            var_isstr;
+    int             result;
+    size_t          dim_offset;
+    intptr_t        valptr;
 
     if (! xref || ! var)
     {
         return -1;
     }
+    result = bsnmp_get_dim_offset(xref->record_index, &var->oid, &dim_offset);
+    if (result)
+    {
+        *err = SNMP_ErrNoSuchName;
+        return result;
+    }
     rec = &s_records[xref->record_index];
 
-    isstr = (xref->asntype & 0x80) ? true : false;
+    rec_isstr = (xref->asntype & 0x80) ? true : false;
+    rec_type = (bsnmp_type_t)(xref->asntype & ~0x80);
 
-    type = (bsnmp_type_t)(xref->asntype & ~0x80);
+    var_isstr = (var->type & 0x80) ? true : false;
+    var_type  = var->type & ~0x80;
 
-    switch (type)
+    // if the record has dimensions, is a string type, or takes
+    // more than 32 bits, the value is stored outside the record
+    // else the val ptr field is used directly for value store
+    //
+    if (rec->dim || rec_isstr || rec->bits > 32)
+    {
+        valptr = (intptr_t)rec->value;
+    }
+    else
+    {
+        valptr = (intptr_t)&rec->value;
+    }
+    switch (rec_type)
     {
     case SNMP_NULL:
         break;
     case SNMP_INTEGER:
-        *(int32_t *)(intptr_t)&rec->value = var->val.iVal;
+        if (var_type != SNMP_INTEGER)
+        {
+            *err = SNMP_ErrWrongType;
+            return -1;
+        }
+        *((int32_t *)valptr + dim_offset) = var->val.iVal;
         break;
     case SNMP_BOOLEAN:
     case SNMP_UNSIGNED:
@@ -892,19 +1045,47 @@ int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var, bsnmp_
     case SNMP_IPADDRESS:
     case SNMP_COUNTER:
     case SNMP_TIMETICKS:
-        *(uint32_t *)(intptr_t)&rec->value = var->val.uVal;
+        switch (var_type)
+        {
+        case SNMP_BOOLEAN:
+        case SNMP_UNSIGNED:
+        case SNMP_UNSIGNED32:
+        case SNMP_IPADDRESS:
+        case SNMP_COUNTER:
+        case SNMP_TIMETICKS:
+            *((uint32_t *)valptr + dim_offset) = var->val.uVal;
+            break;
+        default:
+            *err = SNMP_ErrWrongType;
+            return -1;
+        }
         break;
     case SNMP_COUNTER64:
     case SNMP_UNSIGNED64:
-        *(uint64_t *)rec->value = var->val.ullVal;
+        if (var_type != SNMP_COUNTER64 && var_type != SNMP_UNSIGNED64)
+        {
+            *err = SNMP_ErrWrongType;
+            return -1;
+        }
+        *((uint64_t *)valptr + dim_offset) = var->val.ullVal;
         break;
     case SNMP_INTEGER64:
-        *(int64_t *)rec->value = var->val.llVal;
+        if (var_type != SNMP_INTEGER64)
+        {
+            *err = SNMP_ErrWrongType;
+            return -1;
+        }
+        *((int32_t *)valptr + dim_offset) = var->val.llVal;
         break;
     case SNMP_OCTET_STRING:
-        if (!isstr)
+        if (var_type != SNMP_OCTET_STRING)
         {
-            *(uint8_t *)(intptr_t)&rec->value = (uint32_t)var->val.ucVal;
+            *err = SNMP_ErrWrongType;
+            return -1;
+        }
+        if (!rec_isstr)
+        {
+            *((uint8_t *)valptr + dim_offset) = (uint32_t)var->val.ucVal;
         }
         else
         {
@@ -916,19 +1097,26 @@ int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var, bsnmp_
                 butil_log(0, "String set overflow %s\n", var->val.sVal);
                 len = rec->maxv - 2;
             }
-            strncpy((char *)(intptr_t)rec->value + 1, var->val.sVal, len);
-            *(((char*)(intptr_t)rec->value) + len + 1) = '\0';
-            *(uint8_t*)(intptr_t)rec->value = (uint8_t)len;
+            // for strings, each is allocated up to maxv bytes
+            dim_offset *= (rec->maxv + 1);
+            strncpy((char *)valptr + dim_offset + 1, var->val.sVal, len);
+            *((char*)valptr + dim_offset + len + 1) = '\0';
+            *((uint8_t*)valptr + dim_offset) = (uint8_t)len;
         }
         break;
     case SNMP_OBJECT_ID:
+        if (var_type != SNMP_OBJECT_ID)
+        {
+            *err = SNMP_ErrWrongType;
+            return -1;
+        }
         if (var->val.oVal->len >= (rec->maxv - 2))
         {
             butil_log(0, "OID set overflow\n");
             *err = SNMP_ErrTooBig;
             return -1;
         }
-        memcpy((char *)(intptr_t)rec->value, var->val.oVal, sizeof(bsnmp_oid_t));
+        memcpy((char *)((bsnmp_oid_t *)valptr + dim_offset), var->val.oVal, sizeof(bsnmp_oid_t));
         break;
     case SNMP_PRINTABLE_STR:
     case SNMP_UTC_TIME:
@@ -956,8 +1144,6 @@ int bsnmp_record_from_var(const bmibc_oid_xref_t *xref, bsnmp_var_t *var, bsnmp_
 
 int bsnmp_set_object_value(
                             bsnmp_var_t *var,
-                            size_t num_indices,
-                            size_t indices[BSNMP_MAX_DIMENSIONS],
                             bsnmp_errcode_t *err
                           )
 {
@@ -973,18 +1159,40 @@ int bsnmp_set_object_value(
     return bsnmp_record_from_var(&s_xrefs[recdex], var, err);
 }
 
+static bool bsnmp_is_object_name(const char *str)
+{
+    bool isstr;
+
+    // if string is all numbers and dots, its an oid
+    //
+    while (*str)
+    {
+        if ((*str != '.') && (*str < '0' || *str > '9'))
+        {
+            return true;
+        }
+        str++;
+    }
+    return false;
+}
+
 int bsnmp_set_string_value(
                             const char *oidstr,
                             const char *str,
-                            size_t num_indices,
-                            size_t indices[BSNMP_MAX_DIMENSIONS],
                             bsnmp_errcode_t *err
                           )
 {
     bsnmp_var_t var;
     int result;
 
-    result = bsnmp_oid_from_string(&var.oid, oidstr);
+    if (bsnmp_is_object_name(oidstr))
+    {
+        result = bsnmp_oid_from_name(&var.oid, oidstr);
+    }
+    else
+    {
+        result = bsnmp_oid_from_string(&var.oid, oidstr);
+    }
     if (result)
     {
         *err = SNMP_ErrNoSuchName;
@@ -995,21 +1203,26 @@ int bsnmp_set_string_value(
     var.type = SNMP_OCTET_STRING;
     var.val.sVal = (char*)str;
 
-    return bsnmp_set_object_value(&var, num_indices, indices, err);
+    return bsnmp_set_object_value(&var, err);
 }
 
 int bsnmp_set_uint_value(
                             const char *oidstr,
                             uint32_t uval,
-                            size_t num_indices,
-                            size_t indices[BSNMP_MAX_DIMENSIONS],
                             bsnmp_errcode_t *err
                           )
 {
     bsnmp_var_t var;
     int result;
 
-    result = bsnmp_oid_from_string(&var.oid, oidstr);
+    if (bsnmp_is_object_name(oidstr))
+    {
+        result = bsnmp_oid_from_name(&var.oid, oidstr);
+    }
+    else
+    {
+        result = bsnmp_oid_from_string(&var.oid, oidstr);
+    }
     if (result)
     {
         *err = SNMP_ErrNoSuchName;
@@ -1020,21 +1233,26 @@ int bsnmp_set_uint_value(
     var.type = SNMP_UNSIGNED32;
     var.val.uVal = uval;
 
-    return bsnmp_set_object_value(&var, num_indices, indices, err);
+    return bsnmp_set_object_value(&var, err);
 }
 
 int bsnmp_set_int_value(
                             const char *oidstr,
                             int32_t ival,
-                            size_t num_indices,
-                            size_t indices[BSNMP_MAX_DIMENSIONS],
                             bsnmp_errcode_t *err
                           )
 {
     bsnmp_var_t var;
     int result;
 
-    result = bsnmp_oid_from_string(&var.oid, oidstr);
+    if (bsnmp_is_object_name(oidstr))
+    {
+        result = bsnmp_oid_from_name(&var.oid, oidstr);
+    }
+    else
+    {
+        result = bsnmp_oid_from_string(&var.oid, oidstr);
+    }
     if (result)
     {
         return result;
@@ -1044,7 +1262,7 @@ int bsnmp_set_int_value(
     var.type = SNMP_INTEGER;
     var.val.iVal = ival;
 
-    return bsnmp_set_object_value(&var, num_indices, indices, err);
+    return bsnmp_set_object_value(&var, err);
 }
 
 int bsnmp_init_objects(bmibc_record_t *records, const bmibc_oid_xref_t *xrefs, size_t num_records)

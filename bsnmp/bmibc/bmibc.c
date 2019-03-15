@@ -47,7 +47,7 @@ unsigned char *g_offset_map= NULL;
 #define TS_INT32        "int32_t"
 #define TS_UINT64       "uint64_t"
 #define TS_INT64        "int64_t"
-#define TS_ENUM         "int"
+#define TS_ENUM         "int32_t"
 #else
 #define TS_UINT8        "unsigned char"
 #define TS_LPUINT8      "unsigned char*"
@@ -59,7 +59,14 @@ unsigned char *g_offset_map= NULL;
 #define TS_ENUM         "int"
 #endif
 
+#ifdef BSNMPOBJECT_H
+#define MAX_NODE_INDEX  BSNMP_MAX_DIMENSIONS
+#else
 #define MAX_NODE_INDEX  3
+#endif
+#ifndef BSNMP_OBJECT_NAMES
+#define BSNMP_OBJECT_NAMES 0
+#endif
 
 static void bmibc_gen_hdr_defs(bmib_node_t* node, FILE* file)
 {
@@ -335,7 +342,7 @@ static void bmibc_gen_src_enums(bmib_node_t *node, FILE *file)
     {
         nenums++;
     }
-    fprintf(file, "int ve_%s[%d] = {\n", sname, nenums);
+    fprintf(file, "%s ve_%s[%d] = {\n", TS_ENUM, sname, nenums);
 
     for (enump = node->f_enums; enump; enump = enump->f_next)
     {
@@ -371,7 +378,7 @@ static void bmibc_gen_src_enums(bmib_node_t *node, FILE *file)
 
     if (g_genstringids)
     {
-        fprintf(file, "int ze_%s[%d] = {\n", sname, nenums);
+        fprintf(file, "%s ze_%s[%d] = {\n", TS_ENUM, sname, nenums);
 
         for (enump = node->f_enums; enump; enump = enump->f_next)
         {
@@ -583,7 +590,7 @@ void bmibc_gen_hdr_dim_store(bmib_context_t *parser, bmib_node_t *node, bmib_nod
     bool  isunsigned = false;
     bool  isstring   = false;
     char  tbuf[256];
-    const char *typestr = "int";
+    const char *typestr = TS_INT32;
     const char *basestr = TS_UINT8;
 
     for (pType = node->f_datatype; pType && pType->f_basetype;)
@@ -621,14 +628,14 @@ void bmibc_gen_hdr_dim_store(bmib_context_t *parser, bmib_node_t *node, bmib_nod
             isunsigned = false;
             if (node->f_typemods & STRING_OF)
             {
-                typestr = "int*";
-                basestr = "int";
+                typestr = TS_INT32"*";
+                basestr = TS_INT32;
                 isunsigned = false;
                 isstring = true;
             }
             else
             {
-                typestr = "int";
+                typestr = TS_INT32;
 
         #if 0
                 // this code would type storage for enum values based on the
@@ -1509,7 +1516,9 @@ static void bmibc_gen_record(bmib_context_t *parser, bmib_node_t *node, bmib_nod
     fprintf(file, "/********* %s \n", node->f_sym->f_name);
     fprintf(file, "*/\n");
     fprintf(file, "{\n");
+    #if BSNMP_OBJECT_NAMES
     fprintf(file, "  /*   name:*/ \"%s\",\n",          node->f_sym->f_name);
+    #endif
 
     // for now at least, dont allow initializers outside valid range
     //
@@ -1684,7 +1693,7 @@ static void bmibc_gen_src_dim_store(bmib_context_t *parser, bmib_node_t *node, b
     bool  isunsigned = false;
     bool  isstring   = false;
     char  tbuf[256];
-    const char *typestr = "int";
+    const char *typestr = TS_INT32;
     const char *basestr = TS_UINT8;
 
     for (type = node->f_datatype; type && type->f_basetype;)
@@ -1722,14 +1731,14 @@ static void bmibc_gen_src_dim_store(bmib_context_t *parser, bmib_node_t *node, b
             isunsigned = false;
             if (node->f_typemods & STRING_OF)
             {
-                typestr = "int*";
-                basestr = "int";
+                typestr = TS_INT32"*";
+                basestr = TS_INT32;
                 isunsigned = false;
                 isstring = true;
             }
             else
             {
-                typestr = "int";
+                typestr = TS_INT32;
         #if 0
                 // this code would type storage for enum values based on the
                 // enum type, which could be 1,2,4, etc. bytes wide, but code
@@ -2581,7 +2590,7 @@ int main(int argc, char **argv)
     fprintf(hdrfile, "#ifndef BSNMPOBJECT_H\n");
     #ifdef BSNMPOBJECT_H
     // inherit object record type from snmp library
-    fprintf(hdrfile, "%s\n%s\n%s\n%s\n",
+    fprintf(hdrfile, "%s\n%s\n%s\n%s",
          BMIBC_VALUE_TYPE_STR,
          BMIBC_ACCESS_METHOD_STR,
          BMIBC_ACCESS_PERM_STR,
@@ -2611,9 +2620,9 @@ int main(int argc, char **argv)
     fprintf(hdrfile, "    size_t offset;\n    size_t bits;\n");
     fprintf(hdrfile, "    bmibc_value_type_t type;\n    bmibc_access_method_t method;\n");
     fprintf(hdrfile, "    bmibc_access_perm_t access;\n    void *subs;\n");
-    fprintf(hdrfile, "    void *factory_value;\n    void *value;\n} bmibc_record_t;\n\n");
+    fprintf(hdrfile, "    void *factory_value;\n    void *value;\n} bmibc_record_t;\n");
     #endif
-    fprintf(hdrfile, "#endif\n");
+    fprintf(hdrfile, "#endif\n\n");
 
     fprintf(hdrfile, "/* Number of precompiled object records\n*/\n");
     fprintf(hdrfile, "#define BMIBC_NUM_RECORDS %d\n", nleafs);
@@ -2698,13 +2707,26 @@ int main(int argc, char **argv)
     {
         bmibc_gen_src_dim_store(parser, leaf, leafs, srcfile);
     }
-
-    fprintf(hdrfile, "\n\n/* OID to obejct record index cross reference table\n*/\n");
+    fprintf(hdrfile, "\n#ifndef BSNMPOBJECT_H\n");
+    #ifdef BSNMPOBJECT_H
+    // inherit xref type from snmp library
+    fprintf(hdrfile, "%s",
+         BMIBC_OID_XREF_STR);
+    #else
+    fprintf(hdrfile, "/* OID to object record index cross reference table\n*/\n");
     fprintf(hdrfile, "#define BMIBC_MAX_NODE_INDEX %d /* number of indices supported */\n", MAX_NODE_INDEX);
 
-    fprintf(hdrfile, "typedef struct {\n    const char *oidstr;\n    size_t record_index;\n    %s asntype;\n", TS_UINT8);
-    fprintf(hdrfile, "    size_t indices[BMIBC_MAX_NODE_INDEX];\n} bmibc_oid_xref_t;\n\n");
-
+    fprintf(hdrfile, "typedef struct {\n");
+    fprintf(hdrfile, "    const char *oidstr;\n");
+    fprintf(hdrfile, "    size_t record_index;\n");
+    fprintf(hdrfile, "    %s asntype;\n", TS_UINT8);
+    fprintf(hdrfile, "    size_t indices[BMIBC_MAX_NODE_INDEX];\n}\n");
+    #if BSNMP_OBJECT_NAMES
+    fprintf(hdrfile, "    const char *objname;\n");
+    #endif
+    fprintf(hdrfile, "bmibc_oid_xref_t;\n");
+    #endif
+    fprintf(hdrfile, "#endif\n\n");
     fprintf(hdrfile, "\nextern const bmibc_oid_xref_t g_oidxreftab[BMIBC_NUM_RECORDS];\n");
 
     fprintf(srcfile, "\n\n/* OID to Index cross reference table\n*/\n");

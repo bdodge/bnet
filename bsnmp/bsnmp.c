@@ -474,7 +474,6 @@ static int bsnmp_process_req_header(bsnmp_server_t *server, bsnmp_request_t *req
     switch (req->version)
     {
     case SNMP_V1:
-        break;
     case SNMP_V2C:
         result = bsnmp_string_from_ber(server, req->community, sizeof req->community, &stringlen);
         if (result)

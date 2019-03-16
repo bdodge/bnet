@@ -219,7 +219,7 @@ int butil_base64_encode(
                     )
 {
     char *base = out;
-  const char *alphabet;
+    const char *alphabet;
     uint8_t  b1, b2, b3;
     uint32_t d;
     size_t j = 0, k = 0;
@@ -230,14 +230,14 @@ int butil_base64_encode(
     static const char *s_alphabet64_url =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
-  if (urlencode)
-  {
-      alphabet = s_alphabet64_url;
-  }
-  else
-  {
-      alphabet = s_alphabet64_base;
-  }
+    if (urlencode)
+    {
+        alphabet = s_alphabet64_url;
+    }
+    else
+    {
+        alphabet = s_alphabet64_base;
+    }
     while (j < (outsize - 4) && k < srcbytes)
     {
         b1 = src[k];
@@ -325,6 +325,7 @@ const char *butil_scheme_name(butil_url_scheme_t scheme)
     case schemeWSS:     return "WSS";
     case schemeSIP:     return "SIP";
     case schemeSIPS:    return "SIPS";
+    case schemeMAILTO:  return "MAILTO";
     default:            return "";
     }
 }
@@ -369,6 +370,11 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
     if (! strcasecmp(name, "sip"))
     {
         *scheme = schemeHTTP;
+        return 0;
+    }
+    if (! strcasecmp(name, "mailto"))
+    {
+        *scheme = schemeMAILTO;
         return 0;
     }
     return -1;
@@ -425,7 +431,15 @@ int butil_parse_url(
     {
         // no scheme found, assume http
         //
-        pe = ps;
+        pe = strstr(ps, "//");
+        if (pe)
+        {
+            pe+= 2;
+        }
+        else
+        {
+            pe = ps;
+        }
         ps = "http";
         len = 4;
     }
@@ -464,6 +478,9 @@ int butil_parse_url(
         break;
     case schemeSIPS:
         portnum = 5062;
+        break;
+    case schemeMAILTO:
+        portnum = 25;
         break;
     case schemeHTTP:
     default:

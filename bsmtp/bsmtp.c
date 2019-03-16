@@ -1,0 +1,1068 @@
+/*
+ * Copyright 2019 Brian Dodge
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "bsmtp.h"
+
+#define BSMTP_IO_MIN_ROOM 32
+
+static int bsmtp_check_response(bsmtp_client_t *bsmtp, bsmtp_state_t next_state, size_t numcodes, ...)
+{
+    va_list args;
+    size_t i;
+
+    iostream_normalize_ring(&bsmtp->io, NULL);
+
+    va_start(args, numcodes);
+    for (i = 0; i < numcodes && i < BSMTP_MAX_EXPECTED_CODES; i++)
+    {
+        bsmtp->expected_codes[i] = (uint32_t)va_arg(args, unsigned);
+    }
+    bsmtp->num_codes = i;
+
+    if (bsmtp->line_count < 3)
+    {
+        butil_log(5, "check resp: no data\n");
+        bsmtp->state = bsmtpDone;
+        return -1;
+    }
+    bsmtp->last_code = strtoul((char*)bsmtp->line, NULL, 0);
+
+    for (i = 0; i < bsmtp->num_codes && i < BSMTP_MAX_EXPECTED_CODES; i++)
+    {
+        if (bsmtp->last_code == bsmtp->expected_codes[i])
+        {
+            butil_log(5, "Code %u is OK\n", bsmtp->expected_codes[i]);
+            bsmtp->num_codes = 0;
+            bsmtp->state = next_state;
+            bsmtp->next_state = bsmtpInit;
+            return 0;
+        }
+    }
+    butil_log(5, "Error: got code %u, expected one of:\n", bsmtp->last_code);
+    for (i = 0; i < bsmtp->num_codes && i < BSMTP_MAX_EXPECTED_CODES; i++)
+    {
+        butil_log(5, "  %u\n", bsmtp->expected_codes[i]);
+    }
+    bsmtp->state = bsmtpDone;
+    bsmtp->num_codes = 0;
+    return 0;
+}
+
+int bsmtp_format_credentials(bsmtp_client_t *bsmtp, char *buf, int nbuf)
+{
+    char encbuf[BSMTP_MAX_ADDRESS * 2];
+    char username[BSMTP_MAX_ADDRESS];
+    char *pu;
+    int  enclen;
+    int result;
+
+    // extract username from sender
+    snprintf(username, sizeof(username), "%s", bsmtp->sender);
+    pu = strchr(username, '@');
+    if (pu)
+    {
+        *pu = '\0';
+    }
+    switch (bsmtp->auth_method)
+    {
+    case bsmtpPLAIN:
+        enclen = snprintf(encbuf, sizeof(encbuf), "%s%c%s%c%s",
+                    username, 0, bsmtp->sender, 0, bsmtp->password);
+        break;
+
+    case bsmtpLOGIN:
+        enclen = snprintf(encbuf, sizeof(encbuf), "%s", bsmtp->sender);
+        break;
+
+    default:
+        BERROR("unsupported method");
+        return -1;
+    }
+    if (enclen < 0 || enclen >= sizeof(encbuf))
+    {
+        BERROR("encode buffer overflow");
+        return -1;
+    }
+    // base64 encode string
+    result = butil_base64_encode(buf, nbuf, (uint8_t *)encbuf, enclen, false, false);
+    if (result < 0)
+    {
+        BERROR("encoding failed");
+        return result;
+    }
+    butil_log(5, "cred encode %s -> %s\n", encbuf, buf);
+    return 0;
+}
+
+static int bsmtp_client_output(bsmtp_client_t *bsmtp)
+{
+    int count;
+    int wc;
+    time_t now;
+
+    if (! bsmtp || ! bsmtp->ctrl_stream)
+    {
+        return -1;
+    }
+    if (bsmtp->io.count == 0)
+    {
+        return 0;
+    }
+    wc = bsmtp->ctrl_stream->poll(bsmtp->ctrl_stream, writeable, 0, 100000);
+    if (wc < 0)
+    {
+        BERROR("closed on send poll");
+        return -1;
+    }
+    time(&now);
+
+    if (wc == 0)
+    {
+        // check long timeout
+        if (bsmtp->last_out_time == 0)
+        {
+            bsmtp->last_out_time = now;
+        }
+        if ((now - bsmtp->last_out_time) > bsmtp->long_timeout)
+        {
+            butil_log(3, "bsmtp write timeout\n");
+            return -1;
+        }
+        return 0;
+    }
+    else
+    {
+        bsmtp->last_out_time = now;
+    }
+    if (bsmtp->io.tail >= bsmtp->io.head)
+    {
+        count = bsmtp->io.size - bsmtp->io.tail;
+    }
+    else
+    {
+        count = bsmtp->io.count;
+    }
+    wc = bsmtp->ctrl_stream->write(bsmtp->ctrl_stream,
+                bsmtp->io.data + bsmtp->io.tail, count);
+    if (wc <= 0)
+    {
+        BERROR("closed on send");
+        return -1;
+    }
+    bsmtp->io.tail += wc;
+    if (bsmtp->io.tail >= bsmtp->io.size)
+    {
+        bsmtp->io.tail = 0;
+    }
+    bsmtp->io.count -= wc;
+    if (bsmtp->io.count == 0)
+    {
+        bsmtp->io.head = 0;
+        bsmtp->io.tail = 0;
+    }
+    return wc;
+}
+
+static int bsmtp_begin_headers(bsmtp_client_t *bsmtp)
+{
+    bsmtp->io.count = 0;
+    bsmtp->io.head = 0;
+    bsmtp->io.tail = 0;
+    return 0;
+}
+
+static int bsmtp_append_header(bsmtp_client_t *bsmtp, const char *content, ...)
+{
+    va_list args;
+    int len;
+
+    va_start(args, content);
+
+    len = vsnprintf(
+            (char*)bsmtp->io.data + bsmtp->io.head,
+            bsmtp->io.size - bsmtp->io.count - 4,
+            content,
+            args
+            );
+    if (len >= (bsmtp->io.size - bsmtp->io.count - 2))
+    {
+        BERROR("Reply buffer overflow");
+        return -1;
+    }
+    bsmtp->io.data[bsmtp->io.head + len] = '\r';
+    bsmtp->io.data[bsmtp->io.head + len + 1] = '\n';
+    bsmtp->io.data[bsmtp->io.head + len + 2] = '\0';
+    len += 2;
+    bsmtp->io.count += len;
+    bsmtp->io.head += len;
+    return 0;
+}
+
+
+static int bsmtp_send_command(bsmtp_client_t *bsmtp, bsmtp_state_t next_state, const char *cmd, const char *data)
+{
+    int len;
+
+    if (cmd)
+    {
+        len = snprintf((char *)bsmtp->io.data, bsmtp->io.size,
+                "%s%s%s\r\n", cmd,
+                (data && *data) ? " " : "", (data && *data) ? data : "");
+
+        if (len < 0 || len >= bsmtp->io.size)
+        {
+            BERROR("Command overflow");
+            return -1;
+        }
+        bsmtp->io.count = len;
+        bsmtp->io.head = len;
+        bsmtp->io.tail = 0;
+    }
+    butil_log(5, "<<==Cmd:%s\n", bsmtp->io.data);
+
+    bsmtp->next_state = next_state;
+    bsmtp->state = bsmtpOutPhase;
+    return 0;
+}
+
+int bsmtp_client_input(bsmtp_client_t *bsmtp, int to_secs, int to_usecs)
+{
+    time_t now;
+    int result;
+    int room;
+    int count;
+    int len;
+
+    if (! bsmtp || ! bsmtp->ctrl_stream)
+    {
+        return -1;
+    }
+    count = bsmtp->io.count;
+
+    if (bsmtp->io.count < bsmtp->io.size)
+    {
+        if (bsmtp->io.count == 0)
+        {
+            // to avoid later renormalizing
+            bsmtp->io.head = 0;
+            bsmtp->io.tail = 0;
+        }
+        if (bsmtp->io.head < bsmtp->io.tail)
+        {
+            room = bsmtp->io.tail - bsmtp->io.head;
+        }
+        else
+        {
+            room = bsmtp->io.size - bsmtp->io.head;
+        }
+        // if there is a bunch of data in the buffer, don't wait for more
+        //
+        if (room < (bsmtp->io.size / 2))
+        {
+            to_secs  = 0;
+            to_usecs = 0;
+        }
+        // don't read if less than N bytes room available.  this is to
+        // ensure TLS read block size can alway fit
+        //
+        if (room >= BSMTP_IO_MIN_ROOM)
+        {
+            result = bsmtp->ctrl_stream->poll(bsmtp->ctrl_stream, readable, to_secs, to_usecs);
+            if (result < 0)
+            {
+                return result;
+            }
+            if (result > 0)
+            {
+                len = bsmtp->ctrl_stream->read(bsmtp->ctrl_stream,
+                       bsmtp->io.data + bsmtp->io.head, room);
+                if (len <= 0)
+                {
+                    if (bsmtp->io.count)
+                    {
+                        return 0;
+                    }
+                    // 0 read after ok poll means connection closed
+                    butil_log(5, "end of connection\n");
+                    return -1;
+                }
+                bsmtp->io.head += len;
+                if (bsmtp->io.head >= bsmtp->io.size)
+                {
+                    bsmtp->io.head = 0;
+                }
+                bsmtp->io.count += len;
+                butil_log(5, "read %d\n", len);
+            }
+        }
+    }
+    time(&now);
+
+    if ((bsmtp->io.count == count) && (bsmtp->state == bsmtp->prev_state))
+    {
+        // check long timeout
+        if (bsmtp->last_in_time == 0)
+        {
+            bsmtp->last_in_time = now;
+        }
+        if ((now - bsmtp->last_in_time) > bsmtp->long_timeout)
+        {
+            butil_log(3, "read timeout\n");
+            return -1;
+        }
+    }
+    else
+    {
+        // reset long timeout
+        bsmtp->last_in_time = now;
+    }
+    return 0;
+}
+
+static void bsmtp_get_line(bsmtp_client_t *bsmtp, bsmtp_state_t next_state)
+{
+    bsmtp->next_state  = next_state;
+    bsmtp->state       = bsmtpReadLine;
+    bsmtp->line_count  = 0;
+    bsmtp->reported_line_error = false;
+}
+
+static const char *bsmtp_state_name(bsmtp_state_t state)
+{
+    switch (state)
+    {
+    case bsmtpInit:             return "Init";
+    case bsmtpTransportInit:    return "TransportInit";
+    case bsmtpTransport:        return "Transport";
+    case bsmtpBanner:           return "Banner";
+    case bsmtpHello:            return "Hello";
+    case bsmtpHelloReply:       return "HelloReply";
+    case bsmtpHelloFeatures:    return "HelloFeatures";
+    case bsmtpStartTLS:         return "StartTLS";
+    case bsmtpStartTLSreply:    return "StartTLSreply";
+    case bsmtpAuthenticate:     return "Authenticate";
+    case bsmtpAuthenticateReply:return "AuthenticateReply";
+    //case bsmtpAuthChallenge:    return "AuthenticateChallenge";
+    case bsmtpLoggedIn:         return "LoggedIn";
+    case bsmtpFrom:             return "From";
+    case bsmtpFromReply:        return "FromReply";
+    case bsmtpTo:               return "To";
+    case bsmtpToReply:          return "ToReply";
+    case bsmtpData:             return "Fata";
+    case bsmtpDataReply:        return "DataReply";
+    case bsmtpHeaders:          return "Headers";
+    case bsmtpHeadersReply:     return "HeadersReply";
+    case bsmtpBody:             return "Body";
+    case bsmtpBodyReply:        return "BodyReply";
+    case bsmtpQuit:             return "Quit";
+    case bsmtpQuitReply:        return "QuitReply";
+    case bsmtpError:            return "Error";
+    case bsmtpReadLine:         return "ReadLine";
+    case bsmtpOutPhase:         return "OutPhase";
+    case bsmtpDone:             return "Done";
+    default:                    return "????";
+    }
+}
+
+int bsmtp_slice(bsmtp_client_t *bsmtp)
+{
+    char cmdbuf[BSMTP_MAX_ADDRESS * 3];
+    int chunk;
+    int result;
+
+    result = -1;
+
+    if (bsmtp->state != bsmtp->prev_state)
+    {
+        butil_log(5, "st %-20s io=%4u   last_code=%3u\n",
+                bsmtp_state_name(bsmtp->state), bsmtp->io.count, bsmtp->last_code);
+        bsmtp->prev_state = bsmtp->state;
+    }
+    switch (bsmtp->state)
+    {
+    case bsmtpInit:
+
+        // open TCP connection (plain text) to smtp server
+        //
+        bsmtp->ctrl_stream = iostream_create_from_tcp_connection(bsmtp->host, bsmtp->port);
+        if (! bsmtp->ctrl_stream)
+        {
+            BERROR("Can not make ctrl_stream");
+            return -1;
+        }
+        bsmtp->tls_setup = false;
+        bsmtp->state = bsmtpTransportInit;
+        result = 0;
+        break;
+
+    case bsmtpTransportInit:
+
+        // poll for writeable means connected
+        //
+        result = bsmtp->ctrl_stream->poll(bsmtp->ctrl_stream, writeable, 0, 10000);
+        if (result < 0)
+        {
+            BERROR("ctrl_stream poll");
+            return -1;
+        }
+        if (result == 0)
+        {
+            // todo -long timeout
+            return 0;
+        }
+        butil_log(5, "Connected\n");
+        bsmtp->state = bsmtpTransport;
+        result = 0;
+        break;
+
+    case bsmtpTransport:
+
+        // read the server's banner and move to banner when done
+        //
+        bsmtp_get_line(bsmtp, bsmtpBanner);
+        result = 0;
+        break;
+
+    case bsmtpReadLine:
+
+        result = bsmtp_client_input(bsmtp, 0, 10000);
+        if (result)
+        {
+            BERROR("Connection error");
+            return -1;
+        }
+        while (bsmtp->io.count > 0)
+        {
+            uint8_t next_in = bsmtp->io.data[bsmtp->io.tail++];
+
+            bsmtp->io.count--;
+            if (bsmtp->io.tail >= bsmtp->io.size)
+            {
+                bsmtp->io.tail = 0;
+            }
+            if (
+                    (next_in == '\n')
+                 && (bsmtp->line_count > 0)
+                 && (bsmtp->line[bsmtp->line_count - 1] == '\r')
+            )
+            {
+                // note line termination not included in result line
+                bsmtp->line[bsmtp->line_count - 1] = '\0';
+                bsmtp->state = bsmtp->next_state;
+                bsmtp->reported_line_error = false;
+                butil_log(5, "==>>Line:%s\n", bsmtp->line);
+                break;
+            }
+            bsmtp->line[bsmtp->line_count++] = next_in;
+            if (bsmtp->line_count >= BSMTP_MAX_LINE - 1)
+            {
+                // policy is to truncate lines that are too long
+                // and let them through since they can often be ignored
+                //
+                if (! bsmtp->reported_line_error)
+                {
+                    BERROR("Line too long, truncating");
+                    bsmtp->reported_line_error = true;
+                }
+                bsmtp->line_count--;
+            }
+        }
+        break;
+
+    case bsmtpOutPhase:
+
+        if (bsmtp->io.count > 0)
+        {
+            result = bsmtp_client_output(bsmtp);
+            if (result < 0)
+            {
+                return result;
+            }
+            result = 0;
+        }
+        else
+        {
+            // data sent, get reply unless in body phase
+            //
+            if (bsmtp->next_state != bsmtpBody)
+            {
+                // sent a command, so fetch reply
+                //
+                bsmtp_get_line(bsmtp, bsmtp->next_state);
+            }
+            else
+            {
+                // send some body/header or file bytes, continue
+                //
+                bsmtp->state = bsmtp->next_state;
+            }
+            result = 0;
+        }
+        break;
+
+    case bsmtpBanner:
+
+        // check the welcome message and move to hello state if ok
+        //
+        result = bsmtp_check_response(bsmtp, bsmtpHello, 1, 220);
+        break;
+
+    case bsmtpHello:
+
+        {
+        char *pd;
+
+        // just use sender email domain for now
+        pd = strchr(bsmtp->sender, '@');
+        if (pd)
+        {
+            pd++;
+        }
+        result = bsmtp_send_command(bsmtp, bsmtpHelloReply, "EHLO", pd);
+        }
+        break;
+
+    case bsmtpHelloReply:
+
+        // EHLO replies can have a bunch of lines responding, so keep reading
+        // until there's no more data pending on input and then go to next state
+        //
+        result = bsmtp_check_response(bsmtp, bsmtpHelloFeatures, 1, 250);
+        break;
+
+    case bsmtpHelloFeatures:
+
+        // give server some time to fill response into socket
+        result = bsmtp_client_input(bsmtp, 0, 10000);
+        if (result)
+        {
+            BERROR("Connection error");
+            return -1;
+        }
+        if (bsmtp->io.count == 0)
+        {
+            bsmtp_state_t next_state;
+
+            // if no data pending, move to next state
+            //
+            next_state = bsmtpAuthenticate;
+
+            if (bsmtp->transport == bsmtpTLS && !bsmtp->tls_setup)
+            {
+                next_state = bsmtpStartTLS;
+            }
+            butil_log(5, "Hello Feeature done, go to %s\n", bsmtp_state_name(next_state));
+            bsmtp->state = next_state;
+            result = 0;
+            break;
+        }
+        // more data pending in hello reply, parse it out
+        bsmtp_get_line(bsmtp, bsmtpHelloReply);
+        result = 0;
+        break;
+
+    case bsmtpStartTLS:
+
+        result = bsmtp_send_command(bsmtp, bsmtpStartTLSreply, "STARTTLS", NULL);
+        break;
+
+    case bsmtpStartTLSreply:
+
+        result = bsmtp_check_response(bsmtp, bsmtpAuthenticate, 1, 220);
+        if (! result)
+        {
+            iostream_t *tls_stream;
+
+            // wrap stream in a tls stream
+            //
+            tls_stream = iostream_tls_create_from_iostream(bsmtp->ctrl_stream, true);
+            if (tls_stream)
+            {
+                bsmtp->ctrl_stream = tls_stream;
+                bsmtp->tls_setup = true;
+                bsmtp->state = bsmtpBanner;
+            }
+            else
+            {
+                butil_log(0, "Can't make TLS stream\n");
+                result = 1;
+            }
+        }
+        break;
+
+    case bsmtpAuthenticate:
+
+        switch (bsmtp->auth_method)
+        {
+        case bsmtpPLAIN:
+            // auth plain - put encoded credentials in the command and get single reply
+            //
+            result = bsmtp_format_credentials(bsmtp, cmdbuf, sizeof(cmdbuf));
+            if (result < 0)
+            {
+                break;
+            }
+            result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, "AUTH PLAIN", cmdbuf);
+            break;
+
+        case bsmtpLOGIN:
+            // auth login - get reply, and go from there
+            //
+            result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, "AUTH LOGIN", NULL);
+            break;
+
+        default:
+            butil_log(0, "Unsupported authentication method\n");
+            result = -1;
+            break;
+        }
+        break;
+
+    case bsmtpAuthenticateReply:
+
+        result = bsmtp_check_response(bsmtp, bsmtpAuthenticateReply, 2, 334, 235);
+        if (! result)
+        {
+            // get prompt out of line, should be "Username" or "Password
+            //
+            uint8_t *pp;
+
+            result = 0;
+
+            if (bsmtp->last_code == 235)
+            {
+                // success, go to logged in state
+                //
+                bsmtp->state = bsmtpLoggedIn;
+                break;
+            }
+            // 334 reply, more stuff to send, see what server wants
+            //
+            for (pp = bsmtp->line; *pp; pp++)
+            {
+                if (*pp < '0' || *pp > '9')
+                {
+                    break;
+                }
+            }
+            while (*pp == ' ' || *pp == '\t')
+            {
+                pp++;
+            }
+            result = butil_base64_decode((uint8_t*)cmdbuf, sizeof(cmdbuf), (char*)pp);
+            if (result < 0)
+            {
+                BERROR("decode failed");
+                break;
+            }
+            butil_log(5, "Auth prompt=\"%s\"\n", cmdbuf);
+
+            if (! strcasecmp(cmdbuf, "Username:") || ! strcasecmp(cmdbuf, "user:"))
+            {
+                // encode username
+                result = bsmtp_format_credentials(bsmtp, cmdbuf, sizeof(cmdbuf));
+                if (result < 0)
+                {
+                    break;
+                }
+                result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, cmdbuf, NULL);
+            }
+            else if (! strcasecmp(cmdbuf, "Password:") || ! strcasecmp(cmdbuf, "pass:"))
+            {
+                // base64 encode password
+                result = butil_base64_encode(cmdbuf, sizeof(cmdbuf),
+                        (uint8_t *)bsmtp->password, strlen(bsmtp->password), false, false);
+                if (result < 0)
+                {
+                    BERROR("encoding failed");
+                }
+                butil_log(5, "pass encode %s -> %s\n", bsmtp->password, cmdbuf);
+                result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, cmdbuf, NULL);
+            }
+            else
+            {
+                butil_log(0, "Unknown prompt %s\n", cmdbuf);
+                result = -1;
+                break;
+            }
+        }
+        break;
+
+    case bsmtpLoggedIn:
+
+        butil_log(4, "Logged In\n");
+        bsmtp->state = bsmtpFrom;
+        result = 0;
+        break;
+
+    case bsmtpFrom:
+
+        snprintf(cmdbuf, sizeof(cmdbuf), "<%s>", bsmtp->sender);
+        result = bsmtp_send_command(bsmtp, bsmtpFromReply, "MAIL FROM:", cmdbuf);
+        break;
+
+    case bsmtpFromReply:
+
+        result = bsmtp_check_response(bsmtp, bsmtpTo, 1, 250);
+        break;
+
+    case bsmtpTo:
+
+        snprintf(cmdbuf, sizeof(cmdbuf), "<%s>", bsmtp->recipient);
+        result = bsmtp_send_command(bsmtp, bsmtpToReply, "RCPT TO:", cmdbuf);
+        break;
+
+    case bsmtpToReply:
+
+        result = bsmtp_check_response(bsmtp, bsmtpData, 1, 250);
+        break;
+
+    case bsmtpData:
+
+        result = bsmtp_send_command(bsmtp, bsmtpDataReply, "DATA", NULL);
+        break;
+
+    case bsmtpDataReply:
+
+        result = bsmtp_check_response(bsmtp, bsmtpHeaders, 1, 354);
+        break;
+
+    case bsmtpHeaders:
+
+        result = bsmtp_begin_headers(bsmtp);
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp, "From: <%s>", bsmtp->sender);
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp, "To: <%s>", bsmtp->recipient);
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp, "Subject: %s", bsmtp->subject);
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp, "MIME-Version: 1.0", NULL);
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp,
+                            "Content-Type: multipart/mixed; boundary=\"%s\"",
+                            bsmtp->boundary);
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp,
+                            "\r\nNote that this is a multi-part message in MIME format.\r\n");
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp, "");
+        if (result)
+        {
+            break;
+        }
+        // setup multipart for body text
+        //
+        result = bsmtp_append_header(bsmtp,
+                            "--%s",
+                            bsmtp->boundary);
+        if (result)
+        {
+            break;
+        }
+#if 0
+        result = bsmtp_append_header(bsmtp,
+                            "--%s\r\nContent-Type: text/%s; charset=UTF-8",
+                            bsmtp->boundary,
+                            "plain");
+        if (result)
+        {
+            break;
+        }
+        result = bsmtp_append_header(bsmtp,
+                            "Content-Disposition: inline");
+        if (result)
+        {
+            break;
+        }
+        // blank line to start body
+        //
+        result = bsmtp_append_header(bsmtp, "");
+        if (result)
+        {
+            break;
+        }
+#endif
+        bsmtp->state = bsmtpBody;
+        break;
+
+    case bsmtpHeadersReply:
+
+        BERROR("Unused state");
+        result = -1;
+        break;
+
+    case bsmtpBody:
+
+        // this state gets here only when io buffer is emtpy, expect the first time
+        // when it comes with headers preloaded
+        {
+            int room;
+            int termsize;
+
+            iostream_normalize_ring(&bsmtp->io, NULL);
+            room = bsmtp->io.size - bsmtp->io.count - 1;
+            if (room > bsmtp->body_count)
+            {
+                room = bsmtp->body_count;
+            }
+            if (room > 0)
+            {
+                // copy as much of body as will fit into io buffer and send it
+                //
+                memcpy(bsmtp->io.data + bsmtp->io.head, bsmtp->body, room);
+                bsmtp->io.count += room;
+                bsmtp->io.head += room;
+                if (bsmtp->io.head >= bsmtp->io.size)
+                {
+                    bsmtp->io.head = 0;
+                }
+                bsmtp->io.data[bsmtp->io.head] = '\0';
+                bsmtp->body += room;
+                bsmtp->body_count -= room;
+            }
+            // check buffer size left and see if we need to send some data to make room
+            //
+            room = bsmtp->io.size - bsmtp->io.count - 1;
+            termsize = strlen(bsmtp->boundary) + 10;
+            if (room < termsize)
+            {
+                // buffer full, flush to server, need room for termination
+                //
+                result = bsmtp_send_command(bsmtp, bsmtpBody, NULL, NULL);
+            }
+            else
+            {
+                // if no more body, append the end sequence to the buffer and send
+                //
+                if (bsmtp->body_count == 0)
+                {
+                    result = bsmtp_append_header(bsmtp, "\r\n--%s--\r\n.\r\n", bsmtp->boundary);
+                    result = bsmtp_send_command(bsmtp, bsmtpBodyReply, NULL, NULL);
+                }
+                else
+                {
+                    // can't happen really since room implies no body left
+                    butil_log(1, "Expected no body if buffer room in body state\n");
+                    result = -1;
+                }
+            }
+        }
+        break;
+
+    case bsmtpBodyReply:
+
+        result = bsmtp_check_response(bsmtp, bsmtpQuit, 1, 250);
+        break;
+
+    case bsmtpQuit:
+
+        result = bsmtp_send_command(bsmtp, bsmtpQuitReply, "QUIT", NULL);
+        break;
+
+    case bsmtpQuitReply:
+
+        result = bsmtp_check_response(bsmtp, bsmtpQuit, 1, 221);
+        if (result)
+        {
+            butil_log(0, "Ignoring QUIT reply %u\n", bsmtp->last_code);
+            result = 0;
+        }
+        bsmtp->state = bsmtpDone;
+        break;
+
+    case bsmtpError:
+
+        result = -1;
+        break;
+
+    case bsmtpDone:
+
+        if (bsmtp->ctrl_stream)
+        {
+            bsmtp->ctrl_stream->close(bsmtp->ctrl_stream);
+            bsmtp->ctrl_stream = NULL;
+        }
+        if (bsmtp->file_stream)
+        {
+            bsmtp->file_stream->close(bsmtp->file_stream);
+            bsmtp->file_stream = NULL;
+        }
+        butil_log(5, "Done");
+        result = 0;
+        break;
+    }
+    return result;
+}
+
+int bsmtp_send_mail(
+                const char  *server_url,
+                bsmtp_transport_t transport,
+                const char  *recipient_email,
+                const char  *sender_email,
+                const char  *sender_password,
+                const char  *subject,
+                const char  *body,
+                size_t       num_attachments,
+                ...
+                 )
+{
+    bsmtp_client_t *bsmtp;
+    butil_url_scheme_t scheme;
+    int result;
+
+    if (! server_url || ! recipient_email || ! sender_email)
+    {
+        return -1;
+    }
+    bsmtp = bsmtp_client_create();
+    if (! bsmtp)
+    {
+        butil_log(0, "Client alloc failed\n");
+        return -1;
+    }
+    result = -1;
+
+    bsmtp->transport = transport;
+    bsmtp->auth_supported = 0;
+    bsmtp->auth_method    = bsmtpLOGIN;
+
+    bsmtp->recipient = recipient_email;
+    bsmtp->sender = sender_email;
+    bsmtp->password = sender_password;
+
+    if (! subject)
+    {
+        subject = "";
+    }
+    if (! body)
+    {
+        body = "";
+    }
+    bsmtp->subject = subject;
+    bsmtp->body = body;
+    bsmtp->body_count = strlen(body);
+
+    // parse server url
+    //
+    result = butil_parse_url(
+                            server_url,
+                            &bsmtp->scheme,
+                            bsmtp->host, sizeof(bsmtp->host),
+                            &bsmtp->port,
+                            bsmtp->path, sizeof(bsmtp->path)
+                            );
+    if (result)
+    {
+        butil_log(0, "Bad URL %s\n", server_url);
+        bsmtp_client_destroy(bsmtp);
+        return result;
+    }
+    butil_log(5, "Host=%s Port=%u Path=%s\n", bsmtp->host, bsmtp->port, bsmtp->path);
+
+    do
+    {
+        result = bsmtp_slice(bsmtp);
+    }
+    while (!result && bsmtp->state != bsmtpDone);
+
+    if (bsmtp)
+    {
+        bsmtp_client_destroy(bsmtp);
+    }
+    return result;
+}
+
+void bsmtp_client_destroy(bsmtp_client_t *bsmtp)
+{
+    if (bsmtp)
+    {
+        if (bsmtp->ctrl_stream)
+        {
+            bsmtp->ctrl_stream->close(bsmtp->ctrl_stream);
+            bsmtp->ctrl_stream = NULL;
+        }
+        if (bsmtp->file_stream)
+        {
+            bsmtp->file_stream->close(bsmtp->file_stream);
+            bsmtp->file_stream = NULL;
+        }
+        free(bsmtp);
+    }
+}
+
+bsmtp_client_t *bsmtp_client_create()
+{
+    bsmtp_client_t *bsmtp;
+    int result;
+
+    bsmtp = (bsmtp_client_t *)malloc(sizeof(bsmtp_client_t));
+    if (bsmtp)
+    {
+        memset(bsmtp, 0, sizeof(bsmtp_client_t));
+
+        bsmtp->transport = bsmtpPlainText;
+        bsmtp->priv = NULL;
+
+        bsmtp->io.data = bsmtp->iobuf;
+        bsmtp->io.size = sizeof(bsmtp->iobuf);
+        bsmtp->io.count = 0;
+        bsmtp->io.head = 0;
+        bsmtp->io.tail = 0;
+
+        bsmtp->fio.data = bsmtp->fiobuf;
+        bsmtp->fio.size = sizeof(bsmtp->fiobuf);
+        bsmtp->fio.count = 0;
+        bsmtp->fio.head = 0;
+        bsmtp->fio.tail = 0;
+
+        bsmtp->line_count = 0;
+        bsmtp->long_timeout = 15;
+
+        bsmtp->state = bsmtpInit;
+        bsmtp->next_state = bsmtpInit;
+        bsmtp->prev_state = bsmtpInit;
+        bsmtp->num_codes = 0;
+
+        bsmtp->ctrl_stream = NULL;
+        bsmtp->file_stream = NULL;
+
+        strncpy(bsmtp->boundary, "bnetbnetbnetbnet", BSMTP_MAX_BOUNDARY);
+        bsmtp->boundary[BSMTP_MAX_BOUNDARY - 1] = '\0';
+    }
+    return bsmtp;
+}
+

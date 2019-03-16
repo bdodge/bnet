@@ -30,6 +30,7 @@ HTTP_PATH=$(SRCROOT)/bhttp
 FTP_PATH=$(SRCROOT)/bftp
 XMPP_PATH=$(SRCROOT)/bxmpp
 MQTT_PATH=$(SRCROOT)/bmqtt
+SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
 
 CC=gcc
@@ -121,6 +122,7 @@ HTTPLIB=$(HTTP_PATH)/$(OBJDIR)/libbhttp.a
 FTPLIB=$(FTP_PATH)/$(OBJDIR)/libbftp.a
 XMPPLIB=$(XMPP_PATH)/$(OBJDIR)/libbxmpp.a
 MQTTLIB=$(MQTT_PATH)/$(OBJDIR)/libbmqtt.a
+SMTPLIB=$(SMTP_PATH)/$(OBJDIR)/libbsmtp.a
 SNMPLIB=$(SNMP_PATH)/$(OBJDIR)/libbsnmp.a
 
 ifndef BNET_TLS

@@ -1,0 +1,156 @@
+/*
+ * Copyright 2019 Brian Dodge
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef BSMTP_H
+#define BSMTP_H 1
+
+#include "bnetheaders.h"
+#include "bstreamio.h"
+#include "butil.h"
+
+/// Is TLS supported
+#define BSMTP_SUPPORT_TLS 1
+
+#define BSMTP_IO_SIZE (2*1436)
+#define BSMTP_MAX_LINE (BSMTP_IO_SIZE)
+
+#define BSMTP_MAX_ADDRESS   BSMTP_IO_SIZE
+#define BSMTP_MAX_PASSWORD  (64)
+#define BSMTP_MAX_HOST      (256)
+#define BSMTP_MAX_PATH      (256)
+
+#define BSMTP_MAX_BOUNDARY        (32)
+#define BSMTP_MAX_EXPECTED_CODES  (16)
+
+typedef enum
+{
+    bsmtpPlainText,
+    bsmtpSSL,
+    bsmtpTLS
+}
+bsmtp_transport_t;
+
+typedef enum
+{
+    bsmtpPLAIN          = 0x0001,
+    bsmtpLOGIN          = 0x0002,
+    bsmtpGSSAPI         = 0x0004,
+    bsmtpDIGEST_MD5     = 0x0008,
+    bsmtpMD5            = 0x0010,
+    bsmtpCRAM_MD5       = 0x0020,
+    bsmtpOAUTH1         = 0X0040,
+    bsmtpOAUTH2         = 0X0080
+}
+bsmtp_auth_type_t;
+
+typedef enum
+{
+    bsmtpInit,
+    bsmtpTransportInit,
+    bsmtpTransport,
+    bsmtpBanner,
+    bsmtpHello,
+    bsmtpHelloReply,
+    bsmtpHelloFeatures,
+    bsmtpStartTLS,
+    bsmtpStartTLSreply,
+    bsmtpAuthenticate,
+    bsmtpAuthenticateReply,
+    //bsmtpAuthChallenge,
+    bsmtpLoggedIn,
+    bsmtpFrom,
+    bsmtpFromReply,
+    bsmtpTo,
+    bsmtpToReply,
+    bsmtpData,
+    bsmtpDataReply,
+    bsmtpHeaders,
+    bsmtpHeadersReply,
+    bsmtpBody,
+    bsmtpBodyReply,
+    bsmtpReadLine,
+    bsmtpOutPhase,
+    bsmtpQuit,
+    bsmtpQuitReply,
+    bsmtpError,
+    bsmtpDone,
+}
+bsmtp_state_t;
+
+typedef struct tag_smtp_client
+{
+    bsmtp_transport_t transport;
+    const char      *recipient;
+    const char      *sender;
+    const char      *password;
+    const char      *subject;
+    const char      *body;
+    size_t          body_count;
+    butil_url_scheme_t scheme;
+    char            host[BSMTP_MAX_HOST];
+    uint16_t        port;
+    char            path[BSMTP_MAX_PATH];
+    void            *priv;
+    bsmtp_state_t   state;
+    bsmtp_state_t   next_state;
+    bsmtp_state_t   prev_state;
+    uint32_t        expected_codes[BSMTP_MAX_EXPECTED_CODES];
+    size_t          num_codes;
+    uint32_t        last_code;
+    size_t          xfer_data_total;
+    size_t          xfer_file_total;
+    iostream_t      *ctrl_stream;
+    iostream_t      *file_stream;
+    time_t          long_timeout;
+    time_t          last_in_time;
+    time_t          last_out_time;
+    bool            tls_setup;
+    bsmtp_auth_type_t auth_method;
+    uint32_t        auth_supported;
+    size_t          max_message;
+    char            boundary[BSMTP_MAX_BOUNDARY];
+    uint8_t         line[BSMTP_MAX_LINE];
+    int             line_count;
+    bool            reported_line_error;
+    ioring_t        io;
+    uint8_t         iobuf[BSMTP_IO_SIZE];
+    ioring_t        fio;
+    uint8_t         fiobuf[BSMTP_IO_SIZE];
+}
+bsmtp_client_t;
+
+int bsmtp_slice(
+                bsmtp_client_t *bsmtp
+);
+
+int bsmtp_send_mail(
+                const char  *server_url,
+                bsmtp_transport_t transport,
+                const char  *recipient_email,
+                const char  *sender_email,
+                const char  *sender_password,
+                const char  *subject,
+                const char  *body,
+                size_t       num_attachments,
+                ...
+                );
+
+void bsmtp_client_destroy(
+                bsmtp_client_t *bsmtp
+                );
+
+bsmtp_client_t *bsmtp_client_create(void);
+
+#endif

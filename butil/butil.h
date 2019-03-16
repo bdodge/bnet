@@ -55,6 +55,7 @@ typedef enum
     schemeWSS,
     schemeSIP,
     schemeSIPS,
+    schemeMAILTO,
 }
 butil_url_scheme_t;
 

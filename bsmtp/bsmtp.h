@@ -31,6 +31,7 @@
 #endif
 
 #define BSMTP_IO_SIZE (2*1436)
+#define BSMTP_IO_MIN_ROOM (32)
 #define BSMTP_MAX_LINE (1024)
 
 #define BSMTP_MAX_ADDRESS   BSMTP_MAX_LINE
@@ -140,11 +141,13 @@ typedef struct tag_smtp_client
     time_t          last_in_time;
     time_t          last_out_time;
     bool            tls_setup;
+    uint32_t        esmtp_features;
     bsmtp_auth_type_t auth_method;
     uint32_t        auth_supported;
     size_t          max_message;
     char            boundary[BSMTP_MAX_BOUNDARY];
     uint8_t         cmdbuf[BSMTP_MAX_LINE * 3];
+    mime_content_type_t body_mime_type;
     mime_content_type_t attachment_mime_type;
     bool            attachment_encoded;
     uint8_t         line[BSMTP_MAX_LINE];

@@ -15,8 +15,6 @@
  */
 #include "bsmtp.h"
 
-#define BSMTP_IO_MIN_ROOM 32
-
 static int bsmtp_check_response(bsmtp_client_t *bsmtp, bsmtp_state_t next_state, size_t numcodes, ...)
 {
     va_list args;
@@ -60,7 +58,7 @@ static int bsmtp_check_response(bsmtp_client_t *bsmtp, bsmtp_state_t next_state,
     return 0;
 }
 
-int bsmtp_format_credentials(bsmtp_client_t *bsmtp, char *buf, int nbuf)
+static int bsmtp_format_credentials(bsmtp_client_t *bsmtp, char *buf, int nbuf)
 {
     char encbuf[BSMTP_MAX_ADDRESS * 2];
     char username[BSMTP_MAX_ADDRESS];
@@ -230,14 +228,15 @@ static int bsmtp_send_command(bsmtp_client_t *bsmtp, bsmtp_state_t next_state, c
         bsmtp->io.head = len;
         bsmtp->io.tail = 0;
     }
-    butil_log(5, "<<==Cmd:%s\n", bsmtp->io.data);
+    butil_log((bsmtp->state == bsmtpSendBody || bsmtp->state == bsmtpSendAttachment)
+                ? 6 : 5, "<<==Cmd:%s\n", bsmtp->io.data);
 
     bsmtp->next_state = next_state;
     bsmtp->state = bsmtpOutPhase;
     return 0;
 }
 
-int bsmtp_client_input(bsmtp_client_t *bsmtp, int to_secs, int to_usecs)
+static int bsmtp_client_input(bsmtp_client_t *bsmtp, int to_secs, int to_usecs)
 {
     time_t now;
     int result;
@@ -329,6 +328,187 @@ int bsmtp_client_input(bsmtp_client_t *bsmtp, int to_secs, int to_usecs)
         bsmtp->last_in_time = now;
     }
     return 0;
+}
+
+typedef enum
+{
+    besmtp_none     = 0,
+    besmtp_auth     = 0x01,
+    besmtp_size     = 0x02,
+    besmtp_starttls = 0x04,
+    besmtp_8bitmime = 0x08
+}
+bsmtp_feature_t;
+
+static struct tag_esmtp_feature
+{
+    const char *name;
+    bsmtp_feature_t feature;
+}
+s_esmtp_features[] =
+{
+    { "AUTH",     besmtp_auth },
+    { "SIZE",     besmtp_size },
+    { "STARTTLS", besmtp_starttls },
+    { "8BITMIME", besmtp_8bitmime }
+};
+
+#define BSMTP_NUM_FEATURES (sizeof(s_esmtp_features) / sizeof(struct tag_esmtp_feature))
+
+static struct tag_esmtp_authmethod
+{
+    const char *name;
+    bsmtp_auth_type_t method;
+}
+s_esmtp_authmethods[] =
+{
+    { "PLAIN",      bsmtpPLAIN },
+    { "LOGIN",      bsmtpLOGIN },
+    { "GSSAPI",     bsmtpGSSAPI },
+    { "DIGEST_MD5", bsmtpDIGEST_MD5 },
+    { "MD5",        bsmtpMD5 },
+    { "CRAM_MD5",   bsmtpCRAM_MD5 },
+    { "XOAUTH",     bsmtpOAUTH1 },
+    { "XOAUTH2",    bsmtpOAUTH2 }
+};
+
+#define BSMTP_NUM_AUTH_METHODS (sizeof(s_esmtp_authmethods) / sizeof(struct tag_esmtp_authmethod))
+
+static const char *bsmtp_auth_method_string(bsmtp_auth_type_t method)
+{
+    int i;
+
+    for (i = 0; i < BSMTP_NUM_AUTH_METHODS; i++)
+    {
+        if (s_esmtp_authmethods[i].method == method)
+        {
+            return s_esmtp_authmethods[i].name;
+        }
+    }
+    return "???";
+}
+
+static int bsmtp_parse_feature(bsmtp_client_t *bsmtp)
+{
+    bsmtp_feature_t feature;
+    int i;
+    size_t len;
+    uint16_t code;
+    char *pf;
+    char *pe;
+
+    // expect feature in line, like "250-name value"
+    //
+    pf = bsmtp->line;
+    code = strtoul(pf, &pf, 10);
+    if (code != 250 || ! pf)
+    {
+        return 0;
+    }
+    if (*pf != '-')
+    {
+        return 0;
+    }
+    pf++;
+    feature = besmtp_none;
+
+    // if this is a feature we care about?
+    for (i = 0; i < BSMTP_NUM_FEATURES; i++)
+    {
+        len = strlen(s_esmtp_features[i].name);
+        if (! strncasecmp(pf, s_esmtp_features[i].name, len))
+        {
+            feature = s_esmtp_features[i].feature;
+            pf+= len;
+            break;
+        }
+    }
+    bsmtp->esmtp_features |= (uint32_t)feature;
+
+    // skip to value part of line
+    while (butil_is_white(*pf))
+    {
+        pf++;
+    }
+    if (! *pf)
+    {
+        return 0;
+    }
+    // and terminate it
+    for (pe = pf; *pe && ! butil_is_white(*pe);)
+    {
+        pe++;
+    }
+    *pe = '\0';
+
+    switch (feature)
+    {
+    case besmtp_auth:
+        while (*pf)
+        {
+            // if this is a method we care about?
+            for (i = 0; i < BSMTP_NUM_AUTH_METHODS; i++)
+            {
+                if (! strcasecmp(pf, s_esmtp_authmethods[i].name))
+                {
+                    butil_log(5, "Adding auth method %s\n", s_esmtp_authmethods[i].name);
+                    bsmtp->auth_supported |= (uint32_t)s_esmtp_authmethods[i].method;
+                    break;
+                }
+            }
+            pf = pe;
+
+            if (pf >= (char*)bsmtp->line + bsmtp->line_count)
+            {
+                return 0;
+            }
+            pf++;
+
+            if (! *pf)
+            {
+                return 0;
+            }
+            // skip to next token
+            while (butil_is_white(*pf))
+            {
+                pf++;
+            }
+            // and terminate
+            for (pe = pf; *pe && ! butil_is_white(*pe);)
+            {
+                pe++;
+            }
+            *pe = '\0';
+        }
+        break;
+    case besmtp_size:
+        bsmtp->max_message = strtoul(pf, NULL, 10);
+        butil_log(5, "Setting max message size to %zu\n", bsmtp->max_message);
+        break;
+    case besmtp_starttls:
+    case besmtp_8bitmime:
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
+
+static mime_content_type_t bsmtp_sniff_contents(bsmtp_client_t *bsmtp, const char *content, size_t content_length)
+{
+    if (! content || ! content_length)
+    {
+        return butil_mime_bin;
+    }
+    if (strstr(content, "<html"))
+    {
+        return butil_mime_html;
+    }
+    if (strstr(content, "<xml"))
+    {
+        return butil_mime_xml;
+    }
+    return butil_mime_text;
 }
 
 static void bsmtp_get_line(bsmtp_client_t *bsmtp, bsmtp_state_t next_state)
@@ -572,6 +752,12 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
             result = 0;
             break;
         }
+        // parse this line to see if we care about it
+        result = bsmtp_parse_feature(bsmtp);
+        if (result)
+        {
+            break;
+        }
         // more data pending in hello reply, parse it out
         bsmtp_get_line(bsmtp, bsmtpHelloReply);
         result = 0;
@@ -607,6 +793,29 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         break;
 
     case bsmtpAuthenticate:
+
+        if (bsmtp->auth_method == bsmtpLOGIN)
+        {
+            // default auth specified, see what server wants, if anything
+            //
+            // pick a method to auth, based on esmtp features and what we can do
+            //
+            if (bsmtp->auth_supported & bsmtpLOGIN)
+            {
+                bsmtp->auth_method = bsmtpLOGIN;
+            }
+            else if (bsmtp->auth_supported & bsmtpPLAIN)
+            {
+                bsmtp->auth_method = bsmtpPLAIN;
+            }
+            else if (bsmtp->auth_supported)
+            {
+                butil_log(0, "We don't support any authentication method server supports\n");
+                result = -1;
+                break;
+            }
+        }
+        butil_log(5, "Authenticating, method %s\n", bsmtp_auth_method_string(bsmtp->auth_method));
 
         switch (bsmtp->auth_method)
         {
@@ -790,12 +999,34 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             break;
         }
+        if (bsmtp->body_mime_type == butil_mime_bin)
+        {
+            // if there is no initial body, get some now to sniff body mime type
+            //
+            if (! bsmtp->body || bsmtp->body_count == 0)
+            {
+                if (bsmtp->body_callback)
+                {
+                    result = bsmtp->body_callback(bsmtpGetBody, bsmtp->priv, &bsmtp->body, &bsmtp->body_count);
+                    if (result)
+                    {
+                        butil_log(1, "Body callback cancels\n");
+                        break;
+                    }
+                }
+            }
+            if (bsmtp->body && bsmtp->body_count > 0)
+            {
+                bsmtp->body_mime_type = bsmtp_sniff_contents(bsmtp, bsmtp->body, bsmtp->body_count);
+            }
+            butil_log(5, "Sniffed type %s for body\n", butil_mime_string_for_content_type(bsmtp->body_mime_type));
+        }
         // setup multipart for body text
         //
         result = bsmtp_append_header(bsmtp,
-                            "--%s\r\nContent-Type: text/%s; charset=UTF-8",
+                            "--%s\r\nContent-Type: %s; charset=UTF-8",
                             bsmtp->boundary,
-                            "plain");
+                            butil_mime_string_for_content_type(bsmtp->body_mime_type));
         if (result)
         {
             break;
@@ -806,7 +1037,6 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             break;
         }
-#endif
         // blank line to start body
         //
         result = bsmtp_append_header(bsmtp, "");
@@ -814,6 +1044,15 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             break;
         }
+#else
+        // blank line to start body
+        //
+        result = bsmtp_append_header(bsmtp, "");
+        if (result)
+        {
+            break;
+        }
+#endif
         bsmtp->state = bsmtpSendBody;
         break;
 
@@ -927,9 +1166,9 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
                     result = bsmtp_send_command(bsmtp, bsmtpSendAttachment, NULL, NULL);
                     break;
                 }
-                butil_log(5, "Body callback adds %zu more\n", bsmtp->body_count);
+                butil_log(5, "Body %zu more added\n", bsmtp->body_count);
             }
-            // this puts any existin io data to left of ring, but there
+            // this puts any existing io data to left of ring, but there
             // should not be any in here typically
             //
             iostream_normalize_ring(&bsmtp->io, NULL);
@@ -941,7 +1180,7 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
             }
             if (room > 0)
             {
-                butil_log(5, "Adding %zu to body\n", room);
+                butil_log(5, "Adding %zu to send\n", room);
 
                 // copy as much of body as will fit into io buffer and send it
                 //
@@ -1026,7 +1265,15 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         case butil_mime_json:
         case butil_mime_text:
         case butil_mime_xml:
-            bsmtp->attachment_encoded = false;
+            if (! (bsmtp->esmtp_features & besmtp_8bitmime))
+            {
+                // assume server is not 8 bit safe
+                bsmtp->attachment_encoded = true;
+            }
+            else
+            {
+                bsmtp->attachment_encoded = false;
+            }
             break;
         default:
             bsmtp->attachment_encoded = true;
@@ -1157,6 +1404,7 @@ int bsmtp_send_mail(
     result = -1;
 
     bsmtp->transport = transport;
+    bsmtp->esmtp_features = 0;
     bsmtp->auth_supported = 0;
     bsmtp->auth_method    = bsmtpLOGIN;
 
@@ -1175,6 +1423,7 @@ int bsmtp_send_mail(
     bsmtp->subject = subject;
     bsmtp->body = initial_body;
     bsmtp->body_count = strlen(initial_body);
+    bsmtp->body_mime_type = butil_mime_bin;
 
     bsmtp->body_callback = body_callback;
     bsmtp->priv = priv;

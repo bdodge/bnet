@@ -15,6 +15,8 @@
  */
 #include "bsmtp.h"
 
+#define USE_GOOGLE 1
+
 #define MAX_EMAIL_ATTACHMENTS 4
 
 typedef struct tag_email_context
@@ -113,8 +115,11 @@ int main(int argc, char **argv)
         port = 587;
         break;
     }
+#if USE_GOOGLE
+    snprintf(url, sizeof(url), "//smtp.gmail.com:%u", port);
+#else
     snprintf(url, sizeof(url), "//smtp.outlook.com:%u", port);
-//    snprintf(url, sizeof(url), "//smtp.gmail.com:%u", port);
+#endif
 
     email_context.body = "Callback provided body\r\n";
     email_context.cur_attachment = 0;
@@ -126,17 +131,21 @@ int main(int argc, char **argv)
             url,
             transport,
             "bnet_tester_2222@outlook.com",
+#if USE_GOOGLE
+            "bnettester1111@gmail.com",
+#else
             "bnet_test_1111@outlook.com",
+#endif
             "youwantspam1111",
 //            "bnet_test_1111@outlook.com",
 //            "bnet_tester_2222@outlook.com",
 //            "youwantspam2222",
             "Hello",
-            "This is a test\n",
+            "<html><h2>Html Test Email</h2><h3>This is a test</h3>\n",
             body_callback,
             &email_context
             );
-    if (! result)
+    if (result)
     {
         butil_log(0, "Send call failed\n");
         return result;

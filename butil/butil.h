@@ -18,32 +18,118 @@
 
 #include "bnetheaders.h"
 
+/// Is multipart mime supported
+/// define this as 0 to save space if needed
+//
+#ifndef BUTIL_SUPPORT_MULTIPART
+#define BUTIL_SUPPORT_MULTIPART (1)
+#endif
+
+/// Support a larger set of mime types (more strings space)
+//
+#ifndef BUTIL_SUPPORT_EXTENDED_MIME_TYPES
+#define BUTIL_SUPPORT_EXTENDED_MIME_TYPES (1)
+#endif
+
 #define BUTIL_MAX_URL_SCHEME 8
 #define BUTIL_MAX_PORTSPEC   5
 
-void butil_log(uint32_t level, const char *fmt, ...);
-void butil_set_log_level(uint32_t level);
+typedef enum
+{
+    butil_mime_bin,
+    butil_mime_css,
+    butil_mime_gif,
+    butil_mime_html,
+    butil_mime_ico,
+    butil_mime_jpeg,
+    butil_mime_jar,
+    butil_mime_js,
+    butil_mime_json,
+    butil_mime_text,
+    butil_mime_tiff,
+    butil_mime_xml,
+#if BUTIL_SUPPORT_MULTIPART
+    butil_mime_multi,
+#endif
+#if BUTIL_SUPPORT_EXTENDED_MIME_TYPES
+    butil_mime_aac,
+    butil_mime_abw,
+    butil_mime_arc,
+    butil_mime_avi,
+    butil_mime_azw,
+    butil_mime_bz,
+    butil_mime_bz2,
+    butil_mime_csh,
+    butil_mime_csv,
+    butil_mime_doc,
+    butil_mime_eot,
+    butil_mime_epub,
+    butil_mime_ics,
+    butil_mime_midi,
+    butil_mime_mpeg,
+    butil_mime_mpkg,
+    butil_mime_odp,
+    butil_mime_ods,
+    butil_mime_odt,
+    butil_mime_oga,
+    butil_mime_ogv,
+    butil_mime_ogx,
+    butil_mime_otf,
+    butil_mime_png,
+    butil_mime_pdf,
+    butil_mime_ppt,
+    butil_mime_rar,
+    butil_mime_rtf,
+    butil_mime_sh,
+    butil_mime_svg,
+    butil_mime_swf,
+    butil_mime_tar,
+    butil_mime_ts,
+    butil_mime_ttf,
+    butil_mime_vsd,
+    butil_mime_wav,
+    butil_mime_weba,
+    butil_mime_webm,
+    butil_mime_webp,
+    butil_mime_woff,
+    butil_mime_woff2,
+    butil_mime_xhtml,
+    butil_mime_xls,
+    butil_mime_xlsx,
+    butil_mime_xul,
+    butil_mime_zip,
+    butil_mime_3gp,
+    butil_mime_3g2,
+    butil_mime_7z,
+#endif
+}
+mime_content_type_t;
 
-int butil_hextou(char digit, uint8_t *val);
-int butil_is_white(char ch);
-int butil_is_number(char ch);
+#define BUTIL_DEFAULT_MIME butil_mime_bin
 
-size_t butil_utf8_encode(uint32_t unicode, uint8_t utfbuf[5]);
+void butil_log              (uint32_t level, const char *fmt, ...);
+void butil_set_log_level    (uint32_t level);
 
-int butil_base64_decode(
-                        uint8_t        *out,
-                        size_t          outsize,
-                        const char     *src
-                        );
+int butil_hextou            (char digit, uint8_t *val);
+int butil_is_white          (char ch);
+int butil_is_number         (char ch);
 
-int butil_base64_encode(
-                        char           *out,
-                        size_t          outsize,
-                        const uint8_t  *src,
-                        size_t          srcbytes,
-                        bool            urlencode,
-                        bool            hexescape
-                        );
+size_t butil_utf8_encode    (uint32_t unicode, uint8_t utfbuf[5]);
+
+int butil_base64_decode     (
+                            uint8_t        *out,
+                            size_t          outsize,
+                            const char     *src
+                            );
+
+int butil_base64_encode     (
+                            char           *out,
+                            size_t          outsize,
+                            const uint8_t  *src,
+                            size_t          srcbytes,
+                            bool            urlencode,
+                            bool            hexescape
+                            );
 
 typedef enum
 {
@@ -60,33 +146,44 @@ typedef enum
 butil_url_scheme_t;
 
 const char *butil_scheme_name(
-                        butil_url_scheme_t method
-                        );
+                            butil_url_scheme_t method
+                            );
 
-int butil_scheme_from_name(
-                        const char         *name,
-                        butil_url_scheme_t *scheme
-                        );
+int butil_scheme_from_name  (
+                            const char         *name,
+                            butil_url_scheme_t *scheme
+                            );
 
-int butil_parse_url(
-                        const char         *url,
-                        butil_url_scheme_t *scheme,
-                        char               *host,
-                        size_t              nhost,
-                        uint16_t           *port,
-                        char               *path,
-                        size_t              npath
-                        );
+int butil_parse_url         (
+                            const char         *url,
+                            butil_url_scheme_t *scheme,
+                            char               *host,
+                            size_t              nhost,
+                            uint16_t           *port,
+                            char               *path,
+                            size_t              npath
+                            );
 
-int butil_paste_url(
-                        char               *url,
-                        size_t              nurl,
-                        const butil_url_scheme_t scheme,
-                        const char         *host,
-                        const uint16_t      port,
-                        const char         *path
-                        );
+int butil_paste_url         (
+                            char               *url,
+                            size_t              nurl,
+                            const butil_url_scheme_t scheme,
+                            const char         *host,
+                            const uint16_t      port,
+                            const char         *path
+                            );
 
+
+int butil_ncasecmp           (const char *haystack, const char *needle);
+
+time_t butil_rfc2616_date_to_time(const char *date);
+const char *butil_time_to_rfc2616_date(time_t when, char *buf, size_t nbuf);
+
+const char *butil_mime_string_for_file(const char *path);
+mime_content_type_t butil_content_type_for_file(const char *path);
+
+const char *butil_mime_string_for_content_type(mime_content_type_t type);
+mime_content_type_t butil_content_type_for_mime_string(const char *mime);
 
 #endif
 

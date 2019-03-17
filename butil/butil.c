@@ -598,3 +598,411 @@ int butil_paste_url(
     return 0;
 }
 
+#if ! defined(__GNUC__) || defined(_WIN32)
+struct tm *gmtime_r(time_t *timeval, struct tm *stm)
+{
+    struct tm *ptm;
+
+    ptm = gmtime(timeval);
+    *stm = *ptm;
+    return stm;
+}
+#endif
+
+time_t butil_rfc2616_date_to_time(const char *date)
+{
+    int day, year, monthdex, hh, mm, ss;
+    struct tm when;
+    char dayofweek[8];
+    char month[8];
+    char zone[8];
+    time_t converted;
+    time_t gmtoff;
+    time_t err_time;
+    struct tm lct, gmt;
+    int sret;
+
+    err_time = (time_t)0;
+
+    // expect string like: "Tue, 15 Nov 1994 08:12:31 GMT"
+    //
+    if (! date || ! *date)
+    {
+        return err_time;
+    }
+    // get time for the end of day number 2 of epoch
+    converted = 48 * 3600;
+
+    // convert to local time
+    memcpy(&lct, localtime(&converted), sizeof(struct tm));
+
+    // and convert to gmtime
+    gmtime_r(&converted, &gmt);
+
+    // calculate seconds in each time and get the difference between gmt and local time
+    //
+    gmtoff  = gmt.tm_mday * 24 * 3600 + gmt.tm_hour * 3600 + gmt.tm_min * 60 + gmt.tm_sec;
+    gmtoff -= lct.tm_mday * 24 * 3600 + lct.tm_hour * 3600 + lct.tm_min * 60 + lct.tm_sec;
+
+    sret = sscanf(date, "%3s, %d %3s %d %d:%d:%d %3s",
+              dayofweek, &day, month, &year, &hh, &mm, &ss, zone);
+
+    if (sret < 0)
+    {
+        return err_time;
+    }
+    if (day < 0 || day > 31)
+    {
+        return err_time;
+    }
+    if (hh < 0 || hh > 23)
+    {
+        return err_time;
+    }
+    if (mm < 0 || mm > 59)
+    {
+        return err_time;
+    }
+    if (ss < 0 || ss > 59)
+    {
+        return err_time;
+    }
+    switch (month[0])
+    {
+    case 'J': case 'j':
+        if (month[1] == 'a' || month[1] == 'A')
+        {
+            if (month[2] == 'n' || month[2] == 'N')
+            {
+                monthdex = 0;
+                break;
+            }
+        }
+        else
+        {
+            if (month[2] == 'n' || month[2] == 'N')
+            {
+                monthdex = 5;
+                break;
+            }
+            else if (month[2] == 'l' || month[2] == 'L')
+            {
+                monthdex = 6;
+                break;
+            }
+        }
+        return err_time;
+    case 'F': case 'f':
+        if (month[1] == 'e' || month[1] == 'E')
+        {
+            if (month[2] == 'b' || month[2] == 'B')
+            {
+                monthdex = 1;
+                break;
+            }
+        }
+        return err_time;
+    case 'M': case 'm':
+        if (month[1] == 'a' || month[1] == 'A')
+        {
+            if (month[2] == 'r' || month[2] == 'R')
+            {
+                monthdex = 2;
+                break;
+            }
+            if (month[2] == 'y' || month[2] == 'Y')
+            {
+                monthdex = 4;
+                break;
+            }
+        }
+        return err_time;
+    case 'A': case 'a':
+        if (month[1] == 'u' || month[1] == 'U')
+        {
+            if (month[2] == 'g' || month[2] == 'G')
+            {
+                monthdex = 7;
+                break;
+            }
+        }
+        if (month[1] == 'p' || month[1] == 'P')
+        {
+            if (month[2] == 'r' || month[2] == 'R')
+            {
+                monthdex = 3;
+                break;
+            }
+        }
+        return err_time;
+    case 'S': case 's':
+        if (month[1] == 'e' || month[1] == 'E')
+        {
+            if (month[2] == 'p' || month[2] == 'P')
+            {
+                monthdex = 8;
+                break;
+            }
+        }
+        return err_time;
+    case 'O': case 'o':
+        if (month[1] == 'c' || month[1] == 'C')
+        {
+            if (month[2] == 't' || month[2] == 'T')
+            {
+                monthdex = 9;
+                break;
+            }
+        }
+        return err_time;
+    case 'N': case 'n':
+        if (month[1] == 'o' || month[1] == 'O')
+        {
+            if (month[2] == 'v' || month[2] == 'V')
+            {
+                monthdex = 10;
+                break;
+            }
+        }
+        return err_time;
+    case 'D': case 'd':
+        if (month[1] == 'e' || month[1] == 'E')
+        {
+            if (month[2] == 'c' || month[2] == 'C')
+            {
+                monthdex = 11;
+                break;
+            }
+        }
+        return err_time;
+    default:
+        return err_time;
+    }
+    memset(&when, 0, sizeof(when));
+
+    when.tm_year = year - 1900;
+    when.tm_mday = day;
+    when.tm_mon  = monthdex;
+
+    when.tm_hour = hh;
+    when.tm_min  = mm;
+    when.tm_sec  = ss;
+
+    converted = mktime(&when);
+
+    // remove local timezone from converted to make it gmt
+    converted -= gmtoff;
+
+    return converted;
+}
+
+const char *butil_time_to_rfc2616_date(time_t when, char *buf, size_t nbuf)
+{
+    struct tm tm, *ptm;
+    const char *bad_date = "Mon, 1 Jan 2015 00:00:00 GMT";
+
+    if (! buf || ! nbuf) {
+        return bad_date;
+    }
+    *buf = '\0';
+    ptm = gmtime_r(&when, &tm);
+    if (ptm) {
+        int len = strftime(buf, nbuf, "%a, %d %b %Y %H:%M:%S GMT", ptm);
+        if (len <= 0) {
+            // if strftime fails
+            return bad_date;
+        }
+    } else {
+        return bad_date;
+    }
+    return buf;
+}
+
+typedef struct tag_mime_tab
+{
+    mime_content_type_t type;
+    const char         *ext;
+    const char         *mime;
+}
+butil_mime_entry_t;
+
+static butil_mime_entry_t s_mimetab[] =
+{
+    { butil_mime_bin,  ".bin",   "application/octet-stream" },
+    { butil_mime_css,  ".css",   "text/css" },
+    { butil_mime_gif,  ".gif",   "image/gif" },
+    { butil_mime_html, ".htm",   "text/html" },
+    { butil_mime_html, ".html",  "text/html" },
+    { butil_mime_ico,  ".ico",   "image/x-icon" },
+    { butil_mime_jar,  ".jar",   "application/java-archive" },
+    { butil_mime_jpeg, ".jpeg",  "image/jpeg" },
+    { butil_mime_jpeg, ".jpg",   "image/jpeg" },
+    { butil_mime_js,   ".js",    "application/javascript" },
+    { butil_mime_json, ".json",  "application/json" },
+    { butil_mime_text, ".text",  "text/plain" },
+    { butil_mime_text, ".txt",   "text/plain" },
+    { butil_mime_tiff, ".tif",   "image/tiff" },
+    { butil_mime_tiff, ".tiff",  "image/tiff" },
+    { butil_mime_xml,  ".xml",   "application/xml" },
+#if BUTIL_SUPPORT_MULTIPART
+    { butil_mime_multi,".",      "multipart/form-data" },
+#endif
+#if BUTIL_SUPPORT_EXTENDED_MIME_TYPES
+    { butil_mime_aac,  ".aac",   "audio/aac" },
+    { butil_mime_abw,  ".abw",   "application/x-abiword" },
+    { butil_mime_arc,  ".arc",   "application/octet-stream" },
+    { butil_mime_avi,  ".avi",   "video/x-msvideo" },
+    { butil_mime_azw,  ".azw",   "application/vnd.amazon.ebook" },
+    { butil_mime_bz,   ".bz",    "application/x-bzip" },
+    { butil_mime_bz2,  ".bz2",   "application/x-bzip2" },
+    { butil_mime_csh,  ".csh",   "application/x-csh" },
+    { butil_mime_csv,  ".csv",   "text/csv" },
+    { butil_mime_doc,  ".doc",   "application/msword" },
+    { butil_mime_eot,  ".eot",   "application/vnd.ms-fontobject" },
+    { butil_mime_epub, ".epub",  "application/epub+zip" },
+    { butil_mime_ics,  ".ics",   "text/calendar" },
+    { butil_mime_midi, ".mid",   "audio/midi" },
+    { butil_mime_midi, ".midi",  "audio/midi" },
+    { butil_mime_mpeg, ".mpeg",  "video/mpeg" },
+    { butil_mime_mpkg, ".mpkg",  "application/vnd.apple.installer+xml" },
+    { butil_mime_odp,  ".odp",   "application/vnd.oasis.opendocument.presentation" },
+    { butil_mime_ods,  ".ods",   "application/vnd.oasis.opendocument.spreadsheet" },
+    { butil_mime_odt,  ".odt",   "application/vnd.oasis.opendocument.text" },
+    { butil_mime_oga,  ".oga",   "audio/ogg" },
+    { butil_mime_ogv,  ".ogv",   "video/ogg" },
+    { butil_mime_ogx,  ".ogx",   "application/ogg" },
+    { butil_mime_otf,  ".otf",   "font/otf" },
+    { butil_mime_png,  ".png",   "image/png" },
+    { butil_mime_pdf,  ".pdf",   "application/pdf" },
+    { butil_mime_ppt,  ".ppt",   "application/vnd.ms-powerpoint" },
+    { butil_mime_rar,  ".rar",   "application/x-rar-compressed" },
+    { butil_mime_rtf,  ".rtf",   "application/rtf" },
+    { butil_mime_sh,   ".sh",    "application/x-sh" },
+    { butil_mime_svg,  ".svg",   "image/svg+xml" },
+    { butil_mime_swf,  ".swf",   "application/x-shockwave-flash" },
+    { butil_mime_tar,  ".tar",   "application/x-tar" },
+    { butil_mime_ts,   ".ts",    "application/typescript" },
+    { butil_mime_ttf,  ".ttf",   "font/ttf" },
+    { butil_mime_vsd,  ".vsd",   "application/vnd.visio" },
+    { butil_mime_wav,  ".wav",   "audio/x-wav" },
+    { butil_mime_weba, ".weba",  "audio/webm" },
+    { butil_mime_webm, ".webm",  "video/webm" },
+    { butil_mime_webp, ".webp",  "image/webp" },
+    { butil_mime_woff, ".woff",  "font/woff" },
+    { butil_mime_woff2,".woff2", "font/woff2" },
+    { butil_mime_xhtml,".xhtml", "application/xhtml+xml" },
+    { butil_mime_xls,  ".xls",   "application/vnd.ms-excel" },
+    { butil_mime_xlsx, ".xlsx",  "application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+    { butil_mime_xul,  ".xul",   "application/vnd.mozilla.xul+xml" },
+    { butil_mime_zip,  ".zip",   "application/zip" },
+    { butil_mime_3gp,  ".3gp",   "video/3gpp" },
+    { butil_mime_3g2,  ".3g2",   "video/3gpp2" },
+    { butil_mime_7z,   ".7z",    "application/x-7z-compressed" },
+#endif
+};
+
+#define NUM_MIME_ENTRIES (sizeof(s_mimetab) / sizeof(butil_mime_entry_t))
+
+const char *butil_mime_string_for_file(const char *path)
+{
+    const char *pext;
+    int i;
+
+    if (! path || ! *path)
+    {
+       return BUTIL_DEFAULT_MIME;
+    }
+    pext = path + strlen(path) - 1;
+    while (pext > path)
+    {
+        if (*pext-- == '.')
+        {
+            pext++;
+            break;
+        }
+    }
+    if (*pext != '.')
+    {
+       return BUTIL_DEFAULT_MIME;
+    }
+    pext++;
+
+    for (i = 0; i < NUM_MIME_ENTRIES; i++)
+    {
+        if (! strcasecmp(pext, s_mimetab[i].ext + 1))
+        {
+            return s_mimetab[i].mime;
+        }
+    }
+    return BUTIL_DEFAULT_MIME;
+}
+
+mime_content_type_t butil_content_type_for_file(const char *path)
+{
+    const char *pext;
+    int i;
+
+    if (! path || ! *path)
+    {
+       return butil_mime_bin;
+    }
+    pext = path + strlen(path) - 1;
+    while (pext > path)
+    {
+        if (*pext-- == '.')
+        {
+            pext++;
+            break;
+        }
+    }
+    if (*pext != '.')
+    {
+       return butil_mime_bin;
+    }
+    pext++;
+
+    for (i = 0; i < NUM_MIME_ENTRIES; i++)
+    {
+        if (! strcasecmp(pext, s_mimetab[i].ext + 1))
+        {
+            return s_mimetab[i].type;
+        }
+    }
+    return butil_mime_bin;
+}
+
+const char *butil_mime_string_for_content_type(mime_content_type_t type)
+{
+    int i;
+
+    for (i = 0; i < NUM_MIME_ENTRIES; i++)
+    {
+        if (type == s_mimetab[i].type)
+        {
+            return s_mimetab[i].mime;
+        }
+    }
+    // can't happen?
+    return BUTIL_DEFAULT_MIME;
+}
+
+mime_content_type_t butil_content_type_for_mime_string(const char *mime)
+{
+    size_t len;
+    int i;
+
+    if (! mime || ! *mime)
+    {
+       return butil_mime_bin;
+    }
+    for (i = 0; i < NUM_MIME_ENTRIES; i++)
+    {
+        len = strlen(s_mimetab[i].mime);
+        if (! strncasecmp(mime, s_mimetab[i].mime, len))
+        {
+            return s_mimetab[i].type;
+        }
+    }
+    return butil_mime_bin;
+}
+

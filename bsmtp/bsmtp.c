@@ -364,7 +364,8 @@ static const char *bsmtp_state_name(bsmtp_state_t state)
     case bsmtpDataReply:        return "DataReply";
     case bsmtpHeaders:          return "Headers";
     case bsmtpHeadersReply:     return "HeadersReply";
-    case bsmtpBody:             return "Body";
+    case bsmtpSendBody:         return "Body";
+    case bsmtpSendAttachment:   return "Attachment";
     case bsmtpBodyReply:        return "BodyReply";
     case bsmtpQuit:             return "Quit";
     case bsmtpQuitReply:        return "QuitReply";
@@ -378,7 +379,7 @@ static const char *bsmtp_state_name(bsmtp_state_t state)
 
 int bsmtp_slice(bsmtp_client_t *bsmtp)
 {
-    char cmdbuf[BSMTP_MAX_ADDRESS * 3];
+    char *pd;
     int chunk;
     int result;
 
@@ -496,7 +497,10 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             // data sent, get reply unless in body phase
             //
-            if (bsmtp->next_state != bsmtpBody)
+            if (
+                    bsmtp->next_state != bsmtpSendBody
+                &&  bsmtp->next_state != bsmtpSendAttachment
+            )
             {
                 // sent a command, so fetch reply
                 //
@@ -504,7 +508,7 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
             }
             else
             {
-                // send some body/header or file bytes, continue
+                // sent some body/header bytes, continue
                 //
                 bsmtp->state = bsmtp->next_state;
             }
@@ -609,12 +613,12 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         case bsmtpPLAIN:
             // auth plain - put encoded credentials in the command and get single reply
             //
-            result = bsmtp_format_credentials(bsmtp, cmdbuf, sizeof(cmdbuf));
+            result = bsmtp_format_credentials(bsmtp, bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf));
             if (result < 0)
             {
                 break;
             }
-            result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, "AUTH PLAIN", cmdbuf);
+            result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, "AUTH PLAIN", bsmtp->cmdbuf);
             break;
 
         case bsmtpLOGIN:
@@ -661,39 +665,39 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
             {
                 pp++;
             }
-            result = butil_base64_decode((uint8_t*)cmdbuf, sizeof(cmdbuf), (char*)pp);
+            result = butil_base64_decode((uint8_t*)bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf), (char*)pp);
             if (result < 0)
             {
                 BERROR("decode failed");
                 break;
             }
-            butil_log(5, "Auth prompt=\"%s\"\n", cmdbuf);
+            butil_log(5, "Auth prompt=\"%s\"\n", bsmtp->cmdbuf);
 
-            if (! strcasecmp(cmdbuf, "Username:") || ! strcasecmp(cmdbuf, "user:"))
+            if (! strcasecmp(bsmtp->cmdbuf, "Username:") || ! strcasecmp(bsmtp->cmdbuf, "user:"))
             {
                 // encode username
-                result = bsmtp_format_credentials(bsmtp, cmdbuf, sizeof(cmdbuf));
+                result = bsmtp_format_credentials(bsmtp, bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf));
                 if (result < 0)
                 {
                     break;
                 }
-                result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, cmdbuf, NULL);
+                result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, bsmtp->cmdbuf, NULL);
             }
-            else if (! strcasecmp(cmdbuf, "Password:") || ! strcasecmp(cmdbuf, "pass:"))
+            else if (! strcasecmp(bsmtp->cmdbuf, "Password:") || ! strcasecmp(bsmtp->cmdbuf, "pass:"))
             {
                 // base64 encode password
-                result = butil_base64_encode(cmdbuf, sizeof(cmdbuf),
+                result = butil_base64_encode(bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf),
                         (uint8_t *)bsmtp->password, strlen(bsmtp->password), false, false);
                 if (result < 0)
                 {
                     BERROR("encoding failed");
                 }
-                butil_log(5, "pass encode %s -> %s\n", bsmtp->password, cmdbuf);
-                result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, cmdbuf, NULL);
+                butil_log(5, "pass encode %s -> %s\n", bsmtp->password, bsmtp->cmdbuf);
+                result = bsmtp_send_command(bsmtp, bsmtpAuthenticateReply, bsmtp->cmdbuf, NULL);
             }
             else
             {
-                butil_log(0, "Unknown prompt %s\n", cmdbuf);
+                butil_log(0, "Unknown prompt %s\n", bsmtp->cmdbuf);
                 result = -1;
                 break;
             }
@@ -709,8 +713,8 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
 
     case bsmtpFrom:
 
-        snprintf(cmdbuf, sizeof(cmdbuf), "<%s>", bsmtp->sender);
-        result = bsmtp_send_command(bsmtp, bsmtpFromReply, "MAIL FROM:", cmdbuf);
+        snprintf(bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf), "<%s>", bsmtp->sender);
+        result = bsmtp_send_command(bsmtp, bsmtpFromReply, "MAIL FROM:", bsmtp->cmdbuf);
         break;
 
     case bsmtpFromReply:
@@ -720,8 +724,8 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
 
     case bsmtpTo:
 
-        snprintf(cmdbuf, sizeof(cmdbuf), "<%s>", bsmtp->recipient);
-        result = bsmtp_send_command(bsmtp, bsmtpToReply, "RCPT TO:", cmdbuf);
+        snprintf(bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf), "<%s>", bsmtp->recipient);
+        result = bsmtp_send_command(bsmtp, bsmtpToReply, "RCPT TO:", bsmtp->cmdbuf);
         break;
 
     case bsmtpToReply:
@@ -761,6 +765,13 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             break;
         }
+        butil_time_to_rfc2616_date(bsmtp->last_in_time, bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf));
+        result = bsmtp_append_header(bsmtp, "Date: %s", bsmtp->cmdbuf);
+        if (result)
+        {
+            break;
+        }
+#if BSMTP_SUPPORT_MULTIPART
         result = bsmtp_append_header(bsmtp, "MIME-Version: 1.0", NULL);
         if (result)
         {
@@ -779,21 +790,8 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             break;
         }
-        result = bsmtp_append_header(bsmtp, "");
-        if (result)
-        {
-            break;
-        }
         // setup multipart for body text
         //
-        result = bsmtp_append_header(bsmtp,
-                            "--%s",
-                            bsmtp->boundary);
-        if (result)
-        {
-            break;
-        }
-#if 0
         result = bsmtp_append_header(bsmtp,
                             "--%s\r\nContent-Type: text/%s; charset=UTF-8",
                             bsmtp->boundary,
@@ -808,6 +806,7 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             break;
         }
+#endif
         // blank line to start body
         //
         result = bsmtp_append_header(bsmtp, "");
@@ -815,8 +814,7 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         {
             break;
         }
-#endif
-        bsmtp->state = bsmtpBody;
+        bsmtp->state = bsmtpSendBody;
         break;
 
     case bsmtpHeadersReply:
@@ -825,15 +823,117 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
         result = -1;
         break;
 
-    case bsmtpBody:
+    case bsmtpSendBody:
 
-        // this state gets here only when io buffer is emtpy, expect the first time
-        // when it comes with headers preloaded
+        // this state gets here only when io buffer is emtpy, expcept the first time
+        // when it comes with headers preloaded into normalized io buffer
         {
             int room;
             int termsize;
 
+            if (bsmtp->body_count == 0 || bsmtp->body == NULL)
+            {
+                if (bsmtp->file_stream)
+                {
+                    // in an attachment, fill body from file
+                    //
+                    result = bsmtp->file_stream->poll(bsmtp->file_stream, readable, 1, 0);
+                    if (result > 0)
+                    {
+                        // limit read count to 3/4 size of encoding buffer to ensure we can encode
+                        // the data for sending if needed, so just use 1/2 size
+                        //
+                        if (bsmtp->attachment_encoded)
+                        {
+                            room = sizeof(bsmtp->cmdbuf) / 2;
+
+                            if (room > sizeof(bsmtp->fiobuf))
+                            {
+                                room = sizeof(bsmtp->fiobuf);
+                            }
+                        }
+                        else
+                        {
+                            room = sizeof(bsmtp->fiobuf);
+                        }
+                        // ensure buffer is atomically encodable by being mod 4
+                        room &= ~3;
+
+                        // read the data
+                        result = bsmtp->file_stream->read(bsmtp->file_stream, bsmtp->fiobuf, room);
+                    }
+                    if (result <= 0)
+                    {
+                        // no more data in file
+                        //
+                        butil_log(5, "Attachment stream ends\n");
+                        bsmtp->file_stream->close(bsmtp->file_stream);
+                        bsmtp->file_stream = NULL;
+                        bsmtp->body = NULL;
+                        bsmtp->body_count = 0;
+                        result = 0;
+                    }
+                    else
+                    {
+                        // source body data from read file contents
+                        //
+                        if (bsmtp->attachment_encoded)
+                        {
+                            // server cant take binary and data is, so encode it into cmdbuf
+                            //
+                            result = butil_base64_encode(
+                                                        bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf),
+                                                        bsmtp->fiobuf, result,
+                                                        false, false
+                                                        );
+                            if (result < 0)
+                            {
+                                BERROR("Encode failed");
+                                break;
+                            }
+                            bsmtp->body = bsmtp->cmdbuf;
+                            bsmtp->body_count = result;
+                        }
+                        else
+                        {
+                            // server is binary-safe, or the contents are text so use
+                            // file io buffer directly
+                            //
+                            bsmtp->body = bsmtp->fiobuf;
+                            bsmtp->body_count = result;
+                        }
+                        butil_log(5, "Attachment provides %zu more\n", bsmtp->body_count);
+                        result = 0;
+                    }
+                }
+                else if (bsmtp->body_callback)
+                {
+                    // if there is no body, callback to get more body data
+                    //
+                    result = bsmtp->body_callback(bsmtpGetBody, bsmtp->priv, &bsmtp->body, &bsmtp->body_count);
+                    if (result)
+                    {
+                        butil_log(1, "Body callback cancels\n");
+                        break;
+                    }
+                }
+                if (bsmtp->body_count == 0 || bsmtp->body == NULL)
+                {
+                    // no more body, move on to attachments after sending all
+                    // the body data left to the server to ensure room
+                    //
+                    butil_log(5, "End of body, sending data\n");
+
+                    result = bsmtp_send_command(bsmtp, bsmtpSendAttachment, NULL, NULL);
+                    break;
+                }
+                butil_log(5, "Body callback adds %zu more\n", bsmtp->body_count);
+            }
+            // this puts any existin io data to left of ring, but there
+            // should not be any in here typically
+            //
             iostream_normalize_ring(&bsmtp->io, NULL);
+
             room = bsmtp->io.size - bsmtp->io.count - 1;
             if (room > bsmtp->body_count)
             {
@@ -841,6 +941,8 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
             }
             if (room > 0)
             {
+                butil_log(5, "Adding %zu to body\n", room);
+
                 // copy as much of body as will fit into io buffer and send it
                 //
                 memcpy(bsmtp->io.data + bsmtp->io.head, bsmtp->body, room);
@@ -857,30 +959,128 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
             // check buffer size left and see if we need to send some data to make room
             //
             room = bsmtp->io.size - bsmtp->io.count - 1;
-            termsize = strlen(bsmtp->boundary) + 10;
+            termsize = 6;
+            #if BSMTP_SUPPORT_MULTIPART
+            termsize += strlen(bsmtp->boundary) + 4;
+            #endif
             if (room < termsize)
             {
-                // buffer full, flush to server, need room for termination
+                // buffer close to full, flush to server
                 //
-                result = bsmtp_send_command(bsmtp, bsmtpBody, NULL, NULL);
+                butil_log(5, "Flush body buffer of %d\n", bsmtp->io.count);
+
+                result = bsmtp_send_command(bsmtp, bsmtpSendBody, NULL, NULL);
             }
             else
             {
-                // if no more body, append the end sequence to the buffer and send
+                // room in buffer, keep filling body
                 //
-                if (bsmtp->body_count == 0)
-                {
-                    result = bsmtp_append_header(bsmtp, "\r\n--%s--\r\n.\r\n", bsmtp->boundary);
-                    result = bsmtp_send_command(bsmtp, bsmtpBodyReply, NULL, NULL);
-                }
-                else
-                {
-                    // can't happen really since room implies no body left
-                    butil_log(1, "Expected no body if buffer room in body state\n");
-                    result = -1;
-                }
+                result = 0;
             }
         }
+        break;
+
+    case bsmtpSendAttachment:
+
+        #if BSMTP_SUPPORT_MULTIPART
+        if (bsmtp->body_callback)
+        {
+            result = bsmtp->body_callback(bsmtpGetAttachment, bsmtp->priv, &bsmtp->body, &bsmtp->body_count);
+            if (result)
+            {
+                butil_log(1, "Body callback cancels\n");
+                break;
+            }
+        }
+        if (bsmtp->io.count != 0)
+        {
+            butil_log(0, "Expect no data to send\n");
+        }
+        bsmtp_begin_headers(bsmtp);
+
+        if (bsmtp->body == NULL || bsmtp->body[0] == '\0')
+        #endif
+        {
+            // no more attachments, all done, io buffer should be empty
+            //
+            #if BSMTP_SUPPORT_MULTIPART
+            result = bsmtp_append_header(bsmtp, "\r\n--%s--\r\n.", bsmtp->boundary);
+            #else
+            result = bsmtp_append_header(bsmtp, "\r\n.", bsmtp->boundary);
+            #endif
+            result = bsmtp_send_command(bsmtp, bsmtpBodyReply, NULL, NULL);
+            break;
+        }
+        #if BSMTP_SUPPORT_MULTIPART
+        // attach a file, filename is in body
+
+        // get mime type based on file name
+        bsmtp->attachment_mime_type = butil_content_type_for_file(bsmtp->body);
+
+        // if its binary, and server isn't binary safe, encode the attachment data
+        switch (bsmtp->attachment_mime_type)
+        {
+        case butil_mime_css:
+        case butil_mime_html:
+        case butil_mime_js:
+        case butil_mime_json:
+        case butil_mime_text:
+        case butil_mime_xml:
+            bsmtp->attachment_encoded = false;
+            break;
+        default:
+            bsmtp->attachment_encoded = true;
+            break;
+        }
+        butil_log(5, "Sending attachment %s type %s\n",
+                bsmtp->body, butil_mime_string_for_content_type(bsmtp->attachment_mime_type));
+
+        // try and open file
+        //
+        bsmtp->file_stream = iostream_create_reader_from_file(bsmtp->body);
+        if (! bsmtp->file_stream)
+        {
+            butil_log(1, "File %s not opened\n", bsmtp->body);
+            // Note: we could just not attach this and move on, but really, its an error
+            result = -1;
+            break;
+        }
+        // setup multipart for attachment
+        //
+        result = bsmtp_append_header(bsmtp,
+                            "--%s\r\nContent-Type: %s; name=\"%s\"",
+                            bsmtp->boundary,
+                            butil_mime_string_for_content_type(bsmtp->attachment_mime_type),
+                            bsmtp->body);
+        if (result)
+        {
+            break;
+        }
+        if (bsmtp->attachment_encoded)
+        {
+            result = bsmtp_append_header(bsmtp,
+                                "Content-Transfer-Encoding: base64");
+            if (result)
+            {
+                break;
+            }
+        }
+        result = bsmtp_append_header(bsmtp,
+                            "Content-Disposition: attachment; filename=\"%s\"",
+                            bsmtp->body);
+        if (result)
+        {
+            break;
+        }
+        // blank line to start of body
+        //
+        result = bsmtp_append_header(bsmtp, "");
+        if (result)
+        {
+            break;
+        }
+        bsmtp->state = bsmtpSendBody;
+        #endif
         break;
 
     case bsmtpBodyReply:
@@ -935,9 +1135,9 @@ int bsmtp_send_mail(
                 const char  *sender_email,
                 const char  *sender_password,
                 const char  *subject,
-                const char  *body,
-                size_t       num_attachments,
-                ...
+                const char  *initial_body,
+                bsmtp_body_callback_t body_callback,
+                void        *priv
                  )
 {
     bsmtp_client_t *bsmtp;
@@ -968,13 +1168,16 @@ int bsmtp_send_mail(
     {
         subject = "";
     }
-    if (! body)
+    if (! initial_body)
     {
-        body = "";
+        initial_body = "";
     }
     bsmtp->subject = subject;
-    bsmtp->body = body;
-    bsmtp->body_count = strlen(body);
+    bsmtp->body = initial_body;
+    bsmtp->body_count = strlen(initial_body);
+
+    bsmtp->body_callback = body_callback;
+    bsmtp->priv = priv;
 
     // parse server url
     //

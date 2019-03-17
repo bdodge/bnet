@@ -15,12 +15,62 @@
  */
 #include "bsmtp.h"
 
+#define MAX_EMAIL_ATTACHMENTS 4
+
+typedef struct tag_email_context
+{
+    const char *body;
+    size_t     cur_attachment;
+    size_t     num_attachments;
+    const char *attachments[MAX_EMAIL_ATTACHMENTS];
+}
+email_context_t;
+
+int body_callback(bsmtp_callback_type_t type, void *priv, const char **body, size_t *body_count)
+{
+    email_context_t *ctx = (email_context_t *)priv;
+
+    if (! ctx)
+    {
+        return -1;
+    }
+    switch (type)
+    {
+    case bsmtpGetBody:
+        if (ctx->body)
+        {
+            *body = ctx->body;
+            *body_count = strlen(ctx->body);
+            ctx->body = NULL;
+        }
+        break;
+
+    case bsmtpGetAttachment:
+        if (ctx->cur_attachment < ctx->num_attachments)
+        {
+            *body = ctx->attachments[ctx->cur_attachment];
+            *body_count = 0;
+            ctx->cur_attachment++;
+        }
+        else
+        {
+            *body = NULL;
+            *body_count = 0;
+        }
+        break;
+    default:
+        return -1;
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *program;
     uint16_t port;
     bsmtp_transport_t transport;
     char url[BSMTP_MAX_PATH];
+    email_context_t email_context;
     int result;
 #ifdef Windows
     WSADATA wsaData;
@@ -66,6 +116,12 @@ int main(int argc, char **argv)
     snprintf(url, sizeof(url), "//smtp.outlook.com:%u", port);
 //    snprintf(url, sizeof(url), "//smtp.gmail.com:%u", port);
 
+    email_context.body = "Callback provided body\r\n";
+    email_context.cur_attachment = 0;
+    email_context.num_attachments = 0;
+    email_context.attachments[email_context.num_attachments++] = "test_attachment.txt";
+    email_context.attachments[email_context.num_attachments++] = "test_attachment.jpg";
+
     result = bsmtp_send_mail(
             url,
             transport,
@@ -76,8 +132,9 @@ int main(int argc, char **argv)
 //            "bnet_tester_2222@outlook.com",
 //            "youwantspam2222",
             "Hello",
-            "This is a test",
-            0
+            "This is a test\n",
+            body_callback,
+            &email_context
             );
     if (! result)
     {

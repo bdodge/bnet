@@ -559,6 +559,7 @@ static const char *bsmtp_state_name(bsmtp_state_t state)
 
 int bsmtp_slice(bsmtp_client_t *bsmtp)
 {
+    const char *ps;
     char *pd;
     int chunk;
     int result;
@@ -705,9 +706,6 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
 
     case bsmtpHello:
 
-        {
-        char *pd;
-
         // just use sender email domain for now
         pd = strchr(bsmtp->sender, '@');
         if (pd)
@@ -715,7 +713,6 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
             pd++;
         }
         result = bsmtp_send_command(bsmtp, bsmtpHelloReply, "EHLO", pd);
-        }
         break;
 
     case bsmtpHelloReply:
@@ -933,13 +930,42 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
 
     case bsmtpTo:
 
-        snprintf(bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf), "<%s>", bsmtp->recipient);
+        // tokenize next recipient into cmdbuf
+        pd = bsmtp->cmdbuf;
+        *pd++ = '<';
+
+        for (
+                ps = bsmtp->recipient, chunk = sizeof(bsmtp->cmdbuf);
+
+                (chunk > 3) && *ps && ! butil_is_white(*ps) && (*ps != ';') && (*ps != ',');
+
+                chunk--
+        )
+        {
+            *pd++ = *ps++;
+        }
+        // wrap recipient token in <> and null terminate
+        *pd++ = '>';
+        *pd = '\0';
+
+        // skip white space and semicolons/commas to next recipient
+        while (*ps && (butil_is_white(*ps) || (*ps == ';') ||( *ps == ',')))
+        {
+            ps++;
+        }
+        // point to next recipient
+        bsmtp->recipient = ps;
+
+        butil_log(5, "Add Recipient %s\n", bsmtp->cmdbuf);
+
         result = bsmtp_send_command(bsmtp, bsmtpToReply, "RCPT TO:", bsmtp->cmdbuf);
         break;
 
     case bsmtpToReply:
 
-        result = bsmtp_check_response(bsmtp, bsmtpData, 1, 250);
+        // go back to To if more recipients, else start data
+        result = bsmtp_check_response(bsmtp,
+                (bsmtp->recipient && *bsmtp->recipient) ? bsmtpTo : bsmtpData, 1, 250);
         break;
 
     case bsmtpData:
@@ -1099,9 +1125,15 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
                         room &= ~3;
 
                         // read the data
-                        result = bsmtp->file_stream->read(bsmtp->file_stream, bsmtp->fiobuf, room);
+                        chunk = bsmtp->file_stream->read(bsmtp->file_stream, bsmtp->fiobuf, room);
+                        result = 0;
                     }
-                    if (result <= 0)
+                    else
+                    {
+                        // poll failed
+                        chunk = -1;
+                    }
+                    if (chunk <= 0)
                     {
                         // no more data in file
                         //
@@ -1122,7 +1154,7 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
                             //
                             result = butil_base64_encode(
                                                         bsmtp->cmdbuf, sizeof(bsmtp->cmdbuf),
-                                                        bsmtp->fiobuf, result,
+                                                        bsmtp->fiobuf, chunk,
                                                         false, false
                                                         );
                             if (result < 0)
@@ -1139,7 +1171,7 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
                             // file io buffer directly
                             //
                             bsmtp->body = bsmtp->fiobuf;
-                            bsmtp->body_count = result;
+                            bsmtp->body_count = chunk;
                         }
                         butil_log(5, "Attachment provides %zu more\n", bsmtp->body_count);
                         result = 0;

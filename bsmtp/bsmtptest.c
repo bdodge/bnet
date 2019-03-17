@@ -15,7 +15,7 @@
  */
 #include "bsmtp.h"
 
-#define USE_GOOGLE 1
+//#define USE_GOOGLE 1
 
 #define MAX_EMAIL_ATTACHMENTS 4
 
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     result = bsmtp_send_mail(
             url,
             transport,
-            "bnet_tester_2222@outlook.com",
+            "bnet_tester_2222@outlook.com; bnettester1111@gmail.com",
 #if USE_GOOGLE
             "bnettester1111@gmail.com",
 #else

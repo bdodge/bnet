@@ -89,13 +89,13 @@ void http_client_reinit(http_client_t *client, bool newstream)
     client->last_out_time = 0;
     client->in_transfer_type = httpNone;
     client->in_content_length = 0;
-    client->in_content_type = htmtbin;
+    client->in_content_type = butil_mime_bin;
     client->in_transferred = 0;
     client->ifmodifiedsince = 0;
     client->modifiedwhen = 0;
     client->out_transfer_type = httpNone;
     client->out_content_length = 0;
-    client->out_content_type = htmtbin;
+    client->out_content_type = butil_mime_bin;
     client->out_gotten = 0;
     client->out_transferred = 0;
     client->start_byte = 0;
@@ -638,12 +638,12 @@ static int http_process_header(http_client_t *client, char *header)
     }
     else if (! http_ncasecmp(header, "if-modified-since:"))
     {
-        client->ifmodifiedsince = http_rfc2616_date_to_time(value);
+        client->ifmodifiedsince = butil_rfc2616_date_to_time(value);
     }
     else if (! http_ncasecmp(header, "content-type:"))
     {
-        client->in_content_type = http_content_type_for_mime_string(value);
-        if (client->in_content_type == htmtmulti)
+        client->in_content_type = butil_content_type_for_mime_string(value);
+        if (client->in_content_type == butil_mime_multi)
         {
             #if HTTP_SUPPORT_MULTIPART
             // get boundary
@@ -934,8 +934,8 @@ static int http_process_multipart_header(http_client_t *client, char *header)
     }
     else if (! http_ncasecmp(header, "content-type:"))
     {
-        client->in_content_type = http_content_type_for_mime_string(value);
-        if (client->in_content_type == htmtmulti)
+        client->in_content_type = butil_content_type_for_mime_string(value);
+        if (client->in_content_type == butil_mime_multi)
         {
             // this is legal, but we don't handle it
             HTTP_ERROR("Multipart recursion");
@@ -1151,7 +1151,7 @@ int http_client_slice(http_client_t *client)
                     result |= http_append_request(client, "Transfer-Encoding: chunked");
                 }
                 result |= http_append_request(client, "Content-Type: %s",
-                                http_mime_string_for_content_type(client->out_content_type));
+                                butil_mime_string_for_content_type(client->out_content_type));
             }
             else
             {
@@ -1844,7 +1844,7 @@ int http_client_slice(http_client_t *client)
                         result |= http_append_reply(client, "Transfer-Encoding: chunked");
                     }
                     result |= http_append_reply(client, "Content-Type: %s",
-                                    http_mime_string_for_content_type(client->out_content_type));
+                                    butil_mime_string_for_content_type(client->out_content_type));
                 }
                 else
                 {
@@ -1865,7 +1865,7 @@ int http_client_slice(http_client_t *client)
                     char modbuf[32];
 
                     result |= http_append_reply(client, "Last-Modified: %s",
-                                http_time_to_rfc2616_date(client->modifiedwhen, modbuf, sizeof(modbuf)));
+                                butil_time_to_rfc2616_date(client->modifiedwhen, modbuf, sizeof(modbuf)));
                 }
                 if (
                             (client->out_transfer_type != httpChunked)

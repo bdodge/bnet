@@ -35,14 +35,5 @@ int http_method_from_name(const char *name, http_method_t *method);
 int http_auth_string_to_type(const char *auth_str, http_auth_type_t *auth_type);
 const char *http_auth_type_to_string(http_auth_type_t auth_type);
 
-time_t http_rfc2616_date_to_time(const char *date);
-const char *http_time_to_rfc2616_date(time_t when, char *buf, size_t nbuf);
-
-const char *http_mime_string_for_file(const char *path);
-http_content_type_t http_content_type_for_file(const char *path);
-
-const char *http_mime_string_for_content_type(http_content_type_t type);
-http_content_type_t http_content_type_for_mime_string(const char *mime);
-
 #endif
 

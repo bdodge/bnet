@@ -222,7 +222,7 @@ int http_file_callback(
                     }
                 }
             }
-            client->out_content_type = http_content_type_for_file(path);
+            client->out_content_type = butil_content_type_for_file(path);
             client->out_content_length = fstat.st_size;
 
             // optional: modify xfer encoding
@@ -421,7 +421,7 @@ int http_add_canned_resource(
                         http_resource_t   **resources,
                         const char         *urlbase,
                         http_credentials_t *credentials,
-                        http_content_type_t content_type,
+                        mime_content_type_t content_type,
                         const uint8_t      *content,
                         const size_t        content_length
                        )

@@ -403,11 +403,11 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
     pname++;
 
     // get mime type if any
-    pmime = http_mime_string_for_file(pname);
+    pmime = butil_mime_string_for_file(pname);
 
     // format times to strings
-    http_time_to_rfc2616_date(info->mod_time, mdate, sizeof(mdate));
-    http_time_to_rfc2616_date(info->create_time, cdate, sizeof(mdate));
+    butil_time_to_rfc2616_date(info->mod_time, mdate, sizeof(mdate));
+    butil_time_to_rfc2616_date(info->create_time, cdate, sizeof(mdate));
 
     // format xml
     //

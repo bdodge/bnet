@@ -87,77 +87,6 @@ typedef enum
 }
 http_auth_type_t;
 
-typedef enum
-{
-    htmtbin,
-    htmtcss,
-    htmtgif,
-    htmthtml,
-    htmtico,
-    htmtjpeg,
-    htmtjar,
-    htmtjs,
-    htmtjson,
-    htmttext,
-    htmttiff,
-    htmtxml,
-#if HTTP_SUPPORT_MULTIPART
-    htmtmulti,
-#endif
-#if HTTP_SUPPORT_EXTENDED_MIME_TYPES
-    htmtaac,
-    htmtabw,
-    htmtarc,
-    htmtavi,
-    htmtazw,
-    htmtbz,
-    htmtbz2,
-    htmtcsh,
-    htmtcsv,
-    htmtdoc,
-    htmteot,
-    htmtepub,
-    htmtics,
-    htmtmidi,
-    htmtmpeg,
-    htmtmpkg,
-    htmtodp,
-    htmtods,
-    htmtodt,
-    htmtoga,
-    htmtogv,
-    htmtogx,
-    htmtotf,
-    htmtpng,
-    htmtpdf,
-    htmtppt,
-    htmtrar,
-    htmtrtf,
-    htmtsh,
-    htmtsvg,
-    htmtswf,
-    htmttar,
-    htmtts,
-    htmtttf,
-    htmtvsd,
-    htmtwav,
-    htmtweba,
-    htmtwebm,
-    htmtwebp,
-    htmtwoff,
-    htmtwoff2,
-    htmtxhtml,
-    htmtxls,
-    htmtxlsx,
-    htmtxul,
-    htmtzip,
-    htmt3gp,
-    htmt3g2,
-    htmt7z,
-#endif
-}
-http_content_type_t;
-
 #include "bhttputil.h"
 #include "bhttpres.h"
 
@@ -253,11 +182,11 @@ typedef struct http_client
     bool                expect100;
     http_transfer_t     in_transfer_type;
     size_t              in_content_length;
-    http_content_type_t in_content_type;
+    mime_content_type_t in_content_type;
     size_t              in_transferred;
     http_transfer_t     out_transfer_type;
     size_t              out_content_length;
-    http_content_type_t out_content_type;
+    mime_content_type_t out_content_type;
     size_t              out_gotten;
     size_t              out_transferred;
 #if HTTP_SUPPORT_UDP

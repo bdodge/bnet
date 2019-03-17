@@ -107,7 +107,7 @@ typedef struct http_resource
 
         struct
         {
-            http_content_type_t content_type;
+            mime_content_type_t content_type;
             const uint8_t      *content;
             size_t              count;
         }
@@ -139,7 +139,7 @@ int http_add_canned_resource(
                         http_resource_t   **resources,
                         const char         *urlbase,
                         http_credentials_t *credentials,
-                        http_content_type_t content_type,
+                        mime_content_type_t content_type,
                         const uint8_t      *content,
                         const size_t        content_length
                         );

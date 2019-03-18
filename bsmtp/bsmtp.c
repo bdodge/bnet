@@ -399,7 +399,7 @@ static int bsmtp_parse_feature(bsmtp_client_t *bsmtp)
 
     // expect feature in line, like "250-name value"
     //
-    pf = bsmtp->line;
+    pf = (char*)bsmtp->line;
     code = strtoul(pf, &pf, 10);
     if (code != 250 || ! pf)
     {
@@ -1170,7 +1170,7 @@ int bsmtp_slice(bsmtp_client_t *bsmtp)
                             // server is binary-safe, or the contents are text so use
                             // file io buffer directly
                             //
-                            bsmtp->body = bsmtp->fiobuf;
+                            bsmtp->body = (const char *)bsmtp->fiobuf;
                             bsmtp->body_count = chunk;
                         }
                         butil_log(5, "Attachment provides %zu more\n", bsmtp->body_count);

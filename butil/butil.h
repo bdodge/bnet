@@ -105,7 +105,7 @@ typedef enum
 }
 mime_content_type_t;
 
-#define BUTIL_DEFAULT_MIME butil_mime_bin
+#define BUTIL_DEFAULT_MIME "text/plain"
 
 void butil_log              (uint32_t level, const char *fmt, ...);
 void butil_set_log_level    (uint32_t level);

@@ -146,7 +146,7 @@ typedef struct tag_smtp_client
     uint32_t        auth_supported;
     size_t          max_message;
     char            boundary[BSMTP_MAX_BOUNDARY];
-    uint8_t         cmdbuf[BSMTP_MAX_LINE * 3];
+    char            cmdbuf[BSMTP_MAX_LINE * 3];
     mime_content_type_t body_mime_type;
     mime_content_type_t attachment_mime_type;
     bool            attachment_encoded;

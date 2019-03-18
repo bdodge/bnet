@@ -1533,7 +1533,12 @@ int http_client_slice(http_client_t *client)
         case httpLock:
         case httpUnlock:
         #endif
-            client->resource = http_find_resource(client->resources, client->path, client->method);
+            client->resource = http_find_resource(
+                                                client->resources,
+                                                http_scheme_base(client->scheme),
+                                                client->path,
+                                                client->method
+                                                );
             if (! client->resource || ! client->resource->callback)
             {
                 result = http_error_reply(client, 404, "Not Found", false);
@@ -2639,7 +2644,7 @@ int http_client_request(
     if (localpath)
     {
         resources = NULL;
-        result = http_add_file_resource(&resources, localpath, "./", NULL);
+        result = http_add_file_resource(&resources, schemeHTTP, localpath, "./", NULL);
         if (result)
         {
             HTTP_ERROR("Can't add resource");

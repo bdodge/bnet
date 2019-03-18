@@ -34,11 +34,12 @@ void http_resource_free(http_resource_t *resource)
 
 int http_add_resource(
                         http_resource_t       **resources,
+                        butil_url_scheme_t      scheme,
                         http_resource_type_t    type,
                         const char             *urlbase,
                         http_credentials_t     *credentials,
                         http_resource_t       **result
-                   )
+                     )
 {
     http_resource_t *resource;
     http_resource_t *insertp;
@@ -52,6 +53,7 @@ int http_add_resource(
         return -1;
     }
     resource->next = NULL;
+    resource->scheme = scheme;
     resource->type = type;
     resource->urlbase = urlbase;
     #if HTTP_SUPPORT_AUTH
@@ -310,6 +312,7 @@ int http_file_callback(
 
 int http_add_file_resource(
                         http_resource_t   **resources,
+                        butil_url_scheme_t  scheme,
                         const char         *urlbase,
                         const char         *root,
                         http_credentials_t *credentials
@@ -318,7 +321,7 @@ int http_add_file_resource(
     http_resource_t *resource;
     int result;
 
-    result = http_add_resource(resources, httpFileResource, urlbase, credentials, &resource);
+    result = http_add_resource(resources, scheme, httpFileResource, urlbase, credentials, &resource);
     if (! result)
     {
         resource->callback  = http_file_callback;
@@ -330,6 +333,7 @@ int http_add_file_resource(
 
 int http_add_func_resource(
                         http_resource_t   **resources,
+                        butil_url_scheme_t  scheme,
                         const char         *urlbase,
                         http_credentials_t *credentials,
                         http_resource_function_t func,
@@ -339,7 +343,7 @@ int http_add_func_resource(
     http_resource_t *resource;
     int result;
 
-    result = http_add_resource(resources, httpFunctionResource, urlbase, credentials, &resource);
+    result = http_add_resource(resources, scheme, httpFunctionResource, urlbase, credentials, &resource);
     if (! result)
     {
         resource->callback  = func;
@@ -419,6 +423,7 @@ int http_canned_callback(
 
 int http_add_canned_resource(
                         http_resource_t   **resources,
+                        butil_url_scheme_t  scheme,
                         const char         *urlbase,
                         http_credentials_t *credentials,
                         mime_content_type_t content_type,
@@ -429,7 +434,7 @@ int http_add_canned_resource(
     http_resource_t *resource;
     int result;
 
-    result = http_add_resource(resources, httpCannedResource, urlbase, credentials, &resource);
+    result = http_add_resource(resources, scheme, httpCannedResource, urlbase, credentials, &resource);
     if (! result)
     {
         resource->callback = http_canned_callback;
@@ -526,33 +531,11 @@ int http_add_dav_resource(
     http_resource_t *resource;
     int result;
 
-    result = http_add_resource(resources, httpDavResource, urlbase, credentials, &resource);
+    result = http_add_resource(resources, schemeHTTP, httpDavResource, urlbase, credentials, &resource);
     if (! result)
     {
         // by default, dav uses file system for get/put/delete
         resource->callback  = http_file_callback;
-        resource->priv      = NULL;
-        resource->resource.file_data.root = root;
-    }
-    return result;
-}
-#endif
-#if HTTP_SUPPORT_SIP
-int http_add_sip_resource(
-                        http_resource_t   **resources,
-                        const char         *urlbase,
-                        const char         *root,
-                        http_credentials_t *credentials
-                       )
-{
-    http_resource_t *resource;
-    int result;
-
-    result = http_add_resource(resources, httpSipResource, urlbase, credentials, &resource);
-    if (! result)
-    {
-        // by default, dav uses file system for get/put/delete
-        resource->callback  = http_outbuffer_callback;
         resource->priv      = NULL;
         resource->resource.file_data.root = root;
     }
@@ -630,6 +613,7 @@ static char *http_restype_name(http_resource_type_t type)
 
 http_resource_t *http_match_resource(
                         http_resource_t *resources,
+                        const butil_url_scheme_t scheme,
                         const char      *urlpath,
                         http_resource_type_t type
                         )
@@ -641,16 +625,24 @@ http_resource_t *http_match_resource(
 
     for (resource = resources; resource; resource = resource->next)
     {
-        http_log(6, "Compare resource %s:%s to %s:%s\n",
-                http_restype_name(resource->type), resource->urlbase,
-                tnt, urlpath);
-        if (resource->type == type)
+        http_log(6, "Compare resource %s:%s:%s to %s:%s:%s\n",
+                butil_scheme_name(resource->scheme),
+                http_restype_name(resource->type),
+                resource->urlbase,
+                butil_scheme_name(scheme),
+                tnt,
+                urlpath);
+        if (resource->type == type && resource->scheme == scheme)
         {
             if (! pattern_match(urlpath, resource->urlbase))
             {
-                http_log(6, "Matched resource %s:%s to %s:%s\n",
-                        http_restype_name(resource->type), resource->urlbase,
-                        tnt, urlpath);
+                http_log(5, "Matched resource %s:%s:%s to %s:%s:%s\n",
+                        butil_scheme_name(resource->scheme),
+                        http_restype_name(resource->type),
+                        resource->urlbase,
+                        butil_scheme_name(scheme),
+                        tnt,
+                        urlpath);
                 return resource;
             }
         }
@@ -660,46 +652,22 @@ http_resource_t *http_match_resource(
 
 http_resource_t *http_find_resource(
                         http_resource_t *resources,
+                        const butil_url_scheme_t scheme,
                         const char      *path,
                         http_method_t    method
                         )
 {
     http_resource_t *resource;
 
-    resource = http_match_resource(resources, path, httpFunctionResource);
+    resource = http_match_resource(resources, scheme, path, httpFunctionResource);
     if (! resource)
     {
-        resource = http_match_resource(resources, path, httpCannedResource);
+        resource = http_match_resource(resources, scheme, path, httpCannedResource);
     }
-    #if HTTP_SUPPORT_SIP
-    if (! resource)
-    {
-        switch (method)
-        {
-        case httpInvite:
-        case httpAck:
-        case httpPrack:
-        case httpCancel:
-        case httpUpdate:
-        case httpInfo:
-        case httpSubscribe:
-        case httpNotify:
-        case httpRefer:
-        case httpMessage:
-        case httpRegister:
-        case httpBye:
-            resource = http_match_resource(resources, path, httpSipResource);
-            break;
-
-        default:
-            break;
-        }
-    }
-    #endif
     #if HTTP_SUPPORT_WEBDAV
-    if (! resource)
+    if (! resource && scheme == schemeHTTP)
     {
-        resource = http_match_resource(resources, path, httpDavResource);
+        resource = http_match_resource(resources, scheme, path, httpDavResource);
         if (resource)
         {
             // for DAV, use file callback for file operations and a
@@ -722,7 +690,7 @@ http_resource_t *http_find_resource(
         }
     }
     #endif
-    if (! resource)
+    if (! resource && scheme == schemeHTTP)
     {
         if (
                 method == httpGet
@@ -731,7 +699,7 @@ http_resource_t *http_find_resource(
             ||  method == httpDelete
         )
         {
-            resource = http_match_resource(resources, path, httpFileResource);
+            resource = http_match_resource(resources, scheme, path, httpFileResource);
         }
     }
     return resource;

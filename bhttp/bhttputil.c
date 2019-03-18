@@ -22,22 +22,22 @@ int http_ncasecmp(const char *haystack, const char *needle)
     return strncasecmp(haystack, needle, len);
 }
 
-const char *http_scheme_base_name(butil_url_scheme_t scheme)
+const butil_url_scheme_t http_scheme_base(const butil_url_scheme_t scheme)
 {
     switch (scheme)
     {
-    case schemeHTTP:      return "HTTP";
-    case schemeHTTPS:     return "HTTP";
+    case schemeHTTPS:   return schemeHTTP;
     #if HTTP_SUPPORT_WEBSOCKET
-    case schemeWS:        return "HTTP";
-    case schemeWSS:       return "HTTP";
+    case schemeWS:      return schemeHTTP;
+    case schemeWSS:     return schemeHTTP;
     #endif
-    #if HTTP_SUPPORT_SIP
-    case schemeSIP:       return "SIP";
-    case schemeSIPS:      return "SIP";
-    #endif
-    default:            return "";
+    default:            return scheme;
     }
+}
+
+const char *http_scheme_base_name(const butil_url_scheme_t scheme)
+{
+    return butil_scheme_name(http_scheme_base(scheme));
 }
 
 const char *http_method_name(http_method_t method)

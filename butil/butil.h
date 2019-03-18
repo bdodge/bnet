@@ -153,7 +153,7 @@ butil_url_scheme_t;
 #define BUTIL_NUM_USER_SCHEMES  ((int)schemeUSER4 - (int)schemeUSER1 + 1)
 
 const char *butil_scheme_name(
-                            butil_url_scheme_t method
+                            butil_url_scheme_t scheme
                             );
 
 int butil_scheme_from_name  (

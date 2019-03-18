@@ -27,6 +27,7 @@ int http_join_path(char *path, size_t room, const char *root, const char *base, 
 
 int http_ncasecmp(const char *haystack, const char *needle);
 
+const butil_url_scheme_t http_scheme_base(const butil_url_scheme_t scheme);
 const char *http_scheme_base_name(butil_url_scheme_t method);
 
 const char *http_method_name(http_method_t method);

@@ -89,6 +89,7 @@ http_credentials_t;
 typedef struct http_resource
 {
     struct http_resource       *next;
+    butil_url_scheme_t          scheme;
     const char                 *urlbase;
     http_resource_type_t        type;
     #if HTTP_SUPPORT_AUTH
@@ -101,7 +102,7 @@ typedef struct http_resource
     {
         struct
         {
-            const char     *root;
+            const char         *root;
         }
         file_data;
 
@@ -122,6 +123,7 @@ void http_resource_free(http_resource_t *resource);
 
 int http_add_file_resource(
                         http_resource_t   **resources,
+                        const butil_url_scheme_t scheme,
                         const char         *urlbase,
                         const char         *root,
                         http_credentials_t *credentials
@@ -129,6 +131,7 @@ int http_add_file_resource(
 
 int http_add_func_resource(
                         http_resource_t   **resources,
+                        const butil_url_scheme_t scheme,
                         const char         *urlbase,
                         http_credentials_t *credentials,
                         http_resource_function_t func,
@@ -137,6 +140,7 @@ int http_add_func_resource(
 
 int http_add_canned_resource(
                         http_resource_t   **resources,
+                        const butil_url_scheme_t scheme,
                         const char         *urlbase,
                         http_credentials_t *credentials,
                         mime_content_type_t content_type,
@@ -161,12 +165,14 @@ int http_add_sip_resource(
 #endif
 http_resource_t *http_match_resource(
                         http_resource_t    *resources,
+                        const butil_url_scheme_t scheme,
                         const char         *urlpath,
                         http_resource_type_t type
                         );
 
 http_resource_t *http_find_resource(
                         http_resource_t *resources,
+                        const butil_url_scheme_t scheme,
                         const char      *path,
                         http_method_t    method
                         );

@@ -197,7 +197,7 @@ int main(int argc, char **argv)
         //
         char *cannedindex = "<h2>hello world</h2>";
 
-        result = http_add_canned_resource(&resources, "/canned.html",
+        result = http_add_canned_resource(&resources, schemeHTTP,  "/canned.html",
                     NULL, butil_mime_html, (uint8_t*)cannedindex, strlen(cannedindex));
         if (result)
         {
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
 #if HTTP_SUPPORT_WEBSOCKET
         // add a function server resource at echo for websockets
         //
-        result = http_add_func_resource(&resources, "/echo", NULL, echo_callback, NULL);
+        result = http_add_func_resource(&resources, schemeWS, "/echo", NULL, echo_callback, NULL);
         if (result)
         {
             HTTP_ERROR("Can't make resource");
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
         fs_creds.pass = "bbb";
         fs_creds.type = httpAuthBasic;
 #endif
-        result = http_add_file_resource(&resources, "*", "./media", &fs_creds);
+        result = http_add_file_resource(&resources, schemeHTTP, "*", "./media", &fs_creds);
         if (result)
         {
             HTTP_ERROR("Can't make resource");

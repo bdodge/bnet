@@ -91,6 +91,43 @@ int echo_callback(
 
 #endif
 
+int on_evil_scheme(http_method_callback_type_t type, const char *method, const char *data, void *priv)
+{
+    http_log(5, "Method cb %s: %s\n", method, data ? data : "<nil>");
+    return 0;
+}
+
+int evil_canned_callback(
+                        http_client_t       *client,
+                        http_resource_t     *resource,
+                        http_callback_type_t cbtype,
+                        uint8_t            **data,
+                        size_t              *count
+                     )
+{
+    http_method_t method;
+    int result;
+
+    method = client->method;
+    if (method == httpUser0)
+    {
+        client->method = httpGet;
+    }
+    else if (method == httpUser1)
+    {
+        client->method = httpPut;
+    }
+    result = http_canned_callback(
+                                client,
+                                resource,
+                                cbtype,
+                                data,
+                                count
+                                );
+    client->method = method;
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     bool isserver;
@@ -250,6 +287,44 @@ int main(int argc, char **argv)
             return result;
         }
 #endif
+        {
+        butil_url_scheme_t myscheme;
+
+        // register a custom scheme
+        result = butil_register_scheme("sip", &myscheme);
+        if (result)
+        {
+            HTTP_ERROR("can't register scheme");
+        }
+        // and add a few methods for that scheme
+        result = http_register_method("FROBULATE", on_evil_scheme, NULL);
+        if (result)
+        {
+            HTTP_ERROR("can't register method");
+        }
+        result = http_register_method("DEFROBULATE", on_evil_scheme, NULL);
+        if (result)
+        {
+            HTTP_ERROR("can't register method");
+        }
+        // add a resource for the scheme
+        char *cannedfrob = "<h2>hello frobulated world</h2>";
+
+        result = http_add_func_resource(&resources, myscheme,  "/index.html",
+                    NULL, evil_canned_callback, NULL);
+        if (result)
+        {
+            HTTP_ERROR("can't make resource");
+            return result;
+        }
+        resource = http_find_resource(resources, myscheme, "/index.html", httpGet);
+        if (resource)
+        {
+            resource->resource.canned_data.content = (const uint8_t*)cannedfrob;
+            resource->resource.canned_data.count = strlen(cannedfrob);
+            resource->resource.canned_data.content_type = butil_mime_html;
+        }
+        }
         // set use-tls for certain ports
         //
         result = http_server_init(&server, resources, port, httpTCP, (port == 443 || port == 4443));

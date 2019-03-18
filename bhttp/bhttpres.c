@@ -625,7 +625,7 @@ http_resource_t *http_match_resource(
 
     for (resource = resources; resource; resource = resource->next)
     {
-        http_log(6, "Compare resource %s:%s:%s to %s:%s:%s\n",
+        http_log(5, "Compare resource %s:%s:%s to %s:%s:%s\n",
                 butil_scheme_name(resource->scheme),
                 http_restype_name(resource->type),
                 resource->urlbase,
@@ -700,6 +700,24 @@ http_resource_t *http_find_resource(
         )
         {
             resource = http_match_resource(resources, scheme, path, httpFileResource);
+        }
+    }
+    if (! resource)
+    {
+        int sn;
+
+        sn = (int)scheme - BUTIL_FIRST_USER_SCHEME;
+        if (sn >= 0 && sn <= BUTIL_NUM_USER_SCHEMES)
+        {
+            resource = http_match_resource(resources, scheme, path, httpFunctionResource);
+            if (! resource)
+            {
+                resource = http_match_resource(resources, scheme, path, httpCannedResource);
+            }
+            if (! resource)
+            {
+                resource = http_match_resource(resources, scheme, path, httpFileResource);
+            }
         }
     }
     return resource;

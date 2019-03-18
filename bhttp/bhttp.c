@@ -885,10 +885,19 @@ static int http_process_header(http_client_t *client, char *header)
         //
         if (client->method >= HTTP_FIRST_USER_METHOD)
         {
-            result = http_process_user_header(client->method, header);
-            if (result == 0)
+            const http_user_method_t *user_method;
+
+            user_method = http_get_user_method(client->method);
+            if (user_method)
             {
-                return 0;
+                // call user callback and let it know a request is in
+                result = user_method->callback(httpMethodHeader, user_method->name,
+                        header, user_method->priv);
+                if (result == 0)
+                {
+                    // user method absorbed header
+                    return 0;
+                }
             }
         }
         http_log(5, "ignore header %s\n", header);
@@ -1285,17 +1294,32 @@ int http_client_slice(http_client_t *client)
         client->path[i] = 0;
         pline = http_skip_white(pline);
 
-        // extract version
-        if (! http_ncasecmp(pline, "HTTP/"))
+        // extract scheme and version
+        //
+        for (i = 0; pline[i]; i++)
         {
-            pline += 5;
-            client->scheme = schemeHTTP;
-            client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
-            if (*pline)
+            if (pline[i] == '/')
             {
-                pline++;
-                client->vmin = (uint8_t)strtoul(pline, &pline, 10);
+                break;
             }
+        }
+        pline[i] = '\0';
+        client->scheme = schemeHTTP;
+        result = butil_scheme_from_name(pline, &client->scheme);
+        if (result)
+        {
+            HTTP_ERROR("No scheme");
+        }
+        pline += i;
+        if (*pline)
+        {
+            pline++;
+        }
+        client->vmaj = (uint8_t)strtoul(pline, &pline, 10);
+        if (*pline)
+        {
+            pline++;
+            client->vmin = (uint8_t)strtoul(pline, &pline, 10);
         }
         http_log(3, "cl:%u %s %s %s/%u.%u\n", client->id,
                 http_method_name(client->method),
@@ -1546,6 +1570,10 @@ int http_client_slice(http_client_t *client)
         case httpLock:
         case httpUnlock:
         #endif
+        case httpUser0: case httpUser1: case httpUser2: case httpUser3:
+        case httpUser4: case httpUser5: case httpUser6: case httpUser7:
+        case httpUser8: case httpUser9: case httpUser10: case httpUser11:
+        case httpUser12: case httpUser13: case httpUser14: case httpUser15:
             client->resource = http_find_resource(
                                                 client->resources,
                                                 http_scheme_base(client->scheme),
@@ -1624,6 +1652,7 @@ int http_client_slice(http_client_t *client)
             result = 0;
             break;
 
+        case httpOptions:
         default:
             // any other methods are handled after body is downloaded in buffer
             result = 0;
@@ -1805,6 +1834,8 @@ int http_client_slice(http_client_t *client)
         }
         if (client->in_content_length == 0)
         {
+            const http_user_method_t *user_method;
+
             if (client->in_transfer_type == httpChunked)
             {
                 // time to get another chunk
@@ -1974,6 +2005,32 @@ int http_client_slice(http_client_t *client)
                 }
                 break;
 
+            case httpUser0: case httpUser1: case httpUser2: case httpUser3:
+            case httpUser4: case httpUser5: case httpUser6: case httpUser7:
+            case httpUser8: case httpUser9: case httpUser10: case httpUser11:
+            case httpUser12: case httpUser13: case httpUser14: case httpUser15:
+                // a user method, if there's a method callback use it
+                user_method = http_get_user_method(client->method);
+                if (user_method)
+                {
+                    // call user callback and let it know a request is in
+                    result = user_method->callback(httpMethodRequest, user_method->name,
+                            client->path, user_method->priv);
+                    if (result)
+                    {
+                        http_log(1, "Method callback aborts\n");
+                        return http_slice_fatal(client, result);
+                    }
+                    client->state = httpBodyUpload;
+                }
+                else
+                {
+                    // method doesn't care about body, move on
+                    //
+                    client->state = httpBodyUpload;
+                }
+                break;
+
             default:
                 http_log(1, "Bad request: %s\n", http_method_name(client->method));
                 result = http_error_reply(client, 405, "Bad Request", false);
@@ -1981,6 +2038,7 @@ int http_client_slice(http_client_t *client)
                 {
                     return http_slice_fatal(client, result);
                 }
+                break;
             }
             // body download complete, all set
             //

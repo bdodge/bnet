@@ -40,13 +40,7 @@ const char *http_scheme_base_name(const butil_url_scheme_t scheme)
     return butil_scheme_name(http_scheme_base(scheme));
 }
 
-static struct tag_user_method
-{
-    char name[HTTP_MAX_METHOD_NAME];
-    http_method_callback_t callback;
-    void *priv;
-}
-s_user_methods[HTTP_NUM_USER_METHODS] =
+http_user_method_t s_user_methods[HTTP_NUM_USER_METHODS] =
 {
     { "", NULL, NULL }
 };
@@ -172,6 +166,8 @@ int http_method_from_name(const char *name, http_method_t *method)
     {
         if (s_user_methods[meth].name[0])
         {
+            http_log(5, "Compare method=%s= to =%s=\n",
+                    name, s_user_methods[meth].name);
             if (! http_ncasecmp(name, s_user_methods[meth].name))
             {
                 *method = (http_method_t)(HTTP_FIRST_USER_METHOD + meth);
@@ -183,7 +179,7 @@ int http_method_from_name(const char *name, http_method_t *method)
     return -1;
 }
 
-int bhttp_register_method(const char *name, http_method_callback_t callback, void *priv)
+int http_register_method(const char *name, http_method_callback_t callback, void *priv)
 {
     int meth;
 
@@ -202,31 +198,22 @@ int bhttp_register_method(const char *name, http_method_callback_t callback, voi
     return -1;
 }
 
-int http_process_user_header(http_method_t method, const char *header)
+const http_user_method_t *http_get_user_method(http_method_t method)
 {
-    struct tag_user_method *handler;
+    http_user_method_t *handler;
     int meth;
 
-    if (! header)
-    {
-        return -1;
-    }
     meth = (int)method - HTTP_FIRST_USER_METHOD;
     if (meth < 0 || meth >= HTTP_NUM_USER_METHODS)
     {
-        return 1;
+        return NULL;
     }
     handler = &s_user_methods[meth];
-    if (! handler->callback)
+    if (handler->name[0] == '\0')
     {
-        return 1;
+        return NULL;
     }
-    return handler->callback(
-                            httpMethodHeader,
-                            handler->name,
-                            header,
-                            handler->priv
-                            );
+    return handler;
 }
 
 static inline uint8_t byte_from_hex(char x)

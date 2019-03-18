@@ -404,16 +404,6 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
         *scheme = schemeWS;
         return 0;
     }
-    if (! strcasecmp(name, "sips"))
-    {
-        *scheme = schemeHTTPS;
-        return 0;
-    }
-    if (! strcasecmp(name, "sip"))
-    {
-        *scheme = schemeHTTP;
-        return 0;
-    }
     if (! strcasecmp(name, "mailto"))
     {
         *scheme = schemeMAILTO;
@@ -423,7 +413,8 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
     {
         if (s_user_schemes[scheme_num].name[0])
         {
-            if (! strcmp(s_user_schemes[scheme_num].name, name))
+            if (! strncasecmp(name, s_user_schemes[scheme_num].name,
+                    strlen(s_user_schemes[scheme_num].name)))
             {
                 *scheme = scheme_num + BUTIL_FIRST_USER_SCHEME;
                 return 0;

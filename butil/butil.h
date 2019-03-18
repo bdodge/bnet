@@ -142,14 +142,26 @@ typedef enum
     schemeSIP,
     schemeSIPS,
     schemeMAILTO,
+    schemeUSER1,
+    schemeUSER2,
+    schemeUSER3,
+    schemeUSER4
 }
 butil_url_scheme_t;
+
+#define BUTIL_FIRST_USER_SCHEME ((int)schemeUSER1)
+#define BUTIL_NUM_USER_SCHEMES  ((int)schemeUSER4 - (int)schemeUSER1 + 1)
 
 const char *butil_scheme_name(
                             butil_url_scheme_t method
                             );
 
 int butil_scheme_from_name  (
+                            const char         *name,
+                            butil_url_scheme_t *scheme
+                            );
+
+int butil_register_scheme   (
                             const char         *name,
                             butil_url_scheme_t *scheme
                             );

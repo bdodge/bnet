@@ -313,8 +313,32 @@ int butil_base64_encode(
     return (k < srcbytes) ? -1 : (out - base);
 }
 
+static char s_user_schemes[BUTIL_NUM_USER_SCHEMES * (BUTIL_MAX_URL_SCHEME + 2)];
+
+int butil_register_scheme   (
+                            const char         *name,
+                            butil_url_scheme_t *scheme
+                            )
+{
+    size_t scheme_num;
+
+    for (scheme_num = 0; scheme_num < BUTIL_NUM_USER_SCHEMES; scheme_num++)
+    {
+        if (! s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)])
+        {
+            *scheme = scheme_num + BUTIL_FIRST_USER_SCHEME;
+            strncpy(&s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)], name, BUTIL_MAX_URL_SCHEME);
+            s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2) + BUTIL_MAX_URL_SCHEME - 1] = '\0';
+            return 0;
+        }
+    }
+    return -1;
+}
+
 const char *butil_scheme_name(butil_url_scheme_t scheme)
 {
+    size_t scheme_num;
+
     switch (scheme)
     {
     case schemeFTP:     return "FTP";
@@ -326,12 +350,23 @@ const char *butil_scheme_name(butil_url_scheme_t scheme)
     case schemeSIP:     return "SIP";
     case schemeSIPS:    return "SIPS";
     case schemeMAILTO:  return "MAILTO";
-    default:            return "";
+    default:
+        scheme_num = scheme - BUTIL_FIRST_USER_SCHEME;
+        if (scheme_num < BUTIL_NUM_USER_SCHEMES)
+        {
+            if (s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)])
+            {
+                return &s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)];
+            }
+        }
     }
+    return "????";
 }
 
 int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
 {
+    size_t scheme_num;
+
     if (! strcasecmp(name, "https"))
     {
         *scheme = schemeHTTPS;
@@ -376,6 +411,17 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
     {
         *scheme = schemeMAILTO;
         return 0;
+    }
+    for (scheme_num = 0; scheme_num < BUTIL_NUM_USER_SCHEMES; scheme_num++)
+    {
+        if (s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)])
+        {
+            if (! strcmp(&s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)], name))
+            {
+                *scheme = scheme_num + BUTIL_FIRST_USER_SCHEME;
+                return 0;
+            }
+        }
     }
     return -1;
 }

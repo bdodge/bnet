@@ -43,10 +43,15 @@
                             HTTP_MAX_PORTSPEC +     \
                             4   )
 
+/// Longest user method string
+//
+#ifndef HTTP_MAX_METHOD_NAME
+#define HTTP_MAX_METHOD_NAME  (16)
+#endif
 /// Longest basic-authentication user/password string accepted
 //
 #ifndef HTTP_MAX_AUTH_STRING
-#define HTTP_MAX_AUTH_STRING (64)
+#define HTTP_MAX_AUTH_STRING  (64)
 #endif
 
 /// How many clients, per server, can be connected

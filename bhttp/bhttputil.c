@@ -40,8 +40,21 @@ const char *http_scheme_base_name(const butil_url_scheme_t scheme)
     return butil_scheme_name(http_scheme_base(scheme));
 }
 
+static struct tag_user_method
+{
+    char name[HTTP_MAX_METHOD_NAME];
+    http_method_callback_t callback;
+    void *priv;
+}
+s_user_methods[HTTP_NUM_USER_METHODS] =
+{
+    { "", NULL, NULL }
+};
+
 const char *http_method_name(http_method_t method)
 {
+    int meth;
+
     switch (method)
     {
     case httpOptions:   return "OPTIONS";
@@ -61,26 +74,23 @@ const char *http_method_name(http_method_t method)
     case httpLock:      return "LOCK";
     case httpUnlock:    return "UNLOCK";
 #endif
-#if HTTP_SUPPORT_SIP
-    case httpInvite:    return "INVITE";
-    case httpAck:       return "ACK";
-    case httpPrack:     return "PRACK";
-    case httpCancel:    return "CANCEL";
-    case httpUpdate:    return "UPDATE";
-    case httpInfo:      return "INFO";
-    case httpSubscribe: return "SUBSCRIBE";
-    case httpNotify:    return "NOTIFY";
-    case httpRefer:     return "REFER";
-    case httpMessage:   return "MESSAGE";
-    case httpRegister:  return "REGISTER";
-    case httpBye:       return "BYE";
-#endif
-    default:            return "- bad method -";
+    default:
+        meth = (int)method - HTTP_FIRST_USER_METHOD;
+        if (meth >= 0 && meth < HTTP_NUM_USER_METHODS)
+        {
+            if (s_user_methods[meth].name[0])
+            {
+                return s_user_methods[meth].name;
+            }
+        }
     }
+    return "- bad method -";
 }
 
 int http_method_from_name(const char *name, http_method_t *method)
 {
+    int meth;
+
     if (! http_ncasecmp(name, "OPTIONS"))
     {
         *method = httpOptions;
@@ -158,70 +168,65 @@ int http_method_from_name(const char *name, http_method_t *method)
         return 0;
     }
 #endif
-#if HTTP_SUPPORT_SIP
-    if (! http_ncasecmp(name, "INVITE"))
+    for (meth = 0; meth < HTTP_NUM_USER_METHODS; meth++)
     {
-        *method = httpInvite;
-        return 0;
+        if (s_user_methods[meth].name[0])
+        {
+            if (! http_ncasecmp(name, s_user_methods[meth].name))
+            {
+                *method = (http_method_t)(HTTP_FIRST_USER_METHOD + meth);
+                return 0;
+            }
+        }
     }
-    if (! http_ncasecmp(name, "ACK"))
-    {
-        *method = httpAck;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "PRACK"))
-    {
-        *method = httpPrack;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "CANCEL"))
-    {
-        *method = httpCancel;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "UPDATE"))
-    {
-        *method = httpUpdate;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "INFO"))
-    {
-        *method = httpInfo;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "SUBSCRIBE"))
-    {
-        *method = httpSubscribe;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "NOTIFY"))
-    {
-        *method = httpNotify;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "REFER"))
-    {
-        *method = httpRefer;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "MESSAGE"))
-    {
-        *method = httpMessage;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "REGISTER"))
-    {
-        *method = httpRegister;
-        return 0;
-    }
-    if (! http_ncasecmp(name, "BYE"))
-    {
-        *method = httpBye;
-        return 0;
-    }
-#endif
     *method = httpUnsupported;
     return -1;
+}
+
+int bhttp_register_method(const char *name, http_method_callback_t callback, void *priv)
+{
+    int meth;
+
+    for (meth = 0; meth < HTTP_NUM_USER_METHODS; meth++)
+    {
+        if (! s_user_methods[meth].name[0])
+        {
+            strncpy(s_user_methods[meth].name, name, HTTP_MAX_METHOD_NAME - 1);
+            s_user_methods[meth].name[HTTP_MAX_METHOD_NAME - 1] = '\0';
+            s_user_methods[meth].callback = callback;
+            s_user_methods[meth].priv = priv;
+            return 0;
+        }
+    }
+    HTTP_ERROR("No user method slots left");
+    return -1;
+}
+
+int http_process_user_header(http_method_t method, const char *header)
+{
+    struct tag_user_method *handler;
+    int meth;
+
+    if (! header)
+    {
+        return -1;
+    }
+    meth = (int)method - HTTP_FIRST_USER_METHOD;
+    if (meth < 0 || meth >= HTTP_NUM_USER_METHODS)
+    {
+        return 1;
+    }
+    handler = &s_user_methods[meth];
+    if (! handler->callback)
+    {
+        return 1;
+    }
+    return handler->callback(
+                            httpMethodHeader,
+                            handler->name,
+                            header,
+                            handler->priv
+                            );
 }
 
 static inline uint8_t byte_from_hex(char x)

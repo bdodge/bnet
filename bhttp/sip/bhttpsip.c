@@ -1,3 +1,80 @@
+#if HTTP_SUPPORT_SIP
+    case httpInvite:    return "INVITE";
+    case httpAck:       return "ACK";
+    case httpPrack:     return "PRACK";
+    case httpCancel:    return "CANCEL";
+    case httpUpdate:    return "UPDATE";
+    case httpInfo:      return "INFO";
+    case httpSubscribe: return "SUBSCRIBE";
+    case httpNotify:    return "NOTIFY";
+    case httpRefer:     return "REFER";
+    case httpMessage:   return "MESSAGE";
+    case httpRegister:  return "REGISTER";
+    case httpBye:       return "BYE";
+#endif
+#if HTTP_SUPPORT_SIP
+    if (! http_ncasecmp(name, "INVITE"))
+    {
+        *method = httpInvite;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "ACK"))
+    {
+        *method = httpAck;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "PRACK"))
+    {
+        *method = httpPrack;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "CANCEL"))
+    {
+        *method = httpCancel;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "UPDATE"))
+    {
+        *method = httpUpdate;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "INFO"))
+    {
+        *method = httpInfo;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "SUBSCRIBE"))
+    {
+        *method = httpSubscribe;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "NOTIFY"))
+    {
+        *method = httpNotify;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "REFER"))
+    {
+        *method = httpRefer;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "MESSAGE"))
+    {
+        *method = httpMessage;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "REGISTER"))
+    {
+        *method = httpRegister;
+        return 0;
+    }
+    if (! http_ncasecmp(name, "BYE"))
+    {
+        *method = httpBye;
+        return 0;
+    }
+#endif
+
 #include "bhttp.h"
 
 #if HTTP_SUPPORT_SIP
@@ -17,7 +94,7 @@
     client->sip_cseq = 0;
     #endif
 
-	
+
     #if HTTP_SUPPORT_SIP
     else if (! http_ncasecmp(header, "via:"))
     {
@@ -77,7 +154,7 @@
                     {
                         client->sip_depth = -2;
                     }
-	
+
 #if HTTP_SUPPORT_SIP
         ||  client->scheme == schemeSIPS
 #endif
@@ -97,7 +174,7 @@
         }
     #endif
         break;
-		
+
             #if HTTP_SUPPORT_SIP
             case httpInvite:
             case httpAck:
@@ -136,7 +213,7 @@
                 break;
             #endif
 
-		
+
         #if HTTP_SUPPORT_SIP
         if (! http_ncasecmp(pline, "SIP/"))
         {

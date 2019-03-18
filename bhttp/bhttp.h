@@ -60,21 +60,28 @@ typedef enum
     httpMove,
     httpLock,
     httpUnlock,
-    // sip
-    httpInvite,
-    httpAck,
-    httpPrack,
-    httpCancel,
-    httpUpdate,
-    httpInfo,
-    httpSubscribe,
-    httpNotify,
-    httpRefer,
-    httpMessage,
-    httpRegister,
-    httpBye,
+    // user methods
+    httpUser0,
+    httpUser1,
+    httpUser2,
+    httpUser3,
+    httpUser4,
+    httpUser5,
+    httpUser6,
+    httpUser7,
+    httpUser8,
+    httpUser9,
+    httpUser10,
+    httpUser11,
+    httpUser12,
+    httpUser13,
+    httpUser14,
+    httpUser15
 }
 http_method_t;
+
+#define HTTP_NUM_USER_METHODS (((int)httpUser15 - (int)httpUser0) + 1)
+#define HTTP_FIRST_USER_METHOD ((int)httpUser0)
 
 typedef enum
 {

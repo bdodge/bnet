@@ -878,6 +878,19 @@ static int http_process_header(http_client_t *client, char *header)
     #endif
     else
     {
+        int result;
+
+        // if the method is a user method, and there's a callback
+        // then pass header to user's callback
+        //
+        if (client->method >= HTTP_FIRST_USER_METHOD)
+        {
+            result = http_process_user_header(client->method, header);
+            if (result == 0)
+            {
+                return 0;
+            }
+        }
         http_log(5, "ignore header %s\n", header);
     }
     return 0;

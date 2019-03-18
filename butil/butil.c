@@ -313,7 +313,14 @@ int butil_base64_encode(
     return (k < srcbytes) ? -1 : (out - base);
 }
 
-static char s_user_schemes[BUTIL_NUM_USER_SCHEMES * (BUTIL_MAX_URL_SCHEME + 2)];
+static struct tag_user_scheme
+{
+    char name[BUTIL_MAX_URL_SCHEME];
+}
+s_user_schemes[BUTIL_NUM_USER_SCHEMES] =
+{
+    { "" }
+};
 
 int butil_register_scheme   (
                             const char         *name,
@@ -324,11 +331,11 @@ int butil_register_scheme   (
 
     for (scheme_num = 0; scheme_num < BUTIL_NUM_USER_SCHEMES; scheme_num++)
     {
-        if (! s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)])
+        if (! s_user_schemes[scheme_num].name[0])
         {
             *scheme = scheme_num + BUTIL_FIRST_USER_SCHEME;
-            strncpy(&s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)], name, BUTIL_MAX_URL_SCHEME);
-            s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2) + BUTIL_MAX_URL_SCHEME - 1] = '\0';
+            strncpy(s_user_schemes[scheme_num].name, name, BUTIL_MAX_URL_SCHEME - 1);
+            s_user_schemes[scheme_num].name[BUTIL_MAX_URL_SCHEME - 1] = '\0';
             return 0;
         }
     }
@@ -354,9 +361,9 @@ const char *butil_scheme_name(butil_url_scheme_t scheme)
         scheme_num = scheme - BUTIL_FIRST_USER_SCHEME;
         if (scheme_num < BUTIL_NUM_USER_SCHEMES)
         {
-            if (s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)])
+            if (s_user_schemes[scheme_num].name[0])
             {
-                return &s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)];
+                return s_user_schemes[scheme_num].name;
             }
         }
     }
@@ -414,9 +421,9 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
     }
     for (scheme_num = 0; scheme_num < BUTIL_NUM_USER_SCHEMES; scheme_num++)
     {
-        if (s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)])
+        if (s_user_schemes[scheme_num].name[0])
         {
-            if (! strcmp(&s_user_schemes[scheme_num * (BUTIL_MAX_URL_SCHEME + 2)], name))
+            if (! strcmp(s_user_schemes[scheme_num].name, name))
             {
                 *scheme = scheme_num + BUTIL_FIRST_USER_SCHEME;
                 return 0;

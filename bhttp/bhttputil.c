@@ -174,12 +174,21 @@ int http_method_from_name(const char *name, http_method_t *method)
                 return 0;
             }
         }
+        else
+        {
+            break;
+        }
     }
     *method = httpUnsupported;
     return -1;
 }
 
-int http_register_method(const char *name, http_method_callback_t callback, void *priv)
+int http_register_method(
+                        const char *name,
+                        http_method_callback_t callback,
+                        void *priv,
+                        http_method_t *method
+                        )
 {
     int meth;
 
@@ -191,10 +200,18 @@ int http_register_method(const char *name, http_method_callback_t callback, void
             s_user_methods[meth].name[HTTP_MAX_METHOD_NAME - 1] = '\0';
             s_user_methods[meth].callback = callback;
             s_user_methods[meth].priv = priv;
+            if (method)
+            {
+                *method = HTTP_FIRST_USER_METHOD + meth;
+            }
             return 0;
         }
     }
-    HTTP_ERROR("No user method slots left");
+    butil_log(0, "No user method slots left\n");
+    if (method)
+    {
+        *method = HTTP_FIRST_USER_METHOD + meth;
+    }
     return -1;
 }
 
@@ -214,6 +231,28 @@ const http_user_method_t *http_get_user_method(http_method_t method)
         return NULL;
     }
     return handler;
+}
+
+int http_make_user_method_callback(
+                            http_client_t *client,
+                            http_method_callback_type_t type,
+                            http_method_t method,
+                            const char *data
+                            )
+{
+    const http_user_method_t *handler;
+
+    handler = http_get_user_method(method);
+    if (! handler)
+    {
+        return -1;
+    }
+    if (! handler->callback)
+    {
+        // this is ok, methods are allowed to ignore us
+        return 0;
+    }
+    return handler->callback(client, type, method, data, handler->priv);
 }
 
 static inline uint8_t byte_from_hex(char x)

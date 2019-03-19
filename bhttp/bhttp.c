@@ -885,19 +885,17 @@ static int http_process_header(http_client_t *client, char *header)
         //
         if (client->method >= HTTP_FIRST_USER_METHOD)
         {
-            const http_user_method_t *user_method;
-
-            user_method = http_get_user_method(client->method);
-            if (user_method)
+            // call user callback and let it know a request is in
+            result = http_make_user_method_callback(
+                                        client,
+                                        httpMethodHeader,
+                                        client->method,
+                                        header
+                                        );
+            if (result == 0)
             {
-                // call user callback and let it know a request is in
-                result = user_method->callback(httpMethodHeader, user_method->name,
-                        header, user_method->priv);
-                if (result == 0)
-                {
-                    // user method absorbed header
-                    return 0;
-                }
+                // user method absorbed header
+                return 0;
             }
         }
         http_log(5, "ignore header %s\n", header);
@@ -1834,8 +1832,6 @@ int http_client_slice(http_client_t *client)
         }
         if (client->in_content_length == 0)
         {
-            const http_user_method_t *user_method;
-
             if (client->in_transfer_type == httpChunked)
             {
                 // time to get another chunk
@@ -2009,26 +2005,19 @@ int http_client_slice(http_client_t *client)
             case httpUser4: case httpUser5: case httpUser6: case httpUser7:
             case httpUser8: case httpUser9: case httpUser10: case httpUser11:
             case httpUser12: case httpUser13: case httpUser14: case httpUser15:
-                // a user method, if there's a method callback use it
-                user_method = http_get_user_method(client->method);
-                if (user_method)
+               // a user method, if there's a method callback use it
+                result = http_make_user_method_callback(
+                                        client,
+                                        httpMethodRequest,
+                                        client->method,
+                                        client->path
+                                        );
+                if (result)
                 {
-                    // call user callback and let it know a request is in
-                    result = user_method->callback(httpMethodRequest, user_method->name,
-                            client->path, user_method->priv);
-                    if (result)
-                    {
-                        http_log(1, "Method callback aborts\n");
-                        return http_slice_fatal(client, result);
-                    }
-                    client->state = httpBodyUpload;
+                    http_log(1, "Method callback aborts\n");
+                    return http_slice_fatal(client, result);
                 }
-                else
-                {
-                    // method doesn't care about body, move on
-                    //
-                    client->state = httpBodyUpload;
-                }
+                client->state = httpBodyUpload;
                 break;
 
             default:

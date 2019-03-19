@@ -91,9 +91,16 @@ int echo_callback(
 
 #endif
 
-int on_evil_scheme(http_method_callback_type_t type, const char *method, const char *data, void *priv)
+int on_evil_scheme(
+                    http_client_t *client,
+                    http_method_callback_type_t type,
+                    const http_method_t method,
+                    const char *data,
+                    void *priv
+                )
 {
-    http_log(5, "Method cb %s: %s\n", method, data ? data : "<nil>");
+    http_log(5, "Method cb %d %s: %s\n", type,
+           http_method_name(method), data ? data : "<nil>");
     return 0;
 }
 
@@ -297,12 +304,12 @@ int main(int argc, char **argv)
             HTTP_ERROR("can't register scheme");
         }
         // and add a few methods for that scheme
-        result = http_register_method("FROBULATE", on_evil_scheme, NULL);
+        result = http_register_method("FROBULATE", on_evil_scheme, NULL, NULL);
         if (result)
         {
             HTTP_ERROR("can't register method");
         }
-        result = http_register_method("DEFROBULATE", on_evil_scheme, NULL);
+        result = http_register_method("DEFROBULATE", on_evil_scheme, NULL, NULL);
         if (result)
         {
             HTTP_ERROR("can't register method");

@@ -120,6 +120,22 @@ http_resource_t;
 http_resource_t *http_resource_create(void);
 void http_resource_free(http_resource_t *resource);
 
+int http_canned_callback(
+                        struct http_client  *client,
+                        http_resource_t     *resource,
+                        http_callback_type_t cbtype,
+                        uint8_t            **data,
+                        size_t              *count
+                        );
+
+int http_file_callback(
+                        struct http_client  *client,
+                        http_resource_t     *resource,
+                        http_callback_type_t cbtype,
+                        uint8_t            **data,
+                        size_t              *count
+                        );
+
 int http_add_file_resource(
                         http_resource_t   **resources,
                         const butil_url_scheme_t scheme,

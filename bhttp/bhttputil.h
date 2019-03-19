@@ -31,11 +31,12 @@ typedef enum
 http_method_callback_type_t;
 
 typedef int (*http_method_callback_t)(
-                               http_method_callback_type_t type,
-                               const char *method,
-                               const char *data,
-                               void *priv
-                               );
+                            struct http_client *client,
+                            http_method_callback_type_t type,
+                            const http_method_t method,
+                            const char *data,
+                            void *priv
+                            );
 
 typedef struct tag_user_method
 {
@@ -45,20 +46,55 @@ typedef struct tag_user_method
 }
 http_user_method_t;
 
-int http_join_path(char *path, size_t room, const char *root, const char *base, const char *file);
+int http_join_path          (
+                            char *path,
+                            size_t room,
+                            const char *root,
+                            const char *base,
+                            const char *file
+                            );
 
-int http_ncasecmp(const char *haystack, const char *needle);
+int http_ncasecmp           (
+                            const char *haystack,
+                            const char *needle
+                            );
+const butil_url_scheme_t http_scheme_base(
+                            const butil_url_scheme_t scheme
+                            );
+const char *http_scheme_base_name(
+                            butil_url_scheme_t method
+                            );
 
-const butil_url_scheme_t http_scheme_base(const butil_url_scheme_t scheme);
-const char *http_scheme_base_name(butil_url_scheme_t method);
+const char *http_method_name(
+                            http_method_t method
+                            );
+int http_method_from_name   (
+                            const char *name,
+                            http_method_t *method
+                            );
+int http_register_method    (
+                            const char *name,
+                            http_method_callback_t callback,
+                            void *priv,
+                            http_method_t *methodused
+                            );
+const http_user_method_t *http_get_user_method(
+                            http_method_t method
+                            );
+int http_make_user_method_callback(
+                            struct http_client *client,
+                            http_method_callback_type_t type,
+                            http_method_t method,
+                            const char *data
+                            );
 
-const char *http_method_name(http_method_t method);
-int http_method_from_name(const char *name, http_method_t *method);
-int http_register_method(const char *name, http_method_callback_t callback, void *priv);
-const http_user_method_t *http_get_user_method(http_method_t method);
-
-int http_auth_string_to_type(const char *auth_str, http_auth_type_t *auth_type);
-const char *http_auth_type_to_string(http_auth_type_t auth_type);
+int http_auth_string_to_type(
+                            const char *auth_str,
+                            http_auth_type_t *auth_type
+                            );
+const char *http_auth_type_to_string(
+                            http_auth_type_t auth_type
+                            );
 
 #endif
 

@@ -284,6 +284,9 @@ int http_file_callback(
         HTTP_ERROR("No stream");
         return 1;
 
+    case httpDownloadDone:
+        return 0;
+
     case httpUploadData:
         if (stream)
         {
@@ -503,6 +506,9 @@ int http_outbuffer_callback(
         }
         *count = moved;
         break;
+
+    case httpDownloadDone:
+        return 0;
 
     case httpUploadData:
         if (count)

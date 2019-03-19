@@ -1,0 +1,18 @@
+INVITE sip:bob@biloxi.example.com SIP/2.0
+Via: SIP/2.0/TCP client.atlanta.example.com
+Max-Forwards: 10
+From: Alice <sip:alice@biloxi.example.com>
+To: Bob <sip:bob@biloxi.example.com>
+Call-ID: 12345678@atlanta.example.com
+CSeq: 1 INVITE
+Contact: <sip:alice@client.atlanta.example.com>
+Content-Type: application/sdp
+Content-Length: 133
+
+v=0
+o=bob 1111 2222 IN IP4 client.biloxi.example.com
+s=-
+c=IN IP4 127.0.0.1
+t=0 0
+m=audio 3456 RTP/AVP 0
+a=rtpmap:0 PCMU/8000

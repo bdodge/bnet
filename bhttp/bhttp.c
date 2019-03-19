@@ -1539,6 +1539,7 @@ int http_client_slice(http_client_t *client)
         break;
 
     case httpHandleReadRequest:
+        // server read a request
         if (client->expect100)
         {
             // if client is expecting 100, answer that now
@@ -1702,6 +1703,7 @@ int http_client_slice(http_client_t *client)
         break;
 #endif
     case httpHandleSendRequest:
+        // client is sending req to server
         if (client->resource && client->resource->callback)
         {
             if (client->method == httpGet)
@@ -1855,6 +1857,36 @@ int http_client_slice(http_client_t *client)
                 break;
             }
             #endif
+            if (client->resource && client->resource->callback)
+            {
+                // tell resource the body download is over
+                //
+                // NOTE: this callback can change client state, setup xfer state, etc.
+                //
+                result = client->resource->callback(
+                                            client,
+                                            client->resource,
+                                            httpDownloadDone,
+                                            NULL,
+                                            NULL
+                                            );
+                if (result)
+                {
+                    HTTP_ERROR("Request body done callback cancels");
+                    client->resource = NULL;
+                    client->resource_open = false;
+                    result = http_error_reply(client, 500, "Resource failed", false);
+                    if (result)
+                    {
+                        return http_slice_fatal(client, result);
+                    }
+                }
+                if (client->state != httpBodyDownload)
+                {
+                    // callback changed state, don't do anything more here
+                    break;
+                }
+            }
             switch (client->method)
             {
             case httpGet:
@@ -2005,18 +2037,8 @@ int http_client_slice(http_client_t *client)
             case httpUser4: case httpUser5: case httpUser6: case httpUser7:
             case httpUser8: case httpUser9: case httpUser10: case httpUser11:
             case httpUser12: case httpUser13: case httpUser14: case httpUser15:
-               // a user method, if there's a method callback use it
-                result = http_make_user_method_callback(
-                                        client,
-                                        httpMethodRequest,
-                                        client->method,
-                                        client->path
-                                        );
-                if (result)
-                {
-                    http_log(1, "Method callback aborts\n");
-                    return http_slice_fatal(client, result);
-                }
+                // resource callback should have handled state if needed
+                // so if getting here means nothing done, so move on
                 client->state = httpBodyUpload;
                 break;
 
@@ -2033,11 +2055,12 @@ int http_client_slice(http_client_t *client)
             //
             break;
         }
-        // continue getting body data
+        // continue getting body data if we expect more
         //
         result = http_client_input(client, 0, 0);
         if (result)
         {
+            // no more data, if expecting more, that
             if (client->in_transfer_type == httpNone)
             {
                 client->in_transfer_type = httpLength;
@@ -2272,9 +2295,9 @@ int http_client_slice(http_client_t *client)
         }
         // take the used data out of the content length for counted xfer
         //
-        if (client->in_content_length >= i)
+        if (client->in_content_length >= bodyCount)
         {
-            client->in_content_length -= i;
+            client->in_content_length -= bodyCount;
         }
         else
         {
@@ -2435,21 +2458,21 @@ int http_client_slice(http_client_t *client)
                 }
                 #endif
 
-                i = count;
+                bodyCount = count;
                 if (count > 0 && client->out_transfer_type == httpChunked)
                 {
                     // back annotate chunk count
                     snprintf((char *)content - 8, 8, "\r\n%04X\r", i);
                     content[-1] = '\n';
-                    i += 8;
+                    bodyCount += 8;
                 }
             }
             else
             {
                 count = 0;
-                i = 0;
+                bodyCount = 0;
             }
-            if (i > 0)
+            if (bodyCount > 0)
             {
                 // got data from callback. if it used our reply buffer for
                 // the data, and there is still good room left in the reply buffer
@@ -2466,8 +2489,8 @@ int http_client_slice(http_client_t *client)
                     HTTP_ERROR("Not implemented");
                     return http_slice_fatal(client, -1);
                 }
-                client->out.count += i;
-                client->out.head += i;
+                client->out.count += bodyCount;
+                client->out.head += bodyCount;
                 if (client->out.head >= client->out.size)
                 {
                     client->out.head = 0;

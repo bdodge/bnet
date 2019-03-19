@@ -1,6 +1,8 @@
 #include "bsip.h"
 #include "butil.h"
 
+static sip_session_t s_session;
+
 static const char *sip_skip_white(const char *p)
 {
     while (*(p) && ((*(p) == ' ') || (*(p) == '\t')))
@@ -19,13 +21,31 @@ static const char *sip_skip_nonwhite(const char *p)
     return p;
 }
 
+int sip_init_session(sip_server_context_t *sip, sip_session_t *session)
+{
+	if (! sip || ! session)
+	{
+		return -1;
+	}
+	memset(session, 0, sizeof(sip_session_t));
+	session->state = sipIdle;
+	return 0;
+}
+
 int sip_init_context(sip_server_context_t *sip)
 {
+	int result;
+
 	if (! sip)
 	{
 		return -1;
 	}
 	sip->connected = false;
+	sip->sdpin.data = (uint8_t*)sip->sdp;
+	sip->sdpin.head = 0;
+	sip->sdpin.tail = 0;
+	sip->sdpin.count = 0;
+	sip->sdpin.size = sizeof(sip->sdp);
     sip->sip_via[0] = '\0';
     sip->sip_from[0] = '\0';
     sip->sip_to[0] = '\0';
@@ -33,14 +53,15 @@ int sip_init_context(sip_server_context_t *sip)
     sip->sip_callid[0] = '\0';
     sip->sip_depth = 0;
     sip->sip_cseq = 0;
-	return 0;
+	result = sip_init_session(sip, &s_session);
+	return result;
 }
 
 int sip_process_header(sip_server_context_t *sip, const char *header)
 {
     const char *value;
 
-    http_log(4, "sip hdr %s\n", header);
+    butil_log(4, "sip hdr %s\n", header);
 
     header = sip_skip_white(header);
     value = sip_skip_nonwhite(header);
@@ -50,7 +71,7 @@ int sip_process_header(sip_server_context_t *sip, const char *header)
     {
         if (strlen(value) >= sizeof(sip->sip_via))
         {
-            HTTP_ERROR("VIA len");
+            BERROR("VIA len");
             return -1;
         }
         strcpy(sip->sip_via, value);
@@ -59,7 +80,7 @@ int sip_process_header(sip_server_context_t *sip, const char *header)
     {
         if (strlen(value) >= sizeof(sip->sip_from))
         {
-            HTTP_ERROR("from len");
+            BERROR("from len");
             return -1;
         }
         strcpy(sip->sip_from, value);
@@ -68,7 +89,7 @@ int sip_process_header(sip_server_context_t *sip, const char *header)
     {
         if (strlen(value) >= sizeof(sip->sip_to))
         {
-            HTTP_ERROR("to len");
+            BERROR("to len");
             return -1;
         }
         strcpy(sip->sip_to, value);
@@ -77,7 +98,7 @@ int sip_process_header(sip_server_context_t *sip, const char *header)
     {
         if (strlen(value) >= sizeof(sip->sip_contact))
         {
-            HTTP_ERROR("contact len");
+            BERROR("contact len");
             return -1;
         }
         strcpy(sip->sip_contact, value);
@@ -86,7 +107,7 @@ int sip_process_header(sip_server_context_t *sip, const char *header)
     {
         if (strlen(value) >= sizeof(sip->sip_contact))
         {
-            HTTP_ERROR("call-id len");
+            BERROR("call-id len");
             return -1;
         }
         strcpy(sip->sip_callid, value);
@@ -136,32 +157,8 @@ int sip_process_header(sip_server_context_t *sip, const char *header)
             case httpMessage:
             case httpRegister:
             case httpBye:
-                if (! sip->resource)
-                {
-                    HTTP_ERROR("No SIP resource");
-                    result = http_error_reply(client, 405, "Bad Request", false);
-                    if (result)
-                    {
-                        return http_slice_fatal(client, result);
-                    }
-                    return 0;
-                }
-                result = http_sip_request(client);
-                if (result)
-                {
-                    // any errors that don't format a reply go to done state, else
-                    // assume the request handler sent a specific reply already
-                    //
-                    if (sip->state != httpSendReply)
-                    {
-                        sip->state = httpDone;
-                    }
-                    result = 0;
-                }
                 break;
 #endif
-
-static sip_session_t s_session;
 
 static int sip_sdp_codec_supported(sip_session_t *session, const char *sdp, uint32_t format)
 {
@@ -204,7 +201,7 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
 	size_t addr_len;
 	int i;
 
-	http_log(2, "SDP=\n%s\n", sdp);
+	butil_log(2, "SDP=\n%s\n", sdp);
 
     addr_len = sizeof(session->remote_rtp_addr);
     memset(&session->remote_rtp_addr, 0, addr_len);
@@ -215,7 +212,7 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
 	ps = strstr(sdp, "m=");
 	if (! ps)
 	{
-		HTTP_ERROR("No SDP media descriptor");
+		BERROR("No SDP media descriptor");
 		return -1;
 	}
 	// parse m=tag port transport n <n>
@@ -226,13 +223,13 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
 	ps = sip_skip_white(ps);
 	if (*ps < '0' || *ps > '9')
 	{
-		HTTP_ERROR("No port in SDP media desc");
+		BERROR("No port in SDP media desc");
 		return -1;
 	}
 	session->remote_rtp_addr.sin_port = htons((uint16_t)strtoul(ps, (char **)&ps, 10));
 	if (! ps || ! *ps)
 	{
-		HTTP_ERROR("Incomplete SDP media desc");
+		BERROR("Incomplete SDP media desc");
 		return -1;
 	}
 	ps = sip_skip_white(ps);
@@ -247,7 +244,7 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
 		format = strtoul(ps, (char **)&ps, 10);
 		ps = sip_skip_white(ps);
 
-		http_log(3, "try codec %u\n", format);
+		butil_log(3, "try codec %u\n", format);
 
 		if (sip_sdp_codec_supported(session, sdp, format))
 		{
@@ -257,15 +254,19 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
 	}
 	if (! codec_found)
 	{
-		HTTP_ERROR("No matching codec");
+		BERROR("No matching codec");
 		return -1;
 	}
 	// find caller after media descriptor used
 	ps = strstr(pmedia_spec, "c=");
 	if (! ps)
 	{
-		HTTP_ERROR("No SDP remote addr");
-		return -1;
+		ps = strstr(sdp, "c=");
+		if (! ps)
+		{
+			BERROR("No SDP remote addr");
+			return -1;
+		}
 	}
 	// c=IN IP4 <host>
 	ps+=2;
@@ -273,7 +274,7 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
 	ps = sip_skip_white(ps);
 	if (strncmp(ps, "IP4", 3))
 	{
-		HTTP_ERROR("Need IP4");
+		BERROR("Need IP4");
 		return -1;
 	}
 	ps = sip_skip_nonwhite(ps);
@@ -306,7 +307,7 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
         server = gethostbyname(host);
         if (server == NULL)
         {
-            HTTP_ERROR("Can't find host");
+            BERROR("Can't find host");
             return -1;
         }
         memcpy((char *)&session->remote_rtp_addr.sin_addr.s_addr,
@@ -316,18 +317,18 @@ static int sip_parse_sdp(sip_session_t *session, const char *sdp)
     {
         if (! inet_aton(host, &session->remote_rtp_addr.sin_addr))
         {
-            HTTP_ERROR("Invalid address");
+            BERROR("Invalid address");
             return -1;
         }
     }
-	http_log(2, "RTP dest address=%s:%u\n",
+	butil_log(2, "RTP dest address=%s:%u\n",
 			inet_ntoa(session->remote_rtp_addr.sin_addr),
 			ntohs(session->remote_rtp_addr.sin_port));
 
 	return 0;
 }
 
-static int sip_session_start(sip_session_t *session)
+static int sip_session_start(sip_server_context_t *sip, sip_session_t *session)
 {
 	struct sockaddr_in rtp_addr;
 	socklen_t addr_len;
@@ -335,7 +336,7 @@ static int sip_session_start(sip_session_t *session)
 	session->rtp_socket = http_create_server_socket(httpUDP, 0);
 	if (session->rtp_socket == INVALID_SOCKET)
 	{
-		HTTP_ERROR("RTP socket");
+		BERROR("RTP socket");
 		return -1;
 	}
 	addr_len = sizeof(rtp_addr);
@@ -343,15 +344,15 @@ static int sip_session_start(sip_session_t *session)
 	{
 		close_socket(session->rtp_socket);
 		session->rtp_socket = INVALID_SOCKET;
-		HTTP_ERROR("RTP port");
+		BERROR("RTP port");
 		return -1;
 	}
 	session->rtp_port = ntohs(rtp_addr.sin_port);
 
-	snprintf(session->sdp, sizeof(session->sdp),
+	snprintf(sip->sdp, sizeof(sip->sdp),
 		"v=0\r\n"
 		"o=- 3720446843 3720446844 IN IP4 192.168.1.177\r\n"
-		"s=bhttpsip\r\n"
+		"s=bsip\r\n"
 		"b=AS:84\r\n"
 		"t=0 0\r\n"
 		"a=X-nat:0\r\n"
@@ -394,7 +395,7 @@ static int sip_read_rtp(uint8_t *buffer, int len)
 	}
 	if(len < 12)
 	{
-		HTTP_ERROR("Short RTP");
+		BERROR("Short RTP");
 		return -1;
 	}
 	pd = buffer;
@@ -410,7 +411,7 @@ static int sip_read_rtp(uint8_t *buffer, int len)
 		v |=  ((unsigned long)(unsigned char)pd[1]) << 16;
 		v |=  ((unsigned long)(unsigned char)pd[0]) << 24;
 
-		http_log(5, "RTP v=%08X\n", v);
+		butil_log(5, "RTP v=%08X\n", v);
 
 		len -= 4;
 		pd += 4;
@@ -544,11 +545,11 @@ static int sip_read_audio(sip_session_t *session)
                    );
 	if (result < 0)
 	{
-		http_log(1, "RTP Rx Sel Error %d\n", errno);
+		butil_log(1, "RTP Rx Sel Error %d\n", errno);
 		return result;
 	}
 	result = recv(session->rtp_socket, buf, sizeof(buf), 0);
-	http_log(2, "RTP Rx: %d\n", result);
+	butil_log(2, "RTP Rx: %d\n", result);
 	if (result < 0)
 	{
 		if (errno == EAGAIN)
@@ -557,7 +558,7 @@ static int sip_read_audio(sip_session_t *session)
 		}
 		else
 		{
-			http_log(1, "RTP Rx Error %d\n", errno);
+			butil_log(1, "RTP Rx Error %d\n", errno);
 			return result;
 		}
 	}
@@ -568,7 +569,7 @@ static int sip_read_audio(sip_session_t *session)
 		addr_len = sizeof(session->remote_rtp_addr);
 		wc = sendto(session->rtp_socket, buf, result, 0,
 			(struct sockaddr *)&session->remote_rtp_addr, addr_len);
-		http_log(2, "RTP Tx=%d\n", wc);
+		butil_log(2, "RTP Tx=%d\n", wc);
 	}
 	if (result > 0)
 	{
@@ -585,24 +586,25 @@ int sip_slice(http_client_t *client, sip_server_context_t *sip)
 	result = 0;
 	session = &s_session;
 
-	switch (client->method)
+	butil_log(5, "SIP state %u\n", session->state);
+
+	switch (sip->method)
 	{
-//	case httpInvite:
-	case httpUser0:
+	case sipInvite:
 		if (session->state == sipInboundRinging)
 		{
 			result = sip_begin_reply(client, sip, 200, "OK");
-			result |= http_append_reply(client, "Content-Length: %d", strlen(session->sdp));
+			result |= http_append_reply(client, "Content-Length: %d", strlen(sip->sdp));
 			result |= http_append_reply(client, "Content-Type: %s", "application/sdp");
 			result |= http_append_reply(client, "");
-			result |= http_append_reply(client, session->sdp);
+			result |= http_append_reply(client, sip->sdp);
 			if (result)
 			{
 				session->state = sipIdle;
 				return result;
 			}
 			session->state = sipInboundAnswered;
-			return http_send_out_data(client, httpSendReply, httpSendReply/*httpSipSlice*/);
+			return 0;//http_send_out_data(client, httpSendReply, httpBodyUpload);
 		}
 		if (session->state == sipInboundAnswered)
 		{
@@ -632,7 +634,7 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 	char *pv;
 	int i;
 
-    http_log(5, "SIP %s %u %s\n", http_method_name(client->method),
+    butil_log(5, "SIP %s %u %s\n", http_method_name(client->method),
             sip->sip_cseq, client->path);
 
 	session = &s_session;
@@ -644,7 +646,7 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 
 	if (! sip->sip_via[0])
 	{
-		HTTP_ERROR("no via");
+		BERROR("no via");
 		return -1;
 	}
 	if (sip->sip_contact[0])
@@ -667,7 +669,7 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 
 		if (i >= sizeof(client->out_host) - 1)
 		{
-			HTTP_ERROR("contact overflow");
+			BERROR("contact overflow");
 			return -1;
 		}
 		if (*pv == '>')
@@ -680,14 +682,13 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 		}
 		else
 		{
-			HTTP_ERROR("no port in contact");
+			BERROR("no port in contact");
 			return -1;
 		}
 	}
-	switch (client->method)
+	switch (sip->method)
     {
-//	case httpInvite:
-	case httpUser0:
+	case sipInvite:
 		if (session->state != sipIdle)
 		{
 			result = sip_begin_reply(client, sip, 486, "Busy");
@@ -698,25 +699,11 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 			}
 			return http_send_out_data(client, httpSendReply, httpKeepAlive);
 		}
-		http_log(4, "Sip call from %s\n", sip->sip_from);
+		result = sip_init_session(sip, &s_session);
 
-		// copy sdp body from outbuf
-		if (client->out.count == 0)
-		{
-			HTTP_ERROR("no SDP");
-			session->state = sipIdle;
-			return -1;
-		}
-		if (client->out.count >= sizeof(session->sdp))
-		{
-			HTTP_ERROR("SDP overflow");
-			session->state = sipIdle;
-			return -1;
-		}
-		memcpy(session->sdp, client->out.data + client->out.tail, client->out.count);
-		session->sdp[client->out.count] = '\0';
+		butil_log(4, "Sip call from %s\n", sip->sip_from);
 
-		result = sip_parse_sdp(session, session->sdp);
+		result = sip_parse_sdp(session, sip->sdp);
 		if (result)
 		{
 			result = sip_begin_reply(client, sip, 488, "Error");
@@ -724,7 +711,7 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 		}
 		else
 		{
-			result = sip_session_start(session);
+			result = sip_session_start(sip, session);
 			if (result)
 			{
 				result = sip_begin_reply(client, sip, 500, "Error");
@@ -741,26 +728,24 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 		{
 			return result;
 		}
-		return http_send_out_data(client, httpSendReply, httpSendReply);
+		return http_send_out_data(client, httpSendReply, httpBodyUpload);
 
-//	case httpAck:
-	case httpUser2:
+	case sipAck:
 		if (session->state == sipInboundRinging || session->state == sipInboundAnswered)
 		{
-			http_log(4, "Sip call started\n");
+			butil_log(4, "Sip call started\n");
 			session->state = sipInboundCall;
 			client->state = httpKeepAlive;
 		}
 		else
 		{
-			HTTP_ERROR("Unexpected ACK");
+			BERROR("Unexpected ACK");
 			client->state = httpKeepAlive;
 		}
 		break;
 
-//	case httpBye:
-	case httpUser5:
-		http_log(4, "Sip call ended\n");
+	case sipBye:
+		butil_log(4, "Sip call ended\n");
 		session->state = sipIdle;
 		client->state = httpKeepAlive;
 		break;
@@ -778,4 +763,3 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 	}
 	return 0;
 }
-

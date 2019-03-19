@@ -15,6 +15,7 @@ bsnmp/bsnmp
 bsnmp/bmibc/bmibc
 bsnmp/bmibc/crap.*
 bsmtp/bsmtptest
+bsip/bsip
 
 # Prerequisites
 *.d

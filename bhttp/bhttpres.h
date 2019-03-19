@@ -18,10 +18,11 @@
 
 typedef enum
 {
-    httpRequest,
-    httpDownloadData,
-    httpUploadData,
-    httpComplete
+    httpRequest,        ///< a reguest came in
+    httpDownloadData,   ///< request is sending body data
+    httpDownloadDone,   ///< the request body data is in, dispatch
+    httpUploadData,     ///< callback is uploading data
+    httpComplete        ///< the request is done and uploaded data sent
 }
 http_callback_type_t;
 

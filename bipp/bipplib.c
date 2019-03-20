@@ -15,34 +15,9 @@
  */
 #include "bipp.h"
 
-#if 0
-static butil_url_scheme_t s_sip_scheme;
+static butil_url_scheme_t s_ipp_scheme;
 
-static struct tag_sip_method_registry
-{
-    const char *name;
-    http_method_t httpmethod;
-    sip_method_t  sipmethod;
-}
-s_method_registry[] =
-{
-    { "INVITE",     httpUnsupported, sipInvite },
-    { "ACK",        httpUnsupported, sipAck },
-    { "PRACK",      httpUnsupported, sipPrack },
-    { "CANCEL",     httpUnsupported, sipCancel },
-    { "UPDATE",     httpUnsupported, sipUpdate },
-    { "INFO",       httpUnsupported, sipInfo },
-    { "SUBSCRIBE",  httpUnsupported, sipSubscribe },
-    { "NOTIFY",     httpUnsupported, sipNotify },
-    { "REFER",      httpUnsupported, sipRefer },
-    { "MESSAGE",    httpUnsupported, sipMessage },
-    { "REGISTER",   httpUnsupported, sipRegister },
-    { "BYE",        httpUnsupported, sipBye },
-};
-
-#define SIP_NUM_METHODS (sizeof(s_method_registry)/sizeof(struct tag_sip_method_registry))
-
-int sip_canned_resource_callback(
+int ipp_canned_resource_callback(
                         http_client_t       *client,
                         http_resource_t     *resource,
                         http_callback_type_t cbtype,
@@ -75,7 +50,7 @@ int sip_canned_resource_callback(
     return result;
 }
 
-int sip_resource_callback(
+int ipp_resource_callback(
                         http_client_t       *client,
                         http_resource_t     *resource,
                         http_callback_type_t cbtype,
@@ -83,66 +58,37 @@ int sip_resource_callback(
                         size_t              *count
                      )
 {
-    sip_server_context_t *sip;
+//    sip_server_context_t *sip;
     int result;
     int meth;
 
-    butil_log(5, "SIP Resource CB: %d\n", cbtype);
+    butil_log(7, "IPP Resource CB: %d\n", cbtype);
 
     if (! resource)
     {
         BERROR("no resource");
         return -1;
     }
+    /*
     sip = (sip_server_context_t *)resource->priv;
     if (! sip)
     {
         BERROR("no server context in resource");
         return -1;
     }
+    */
     switch (cbtype)
     {
     case httpRequest:
 
-        butil_log(5, "sip resource cb (request)  %s: %s\n",
+        butil_log(5, "IPP resource cb (request)  %s: %s\n",
                 http_method_name(client->method), data ? (char*)data : "<nil>");
-
-        for (meth = 0; meth < SIP_NUM_METHODS; meth++)
-        {
-            if (client->method == s_method_registry[meth].httpmethod)
-            {
-                break;
-            }
-        }
-        if (meth >= SIP_NUM_METHODS)
-        {
-            BERROR("No such method\n");
-            // todo 405, bad req
-            return 0;
-        }
-        sip->method = s_method_registry[meth].sipmethod;
-
-        butil_log(5, "SIP Request %s\n",
-            http_method_name(s_method_registry[meth].httpmethod));
-
-        if (! client->resource)
-        {
-            BERROR("No SIP resource");
-            result = http_error_reply(client, 405, "Bad Request", false);
-            if (result)
-            {
-                return -1;
-            }
-            return 0;
-        }
-        // hold of passing on request until body is uploaded
         break;
 
     case httpDownloadData:
 
-        butil_log(5, "sip download cb (request)  %s: %zu bytes\n",
-                http_method_name(client->method), count ? *count : 0);
-
+        butil_log(5, "IPP download cb (body->): %zu bytes\n", count ? *count : 0);
+        /*
         if (data && *data && count && *count)
         {
             uint8_t *pd = (uint8_t*)*data;
@@ -157,17 +103,17 @@ int sip_resource_callback(
                 }
                 sip->sdpin.count++;
             }
-         //   *count = nd;
+            *count = nd;
         }
         sip->sdpin.data[sip->sdpin.head] = '\0';
+        */
         break;
 
     case httpDownloadDone:
 
-        butil_log(5, "sip download done cb   %s\n",
-                http_method_name(client->method));
-
-        result = sip_request(client, sip);
+        butil_log(5, "IPP download done cb\n");
+        /*
+        result = ipp_request(client, sip);
         if (result)
         {
             // any errors that don't format a reply go to done state, else
@@ -190,18 +136,19 @@ int sip_resource_callback(
             }
             result = 0;
         }
+        */
         break;
 
     case httpUploadData:
 
-        butil_log(5, "sip upload cb (request)  %s\n",
-                http_method_name(client->method));
+        butil_log(5, "IPP upload cb (<-body)\n");
         *count = 0;
         *data = NULL;
         break;
 
     case httpComplete:
 
+        butil_log(5, "IPP done cb\n");
         break;
 
     default:
@@ -211,7 +158,8 @@ int sip_resource_callback(
     return 0;
 }
 
-int sip_method_callback(
+#if 0
+int ipp_method_callback(
                         http_client_t *client,
                         http_method_callback_type_t type,
                         const http_method_t method,
@@ -272,13 +220,14 @@ int sip_method_callback(
     }
     return 0;
 }
+#endif
 
-int sip_phone(int argc, char **argv)
+int ipp_server(int argc, char **argv)
 {
-    sip_server_context_t sip_server;
+//    sip_server_context_t sip_server;
     uint16_t port;
     const char *program, *arg;
-    http_method_t method;
+//    http_method_t method;
     int i;
     int result;
 
@@ -308,10 +257,10 @@ int sip_phone(int argc, char **argv)
     program = *argv++;
     argc--;
 
-    port = 5050;
+    port = 6310;
     result = 0;
 
-    memset(&sip_server, 0, sizeof(sip_server));
+//    memset(&sip_server, 0, sizeof(sip_server));
 
     while (argc > 0 && ! result)
     {
@@ -321,11 +270,6 @@ int sip_phone(int argc, char **argv)
         {
             switch (arg[1])
             {
-            case 'u':
-            case 't':
-                argc--;
-                argv--;
-                break;
             case 'p':
                 if (argc > 0)
                 {
@@ -354,32 +298,11 @@ int sip_phone(int argc, char **argv)
 
     butil_url_scheme_t myscheme;
 
-    result = sip_init_context(&sip_server);
-    if (result)
-    {
-        BERROR("Can't init");
-        return result;
-    }
     // register a custom scheme
-    result = butil_register_scheme("sip", &s_sip_scheme);
+    result = butil_register_scheme("ipp", &s_ipp_scheme);
     if (result)
     {
         BERROR("can't register scheme");
-    }
-    // register our methods
-    for (i = 0; i < SIP_NUM_METHODS; i++)
-    {
-        result = http_register_method(
-                                    s_method_registry[i].name,
-                                    sip_method_callback,
-                                    &sip_server,
-                                    &s_method_registry[i].httpmethod
-                                    );
-        if (result)
-        {
-            BERROR("can't register method");
-            return result;
-        }
     }
     // add canned index.html at http for testing
     char *cannedindex = "<h2>hello world</h2>";
@@ -391,27 +314,10 @@ int sip_phone(int argc, char **argv)
         BERROR("can't make resource");
         return result;
     }
-    // add a resource for the scheme as well
-    char *cannedfrob = "<h2>hello frobulated world</h2>";
-
-    result = http_add_func_resource(&resources, s_sip_scheme,  "/index.html",
-                NULL, sip_resource_callback, NULL);
-    if (result)
-    {
-        BERROR("can't make resource");
-        return result;
-    }
-    resource = http_find_resource(resources, s_sip_scheme, "/index.html", httpGet);
-    if (resource)
-    {
-        resource->resource.canned_data.content = (const uint8_t*)cannedfrob;
-        resource->resource.canned_data.count = strlen(cannedfrob);
-        resource->resource.canned_data.content_type = butil_mime_html;
-    }
-    // handle all sip scheme urls in callback
+    // handle all HTTP scheme urls in callback
     //
-    result = http_add_func_resource(&resources, s_sip_scheme,  "*",
-                NULL, sip_resource_callback, &sip_server);
+    result = http_add_func_resource(&resources, schemeHTTP,  "*",
+                NULL, ipp_resource_callback, NULL);
     if (result)
     {
         BERROR("can't make resource");
@@ -419,7 +325,7 @@ int sip_phone(int argc, char **argv)
     }
     // set use-tls for certain ports
     //
-    result = http_server_init(&server, resources, port, httpUDP, (port == 5061));
+    result = http_server_init(&server, resources, port, httpTCP, (port == 5061));
     if (result)
     {
         BERROR("can't start server");
@@ -433,4 +339,3 @@ int sip_phone(int argc, char **argv)
     http_server_cleanup(&server);
     return result;
 }
-#endif

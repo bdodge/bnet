@@ -18,6 +18,6 @@
 
 int main(int argc, char **argv)
 {
-    return 0;
+    return ipp_server(argc, argv);
 }
 

@@ -549,7 +549,7 @@ static int sip_read_audio(sip_session_t *session)
 		return result;
 	}
 	result = recv(session->rtp_socket, buf, sizeof(buf), 0);
-	butil_log(2, "RTP Rx: %d\n", result);
+	butil_log(((result > 0) ? 5 : 7), "RTP Rx: %d\n", result);
 	if (result < 0)
 	{
 		if (errno == EAGAIN)
@@ -580,48 +580,50 @@ static int sip_read_audio(sip_session_t *session)
 
 int sip_slice(http_client_t *client, sip_server_context_t *sip)
 {
+	static sip_state_t prevstate = sipIdle;
 	sip_session_t *session;
 	int result;
 
 	result = 0;
 	session = &s_session;
 
-	butil_log(5, "SIP state %u\n", session->state);
-
-	switch (sip->method)
+	if (session->state != prevstate)
 	{
-	case sipInvite:
-		if (session->state == sipInboundRinging)
+		butil_log(5, "SIP state %u\n", session->state);
+		prevstate = session->state;
+	}
+	switch (session->state)
+	{
+	case sipInboundRinging:
+
+		// answer the call
+		//
+		result = sip_begin_reply(client, sip, 200, "OK");
+		result |= http_append_reply(client, "Content-Length: %d", strlen(sip->sdp));
+		result |= http_append_reply(client, "Content-Type: %s", "application/sdp");
+		result |= http_append_reply(client, "");
+		result |= http_append_reply(client, sip->sdp);
+		if (result)
 		{
-			result = sip_begin_reply(client, sip, 200, "OK");
-			result |= http_append_reply(client, "Content-Length: %d", strlen(sip->sdp));
-			result |= http_append_reply(client, "Content-Type: %s", "application/sdp");
-			result |= http_append_reply(client, "");
-			result |= http_append_reply(client, sip->sdp);
-			if (result)
-			{
-				session->state = sipIdle;
-				return result;
-			}
-			session->state = sipInboundAnswered;
-			return 0;//http_send_out_data(client, httpSendReply, httpBodyUpload);
+			session->state = sipIdle;
+			return result;
 		}
-		if (session->state == sipInboundAnswered)
+		session->state = sipInboundAnswered;
+		break;
+
+	case sipInboundCall:
+
+		// in a call, marshall data
+		//
+		result = sip_read_audio(session);
+		if (result)
 		{
-			session->state = sipInboundCall;
-		}
-		if (session->state == sipInboundCall)
-		{
-			session->state = sipInboundCall;
-			result = sip_read_audio(session);
-			if (result)
-			{
-				session->state = sipIdle;
-			}
+			session->state = sipIdle;
 		}
 		break;
 
 	default:
+
 		break;
 	}
 	return result;
@@ -719,6 +721,7 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 			}
 			else
 			{
+				butil_log(4, "RINGING========\n");
 				result = sip_begin_reply(client, sip, 180, "Ringing");
 				session->state = sipInboundRinging;
 			}
@@ -728,7 +731,7 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 		{
 			return result;
 		}
-		return http_send_out_data(client, httpSendReply, httpBodyUpload);
+		return http_send_out_data(client, httpSendReply, httpUserMethod);
 
 	case sipAck:
 		if (session->state == sipInboundRinging || session->state == sipInboundAnswered)
@@ -739,6 +742,7 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 		}
 		else
 		{
+			butil_log(4, "ACK in state %d\n", session->state);
 			BERROR("Unexpected ACK");
 			client->state = httpKeepAlive;
 		}
@@ -746,9 +750,10 @@ int sip_request(struct http_client *client, sip_server_context_t *sip)
 
 	case sipBye:
 		butil_log(4, "Sip call ended\n");
+		result = sip_begin_reply(client, sip, 200, "OK");
+		result |= http_append_reply(client, "");
 		session->state = sipIdle;
-		client->state = httpKeepAlive;
-		break;
+		return http_send_out_data(client, httpSendReply, httpDone);
 
 	default:
 		client->keepalive = 1;

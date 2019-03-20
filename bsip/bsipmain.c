@@ -181,9 +181,14 @@ int sip_resource_callback(
         }
         else
         {
-            // sip wants to continue, so set a bogus length
-            //
-            client->out_content_length = 0x7fffffff;
+            if (client->state != httpSendReply)
+            {
+                // sip wants to continue, so move to usermethod state
+                // which will call our method handler function
+                //
+                client->state = httpUserMethod;
+            }
+            result = 0;
         }
         break;
 
@@ -191,22 +196,8 @@ int sip_resource_callback(
 
         butil_log(5, "sip upload cb (request)  %s\n",
                 http_method_name(client->method));
-
-        result = sip_slice(client, sip);
-
-        *data = NULL;
         *count = 0;
-
-        if (client->out.count > 0)
-        {
-            iostream_normalize_ring(&client->out, NULL);
-            *data = client->out.data;
-            *count = client->out.count;
-        }
-        else if (result)
-        {
-            client->state = httpDone;
-        }
+        *data = NULL;
         break;
 
     case httpComplete:
@@ -247,6 +238,37 @@ int sip_method_callback(
     }
     if (type == httpMethodRequest)
     {
+        result = sip_slice(client, sip);
+
+        if (client->out.count > 0)
+        {
+            iostream_normalize_ring(&client->out, NULL);
+
+            // if slice generated data, go to reply state until
+            // it is sent, then come back to usermethod
+            //
+            if (client->out.count > 0)
+            {
+                return http_send_out_data(client, httpSendReply, httpUserMethod);
+            }
+        }
+        else if (result)
+        {
+            client->state = httpDone;
+        }
+        else
+        {
+            // if any input pending for client, go back to read request state
+            // which may (or may not) get back to usermethod state
+            //
+            result = http_client_input(client, 0, 0);
+            if (result == 0 && client->in.count > 0)
+            {
+                client->next_state  = httpReadRequest;
+                client->state       = httpReadline;
+                client->line_count  = 0;
+            }
+        }
     }
     return 0;
 }
@@ -286,7 +308,7 @@ int sip_phone(int argc, char **argv)
     program = *argv++;
     argc--;
 
-    port = 5060;
+    port = 5050;
     result = 0;
 
     memset(&sip_server, 0, sizeof(sip_server));
@@ -397,7 +419,7 @@ int sip_phone(int argc, char **argv)
     }
     // set use-tls for certain ports
     //
-    result = http_server_init(&server, resources, port, httpTCP, (port == 5061));
+    result = http_server_init(&server, resources, port, httpUDP, (port == 5061));
     if (result)
     {
         BERROR("can't start server");

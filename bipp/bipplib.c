@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "bsip.h"
+#include "bipp.h"
 
-
+#if 0
 static butil_url_scheme_t s_sip_scheme;
 
 static struct tag_sip_method_registry
@@ -433,4 +433,4 @@ int sip_phone(int argc, char **argv)
     http_server_cleanup(&server);
     return result;
 }
-
+#endif

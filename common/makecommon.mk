@@ -32,6 +32,8 @@ XMPP_PATH=$(SRCROOT)/bxmpp
 MQTT_PATH=$(SRCROOT)/bmqtt
 SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
+SIP_PATH=$(SRCROOT)/bsip
+IPP_PATH=$(SRCROOT)/bipp
 
 CC=gcc
 CFLAGS+=-g -fno-diagnostics-color
@@ -124,6 +126,8 @@ XMPPLIB=$(XMPP_PATH)/$(OBJDIR)/libbxmpp.a
 MQTTLIB=$(MQTT_PATH)/$(OBJDIR)/libbmqtt.a
 SMTPLIB=$(SMTP_PATH)/$(OBJDIR)/libbsmtp.a
 SNMPLIB=$(SNMP_PATH)/$(OBJDIR)/libbsnmp.a
+SIPLIB=$(SIP_PATH)/$(OBJDIR)/libbsip.a
+IPPLIB=$(IPP_PATH)/$(OBJDIR)/libbipp.a
 
 ifndef BNET_TLS
 	BNET_TLS=1
@@ -171,6 +175,12 @@ $(MQTT_PATH)/%.a:
 
 $(SNMP_PATH)/%.a:
 	make -C $(SNMP_PATH) library
+
+$(SIP_PATH)/%.a:
+	make -C $(SIP_PATH) library
+
+$(IPP_PATH)/%.a:
+	make -C $(IPP_PATH) library
 
 $(MBEDTLS_PATH)/library/%.a:
 	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)

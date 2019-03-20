@@ -17,13 +17,13 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-SOURCES=$(SRCDIR)/bsipmain.c	\
-		$(SRCDIR)/bsip.c
+SOURCES=$(SRCDIR)/bipplib.c	\
+		$(SRCDIR)/bipp.c
 
-HEADERS=$(SOURCES:%.c=%.h) bsipconfig.h
+HEADERS=$(SOURCES:%.c=%.h) bippconfig.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-LIBS= $(IOLIB) $(UTILLIB)
+LIBS= $(HTTP_LIB) $(IOLIB) $(UTILLIB)
 LIBDIRS= $(IO_PATH) $(UTIL_PATH)
 LIBINCLS= $(LIBDIRS:%=-I%)
 CFLAGS += $(LIBINCLS)
@@ -36,25 +36,24 @@ EXTRA_DEFINES += HTTP_SUPPORT_UDP=1
 
 CFLAGS += $(EXTRA_DEFINES:%=-D%)
 
-PROGSOURCES=$(SRCDIR)/bsiptest.c
-PROGOBJECTS=$(OBJDIR)/bsiptest.o
+PROGSOURCES=$(SRCDIR)/bipptest.c
+PROGOBJECTS=$(OBJDIR)/bipptest.o
 
 CFLAGS+=-I$(HTTP_PATH) -I$(UTIL_PATH) -I$(IO_PATH)
 
-bsip: $(PROGOBJECTS) $(SIPLIB) $(LIBS) $(TLSDEPS)
-	make -C $(HTTP_PATH) EXTRA_DEFINES="$(EXTRA_DEFINES)"
-	$(CC) $(CFLAGS) -o $@ $^ $(HTTPLIB) $(SYSLIBS)
+bipp: $(PROGOBJECTS) $(IPPLIB) $(LIBS) $(TLSDEPS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
-library: $(SIPLIB)
+library: $(IPPLIB)
 
-$(SIPLIB): $(OBJECTS)
+$(IPPLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^
 
 clean:
 	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
 
-$(OBJDIR)/bsiptest.o: $(SRCDIR)/bsiptest.c $(HEADERS)
+$(OBJDIR)/bipptest.o: $(SRCDIR)/bipptest.c $(HEADERS)
 
-$(OBJDIR)/bsipmain.o: $(SRCDIR)/bsipmain.c $(HEADERS)
-$(OBJDIR)/bsipp.o: $(SRCDIR)/bsip.c $(HEADERS)
+$(OBJDIR)/bipplib.o: $(SRCDIR)/bipplib.c $(HEADERS)
+$(OBJDIR)/bippp.o: $(SRCDIR)/bipp.c $(HEADERS)
 

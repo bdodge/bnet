@@ -123,6 +123,7 @@ typedef enum
     httpBodyUpload,
     httpSendReply,
     httpPropFindEnumerate,
+    httpUserMethod,
     httpKeepAlive,
     httpDone
 }

@@ -998,6 +998,7 @@ static const char *http_state_name(http_state_t state)
     case httpBodyUpload:        return "Body (send)";
     case httpSendReply:         return "Reply (send)";
     case httpPropFindEnumerate: return "Enumerate (find)";
+    case httpUserMethod:        return "User Method";
     case httpKeepAlive:         return "KeepAlive";
     case httpDone:              return "Done";
     default:                    return "- bad state -";
@@ -1301,9 +1302,11 @@ int http_client_slice(http_client_t *client)
                 break;
             }
         }
+        incount = pline[i];
         pline[i] = '\0';
         client->scheme = schemeHTTP;
         result = butil_scheme_from_name(pline, &client->scheme);
+        pline[i] = incount;
         if (result)
         {
             HTTP_ERROR("No scheme");
@@ -1333,21 +1336,47 @@ int http_client_slice(http_client_t *client)
         break;
 
     case httpReadReply:
+        // we're a client, getting server reply
         pline = (char*)client->line;
         pline = http_skip_white(pline);
 
         // extract version
-        if (! http_ncasecmp(pline, "HTTP/"))
+        // extract scheme and version
+        //
+        for (i = 0; pline[i]; i++)
         {
-            uint8_t vmaj, vmin;
-
-            pline += 5;
-            vmaj = (uint8_t)strtoul(pline, &pline, 10);
-            if (*pline)
+            if (pline[i] == '/')
             {
-                pline++;
-                vmin = (uint8_t)strtoul(pline, &pline, 10);
+                break;
             }
+        }
+        {
+        char ic;
+        butil_url_scheme_t scheme;
+        uint8_t vmaj, vmin;
+
+        ic = pline[i];
+        pline[i] = '\0';
+        scheme = schemeHTTP;
+
+        result = butil_scheme_from_name(pline, &scheme);
+        pline[i] = ic;
+        if (result)
+        {
+            HTTP_ERROR("No scheme");
+            result = 0; // ignored
+        }
+        pline += i;
+        if (*pline)
+        {
+            pline++;
+        }
+        vmaj = (uint8_t)strtoul(pline, &pline, 10);
+        if (*pline)
+        {
+            pline++;
+            vmin = (uint8_t)strtoul(pline, &pline, 10);
+        }
         }
         pline = http_skip_nonwhite(pline);
         pline = http_skip_white(pline);
@@ -2568,6 +2597,23 @@ int http_client_slice(http_client_t *client)
             result = 0;
         }
     #endif
+        break;
+
+    case httpUserMethod:
+        // call user callback as long as it wants us to
+        result = http_make_user_method_callback(
+                                    client,
+                                    httpMethodRequest,
+                                    client->method,
+                                    NULL
+                                    );
+        if (result)
+        {
+            HTTP_ERROR("user method callback cancels");
+            client->resource = NULL;
+            client->resource_open = false;
+            return http_slice_fatal(client, result);
+        }
         break;
 
     case httpKeepAlive:

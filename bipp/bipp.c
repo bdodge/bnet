@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "bipp.h"
+#include "bipperror.h"
 #include "butil.h"
 
 static int ipp_push_state(ipp_request_t *req, ipp_req_state_t tostate)
@@ -53,6 +54,21 @@ int ipp_request(ipp_server_t *ipp, ipp_request_t *req)
     return 0;
 }
 
+int ipp_dispatch(ipp_server_t *ipp, ipp_request_t *req)
+{
+    if (! ipp || ! req)
+    {
+        return -1;
+    }
+    switch (req->opid)
+    {
+    default:
+        req->last_error = IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED;
+        return 1;
+    }
+    return 0;
+}
+
 int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
 {
     static ipp_req_state_t prevstate = reqReadInput;
@@ -71,18 +87,71 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
     switch (req->state[req->top])
     {
     case reqHeader:
-        // wait for enough data
+        // wait for enough data in to procede
         result = ipp_wait_for_bytes(req, 8);
         if (result)
         {
             return result;
         }
         {
-            int16_t op;
+            result  = ipp_read_int8(req, &req->vmaj);
+            result |= ipp_read_int8(req, &req->vmin);
+            result |= ipp_read_int16(req, &req->opid);
+            result |= ipp_read_int32(req, &req->reqid);
+            if (result)
+            {
+                BERROR("hdr read");
+                return result;
+            }
+            butil_log(5, "IPP %d.%d op=%04X reqid=%d\n", req->vmaj, req->vmin, req->opid, req->reqid);
 
-            result = ipp_read_int16(req, &op);
+            // assume no errors
+            //
+            if (req->reqid == 0)
+            {
+                req->last_error = IPP_STATUS_ERROR_BAD_REQUEST;
+            }
+            else
+            {
+                req->last_error = IPP_STATUS_OK;
 
-            butil_log(5, "%d op=%04X\n", result, op);
+                // dispatch the operation
+                //
+                result = ipp_dispatch(ipp, req);
+            }
+            if (result || req->last_error != IPP_STATUS_OK)
+            {
+                if (req->last_error == IPP_STATUS_OK)
+                {
+                    req->last_error = IPP_STATUS_ERROR_INTERNAL;
+                }
+                // start http reply in client outbuffer
+                result  = http_begin_reply(client, 200, "OK");
+                result |= http_append_reply(client, "Content-Type: application/ipp");
+                result |= http_append_reply(client, "Content-Length: 8");
+                result |= http_append_connection_to_reply(client, false);
+                result |= http_append_reply(client, "");
+
+                // add reply header (only)
+                result  = ipp_write_int8(req, req->vmaj);
+                result |= ipp_write_int8(req, req->vmin);
+                result |= ipp_write_int16(req, req->last_error);
+                result |= ipp_write_int32(req, req->reqid);
+                /*
+                if (result)
+                {
+                    // not sure what to do here, really can't happen
+                    BERROR("hdr write");
+                    return result;
+                }
+                */
+                // send the reply
+                result = http_send_out_data(client, httpSendReply, httpKeepAlive);
+                if (result)
+                {
+                    return result;
+                }
+            }
         }
         break;
 

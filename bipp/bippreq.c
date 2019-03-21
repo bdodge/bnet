@@ -37,9 +37,9 @@ int ipp_read_uint8(ipp_request_t *req, uint8_t *val)
 		{
 			client->in.tail = 0;
 		}
-		return 1;
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 int ipp_read_uint16(ipp_request_t *req, uint16_t *val)
@@ -74,9 +74,9 @@ int ipp_read_uint16(ipp_request_t *req, uint16_t *val)
 			client->in.tail = 0;
 		}
 		*val = uval;
-		return 1;
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 int ipp_read_uint32(ipp_request_t *req, uint32_t *val)
@@ -127,9 +127,14 @@ int ipp_read_uint32(ipp_request_t *req, uint32_t *val)
 			client->in.tail = 0;
 		}
 		*val = uval;
-		return 1;
+		return 0;
 	}
-	return 0;
+	return 1;
+}
+
+int ipp_read_int8(ipp_request_t *req, int8_t *val)
+{
+	return ipp_read_uint8(req, (uint8_t*)val);
 }
 
 int ipp_read_int16(ipp_request_t *req, int16_t *val)
@@ -146,27 +151,24 @@ int ipp_write_uint8(ipp_request_t *req, uint8_t val)
 {
 	http_client_t *client;
 
-	if (! req || ! val)
+	if (! req || ! req->client)
 	{
 		return -1;
 	}
 	client = req->client;
-	if (! client)
-	{
-		return -1;
-	}
+
 	if (client->out.count < client->out.size)
 	{
-		client->in.data[client->in.head] = val;
-		client->in.count++;
-		client->in.head++;
-		if (client->in.head >= client->in.size)
+		client->out.data[client->out.head] = val;
+		client->out.count++;
+		client->out.head++;
+		if (client->out.head >= client->out.size)
 		{
-			client->in.head = 0;
+			client->out.head = 0;
 		}
-		return 1;
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 int ipp_write_uint16(ipp_request_t *req, uint16_t val)
@@ -174,35 +176,31 @@ int ipp_write_uint16(ipp_request_t *req, uint16_t val)
 	http_client_t *client;
 	uint16_t uval;
 
-	if (! req || ! val)
+	if (! req || ! req->client)
 	{
 		return -1;
 	}
 	client = req->client;
-	if (! client)
-	{
-		return -1;
-	}
+
 	if (client->out.count < (client->out.size - 1))
 	{
-		client->in.data[client->in.head] = (uint8_t)(val & 0xFF);
-		client->in.count++;
-		client->in.head++;
-		if (client->in.head >= client->in.size)
+		client->out.data[client->out.head] = (uint8_t)((val >> 8) & 0xFF);
+		client->out.count++;
+		client->out.head++;
+		if (client->out.head >= client->out.size)
 		{
-			client->in.head = 0;
+			client->out.head = 0;
 		}
-		val >>= 8;
-		client->in.data[client->in.head] = (uint8_t)(val & 0xFF);
-		client->in.count++;
-		client->in.head++;
-		if (client->in.head >= client->in.size)
+		client->out.data[client->out.head] = (uint8_t)(val & 0xFF);
+		client->out.count++;
+		client->out.head++;
+		if (client->out.head >= client->out.size)
 		{
-			client->in.head = 0;
+			client->out.head = 0;
 		}
-		return 1;
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 int ipp_write_uint32(ipp_request_t *req, uint32_t val)
@@ -210,51 +208,53 @@ int ipp_write_uint32(ipp_request_t *req, uint32_t val)
 	http_client_t *client;
 	uint32_t uval;
 
-	if (! req || ! val)
+	if (! req || ! req->client)
 	{
 		return -1;
 	}
 	client = req->client;
-	if (! client)
-	{
-		return -1;
-	}
+
 	if (client->out.count < (client->out.size - 3))
 	{
-		client->in.data[client->in.head] = (uint8_t)(val & 0xFF);
-		client->in.count++;
-		client->in.head++;
-		if (client->in.head >= client->in.size)
+		client->out.data[client->out.head] = (uint8_t)((val >> 24) & 0xFF);
+		client->out.count++;
+		client->out.head++;
+		if (client->out.head >= client->out.size)
 		{
-			client->in.head = 0;
+			client->out.head = 0;
 		}
 		val >>= 8;
-		client->in.data[client->in.head] = (uint8_t)(val & 0xFF);
-		client->in.count++;
-		client->in.head++;
-		if (client->in.head >= client->in.size)
+		client->out.data[client->out.head] = (uint8_t)((val >> 16) & 0xFF);
+		client->out.count++;
+		client->out.head++;
+		if (client->out.head >= client->out.size)
 		{
-			client->in.head = 0;
+			client->out.head = 0;
 		}
 		val >>= 8;
-		client->in.data[client->in.head] = (uint8_t)(val & 0xFF);
-		client->in.count++;
-		client->in.head++;
-		if (client->in.head >= client->in.size)
+		client->out.data[client->out.head] = (uint8_t)((val >> 8) & 0xFF);
+		client->out.count++;
+		client->out.head++;
+		if (client->out.head >= client->out.size)
 		{
-			client->in.head = 0;
+			client->out.head = 0;
 		}
 		val >>= 8;
-		client->in.data[client->in.head] = (uint8_t)(val & 0xFF);
-		client->in.count++;
-		client->in.head++;
-		if (client->in.head >= client->in.size)
+		client->out.data[client->out.head] = (uint8_t)(val & 0xFF);
+		client->out.count++;
+		client->out.head++;
+		if (client->out.head >= client->out.size)
 		{
-			client->in.head = 0;
+			client->out.head = 0;
 		}
-		return 1;
+		return 0;
 	}
-	return 0;
+	return 1;
+}
+
+int ipp_write_int8(ipp_request_t *req, int8_t val)
+{
+	return ipp_write_uint8(req, (uint8_t)val);
 }
 
 int ipp_write_int16(ipp_request_t *req, int16_t val)

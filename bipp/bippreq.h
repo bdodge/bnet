@@ -22,9 +22,9 @@ struct tag_ipp_server;
 
 typedef enum
 {
-   reqHeader,
-   reqReadInput,
-   reqWriteOutput
+    reqHeader,
+    reqReadInput,
+    reqWriteOutput
 }
 ipp_req_state_t;
 
@@ -37,12 +37,37 @@ typedef struct tag_ipp_request
     size_t bytes_needed;
     struct tag_ipp_request *next;
     http_client_t *client;
+
+    int16_t  last_error;
+
+    // IPP request header. Yes spec says they are signed
+    //
+    int8_t   vmaj, vmin;
+    int16_t  opid;
+    int16_t  status;
+    int32_t  reqid;
 }
 ipp_request_t;
 
-ipp_request_t *ipp_req_create(struct tag_ipp_server *ipp, http_client_t *client);
-int ipp_req_destroy(struct tag_ipp_server *ipp, ipp_request_t *req);
-int ipp_req_init(struct tag_ipp_server *ipp);
+int ipp_read_uint8      (ipp_request_t *req, uint8_t *val);
+int ipp_read_uint16     (ipp_request_t *req, uint16_t *val);
+int ipp_read_uint32     (ipp_request_t *req, uint32_t *val);
+
+int ipp_read_int8       (ipp_request_t *req, int8_t *val);
+int ipp_read_int16      (ipp_request_t *req, int16_t *val);
+int ipp_read_int32      (ipp_request_t *req, int32_t *val);
+
+int ipp_write_uint8     (ipp_request_t *req, uint8_t val);
+int ipp_write_uint16    (ipp_request_t *req, uint16_t val);
+int ipp_write_uint32    (ipp_request_t *req, uint32_t val);
+
+int ipp_write_int8      (ipp_request_t *req, int8_t val);
+int ipp_write_int16     (ipp_request_t *req, int16_t val);
+int ipp_write_int32     (ipp_request_t *req, int32_t val);
+
+ipp_request_t *ipp_req_create   (struct tag_ipp_server *ipp, http_client_t *client);
+int ipp_req_destroy             (struct tag_ipp_server *ipp, ipp_request_t *req);
+int ipp_req_init                (struct tag_ipp_server *ipp);
 
 #endif
 

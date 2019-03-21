@@ -62,6 +62,7 @@ int ipp_resource_callback(
     ipp_server_t *ipp;
     ipp_request_t *req;
     int result;
+    int old_count;
     int meth;
 
     butil_log(7, "IPP Resource CB: %d\n", cbtype);
@@ -126,10 +127,17 @@ int ipp_resource_callback(
 
         butil_log(5, "IPP download cb (body->): %zu bytes\n", count ? *count : 0);
 
+        // remember the state of in buffer
+        //
+        old_count = client->in.count;
+
         // since the whole request might not fit in a single io buffer the
-        // req is processed incrementally each chance we get
+        // req is processed incrementally each chance we get here
         //
         result = ipp_process(ipp, req);
+
+        // update count as how many bytes processing consumed
+        *count = old_count - client->in.count;
         break;
 
     case httpDownloadDone:

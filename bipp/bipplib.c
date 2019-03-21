@@ -16,6 +16,7 @@
 #include "bipp.h"
 
 static butil_url_scheme_t s_ipp_scheme;
+static ipp_server_t s_ipp_server;
 
 int ipp_canned_resource_callback(
                         http_client_t       *client,
@@ -58,7 +59,8 @@ int ipp_resource_callback(
                         size_t              *count
                      )
 {
-//    sip_server_context_t *sip;
+    ipp_server_t *ipp;
+    ipp_request_t *req;
     int result;
     int meth;
 
@@ -69,51 +71,72 @@ int ipp_resource_callback(
         BERROR("no resource");
         return -1;
     }
-    /*
-    sip = (sip_server_context_t *)resource->priv;
-    if (! sip)
+    // the ipp server context is attached to the resource
+    // when the resource was created
+    //
+    ipp = (ipp_server_t *)resource->priv;
+    if (! ipp)
     {
         BERROR("no server context in resource");
         return -1;
     }
-    */
+    // the request callback should have attached a req
+    // context onto the http client
+    //
+    if (cbtype != httpRequest)
+    {
+        req = (ipp_request_t *)client->ctxpriv;
+        if (! req)
+        {
+            BERROR("no client request context");
+            return -1;
+        }
+    }
     switch (cbtype)
     {
     case httpRequest:
 
         butil_log(5, "IPP resource cb (request)  %s: %s\n",
                 http_method_name(client->method), data ? (char*)data : "<nil>");
+
+        // grab an ipp request context for use during this request
+        //
+        req = ipp_req_create(ipp, client);
+        if (! req)
+        {
+            BERROR("can't make request");
+            return -1;
+        }
+        // attach it to the http client for access
+        //
+        client->ctxpriv = req;
+
+        // begin the request processing. if there is something
+        // wrong with the req url itself, the req can be aborted now
+        //
+        result = ipp_request(ipp, req);
+        if (result)
+        {
+            // httpDone cb will clean us up
+            return result;
+        }
         break;
 
     case httpDownloadData:
 
         butil_log(5, "IPP download cb (body->): %zu bytes\n", count ? *count : 0);
-        /*
-        if (data && *data && count && *count)
-        {
-            uint8_t *pd = (uint8_t*)*data;
-            size_t nd = *count;
 
-            while (nd-- > 0 && sip->sdpin.count < (sip->sdpin.size - 1))
-            {
-                sip->sdpin.data[sip->sdpin.head++] = *pd++;
-                if (sip->sdpin.head >= sip->sdpin.size)
-                {
-                    sip->sdpin.head = 0;
-                }
-                sip->sdpin.count++;
-            }
-            *count = nd;
-        }
-        sip->sdpin.data[sip->sdpin.head] = '\0';
-        */
+        // since the whole request might not fit in a single io buffer the
+        // req is processed incrementally each chance we get
+        //
+        result = ipp_process(ipp, req);
         break;
 
     case httpDownloadDone:
 
         butil_log(5, "IPP download done cb\n");
-        /*
-        result = ipp_request(client, sip);
+
+        result = ipp_process(ipp, req);
         if (result)
         {
             // any errors that don't format a reply go to done state, else
@@ -123,7 +146,10 @@ int ipp_resource_callback(
             {
                 client->state = httpDone;
             }
-            result = 0;
+            else
+            {
+                result = 0;
+            }
         }
         else
         {
@@ -136,7 +162,6 @@ int ipp_resource_callback(
             }
             result = 0;
         }
-        */
         break;
 
     case httpUploadData:
@@ -149,6 +174,11 @@ int ipp_resource_callback(
     case httpComplete:
 
         butil_log(5, "IPP done cb\n");
+        if (req)
+        {
+            result = ipp_req_destroy(ipp, req);
+            client->ctxpriv = NULL;
+        }
         break;
 
     default:
@@ -158,92 +188,16 @@ int ipp_resource_callback(
     return 0;
 }
 
-#if 0
-int ipp_method_callback(
-                        http_client_t *client,
-                        http_method_callback_type_t type,
-                        const http_method_t method,
-                        const char *data,
-                        void *priv
-                        )
+int ipp_server(const char *program, uint16_t port, bool isTLS)
 {
-    sip_server_context_t *sip;
+    http_server_t server;
+    http_resource_t *resources = NULL;
+    http_credentials_t creds;
+
     int result;
-    int meth;
-
-    sip = (sip_server_context_t *)priv;
-
-    if (! sip)
-    {
-        return 1;
-    }
-    if (type == httpMethodHeader)
-    {
-        butil_log(5, "Method cb (header)  %s: %s\n",
-                http_method_name(method), data ? data : "<nil>");
-        result = sip_process_header(sip, data);
-        return result;
-    }
-    if (type == httpMethodRequest)
-    {
-        result = sip_slice(client, sip);
-
-        if (client->out.count > 0)
-        {
-            iostream_normalize_ring(&client->out, NULL);
-
-            // if slice generated data, go to reply state until
-            // it is sent, then come back to usermethod
-            //
-            if (client->out.count > 0)
-            {
-                return http_send_out_data(client, httpSendReply, httpUserMethod);
-            }
-        }
-        else if (result)
-        {
-            client->state = httpDone;
-        }
-        else
-        {
-            // if any input pending for client, go back to read request state
-            // which may (or may not) get back to usermethod state
-            //
-            result = http_client_input(client, 0, 0);
-            if (result == 0 && client->in.count > 0)
-            {
-                client->next_state  = httpReadRequest;
-                client->state       = httpReadline;
-                client->line_count  = 0;
-            }
-        }
-    }
-    return 0;
-}
-#endif
-
-int ipp_server(int argc, char **argv)
-{
-//    sip_server_context_t sip_server;
-    uint16_t port;
-    const char *program, *arg;
-//    http_method_t method;
     int i;
-    int result;
 
-#ifdef Windows
-    WSADATA wsaData;
-
-    result = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (result != 0)
-    {
-        BERROR("WSAStartup failed");
-        return -1;
-    }
-#else
-    signal(SIGPIPE, SIG_IGN);
-#endif
-    http_set_log_level(5);
+    butil_set_log_level(5);
 
 #if HTTP_SUPPORT_TLS
     result = iostream_tls_prolog();
@@ -253,51 +207,11 @@ int ipp_server(int argc, char **argv)
         return -1;
     }
 #endif
-
-    program = *argv++;
-    argc--;
-
-    port = 6310;
-    result = 0;
-
-//    memset(&sip_server, 0, sizeof(sip_server));
-
-    while (argc > 0 && ! result)
+    result = ipp_req_init(&s_ipp_server);
+    if (result)
     {
-        arg = *argv++;
-        argc--;
-        if (arg[0] == '-')
-        {
-            switch (arg[1])
-            {
-            case 'p':
-                if (argc > 0)
-                {
-                    port = strtoul(*argv, NULL, 0);
-                    argv++;
-                    argc--;
-                }
-                else
-                {
-                    butil_log(0, "Use: -p [port]");
-                }
-                break;
-            default:
-                butil_log(0, "Bad Switch: %s\n", arg);
-                break;
-            }
-        }
-        else
-        {
-            butil_log(5, "Ignore parm %s\n", arg);
-        }
+        BERROR("can't init reqs");
     }
-    http_server_t server;
-    http_resource_t *resource, *resources = NULL;
-    http_credentials_t creds;
-
-    butil_url_scheme_t myscheme;
-
     // register a custom scheme
     result = butil_register_scheme("ipp", &s_ipp_scheme);
     if (result)
@@ -317,7 +231,7 @@ int ipp_server(int argc, char **argv)
     // handle all HTTP scheme urls in callback
     //
     result = http_add_func_resource(&resources, schemeHTTP,  "*",
-                NULL, ipp_resource_callback, NULL);
+                NULL, ipp_resource_callback, &s_ipp_server);
     if (result)
     {
         BERROR("can't make resource");
@@ -325,7 +239,7 @@ int ipp_server(int argc, char **argv)
     }
     // set use-tls for certain ports
     //
-    result = http_server_init(&server, resources, port, httpTCP, (port == 5061));
+    result = http_server_init(&server, resources, port, httpTCP, isTLS);
     if (result)
     {
         BERROR("can't start server");

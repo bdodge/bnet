@@ -19,5 +19,22 @@
 #include "bippconfig.h"
 #include "bhttpconfig.h"
 #include "bhttp.h"
+#include "bstreamio.h"
+#include "butil.h"
+#include "bippreq.h"
+
+/// Context for an IPP entity (a printer / print-server)
+//
+typedef struct tag_ipp_server
+{
+    /// pool of ipp request contexts
+    ipp_request_t req_pool[IPP_MAX_REQUESTS];
+    ipp_request_t *req_free;
+}
+ipp_server_t;
+
+int ipp_request(ipp_server_t *ipp, ipp_request_t *req);
+int ipp_process(ipp_server_t *ipp, ipp_request_t *req);
 
 #endif
+

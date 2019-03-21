@@ -17,8 +17,10 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-SOURCES=$(SRCDIR)/bipplib.c	\
-		$(SRCDIR)/bipp.c
+SOURCES=$(SRCDIR)/bipplib.c		\
+		$(SRCDIR)/bipp.c		\
+		$(SRCDIR)/bippreq.c		\
+		$(SRCDIR)/bipperror.c
 
 HEADERS=$(SOURCES:%.c=%.h) bippconfig.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)

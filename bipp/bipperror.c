@@ -13,18 +13,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BIPPCONFIG_H
-#define BIPPCONFIG_H 1
-
-/// Bytes in io buffersm should hold a whole TCP/IP packet
-//
-#define IPP_IO_SIZE						(2048)
-
-/// Size of request pool. max number of concurrent ipp
-/// requests in process. If this is more than one, then
-/// locking is implemented for db access
-//
-#define IPP_MAX_REQUESTS	(1)
-
-#endif
+#include "bipp.h"
 

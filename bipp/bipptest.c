@@ -18,6 +18,58 @@
 
 int main(int argc, char **argv)
 {
-    return ipp_server(argc, argv);
+    const char *program;
+    int result;
+    uint16_t port;
+    char *arg;
+
+#ifdef Windows
+    WSADATA wsaData;
+
+    result = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (result != 0)
+    {
+        BERROR("WSAStartup failed");
+        return -1;
+    }
+#else
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    program = *argv++;
+    argc--;
+
+    port = 6310;
+
+    while (argc > 0 && ! result)
+    {
+        arg = *argv++;
+        argc--;
+        if (arg[0] == '-')
+        {
+            switch (arg[1])
+            {
+            case 'p':
+                if (argc > 0)
+                {
+                    port = strtoul(*argv, NULL, 0);
+                    argv++;
+                    argc--;
+                }
+                else
+                {
+                    fprintf(stderr, "Use: -p [port]");
+                }
+                break;
+            default:
+                fprintf(stderr, "Bad Switch: %s\n", arg);
+                break;
+            }
+        }
+        else
+        {
+            printf("Ignore parm %s\n", arg);
+        }
+    }
+    return ipp_server(program, port, false);
 }
 

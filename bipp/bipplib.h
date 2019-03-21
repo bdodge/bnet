@@ -16,5 +16,8 @@
 #ifndef BIPPLIB_H
 #define BIPPLIB_H 1
 
+#include "bipp.h"
+
+int ipp_server(const char *program, uint16_t port, bool isTLS);
 
 #endif

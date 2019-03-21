@@ -112,6 +112,15 @@ int ipp_resource_callback(
         //
         client->ctxpriv = req;
 
+        // ensure the output buffer is empty and aligned
+        //
+        if (client->out.count != 0)
+        {
+            BERROR("remnant output being dropped");
+            client->out.count = 0;
+        }
+        iostream_normalize_ring(&client->out, NULL);
+
         // begin the request processing. if there is something
         // wrong with the req url itself, the req can be aborted now
         //
@@ -121,6 +130,10 @@ int ipp_resource_callback(
             // httpDone cb will clean us up
             return result;
         }
+        // any valid HTTP request will have inserted a 200 OK return
+        // header in the output buffer. IPP reply data is sent in
+        // chunks to avoid needing to back annotate counts
+        //
         break;
 
     case httpDownloadData:

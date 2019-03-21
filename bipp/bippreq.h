@@ -23,6 +23,15 @@ struct tag_ipp_server;
 typedef enum
 {
     reqHeader,
+    reqAttributes,
+    reqOperationAttributes,
+    reqJobAttributes,
+    reqPrinterAttributes,
+    reqDocumentAttributes,
+    reqSystemAttributes,
+    reqValidation,
+    reqDispatch,
+    reqReply,
     reqReadInput,
     reqWriteOutput
 }
@@ -35,6 +44,7 @@ typedef struct tag_ipp_request
     ipp_req_state_t state[IPP_REQ_MAX_STACK];
     size_t top;
     size_t bytes_needed;
+    int    chunk_pos;
     struct tag_ipp_request *next;
     http_client_t *client;
 
@@ -64,6 +74,13 @@ int ipp_write_uint32    (ipp_request_t *req, uint32_t val);
 int ipp_write_int8      (ipp_request_t *req, int8_t val);
 int ipp_write_int16     (ipp_request_t *req, int16_t val);
 int ipp_write_int32     (ipp_request_t *req, int32_t val);
+
+int ipp_write_text              (ipp_request_t *req, const char *text, uint16_t len);
+int ipp_write_text_attribute    (ipp_request_t *req, const char *text);
+int ipp_write_named_attribute   (ipp_request_t *req, int8_t tag, const char *text);
+
+int ipp_write_chunk_count       (ipp_request_t *req, int chunk);
+int ipp_update_chunk_count      (ipp_request_t *req, int chunksize);
 
 ipp_request_t *ipp_req_create   (struct tag_ipp_server *ipp, http_client_t *client);
 int ipp_req_destroy             (struct tag_ipp_server *ipp, ipp_request_t *req);

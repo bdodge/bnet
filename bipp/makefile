@@ -55,5 +55,7 @@ clean:
 $(OBJDIR)/bipptest.o: $(SRCDIR)/bipptest.c $(HEADERS)
 
 $(OBJDIR)/bipplib.o: $(SRCDIR)/bipplib.c $(HEADERS)
-$(OBJDIR)/bippp.o: $(SRCDIR)/bipp.c $(HEADERS)
+$(OBJDIR)/bipp.o: $(SRCDIR)/bipp.c $(HEADERS)
+$(OBJDIR)/bippreq.o: $(SRCDIR)/bippreq.c $(HEADERS)
+$(OBJDIR)/bipperror.o: $(SRCDIR)/bipperror.c $(HEADERS)
 

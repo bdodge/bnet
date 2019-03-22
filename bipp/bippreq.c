@@ -15,331 +15,225 @@
  */
 #include "bipp.h"
 
-int ipp_read_uint8(ipp_request_t *req, uint8_t *val)
+int ipp_read_uint8(ioring_t *in, uint8_t *val)
 {
 	http_client_t *client;
 
-	if (! req || ! val)
+	if (! in || ! val)
 	{
 		return -1;
 	}
-	client = req->client;
-	if (! client)
+	if (in->count > 0)
 	{
-		return -1;
-	}
-	if (client->in.count > 0)
-	{
-		*val = client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		*val = in->data[in->tail];
+		in->count--;
+		in->tail++;
 		return 0;
 	}
 	return 1;
 }
 
-int ipp_read_uint16(ipp_request_t *req, uint16_t *val)
+int ipp_read_uint16(ioring_t *in, uint16_t *val)
 {
 	http_client_t *client;
 	uint16_t uval;
 
-	if (! req || ! val)
+	if (! in || ! val)
 	{
 		return -1;
 	}
-	client = req->client;
-	if (! client)
+	if (in->count > 1)
 	{
-		return -1;
-	}
-	if (client->in.count > 1)
-	{
-		uval = client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		uval = in->data[in->tail];
+		in->count--;
+		in->tail++;
 		uval <<= 8;
-		uval |= client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		uval |= in->data[in->tail];
+		in->count--;
+		in->tail++;
 		*val = uval;
 		return 0;
 	}
 	return 1;
 }
 
-int ipp_read_uint32(ipp_request_t *req, uint32_t *val)
+int ipp_read_uint32(ioring_t *in, uint32_t *val)
 {
 	http_client_t *client;
 	uint32_t uval;
 
-	if (! req || ! val)
+	if (! in || ! val)
 	{
 		return -1;
 	}
-	client = req->client;
-	if (! client)
+	if (in->count > 3)
 	{
-		return -1;
-	}
-	if (client->in.count > 3)
-	{
-		uval = client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		uval = in->data[in->tail];
+		in->count--;
+		in->tail++;
+
 		uval <<= 8;
-		uval |= client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		uval |= in->data[in->tail];
+		in->count--;
+		in->tail++;
+
 		uval <<= 8;
-		uval |= client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		uval |= in->data[in->tail];
+		in->count--;
+		in->tail++;
+
 		uval <<= 8;
-		uval |= client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		uval |= in->data[in->tail];
+		in->count--;
+		in->tail++;
+
 		*val = uval;
 		return 0;
 	}
 	return 1;
 }
 
-int ipp_read_int8(ipp_request_t *req, int8_t *val)
+int ipp_read_int8(ioring_t *in, int8_t *val)
 {
-	return ipp_read_uint8(req, (uint8_t*)val);
+	return ipp_read_uint8(in, (uint8_t*)val);
 }
 
-int ipp_read_int16(ipp_request_t *req, int16_t *val)
+int ipp_read_int16(ioring_t *in, int16_t *val)
 {
-	return ipp_read_uint16(req, (uint16_t*)val);
+	return ipp_read_uint16(in, (uint16_t*)val);
 }
 
-int ipp_read_int32(ipp_request_t *req, int32_t *val)
+int ipp_read_int32(ioring_t *in, int32_t *val)
 {
-	return ipp_read_uint32(req, (uint32_t*)val);
+	return ipp_read_uint32(in, (uint32_t*)val);
 }
 
-int ipp_read_text(ipp_request_t *req, char *text, uint16_t len)
+int ipp_read_text(ioring_t *in, char *text, uint16_t len)
 {
-	http_client_t *client;
-	int result;
-
-	if (! req || ! req->client)
+	if (! in || ! text)
 	{
 		return -1;
 	}
-	client = req->client;
-
-	if (client->in.count < len)
+	if (in->count < len)
 	{
 		return 1;
 	}
 	while (len-- > 0)
 	{
-		*text++ = client->in.data[client->in.tail];
-		client->in.count--;
-		client->in.tail++;
-		if (client->in.tail >= client->in.size)
-		{
-			client->in.tail = 0;
-		}
+		*text++ = in->data[in->tail];
+		in->count--;
+		in->tail++;
 	}
 	return 0;
 }
 
-int ipp_write_uint8(ipp_request_t *req, uint8_t val)
+int ipp_write_uint8(ioring_t *out, uint8_t val)
 {
-	http_client_t *client;
-
-	if (! req || ! req->client)
+	if (! out)
 	{
 		return -1;
 	}
-	client = req->client;
-
-	if (client->out.count < client->out.size)
+	if (out->count < out->size)
 	{
-		client->out.data[client->out.head] = val;
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
+		out->data[out->head] = val;
+		out->count++;
+		out->head++;
 		return 0;
 	}
 	return 1;
 }
 
-int ipp_write_uint16(ipp_request_t *req, uint16_t val)
+int ipp_write_uint16(ioring_t *out, uint16_t val)
 {
-	http_client_t *client;
 	uint16_t uval;
 
-	if (! req || ! req->client)
+	if (! out)
 	{
 		return -1;
 	}
-	client = req->client;
-
-	if (client->out.count < (client->out.size - 1))
+	if (out->count < (out->size - 1))
 	{
-		client->out.data[client->out.head] = (uint8_t)((val >> 8) & 0xFF);
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
-		client->out.data[client->out.head] = (uint8_t)(val & 0xFF);
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
+		out->data[out->head] = (uint8_t)((val >> 8) & 0xFF);
+		out->count++;
+		out->head++;
+		out->data[out->head] = (uint8_t)(val & 0xFF);
+		out->count++;
+		out->head++;
 		return 0;
 	}
 	return 1;
 }
 
-int ipp_write_uint32(ipp_request_t *req, uint32_t val)
+int ipp_write_uint32(ioring_t *out, uint32_t val)
 {
-	http_client_t *client;
 	uint32_t uval;
 
-	if (! req || ! req->client)
+	if (! out)
 	{
 		return -1;
 	}
-	client = req->client;
-
-	if (client->out.count < (client->out.size - 3))
+	if (out->count < (out->size - 3))
 	{
-		client->out.data[client->out.head] = (uint8_t)((val >> 24) & 0xFF);
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
-		client->out.data[client->out.head] = (uint8_t)((val >> 16) & 0xFF);
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
-		client->out.data[client->out.head] = (uint8_t)((val >> 8) & 0xFF);
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
-		client->out.data[client->out.head] = (uint8_t)(val & 0xFF);
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
+		out->data[out->head] = (uint8_t)((val >> 24) & 0xFF);
+		out->count++;
+		out->head++;
+		out->data[out->head] = (uint8_t)((val >> 16) & 0xFF);
+		out->count++;
+		out->head++;
+		out->data[out->head] = (uint8_t)((val >> 8) & 0xFF);
+		out->count++;
+		out->head++;
+		out->data[out->head] = (uint8_t)(val & 0xFF);
+		out->count++;
+		out->head++;
 		return 0;
 	}
 	return 1;
 }
 
-int ipp_write_int8(ipp_request_t *req, int8_t val)
+int ipp_write_int8(ioring_t *out, int8_t val)
 {
-	return ipp_write_uint8(req, (uint8_t)val);
+	return ipp_write_uint8(out, (uint8_t)val);
 }
 
-int ipp_write_int16(ipp_request_t *req, int16_t val)
+int ipp_write_int16(ioring_t *out, int16_t val)
 {
-	return ipp_write_uint16(req, (uint16_t)val);
+	return ipp_write_uint16(out, (uint16_t)val);
 }
 
-int ipp_write_int32(ipp_request_t *req, int32_t val)
+int ipp_write_int32(ioring_t *out, int32_t val)
 {
-	return ipp_write_uint32(req, (uint32_t)val);
+	return ipp_write_uint32(out, (uint32_t)val);
 }
 
-int ipp_write_text(ipp_request_t *req, const char *text, uint16_t len)
+int ipp_write_text(ioring_t *out, const char *text, uint16_t len)
 {
-	http_client_t *client;
 	int result;
 
-	if (! req || ! req->client)
+	if (! out || ! text)
 	{
 		return -1;
 	}
-	client = req->client;
-
-	if (client->out.count > (client->out.size - len - 2))
+	if (out->count > (out->size - len - 2))
 	{
 		return 1;
 	}
-	client->out.data[client->out.head] = (uint8_t)((len >> 8) & 0xFF);
-	client->out.count++;
-	client->out.head++;
-	if (client->out.head >= client->out.size)
+	result = ipp_write_uint16(out, len);
+	if (! result && (len > 0))
 	{
-		client->out.head = 0;
+		memcpy(out->data + out->head, text, len);
+		out->head += len;
+		out->count -= len;
 	}
-	client->out.data[client->out.head] = (uint8_t)(len & 0xFF);
-	client->out.count++;
-	client->out.head++;
-	if (client->out.head >= client->out.size)
-	{
-		client->out.head = 0;
-	}
-	while (len-- > 0)
-	{
-		client->out.data[client->out.head] = *text++;
-		client->out.count++;
-		client->out.head++;
-		if (client->out.head >= client->out.size)
-		{
-			client->out.head = 0;
-		}
-	}
-	return 0;
+	return result;
 }
 
-int ipp_write_text_attribute(ipp_request_t *req, const char *text)
+int ipp_write_text_attribute(ioring_t *out, const char *text)
 {
 	int result;
 	size_t len;
 
-	if (! req || ! text)
+	if (! out || ! text)
 	{
 		return -1;
 	}
@@ -348,78 +242,74 @@ int ipp_write_text_attribute(ipp_request_t *req, const char *text)
 	{
 		return -2;
 	}
-	return ipp_write_text(req, text, len);
+	return ipp_write_text(out, text, len);
 }
 
-int ipp_write_named_attribute(ipp_request_t *req, int8_t tag, const char *text)
+int ipp_write_named_attribute(ioring_t *out, int8_t tag, const char *text)
 {
 	int result;
 
-	if (! req || ! text)
+	if (! out || ! text)
 	{
 		return -1;
 	}
-	result = ipp_write_int8(req, tag);
+	result = ipp_write_int8(out, tag);
 	if (result)
 	{
 		return result;
 	}
-	return ipp_write_text_attribute(req, text);
+	return ipp_write_text_attribute(out, text);
 }
 
-int ipp_write_chunk_count(ipp_request_t *req, int chunk)
+int ipp_write_chunk_count(ioring_t *out, int chunk)
 {
-	http_client_t *client;
 	char chunk_str[8];
 	int result;
 
-	if (! req || ! req->client)
+	if (! out)
 	{
 		return -1;
 	}
 	snprintf(chunk_str, sizeof(chunk_str), "%04X", chunk);
 
-	result  = ipp_write_uint8(req, chunk_str[0]);
-	result |= ipp_write_uint8(req, chunk_str[1]);
-	result |= ipp_write_uint8(req, chunk_str[2]);
-	result |= ipp_write_uint8(req, chunk_str[3]);
-    result |= ipp_write_uint8(req, '\r');
-    result |= ipp_write_uint8(req, '\n');
+	result  = ipp_write_uint8(out, chunk_str[0]);
+	result |= ipp_write_uint8(out, chunk_str[1]);
+	result |= ipp_write_uint8(out, chunk_str[2]);
+	result |= ipp_write_uint8(out, chunk_str[3]);
+    result |= ipp_write_uint8(out, '\r');
+    result |= ipp_write_uint8(out, '\n');
 	if (chunk == 0)
 	{
-	    result |= ipp_write_uint8(req, '\r');
-	    result |= ipp_write_uint8(req, '\n');
+	    result |= ipp_write_uint8(out, '\r');
+	    result |= ipp_write_uint8(out, '\n');
 	}
 	return result;
 }
 
-int ipp_update_chunk_count(ipp_request_t *req, int chunksize)
+int ipp_update_chunk_count(ioring_t *out, int chunkpos, int chunksize)
 {
-	http_client_t *client;
 	char chunk_str[8];
 	int cur_head;
 	int cur_count;
 	int result;
 
-	if (! req || ! req->client)
+	if (! out)
 	{
 		return -1;
 	}
-	client = req->client;
-
 	// save current position and count in out buffer
-	cur_head  = client->out.head;
-	cur_count = client->out.count;
+	cur_head  = out->head;
+	cur_count = out->count;
 
 	// seek to place reserved chunk count was placed
-	client->out.head = req->chunk_pos;
+	out->head = chunkpos;
 
 	// write the chunk count there
-	result = ipp_write_chunk_count(req, chunksize);
+	result = ipp_write_chunk_count(out, chunksize);
 
 	// restore position and count (had already reserved it)
-	client->out.head  = cur_head;
-	client->out.count = cur_count;
+	out->head  = cur_head;
+	out->count = cur_count;
 	return result;
 }
 
@@ -433,9 +323,17 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 	}
 	req = ipp->req_free;
 	ipp->req_free = req->next;
+
+	req->ipp = ipp;
 	req->client = client;
+
 	req->bytes_needed = 0;
 	req->download_complete = false;
+
+	req->in.count = 0;
+	req->in.size = 0;
+	req->in.head = 0;
+	req->in.tail = 0;
 
 	req->op_attr_count = 0;
 	req->job_attr_count = 0;

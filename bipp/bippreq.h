@@ -52,9 +52,11 @@ ipp_req_state_t;
 typedef struct tag_ipp_request
 {
     struct tag_ipp_request *next;
+    struct tag_ipp_server  *ipp;
     ipp_req_state_t state[IPP_REQ_MAX_STACK];
     size_t          top;
 
+    ioring_t        in;
     size_t          bytes_needed;
     int             chunk_pos;
     http_client_t  *client;
@@ -93,30 +95,30 @@ typedef struct tag_ipp_request
 }
 ipp_request_t;
 
-int ipp_read_uint8      (ipp_request_t *req, uint8_t *val);
-int ipp_read_uint16     (ipp_request_t *req, uint16_t *val);
-int ipp_read_uint32     (ipp_request_t *req, uint32_t *val);
+int ipp_read_uint8      (ioring_t *in, uint8_t *val);
+int ipp_read_uint16     (ioring_t *in, uint16_t *val);
+int ipp_read_uint32     (ioring_t *in, uint32_t *val);
 
-int ipp_read_int8       (ipp_request_t *req, int8_t *val);
-int ipp_read_int16      (ipp_request_t *req, int16_t *val);
-int ipp_read_int32      (ipp_request_t *req, int32_t *val);
+int ipp_read_int8       (ioring_t *in, int8_t *val);
+int ipp_read_int16      (ioring_t *in, int16_t *val);
+int ipp_read_int32      (ioring_t *in, int32_t *val);
 
-int ipp_read_text       (ipp_request_t *req, char *text, uint16_t len);
+int ipp_read_text       (ioring_t *in, char *text, uint16_t len);
 
-int ipp_write_uint8     (ipp_request_t *req, uint8_t val);
-int ipp_write_uint16    (ipp_request_t *req, uint16_t val);
-int ipp_write_uint32    (ipp_request_t *req, uint32_t val);
+int ipp_write_uint8     (ioring_t *in, uint8_t val);
+int ipp_write_uint16    (ioring_t *in, uint16_t val);
+int ipp_write_uint32    (ioring_t *in, uint32_t val);
 
-int ipp_write_int8      (ipp_request_t *req, int8_t val);
-int ipp_write_int16     (ipp_request_t *req, int16_t val);
-int ipp_write_int32     (ipp_request_t *req, int32_t val);
+int ipp_write_int8      (ioring_t *in, int8_t val);
+int ipp_write_int16     (ioring_t *in, int16_t val);
+int ipp_write_int32     (ioring_t *in, int32_t val);
 
-int ipp_write_text              (ipp_request_t *req, const char *text, uint16_t len);
-int ipp_write_text_attribute    (ipp_request_t *req, const char *text);
-int ipp_write_named_attribute   (ipp_request_t *req, int8_t tag, const char *text);
+int ipp_write_text              (ioring_t *out, const char *text, uint16_t len);
+int ipp_write_text_attribute    (ioring_t *out, const char *text);
+int ipp_write_named_attribute   (ioring_t *out, int8_t tag, const char *text);
 
-int ipp_write_chunk_count       (ipp_request_t *req, int chunk);
-int ipp_update_chunk_count      (ipp_request_t *req, int chunksize);
+int ipp_write_chunk_count       (ioring_t *out, int chunk);
+int ipp_update_chunk_count      (ioring_t *out, int chunkpos, int chunksize);
 
 ipp_request_t *ipp_req_create   (struct tag_ipp_server *ipp, http_client_t *client);
 int ipp_req_destroy             (struct tag_ipp_server *ipp, ipp_request_t *req);

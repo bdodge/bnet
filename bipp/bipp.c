@@ -127,7 +127,7 @@ static int ipp_get_value(ipp_request_t *req)
 
     while (req->attr_bytes_remain != 0)
     {
-        result = ipp_read_uint8(req, &vb);
+        result = ipp_read_uint8(&req->in, &vb);
         if (result < 0)
         {
             return result;
@@ -154,7 +154,7 @@ static int ipp_get_value_length(ipp_request_t *req)
 {
     int result;
 
-    result = ipp_read_uint16(req, &req->attr_value_len);
+    result = ipp_read_uint16(&req->in, &req->attr_value_len);
     if (result < 0)
     {
         return result;
@@ -177,7 +177,7 @@ static int ipp_get_name_text(ipp_request_t *req)
 {
     int result;
 
-    result = ipp_read_text(req, req->attr_name, req->attr_name_len);
+    result = ipp_read_text(&req->in, req->attr_name, req->attr_name_len);
     if (result < 0)
     {
         return 0;
@@ -200,7 +200,7 @@ static int ipp_get_name_length(ipp_request_t *req)
 {
     int result;
 
-    result = ipp_read_uint16(req, &req->attr_name_len);
+    result = ipp_read_uint16(&req->in, &req->attr_name_len);
     if (result < 0)
     {
         return result;
@@ -225,7 +225,7 @@ static int ipp_get_attribute(ipp_request_t *req)
 
     // read first byte. if end-tag, pop state, it no data, wait for it
     //
-    result = ipp_read_int8(req, &req->attr_tag);
+    result = ipp_read_int8(&req->in, &req->attr_tag);
     if (result < 0)
     {
         return result;
@@ -249,12 +249,12 @@ static int ipp_get_attribute(ipp_request_t *req)
     return ipp_move_state(req, reqAttributeNameLength);
 }
 
-int ipp_request(ipp_server_t *ipp, ipp_request_t *req)
+int ipp_request(ipp_request_t *req)
 {
     http_client_t *client;
     int result;
 
-    if (! ipp || ! req || ! req->client)
+    if (! req || ! req->client)
     {
         return -1;
     }
@@ -269,16 +269,16 @@ int ipp_request(ipp_server_t *ipp, ipp_request_t *req)
 
     // reserve 6 bytes for reply chunk count at top of reply
     req->chunk_pos = client->out.head;
-    ipp_write_uint32(req, 0);
-    ipp_write_uint8(req, '\r');
-    ipp_write_uint8(req, '\n');
+    ipp_write_uint32(&client->out, 0);
+    ipp_write_uint8(&client->out, '\r');
+    ipp_write_uint8(&client->out, '\n');
     result = 0;
     return result;
 }
 
-int ipp_dispatch(ipp_server_t *ipp, ipp_request_t *req)
+int ipp_dispatch(ipp_request_t *req)
 {
-    if (! ipp || ! req)
+    if (! req)
     {
         return -1;
     }
@@ -393,8 +393,9 @@ int ipp_dispatch(ipp_server_t *ipp, ipp_request_t *req)
     return 0;
 }
 
-int ipp_reply(ipp_server_t *ipp, ipp_request_t *req)
+int ipp_reply(ipp_request_t *req)
 {
+    http_client_t *client;
     int old_count;
     int bytes_made;
     int result;
@@ -403,29 +404,31 @@ int ipp_reply(ipp_server_t *ipp, ipp_request_t *req)
     {
         return -1;
     }
-    old_count = req->client->out.count;
+    client = req->client;
+
+    old_count = client->out.count;
 
     // add reply header
-    result  = ipp_write_int8(req, req->vmaj);
-    result |= ipp_write_int8(req, req->vmin);
-    result |= ipp_write_int16(req, req->last_error);
-    result |= ipp_write_int32(req, req->reqid);
+    result  = ipp_write_int8(&client->out, req->vmaj);
+    result |= ipp_write_int8(&client->out, req->vmin);
+    result |= ipp_write_int16(&client->out, req->last_error);
+    result |= ipp_write_int32(&client->out, req->reqid);
 
     // and reply charset/language
-    result |= ipp_write_int8(req, IPP_TAG_OPERATION);
-    result |= ipp_write_named_attribute(req, IPP_TAG_CHARSET, "attributes-charset");
-    result |= ipp_write_text_attribute(req, "utf-8");
-    result |= ipp_write_named_attribute(req, IPP_TAG_LANGUAGE, "attributes-natural-language");
-    result |= ipp_write_text_attribute(req, "en");
-    result |= ipp_write_int8(req, IPP_TAG_END);
+    result |= ipp_write_int8(&client->out, IPP_TAG_OPERATION);
+    result |= ipp_write_named_attribute(&client->out, IPP_TAG_CHARSET, "attributes-charset");
+    result |= ipp_write_text_attribute(&client->out, "utf-8");
+    result |= ipp_write_named_attribute(&client->out, IPP_TAG_LANGUAGE, "attributes-natural-language");
+    result |= ipp_write_text_attribute(&client->out, "en");
+    result |= ipp_write_int8(&client->out, IPP_TAG_END);
 
-    bytes_made = req->client->out.count - old_count;
+    bytes_made = client->out.count - old_count;
 
     // append a 0 chunk
-    result = ipp_write_chunk_count(req, 0);
+    result = ipp_write_chunk_count(&client->out, 0);
 
     // back-annotate the chunk count
-    result = ipp_update_chunk_count(req, bytes_made);
+    result = ipp_update_chunk_count(&client->out, req->chunk_pos, bytes_made);
     if (result)
     {
         // not sure what to do here, really can't happen
@@ -433,7 +436,7 @@ int ipp_reply(ipp_server_t *ipp, ipp_request_t *req)
         return result;
     }
     // send the reply
-    result = http_send_out_data(req->client, httpSendReply, httpKeepAlive);
+    result = http_send_out_data(client, httpSendReply, httpKeepAlive);
     if (result)
     {
         return result;
@@ -441,7 +444,7 @@ int ipp_reply(ipp_server_t *ipp, ipp_request_t *req)
     return 0;
 }
 
-int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
+int ipp_process(ipp_request_t *req)
 {
     static ipp_req_state_t prevstate = reqReadInput;
     static size_t prevtop;
@@ -469,10 +472,10 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
         {
             break;
         }
-        result  = ipp_read_int8(req, &req->vmaj);
-        result |= ipp_read_int8(req, &req->vmin);
-        result |= ipp_read_int16(req, &req->opid);
-        result |= ipp_read_int32(req, &req->reqid);
+        result  = ipp_read_int8(&req->in, &req->vmaj);
+        result |= ipp_read_int8(&req->in, &req->vmin);
+        result |= ipp_read_int16(&req->in, &req->opid);
+        result |= ipp_read_int32(&req->in, &req->reqid);
         if (result)
         {
             BERROR("hdr read");
@@ -491,7 +494,7 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
         // even though all the IPP test suites insist that a request
         // has a charset and natural language operation attributes
         //
-        result = ipp_read_int8(req, &tag);
+        result = ipp_read_int8(&req->in, &tag);
         if (result < 0)
         {
             BERROR("read attr");
@@ -612,7 +615,7 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
 
         // dispatch the operation -----------------------------------
         //
-        result = ipp_dispatch(ipp, req);
+        result = ipp_dispatch(req);
         if (! result)
         {
             result = ipp_move_state(req, reqReply);
@@ -622,7 +625,7 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
 
     case reqReply:
 
-        result = ipp_reply(ipp, req);
+        result = ipp_reply(req);
         if (! result)
         {
             result = ipp_move_state(req, reqDone);

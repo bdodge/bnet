@@ -33,8 +33,8 @@ typedef struct tag_ipp_server
 }
 ipp_server_t;
 
-int ipp_request(ipp_server_t *ipp, ipp_request_t *req);
-int ipp_process(ipp_server_t *ipp, ipp_request_t *req);
+int ipp_request(ipp_request_t *req);
+int ipp_process(ipp_request_t *req);
 
 #endif
 

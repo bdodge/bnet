@@ -18,26 +18,6 @@
 static butil_url_scheme_t s_ipp_scheme;
 static ipp_server_t s_ipp_server;
 
-static int ipp_stream_save_in_state(http_client_t *client, ioring_t *state)
-{
-    if (! client)
-    {
-        return -1;
-    }
-    memcpy(state, &client->in, sizeof(ioring_t));
-    return 0;
-}
-
-static int ipp_stream_restore_in_state(http_client_t *client, ioring_t *state)
-{
-    if (! client)
-    {
-        return -1;
-    }
-    memcpy(&client->in, state, sizeof(ioring_t));
-    return 0;
-}
-
 int ipp_canned_resource_callback(
                         http_client_t       *client,
                         http_resource_t     *resource,
@@ -145,7 +125,7 @@ int ipp_resource_callback(
         // begin the request processing. if there is something
         // wrong with the req url itself, the req can be aborted now
         //
-        result = ipp_request(ipp, req);
+        result = ipp_request(req);
 
         if (result)
         {
@@ -162,27 +142,26 @@ int ipp_resource_callback(
 
         butil_log(5, "IPP download cb (body->): %zu bytes\n", count ? *count : 0);
 
-        // remember the state of in buffer
-        //
-        old_count = client->in.count;
-
-        // snapshot the input ring state since ipp_process uses it
-        // directly and http server thinks it owns it
-        //
-        ipp_stream_save_in_state(client, &instate);
-
         // since the whole request might not fit in a single io buffer the
         // req is processed incrementally each chance we get here
         //
-        result = ipp_process(ipp, req);
-
-        *count = (old_count - client->in.count);
-
-        // restore clients input state. (rewind). it will get updated
-        // by how many bytes we took in count
+        // copy the input ptrs to req's ioring. Note that this is ALWAYS a
+        // single contiguous buffer. the http server insures its input is
+        // normalized (left aligned and contiguous) before calling here. It
+        // ends up being more efficient to do a memmove in the ioring each
+        // request than to check for ring wrap at every byte
         //
-        ipp_stream_restore_in_state(client, &instate);
+        req->in.data = *data;
+        req->in.count = *count;
+        req->in.tail = 0;
+        req->in.head = req->in.count;
+        req->in.size = req->in.count;
 
+        result = ipp_process(req);
+
+        // see how many bytes we took from data, to update client
+        //
+        *count = (*count - req->in.count);
         break;
 
     case httpDownloadDone:
@@ -197,7 +176,9 @@ int ipp_resource_callback(
         //
         do
         {
-            result = ipp_process(ipp, req);
+            req->in.count = 0; // wouldn't be here if any data left
+
+            result = ipp_process(req);
             if (result)
             {
                 // any errors that don't format a reply go to done state, else

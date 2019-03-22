@@ -31,8 +31,6 @@ typedef enum
     reqOperationAttributes,
     reqJobAttributes,
     reqPrinterAttributes,
-    reqDocumentAttributes,
-    reqSystemAttributes,
     reqAttributeTag,
     reqAttributeNameLength,
     reqAttributeNameText,

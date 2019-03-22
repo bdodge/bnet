@@ -20,6 +20,7 @@ include $(SRCROOT)/common/makecommon.mk
 SOURCES=$(SRCDIR)/bipplib.c		\
 		$(SRCDIR)/bipp.c		\
 		$(SRCDIR)/bippreq.c		\
+		$(SRCDIR)/bippattr.c	\
 		$(SRCDIR)/bipperror.c
 
 HEADERS=$(SOURCES:%.c=%.h) bippconfig.h
@@ -57,5 +58,6 @@ $(OBJDIR)/bipptest.o: $(SRCDIR)/bipptest.c $(HEADERS)
 $(OBJDIR)/bipplib.o: $(SRCDIR)/bipplib.c $(HEADERS)
 $(OBJDIR)/bipp.o: $(SRCDIR)/bipp.c $(HEADERS)
 $(OBJDIR)/bippreq.o: $(SRCDIR)/bippreq.c $(HEADERS)
+$(OBJDIR)/bippattr.o: $(SRCDIR)/bippattr.c $(HEADERS)
 $(OBJDIR)/bipperror.o: $(SRCDIR)/bipperror.c $(HEADERS)
 

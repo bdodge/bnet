@@ -26,8 +26,6 @@ static const char *ipp_state_string(ipp_state_t state)
     case reqOperationAttributes:    return "OperationAttributes";
     case reqJobAttributes:          return "JobAttributes";
     case reqPrinterAttributes:      return "PrinterAttributes";
-    case reqDocumentAttributes:     return "DocumentAttributes";
-    case reqSystemAttributes:       return "SystemAttributes";
     case reqAttributeTag:           return "AttributeTag";
     case reqAttributeNameLength:    return "AttributeNameLength";
     case reqAttributeNameText:      return "AttributeNameText";
@@ -530,9 +528,13 @@ int ipp_process(ipp_request_t *req)
             break;
 
         case IPP_TAG_JOB:
+            result = ipp_push_state(req, reqJobAttributes);
+            break;
+
         case IPP_TAG_PRINTER:
-        case IPP_TAG_DOCUMENT:
-        case IPP_TAG_SYSTEM:
+            result = ipp_push_state(req, reqPrinterAttributes);
+            break;
+
         default:
             req->last_error = IPP_STATUS_ERROR_BAD_REQUEST;
             result = ipp_move_state(req, reqReply);
@@ -543,8 +545,6 @@ int ipp_process(ipp_request_t *req)
     case reqOperationAttributes:
     case reqJobAttributes:
     case reqPrinterAttributes:
-    case reqDocumentAttributes:
-    case reqSystemAttributes:
 
         // start off attribute parsing
         result = ipp_push_state(req, reqAttributeTag);

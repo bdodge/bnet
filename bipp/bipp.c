@@ -17,6 +17,32 @@
 #include "bipperror.h"
 #include "butil.h"
 
+static const char *ipp_state_string(ipp_state_t state)
+{
+    switch (state)
+    {
+    case reqHeader:                 return "Header";
+    case reqAttributes:             return "Attributes";
+    case reqOperationAttributes:    return "OperationAttributes";
+    case reqJobAttributes:          return "JobAttributes";
+    case reqPrinterAttributes:      return "PrinterAttributes";
+    case reqDocumentAttributes:     return "DocumentAttributes";
+    case reqSystemAttributes:       return "SystemAttributes";
+    case reqAttributeTag:           return "AttributeTag";
+    case reqAttributeNameLength:    return "AttributeNameLength";
+    case reqAttributeNameText:      return "AttributeNameText";
+    case reqAttributeValueLength:   return "AttributeValueLength";
+    case reqAttributeValue:         return "AttributeValue";
+    case reqValidation:             return "Validation";
+    case reqDispatch:               return "Dispatch";
+    case reqReply:                  return "Reply";
+    case reqReadInput:              return "ReadInput";
+    case reqWriteOutput:            return "WriteOutput";
+    case reqDone:                   return "Done";
+    default:                        return "????";
+    }
+}
+
 static int ipp_push_state(ipp_request_t *req, ipp_req_state_t tostate)
 {
     if (req->top >= IPP_REQ_MAX_STACK)
@@ -39,6 +65,12 @@ static int ipp_pop_state(ipp_request_t *req)
     return 0;
 }
 
+static int ipp_move_state(ipp_request_t *req, ipp_req_state_t tostate)
+{
+    req->state[req->top] = tostate;
+    return 0;
+}
+
 static int ipp_wait_for_bytes(ipp_request_t *req, size_t bytes)
 {
     if (req->client->in.count >= bytes)
@@ -47,6 +79,174 @@ static int ipp_wait_for_bytes(ipp_request_t *req, size_t bytes)
     }
     req->bytes_needed = bytes;
     return ipp_push_state(req, reqReadInput);
+}
+
+/*
+int ipp_get_attribute_and_value(ipp_request_t *req, int8_t tag)
+{
+    switch (tag)
+    {
+    case IPP_TAG_INTEGER:
+    case IPP_TAG_BOOLEAN:
+    case IPP_TAG_ENUM:
+    case IPP_TAG_STRING:
+    case IPP_TAG_DATE:
+    case IPP_TAG_RESOLUTION:
+    case IPP_TAG_RANGE:
+    case IPP_TAG_BEGIN_COLLECTION:
+    case IPP_TAG_TEXTLANG:
+    case IPP_TAG_NAMELANG:
+    case IPP_TAG_END_COLLECTION:
+    case IPP_TAG_TEXT:
+    case IPP_TAG_NAME:
+    case IPP_TAG_RESERVED_STRING:
+    case IPP_TAG_KEYWORD:
+    case IPP_TAG_URI:
+    case IPP_TAG_URISCHEME:
+    case IPP_TAG_CHARSET:
+    case IPP_TAG_LANGUAGE:
+    case IPP_TAG_MIMETYPE:
+    case IPP_TAG_MEMBERNAME:
+        break;
+    default:
+        butil_log(0, "Unknown attrib %02X\n", tag);
+        req->last_error = IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES;
+        return -1;
+    }
+}
+*/
+
+static int ipp_get_value(ipp_request_t *req)
+{
+    int result;
+    uint8_t vb;
+
+    // setup for incrementally reading value bytes
+    //
+    req->attr_bytes_remain = req->attr_value_len;
+
+    while (req->attr_bytes_remain != 0)
+    {
+        result = ipp_read_uint8(req, &vb);
+        if (result < 0)
+        {
+            return result;
+        }
+        if (result > 0)
+        {
+            if (req->download_complete)
+            {
+                butil_log(0, "End of data in attr value\n");
+                return -1;
+            }
+            // need bytes to move on, but do it 1 at a time
+            //
+            return ipp_wait_for_bytes(req, 1);
+        }
+        req->attr_bytes_remain--;
+    }
+    // got all value bytes, go back to wherever we got here from
+    //
+    return ipp_pop_state(req);
+}
+
+static int ipp_get_value_length(ipp_request_t *req)
+{
+    int result;
+
+    result = ipp_read_uint16(req, &req->attr_value_len);
+    if (result < 0)
+    {
+        return result;
+    }
+    if (result > 0)
+    {
+        if (req->download_complete)
+        {
+            butil_log(0, "End of data in attr value length\n");
+            return -1;
+        }
+        // need two bytes to move on
+        //
+        return ipp_wait_for_bytes(req, 2);
+    }
+    return ipp_move_state(req, reqAttributeValue);
+}
+
+static int ipp_get_name_text(ipp_request_t *req)
+{
+    int result;
+
+    result = ipp_read_text(req, req->attr_name, req->attr_name_len);
+    if (result < 0)
+    {
+        return 0;
+    }
+    if (result > 0)
+    {
+        if (req->download_complete)
+        {
+            butil_log(0, "End of data in attr name\n");
+            return -1;
+        }
+        // need len bytes to move on
+        //
+        return ipp_wait_for_bytes(req, req->attr_name_len);
+    }
+    return ipp_move_state(req, reqAttributeValueLength);
+}
+
+static int ipp_get_name_length(ipp_request_t *req)
+{
+    int result;
+
+    result = ipp_read_uint16(req, &req->attr_name_len);
+    if (result < 0)
+    {
+        return result;
+    }
+    if (result > 0)
+    {
+        if (req->download_complete)
+        {
+            butil_log(0, "End of data in attr name length\n");
+            return -1;
+        }
+        // need two bytes to move on
+        //
+        return ipp_wait_for_bytes(req, 2);
+    }
+    return ipp_move_state(req, reqAttributeNameText);
+}
+
+static int ipp_get_attribute(ipp_request_t *req)
+{
+    int result;
+
+    // read first byte. if end-tag, pop state, it no data, wait for it
+    //
+    result = ipp_read_int8(req, &req->attr_tag);
+    if (result < 0)
+    {
+        return result;
+    }
+    if (result > 0)
+    {
+        if (req->download_complete)
+        {
+            butil_log(0, "End of data in attr group, %s\n", ipp_state_string(req->state[req->top]));
+            return -1;
+        }
+        // need a byte to move on
+        //
+        return ipp_wait_for_bytes(req, 1);
+    }
+    if (req->attr_tag == IPP_TAG_END)
+    {
+        butil_log(5, "End of attr group, %s\n", ipp_state_string(req->state[req->top]));
+        return ipp_pop_state(req);
+    }
+    return ipp_move_state(req, reqAttributeNameLength);
 }
 
 int ipp_request(ipp_server_t *ipp, ipp_request_t *req)
@@ -98,6 +298,7 @@ int ipp_dispatch(ipp_server_t *ipp, ipp_request_t *req)
     case IPP_OP_GET_JOBS:
         break;
     case IPP_OP_GET_PRINTER_ATTRIBUTES:
+        req->last_error = IPP_STATUS_OK;
         break;
     case IPP_OP_HOLD_JOB:
     case IPP_OP_RELEASE_JOB:
@@ -204,10 +405,6 @@ int ipp_reply(ipp_server_t *ipp, ipp_request_t *req)
     }
     old_count = req->client->out.count;
 
-    if (req->last_error == IPP_STATUS_OK)
-    {
-        req->last_error = IPP_STATUS_ERROR_INTERNAL;
-    }
     // add reply header
     result  = ipp_write_int8(req, req->vmaj);
     result |= ipp_write_int8(req, req->vmin);
@@ -257,9 +454,11 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
 
     if (req->state[req->top] != prevstate || req->top != prevtop)
     {
-        butil_log(5, "ipp state %d [%d]\n",
-                req->state[req->top], req->top);
+        butil_log(5, "ipp state %s [%d]\n",
+                ipp_state_string(req->state[req->top]), req->top);
     }
+    result = 0;
+
     switch (req->state[req->top])
     {
     case reqHeader: // read in the IPP request header
@@ -268,7 +467,7 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
         result = ipp_wait_for_bytes(req, 8);
         if (result)
         {
-            return result;
+            break;
         }
         result  = ipp_read_int8(req, &req->vmaj);
         result |= ipp_read_int8(req, &req->vmin);
@@ -277,54 +476,114 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
         if (result)
         {
             BERROR("hdr read");
-            return result;
+            break;
         }
-        butil_log(5, "IPP %d.%d op=%04X reqid=%d\n", req->vmaj, req->vmin, req->opid, req->reqid);
+        butil_log(5, "IPP (%d) %d.%d op=%04X reqid=%d\n",
+                   result, req->vmaj, req->vmin, req->opid, req->reqid);
 
-        req->state[req->top] = reqAttributes;
+        result = ipp_move_state(req, reqAttributes);
         break;
 
     case reqAttributes: // incrementally parse attrubute groups
 
         // According to RFC 8010 3.1.1, there are 0 or more groups of
-        // attributes, so having no more input is here not a failure case here
+        // attributes, so having no more input is here not a failure case
         // even though all the IPP test suites insist that a request
         // has a charset and natural language operation attributes
         //
         result = ipp_read_int8(req, &tag);
         if (result < 0)
         {
-            return result;
+            BERROR("read attr");
+            break;
         }
         if (result > 0)
         {
-            // there are no attributes, dispatch this. this code will NOT
-            // be excersized by normal IPP testing tools as they always
-            // insert operation attributes so just go dispatch it
-            //
-            result = 0;
-            req->state[req->top] = reqDispatch;
+            if (req->download_complete)
+            {
+                // no more body data, and none coming
+
+                // there are no attributes, dispatch this. this code will NOT
+                // be exercised by normal IPP testing tools as they always
+                // insert operation attributes, so just go dispatch it
+                //
+                butil_log(5, "IPP Attributes all read, dispatch\n");
+
+                result = ipp_move_state(req, reqDispatch);
+                break;
+            }
+            else
+            {
+                // still downloading request, wait for more data
+                //
+                result = ipp_wait_for_bytes(req, 1);
+                break;
+            }
         }
         switch (tag)
         {
         case IPP_TAG_OPERATION:
+            result = ipp_push_state(req, reqOperationAttributes);
+            break;
+
         case IPP_TAG_JOB:
         case IPP_TAG_PRINTER:
         case IPP_TAG_DOCUMENT:
         case IPP_TAG_SYSTEM:
         default:
             req->last_error = IPP_STATUS_ERROR_BAD_REQUEST;
-            req->state[req->top] = reqReply;
+            result = ipp_move_state(req, reqReply);
+            break;
         }
         break;
 
     case reqOperationAttributes:
     case reqJobAttributes:
-    /*
     case reqPrinterAttributes:
     case reqDocumentAttributes:
     case reqSystemAttributes:
-    */
+
+        // start off attribute parsing
+        result = ipp_push_state(req, reqAttributeTag);
+        break;
+
+    case reqAttributeTag:
+
+        // fetch an attribute, or end-tag (which pops state)
+        result = ipp_get_attribute(req);
+        if (! result)
+        {
+            // if got an end tag, state will be lower than this state
+            // now, in which case, pop once more to get out of group
+            //
+            if (req->state[req->top] < reqAttributeTag)
+            {
+                butil_log(5, "End of Group, %s\n", ipp_state_string(req->state[req->top]));
+                result = ipp_pop_state(req);
+            }
+        }
+        break;
+
+    case reqAttributeNameLength:
+
+        result = ipp_get_name_length(req);
+        break;
+
+    case reqAttributeNameText:
+
+        result = ipp_get_name_text(req);
+        break;
+
+    case reqAttributeValueLength:
+
+        result = ipp_get_value_length(req);
+        break;
+
+    case reqAttributeValue:
+
+        result = ipp_get_value(req);
+        break;
+
     case reqValidation: // got all the attributes we're getting, so validate
 
         req->last_error = IPP_STATUS_OK;
@@ -346,7 +605,7 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
         }
         while (0); // catch
 
-        req->state[req->top] = reqDispatch;
+        result = ipp_move_state(req, reqDispatch);
         break;
 
     case reqDispatch:
@@ -356,22 +615,34 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
         result = ipp_dispatch(ipp, req);
         if (! result)
         {
-            req->state[req->top] = reqReply;
+            result = ipp_move_state(req, reqReply);
+            break;
         }
         break;
 
     case reqReply:
 
         result = ipp_reply(ipp, req);
+        if (! result)
+        {
+            result = ipp_move_state(req, reqDone);
+            break;
+        }
+        break;
+
+    case reqDone:
+
+        result = 0;
         break;
 
     case reqReadInput:
+
         if (client->in.count >= req->bytes_needed)
         {
             result = ipp_pop_state(req);
             if (result)
             {
-                return result;
+                break;
             }
         }
         break;
@@ -379,6 +650,6 @@ int ipp_process(ipp_server_t *ipp, ipp_request_t *req)
     default:
         break;
     }
-    return 0;
+    return result;
 }
 

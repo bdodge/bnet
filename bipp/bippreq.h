@@ -16,8 +16,12 @@
 #ifndef BIPPREQ_H
 #define BIPPREQ_H 1
 
+#include "bipperror.h"
+
 struct tag_ipp_server;
 
+// How deep the parsing state stack can go
+//
 #define IPP_REQ_MAX_STACK 16
 
 typedef enum
@@ -29,11 +33,17 @@ typedef enum
     reqPrinterAttributes,
     reqDocumentAttributes,
     reqSystemAttributes,
+    reqAttributeTag,
+    reqAttributeNameLength,
+    reqAttributeNameText,
+    reqAttributeValueLength,
+    reqAttributeValue,
     reqValidation,
     reqDispatch,
     reqReply,
     reqReadInput,
-    reqWriteOutput
+    reqWriteOutput,
+    reqDone
 }
 ipp_req_state_t;
 
@@ -41,21 +51,45 @@ ipp_req_state_t;
 //
 typedef struct tag_ipp_request
 {
-    ipp_req_state_t state[IPP_REQ_MAX_STACK];
-    size_t top;
-    size_t bytes_needed;
-    int    chunk_pos;
     struct tag_ipp_request *next;
-    http_client_t *client;
+    ipp_req_state_t state[IPP_REQ_MAX_STACK];
+    size_t          top;
 
-    int16_t  last_error;
+    size_t          bytes_needed;
+    int             chunk_pos;
+    http_client_t  *client;
+
+    bool            download_complete;
+    int             op_attr_count;
+    int             job_attr_count;
+
+    int16_t         last_error;
 
     // IPP request header. Yes spec says they are signed
     //
-    int8_t   vmaj, vmin;
-    int16_t  opid;
-    int16_t  status;
-    int32_t  reqid;
+    int8_t          vmaj, vmin;
+    int16_t         opid;
+    int16_t         status;
+    int32_t         reqid;
+
+    // current attribute parsing
+    //
+    int8_t          attr_tag;
+    uint16_t        attr_name_len;
+    char            attr_name[IPP_MAX_TEXT];
+    uint16_t        attr_value_len;
+    uint16_t        attr_bytes_remain;
+    union
+    {
+        int8_t      i8v;
+        uint8_t     u8v;
+        int16_t     i16v;
+        uint16_t    u16v;
+        int32_t     i32v;
+        uint32_t    u32v;
+        char        tv[IPP_MAX_TEXT];
+    }
+                    attr_value;
 }
 ipp_request_t;
 
@@ -66,6 +100,8 @@ int ipp_read_uint32     (ipp_request_t *req, uint32_t *val);
 int ipp_read_int8       (ipp_request_t *req, int8_t *val);
 int ipp_read_int16      (ipp_request_t *req, int16_t *val);
 int ipp_read_int32      (ipp_request_t *req, int32_t *val);
+
+int ipp_read_text       (ipp_request_t *req, char *text, uint16_t len);
 
 int ipp_write_uint8     (ipp_request_t *req, uint8_t val);
 int ipp_write_uint16    (ipp_request_t *req, uint16_t val);

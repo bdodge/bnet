@@ -12,9 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-	*
-	* Portions here adapted from CUPs source are:
-	*
+ *
+ * Portions here adapted from CUPs source are:
+ *
  * Copyright © 2007-2018 by Apple Inc.
  * Copyright © 1997-2006 by Easy Software Products.
  *
@@ -22,18 +22,18 @@
 #ifndef BIPPERROR_H
 #define BIPPERROR_H 1
 
-#  define IPP_MAX_CHARSET	64	/* Maximum length of charset values w/nul */
-#  define IPP_MAX_KEYWORD	256	/* Maximum length of keyword values w/nul */
-#  define IPP_MAX_LANGUAGE	64	/* Maximum length of naturalLanguage values w/nul */
-#  define IPP_MAX_LENGTH	32767	/* Maximum size of any single value */
-#  define IPP_MAX_MIMETYPE	256	/* Maximum length of mimeMediaType values w/nul */
-#  define IPP_MAX_NAME		256	/* Maximum length of common name values w/nul */
-#  define IPP_MAX_OCTETSTRING	1023	/* Maximum length of octetString values w/o nul */
-#  define IPP_MAX_TEXT		1024	/* Maximum length of text values w/nul */
-#  define IPP_MAX_URI		1024	/* Maximum length of uri values w/nul */
-#  define IPP_MAX_URISCHEME	64	/* Maximum length of uriScheme values w/nul */
-#  define IPP_MAX_VALUES	8	/* Power-of-2 allocation increment */
-
+/// Limits as defined by CUPS which should be good enough for us
+//
+#define IPP_MAX_CHARSET		64		// Maximum length of charset values w/nul
+#define IPP_MAX_KEYWORD		256		// Maximum length of keyword values w/nul
+#define IPP_MAX_LANGUAGE	64		// Maximum length of naturalLanguage values w/nul
+#define IPP_MAX_LENGTH		32767	// Maximum size of any single value
+#define IPP_MAX_MIMETYPE	256		// Maximum length of mimeMediaType values w/nul
+#define IPP_MAX_NAME		256		// Maximum length of common name values w/nul
+#define IPP_MAX_OCTETSTRING	1023	// Maximum length of octetString values w/o nul
+#define IPP_MAX_TEXT		1024	// Maximum length of text values w/nul
+#define IPP_MAX_URI			1024	// Maximum length of uri values w/nul
+#define IPP_MAX_URISCHEME	64		// Maximum length of uriScheme values w/nul
 
 typedef enum ipp_dstate_e		/**** Document states @exclude all@ ****/
 {

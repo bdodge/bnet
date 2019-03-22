@@ -18,6 +18,26 @@
 static butil_url_scheme_t s_ipp_scheme;
 static ipp_server_t s_ipp_server;
 
+static int ipp_stream_save_in_state(http_client_t *client, ioring_t *state)
+{
+    if (! client)
+    {
+        return -1;
+    }
+    memcpy(state, &client->in, sizeof(ioring_t));
+    return 0;
+}
+
+static int ipp_stream_restore_in_state(http_client_t *client, ioring_t *state)
+{
+    if (! client)
+    {
+        return -1;
+    }
+    memcpy(&client->in, state, sizeof(ioring_t));
+    return 0;
+}
+
 int ipp_canned_resource_callback(
                         http_client_t       *client,
                         http_resource_t     *resource,
@@ -61,6 +81,7 @@ int ipp_resource_callback(
 {
     ipp_server_t *ipp;
     ipp_request_t *req;
+    ioring_t instate;
     int result;
     int old_count;
     int meth;
@@ -125,6 +146,7 @@ int ipp_resource_callback(
         // wrong with the req url itself, the req can be aborted now
         //
         result = ipp_request(ipp, req);
+
         if (result)
         {
             // httpDone cb will clean us up
@@ -144,45 +166,68 @@ int ipp_resource_callback(
         //
         old_count = client->in.count;
 
+        // snapshot the input ring state since ipp_process uses it
+        // directly and http server thinks it owns it
+        //
+        ipp_stream_save_in_state(client, &instate);
+
         // since the whole request might not fit in a single io buffer the
         // req is processed incrementally each chance we get here
         //
         result = ipp_process(ipp, req);
 
-        // update count as how many bytes processing consumed
-        *count = old_count - client->in.count;
+        *count = (old_count - client->in.count);
+
+        // restore clients input state. (rewind). it will get updated
+        // by how many bytes we took in count
+        //
+        ipp_stream_restore_in_state(client, &instate);
+
         break;
 
     case httpDownloadDone:
 
         butil_log(5, "IPP download done cb\n");
 
-        result = ipp_process(ipp, req);
-        if (result)
+        // indicate no more body data
+        req->download_complete = true;
+
+        // ipp parsing might need multiple calls to get finished and
+        // dispatch the command, and put a reply in, so do that here
+        //
+        do
         {
-            // any errors that don't format a reply go to done state, else
-            // assume the request handler sent a specific reply already
-            //
-            if (client->state != httpSendReply)
+            result = ipp_process(ipp, req);
+            if (result)
             {
-                client->state = httpDone;
+                // any errors that don't format a reply go to done state, else
+                // assume the request handler sent a specific reply already
+                //
+                if (client->state != httpSendReply)
+                {
+                    client->state = httpDone;
+                }
+                else
+                {
+                    // allow reply out vs. http error
+                    result = 0;
+                }
             }
             else
             {
-                result = 0;
+                /*
+                if (client->state != httpSendReply)
+                {
+                    // ipp wants to continue, so move to usermethod state
+                    // which will call our method handler function
+                    //
+                    client->state = httpUserMethod;
+                }
+                */
             }
         }
-        else
-        {
-            if (client->state != httpSendReply)
-            {
-                // sip wants to continue, so move to usermethod state
-                // which will call our method handler function
-                //
-                client->state = httpUserMethod;
-            }
-            result = 0;
-        }
+        while (! result && req->state[req->top] != reqDone);
+
         break;
 
     case httpUploadData:
@@ -274,3 +319,4 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
     http_server_cleanup(&server);
     return result;
 }
+

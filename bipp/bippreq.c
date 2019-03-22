@@ -147,6 +147,34 @@ int ipp_read_int32(ipp_request_t *req, int32_t *val)
 	return ipp_read_uint32(req, (uint32_t*)val);
 }
 
+int ipp_read_text(ipp_request_t *req, char *text, uint16_t len)
+{
+	http_client_t *client;
+	int result;
+
+	if (! req || ! req->client)
+	{
+		return -1;
+	}
+	client = req->client;
+
+	if (client->in.count < len)
+	{
+		return 1;
+	}
+	while (len-- > 0)
+	{
+		*text++ = client->in.data[client->in.tail];
+		client->in.count--;
+		client->in.tail++;
+		if (client->in.tail >= client->in.size)
+		{
+			client->in.tail = 0;
+		}
+	}
+	return 0;
+}
+
 int ipp_write_uint8(ipp_request_t *req, uint8_t val)
 {
 	http_client_t *client;
@@ -370,6 +398,7 @@ int ipp_update_chunk_count(ipp_request_t *req, int chunksize)
 	http_client_t *client;
 	char chunk_str[8];
 	int cur_head;
+	int cur_count;
 	int result;
 
 	if (! req || ! req->client)
@@ -378,8 +407,9 @@ int ipp_update_chunk_count(ipp_request_t *req, int chunksize)
 	}
 	client = req->client;
 
-	// save current position in out buffer
-	cur_head = client->out.head;
+	// save current position and count in out buffer
+	cur_head  = client->out.head;
+	cur_count = client->out.count;
 
 	// seek to place reserved chunk count was placed
 	client->out.head = req->chunk_pos;
@@ -387,8 +417,9 @@ int ipp_update_chunk_count(ipp_request_t *req, int chunksize)
 	// write the chunk count there
 	result = ipp_write_chunk_count(req, chunksize);
 
-	// restore position
-	client->out.head = cur_head;
+	// restore position and count (had already reserved it)
+	client->out.head  = cur_head;
+	client->out.count = cur_count;
 	return result;
 }
 
@@ -403,8 +434,13 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 	req = ipp->req_free;
 	ipp->req_free = req->next;
 	req->client = client;
-	req->top = 0;
 	req->bytes_needed = 0;
+	req->download_complete = false;
+
+	req->op_attr_count = 0;
+	req->job_attr_count = 0;
+
+	req->top = 0;
 	req->state[0] = reqHeader;
 	return req;
 }

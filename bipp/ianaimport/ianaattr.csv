@@ -1,3 +1,0 @@
-groupname, name,member name, sub-member-name, syntax, reference
-Printer Status,printer-uri-supported,,,1setOf uri(MAX),[RFC8011]
-

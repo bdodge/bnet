@@ -418,27 +418,6 @@ int attr_typestring(ipp_syntax_enc_t type[IPP_MAX_ALT_TYPES], char *buffer, size
 	return 0;
 }
 
-static char *format_colname(const char *name, char *buffer, size_t nbuffer)
-{
-	const char *pn;
-	size_t i;
-
-	for (pn = name, i = 0; *pn && i < nbuffer - 1; i++)
-	{
-		if (*pn == '-')
-		{
-			buffer[i] = '_';
-		}
-		else
-		{
-			buffer[i] = *pn;
-		}
-		pn++;
-	}
-	buffer[i] = '\0';
-	return buffer;
-}
-
 typedef struct tag_art
 {
 	struct tag_art *left;
@@ -451,11 +430,76 @@ art_t;
 typedef struct tag_art_list
 {
 	struct tag_art_list *next;
+	struct tag_art_list *parent;
 	char   name[MAX_CSV_LINE];
-	char   recname[MAX_CSV_LINE];
 	art_t *tree;
 }
 art_list_t;
+
+static int format_colname(art_list_t *col, char *buffer, size_t nbuffer)
+{
+	const char *pn;
+	size_t i;
+
+	i = 0;
+
+	while (col)
+	{
+		for (pn = col->name; *pn && i < nbuffer - 1; i++)
+		{
+			if (*pn == '-')
+			{
+				buffer[i] = '_';
+			}
+			else
+			{
+				buffer[i] = *pn;
+			}
+			pn++;
+		}
+		if (i >= (nbuffer - 3))
+		{
+			butil_log(0, "Overflow name format\n");
+			return -1;
+		}
+		if (col->parent)
+		{
+			buffer[i++] = '_';
+			buffer[i++] = '_';
+		}
+		col = col->parent;
+	}
+	buffer[i] = '\0';
+	return 0;
+}
+
+static int format_colname_for_text(art_list_t *col, char *buffer, size_t nbuffer)
+{
+	const char *pn;
+	size_t i;
+
+	i = 0;
+
+	while (col)
+	{
+		for (pn = col->name; *pn && i < nbuffer - 1; i++)
+		{
+			buffer[i] = *pn++;
+		}
+		if (i >= (nbuffer - 3))
+		{
+			butil_log(0, "Overflow name format\n");
+			return -1;
+		}
+		if (col->parent)
+		{
+			buffer[i++] = '.';
+		}
+		col = col->parent;
+	}
+	buffer[i] = '\0';
+	return 0;
+}
 
 int add_attr(art_t **tree, ipp_attr_rec_t *attr)
 {
@@ -609,7 +653,7 @@ static void emit_attr_val(FILE *outfile, art_t *attr_tree, art_t *tree)
 	}
 	fprintf(outfile, "    {\n");
 	fprintf(outfile, "        %zu, // %s\n", index, tree->attr->name);
-	fprintf(outfile, "        %d,%d\n", 0, 0);
+	fprintf(outfile, "        %d,%d,\n", 0, 0);
 	fprintf(outfile, "        NULL,NULL\n");
 	fprintf(outfile, "    },\n");
 
@@ -658,6 +702,24 @@ void insert_collection(art_list_t **list, art_list_t *col)
 	}
 	preval->next = col;
 	col->next = NULL;
+}
+
+art_list_t *create_col(const char *name, art_list_t *parent)
+{
+	art_list_t *col;
+
+	col = (art_list_t *)malloc(sizeof(art_list_t));
+	if (! col)
+	{
+		butil_log(0, "Can't alloc collection\n");
+		return NULL;
+	}
+	strncpy(col->name, name, sizeof(col->name) -1);
+	col->name[sizeof(col->name) - 1] = '\0';
+	col->parent = parent;
+	col->tree = NULL;
+	col->next = NULL;
+	return col;
 }
 
 /*
@@ -727,6 +789,7 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 	char attr_name[MAX_CSV_LINE];
 	char syntax[MAX_CSV_LINE];
 	char member_name[MAX_CSV_LINE];
+	char sub_member_name[MAX_CSV_LINE];
 	ipp_attr_grouping_code_t group_code;
 	ipp_syntax_enc_t typespecs[IPP_MAX_ALT_TYPES];
 	art_t *atree;
@@ -762,7 +825,8 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 
 	// write header
 	//
-	fprintf(outfile, "/*\n * Generated File -- \n *\n * %s\n*/\n\n", pl);
+	fprintf(outfile, "/*\n * Generated File -- \n *\n*/\n\n");
+	fprintf(outfile, "#include \"bippattr.h\"\n\n");
 
 	while (pl != NULL)
 	{
@@ -796,6 +860,23 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 			butil_log(1, "%s:%zu Missing attribute name", fname, linenum);
 			return result;
 		}
+		// skip extensions/obsolete/deprecated
+		//
+		if (strstr(attr_name, "(deprecated)"))
+		{
+			butil_log(4, "Ingoring deprecated %s\n", attr_name);
+			continue;
+		}
+		if (strstr(attr_name, "(obsolete)"))
+		{
+			butil_log(4, "Ingoring obsolete %s\n", attr_name);
+			continue;
+		}
+		if (strstr(attr_name, "(extension)"))
+		{
+			butil_log(4, "Ingoring extension %s\n", attr_name);
+			continue;
+		}
 		// member name
 		result = get_column(pl, &pl, member_name, sizeof(member_name));
 		if (result)
@@ -804,7 +885,7 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 			return result;
 		}
 		// sub-member name
-		result = get_column(pl, &pl, token, sizeof(token));
+		result = get_column(pl, &pl, sub_member_name, sizeof(sub_member_name));
 		if (result)
 		{
 			butil_log(1, "%s:%zu Missing sub-member name", fname, linenum);
@@ -879,33 +960,71 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 
 		if (member_name[0])
 		{
-			// this is a member of current collection, so
-			// blank out member_name and use for attr_name
-			//
-			butil_log(5, "MEMBER %s of %s .............. %s\n",
-						member_name, attr_name, syntax, token);
-
 			ismember = true;
-			strcpy(attr_name, member_name);
-			member_name[0] = '\0';
 
 			if (! curcol)
 			{
-				butil_log(1, "No collection for member %s\n", member_name);
-				return -1;
+				// create a new collection for this first member
+				//
+				butil_log(5, " New Collection %s\n", attr_name);
+
+				curcol = create_col(attr_name, NULL);
+				if (! curcol)
+				{
+					return -1;
+				}
+				insert_collection(&collections, curcol);
+			}
+			if (sub_member_name[0])
+			{
+				if (! curcol->parent)
+				{
+					// first sub-collection member of a collection
+					// so create a new collection parenting current
+					//
+					butil_log(5, "   New Sub-Collection %s\n", member_name);
+
+					curcol = create_col(member_name, curcol);
+					if (! curcol)
+					{
+						return -1;
+					}
+					insert_collection(&collections, curcol);
+				}
+				butil_log(5, "    SUBMEMB %s of %s .......... %s\n",
+							sub_member_name, member_name, syntax);
+
+				// make attr_name the member name for listing this in curcol
+				//
+				strcpy(attr_name, sub_member_name);
+			}
+			else
+			{
+				if (curcol->parent)
+				{
+					butil_log(5, "   End sub-collection %s\n", curcol->name);
+					curcol = curcol->parent;
+				}
+				// if curcol has a parent, pop up, end of subcol
+				//
+				butil_log(5, "  MEMBER %s of %s .............. %s\n",
+							member_name, attr_name, syntax);
+				// make attr_name the member name for listing this in curcol
+				//
+				strcpy(attr_name, member_name);
 			}
 		}
 		else
 		{
-			butil_log(5, "ATTR %s %s .............. %s\n",
-						attr_name, syntax, token);
+			ismember = false;
 
 			if (curcol)
 			{
-				butil_log(5, " - and end collection %s\n", curcol->name);
+				butil_log(5, " - End collection %s\n", curcol->name);
 				curcol = NULL;
 			}
-			ismember = false;
+			butil_log(5, "ATTR %s %s .............. %s\n",
+						attr_name, syntax, token);
 
 			// add the non-member attribute to it's group tree
 			//
@@ -928,37 +1047,9 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 				butil_log(0, "Can't add attr\n");
 				return result;
 			}
-
-			// for collection types, create a collection record
-			//
-			iscollection = false;
-			for (typedex = 0; typedex < IPP_MAX_ALT_TYPES; typedex++)
-			{
-				if ((typespecs[typedex] & ~IPP_ARRAY) == IPP_COLLECTION)
-				{
-					iscollection = true;
-					break;
-				}
-			}
-			if (iscollection)
-			{
-				// change attr name format into C friendly name
-				format_colname(attr_name, member_name, sizeof(member_name));
-
-				curcol = (art_list_t *)malloc(sizeof(art_list_t));
-				if (! curcol)
-				{
-					butil_log(0, "Can't alloc collection\n");
-					return -1;
-				}
-				strcpy(curcol->name, attr_name);
-				strcpy(curcol->recname, member_name);
-				curcol->tree = NULL;
-				curcol->next = NULL;
-
-				insert_collection(&collections, curcol);
-			}
 		}
+		// create an attribute for the attr/memb/submemb
+		//
 		attr = create_attr(
 						attr_name,
 						member_name,
@@ -995,8 +1086,24 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 	//
 	for (curcol = collections; curcol; curcol = curcol->next)
 	{
+		result = format_colname(curcol, member_name, sizeof(member_name));
+		if (result)
+		{
+			butil_log(0, "Format name %s for collection failed\n",
+				curcol->name);
+			return result;
+		}
+		result = format_colname_for_text(curcol, sub_member_name, sizeof(sub_member_name));
+		if (result)
+		{
+			butil_log(0, "Format name %s for collection failed\n",
+				curcol->name);
+			return result;
+		}
+		fprintf(outfile, "// Members of collection %s\n//\n",
+				sub_member_name);
 		fprintf(outfile, "ipp_attr_rec_t s_ipp_col_%s[] = \n{\n",
-				curcol->recname);
+				member_name);
 		s_attr_index = 0;
 		emit_attrs(outfile, curcol->tree);
 		fprintf(outfile, "};\n\n");
@@ -1018,11 +1125,25 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 
 	for (curcol = collections; curcol; curcol = curcol->next)
 	{
+		result = format_colname(curcol, member_name, sizeof(member_name));
+		if (result)
+		{
+			butil_log(0, "Format name %s for collection failed\n",
+				curcol->name);
+			return result;
+		}
+		result = format_colname_for_text(curcol, sub_member_name, sizeof(sub_member_name));
+		if (result)
+		{
+			butil_log(0, "Format name %s for collection failed\n",
+				curcol->name);
+			return result;
+		}
 		snprintf(token, sizeof(token),
 				"(sizeof(s_ipp_col_%s)/sizeof(ipp_attr_rec_t))",
-				curcol->recname);
-		fprintf(outfile, "    { \"%s\", s_ipp_col_%s, %s }\n",
-				curcol->name, curcol->recname, token);
+				member_name);
+		fprintf(outfile, "    { \"%s\", s_ipp_col_%s, %s },\n",
+				sub_member_name, member_name, token);
 	}
 	fprintf(outfile, "};\n\n");
 
@@ -1046,9 +1167,9 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 	// finally, a cross refernce table from group type to group table
 	//
 	fprintf(outfile, "struct tag_grp_xref\n{\n");
-	fprintf(outfile, "    char           *group_pname;\n");
-	fprintf(outfile, "    ipp_attr_t     *group_attrs;\n");
-	fprintf(outfile, "    size_t          num_attr;\n");
+	fprintf(outfile, "    ipp_attr_grouping_code_t  group_pname;\n");
+	fprintf(outfile, "    ipp_attr_t               *group_attrs;\n");
+	fprintf(outfile, "    size_t                    num_attr;\n");
 	fprintf(outfile, "}\ns_ipp_group_xref[] =\n{\n");
 
 	for (typedex = 0; typedex < IPP_GROUPING_SUBSCRIPTION_TEMPLATE; typedex++)

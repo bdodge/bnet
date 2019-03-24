@@ -94,7 +94,7 @@ ipp_attr_rec_t;
 //
 typedef struct tag_attr
 {
-    ipp_attr_rec_t         *rec;        ///< describing attribute record
+    size_t                  recdex;     ///< index into attributes describing this one
     size_t                  len;        ///< length of encoded attribute (bytes)
     size_t                  alloc_len;  ///< bytes allocated for encoded store
     uint8_t                *val;        ///< encoded attribute value(s)

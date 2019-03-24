@@ -783,7 +783,13 @@ int get_column(char *pl, char **epl, char *out, size_t nout)
 	return 0;
 }
 
-int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
+int iana_parse_attributes(
+						const char *fname,
+						const char *hdrname,
+						FILE *infile,
+						FILE *hdrfile,
+						FILE *srcfile
+						)
 {
 	char token[MAX_CSV_LINE];
 	char attr_name[MAX_CSV_LINE];
@@ -806,7 +812,7 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 	bool iscollection;
 	int result;
 
-	if (! infile || ! outfile)
+	if (! infile || ! hdrfile || ! srcfile)
 	{
 		return -1;
 	}
@@ -825,8 +831,12 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 
 	// write header
 	//
-	fprintf(outfile, "/*\n * Generated File -- \n *\n*/\n\n");
-	fprintf(outfile, "#include \"bippattr.h\"\n\n");
+	fprintf(hdrfile, "/*\n * Generated File -- Consider not editing\n *\n*/\n");
+	fprintf(hdrfile, "#ifndef BIANA_ATTRIBS_H\n#define BIANA_ATTRIBS_H 1\n\n");
+	fprintf(hdrfile, "#include \"bippattr.h\"\n\n");
+
+	fprintf(srcfile, "/*\n * Generated File -- Consider not editing\n */\n");
+	fprintf(srcfile, "#include \"%s\"\n\n", hdrname);
 
 	while (pl != NULL)
 	{
@@ -1100,13 +1110,13 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 				curcol->name);
 			return result;
 		}
-		fprintf(outfile, "// Members of collection %s\n//\n",
+		fprintf(srcfile, "// Members of collection %s\n//\n",
 				sub_member_name);
-		fprintf(outfile, "ipp_attr_rec_t s_ipp_col_%s[] = \n{\n",
+		fprintf(srcfile, "ipp_attr_rec_t s_ipp_col_%s[] = \n{\n",
 				member_name);
 		s_attr_index = 0;
-		emit_attrs(outfile, curcol->tree);
-		fprintf(outfile, "};\n\n");
+		emit_attrs(srcfile, curcol->tree);
+		fprintf(srcfile, "};\n\n");
 	}
 	// create a cross reference table of collection name
 	// to collection record. This avoids direct linking of
@@ -1117,11 +1127,14 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 	// the text-based run time linking is a but less efficient
 	// but way easier to follow and understand
 	//
-	fprintf(outfile, "struct tag_col_xref\n{\n");
-	fprintf(outfile, "    char           *name;\n");
-	fprintf(outfile, "    ipp_attr_rec_t *col_attr;\n");
-	fprintf(outfile, "    size_t          num_members;\n");
-	fprintf(outfile, "}\ns_ipp_collection_xref[] =\n{\n");
+	fprintf(hdrfile, "typedef struct tag_col_xref\n{\n");
+	fprintf(hdrfile, "    char           *name;\n");
+	fprintf(hdrfile, "    ipp_attr_rec_t *col_attr;\n");
+	fprintf(hdrfile, "    size_t          num_members;\n");
+	fprintf(hdrfile, "}\nipp_collection_xref_t;\n\n");
+
+	fprintf(srcfile, "struct tag_col_xref ");
+	fprintf(srcfile, "s_ipp_collection_xref[] =\n{\n");
 
 	for (curcol = collections; curcol; curcol = curcol->next)
 	{
@@ -1142,47 +1155,50 @@ int iana_parse_attributes(const char *fname, FILE *infile, FILE *outfile)
 		snprintf(token, sizeof(token),
 				"(sizeof(s_ipp_col_%s)/sizeof(ipp_attr_rec_t))",
 				member_name);
-		fprintf(outfile, "    { \"%s\", s_ipp_col_%s, %s },\n",
+		fprintf(srcfile, "    { \"%s\", s_ipp_col_%s, %s },\n",
 				sub_member_name, member_name, token);
 	}
-	fprintf(outfile, "};\n\n");
+	fprintf(srcfile, "};\n\n");
 
 	// go through attribute tree and emit alphabetized list
 	//
-	fprintf(outfile, "ipp_attr_rec_t s_ipp_attributes[] =\n{\n");
+	fprintf(srcfile, "ipp_attr_rec_t s_ipp_attributes[] =\n{\n");
 	s_attr_index = 0;
-	emit_attrs(outfile, atree);
-	fprintf(outfile, "};\n\n");
+	emit_attrs(srcfile, atree);
+	fprintf(srcfile, "};\n\n");
 
 	// for each group, output a group tree for holding values
 	//
 	for (typedex = 0; typedex < IPP_GROUPING_SUBSCRIPTION_TEMPLATE; typedex++)
 	{
-		fprintf(outfile, "ipp_attr_t s_ipp_attr_group_%s[] =\n{\n",
+		fprintf(srcfile, "ipp_attr_t s_ipp_attr_group_%s[] =\n{\n",
 				group_code_to_name(typedex, true));
-		emit_attr_val(outfile, atree, gtrees[typedex]);
-		fprintf(outfile, "};\n\n");
+		emit_attr_val(srcfile, atree, gtrees[typedex]);
+		fprintf(srcfile, "};\n\n");
 	}
 
 	// finally, a cross refernce table from group type to group table
 	//
-	fprintf(outfile, "struct tag_grp_xref\n{\n");
-	fprintf(outfile, "    ipp_attr_grouping_code_t  group_pname;\n");
-	fprintf(outfile, "    ipp_attr_t               *group_attrs;\n");
-	fprintf(outfile, "    size_t                    num_attr;\n");
-	fprintf(outfile, "}\ns_ipp_group_xref[] =\n{\n");
+	fprintf(hdrfile, "typedef struct tag_grp_xref\n{\n");
+	fprintf(hdrfile, "    ipp_attr_grouping_code_t  group_pname;\n");
+	fprintf(hdrfile, "    ipp_attr_t               *group_attrs;\n");
+	fprintf(hdrfile, "    size_t                    num_attr;\n");
+	fprintf(hdrfile, "}\nipp_group_xref_t;\n\n");
+
+	fprintf(srcfile, "ipp_group_xref_t s_ipp_group_xref[] =\n{\n");
 
 	for (typedex = 0; typedex < IPP_GROUPING_SUBSCRIPTION_TEMPLATE; typedex++)
 	{
-		fprintf(outfile, "    { %s, s_ipp_attr_group_%s, "
+		fprintf(srcfile, "    { %s, s_ipp_attr_group_%s, "
 				"(sizeof(s_ipp_attr_group_%s)/sizeof(ipp_attr_t)) },\n",
 				group_code_to_name(typedex, false),
 				group_code_to_name(typedex, true),
 				group_code_to_name(typedex, true)
 				);
 	}
-	fprintf(outfile, "};\n\n");
+	fprintf(srcfile, "};\n\n");
 
+	fprintf(hdrfile, "#endif\n");
 	return 0;
 }
 

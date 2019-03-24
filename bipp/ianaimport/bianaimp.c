@@ -45,10 +45,12 @@ static int ianaimp_nomem_blurb(const char *msg)
 int main(int argc, char **argv)
 {
     FILE       *infile;
+    FILE       *hdrfile;
     FILE       *srcfile;
     char       *progname;
     char       *infilename;
     char        infilepath[MAX_PATH*2];
+    char        hdrfilename[MAX_PATH];
     char        srcfilename[MAX_PATH];
     bool        import_attr;
     int         loglevel;
@@ -65,6 +67,8 @@ int main(int argc, char **argv)
     argc--;
     argv++;
 
+
+    hdrfilename[0] = '\0';
     srcfilename[0] = '\0';
 
     while (argc > 0 && *argv && *argv[0] == '-')
@@ -75,6 +79,8 @@ int main(int argc, char **argv)
             {
                 argc--;
                 argv++;
+                strcpy(hdrfilename, *argv);
+                strcat(hdrfilename, ".h");
                 strcpy(srcfilename, *argv);
                 strcat(srcfilename, ".c");
             }
@@ -128,13 +134,26 @@ int main(int argc, char **argv)
         }
         if (import_attr)
         {
+            hdrfile = fopen(hdrfilename, "wb");
+            if (! hdrfile)
+            {
+                fclose(infile);
+                return ianaimp_nofile_blurb(hdrfilename);
+            }
             srcfile = fopen(srcfilename, "wb");
             if (! srcfile)
             {
                 fclose(infile);
+                fclose(hdrfile);
                 return ianaimp_nofile_blurb(srcfilename);
             }
-            result = iana_parse_attributes(srcfilename, infile, srcfile);
+            result = iana_parse_attributes(
+                                        *argv,
+                                        hdrfilename,
+                                        infile,
+                                        hdrfile,
+                                        srcfile
+                                        );
         }
         if (result)
         {
@@ -142,6 +161,8 @@ int main(int argc, char **argv)
             return result;
         }
     }
+    fclose(infile);
+    fclose(hdrfile);
     fclose(srcfile);
     return 0;
 }

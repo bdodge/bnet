@@ -829,10 +829,28 @@ int iana_parse_attributes(
 	pl = fgets(line, MAX_CSV_LINE, infile);
 	linenum++;
 
+	// uppercase format header file name
+	strncpy(token, hdrname, sizeof(token) - 1);
+	token[sizeof(token) - 1] = '\0';
+	for (pl = token; *pl; pl++)
+	{
+		if (*pl >= 'a' && *pl <= 'z')
+		{
+			*pl = *pl - 'a' + 'A';
+		}
+		else if (*pl == '.')
+		{
+			*pl = '_';
+		}
+		else if (*pl == '-')
+		{
+			*pl = '_';
+		}
+	}
 	// write header
 	//
 	fprintf(hdrfile, "/*\n * Generated File -- Consider not editing\n *\n*/\n");
-	fprintf(hdrfile, "#ifndef BIANA_ATTRIBS_H\n#define BIANA_ATTRIBS_H 1\n\n");
+	fprintf(hdrfile, "#ifndef %s\n#define %s 1\n\n", token, token);
 	fprintf(hdrfile, "#include \"bippattr.h\"\n\n");
 
 	fprintf(srcfile, "/*\n * Generated File -- Consider not editing\n */\n");

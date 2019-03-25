@@ -17,6 +17,7 @@ bsnmp/bmibc/crap.*
 bsmtp/bsmtptest
 bsip/bsip
 bipp/bipp
+bipp/ianaimport/bianaimp
 
 # Prerequisites
 *.d

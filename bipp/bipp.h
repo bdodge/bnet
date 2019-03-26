@@ -27,6 +27,13 @@
 //
 typedef struct tag_ipp_server
 {
+    /// path and port we serve on
+    char path[IPP_MAX_TEXT];
+    uint16_t port;
+
+    /// serving uri, for convenience
+    char uri[IPP_MAX_TEXT];
+
     /// pool of ipp request contexts
     ipp_request_t req_pool[IPP_MAX_REQUESTS];
     ipp_request_t *req_free;

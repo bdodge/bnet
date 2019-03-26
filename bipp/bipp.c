@@ -36,6 +36,11 @@ static const char *ipp_state_string(ipp_req_state_t state)
     case reqValidation:             return "Validation";
     case reqDispatch:               return "Dispatch";
     case reqReply:                  return "Reply";
+    case reqReplyOneAttribute:      return "ReplyOneAttribute";
+    case reqReplyAttributeValue:    return "ReplyAttributeValue";
+    case reqReplyOperationAttributes:return "ReplyOperationAttributes";
+    case reqReplyJobAttributes:     return "ReplyJobAttributes";
+    case reqReplyPrinterAttributes: return "ReplyPrinterAttributes";
     case reqReadInput:              return "ReadInput";
     case reqWriteOutput:            return "WriteOutput";
     case reqDone:                   return "Done";
@@ -105,41 +110,6 @@ int ipp_set_error(ipp_request_t *req, int16_t ecode)
 }
 #endif
 
-/*
-int ipp_parse_attribute_and_value(ipp_request_t *req, int8_t tag)
-{
-    switch (tag)
-    {
-    case IPP_TAG_INTEGER:
-    case IPP_TAG_BOOLEAN:
-    case IPP_TAG_ENUM:
-    case IPP_TAG_STRING:
-    case IPP_TAG_DATE:
-    case IPP_TAG_RESOLUTION:
-    case IPP_TAG_RANGE:
-    case IPP_TAG_BEGIN_COLLECTION:
-    case IPP_TAG_TEXTLANG:
-    case IPP_TAG_NAMELANG:
-    case IPP_TAG_END_COLLECTION:
-    case IPP_TAG_TEXT:
-    case IPP_TAG_NAME:
-    case IPP_TAG_RESERVED_STRING:
-    case IPP_TAG_KEYWORD:
-    case IPP_TAG_URI:
-    case IPP_TAG_URISCHEME:
-    case IPP_TAG_CHARSET:
-    case IPP_TAG_LANGUAGE:
-    case IPP_TAG_MIMETYPE:
-    case IPP_TAG_MEMBERNAME:
-        break;
-    default:
-        butil_log(0, "Unknown attrib %02X\n", tag);
-        req->last_error = IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES;
-        return -1;
-    }
-}
-*/
-
 static int ipp_parse_value(ipp_request_t *req)
 {
     ipp_attr_t *attr;
@@ -180,7 +150,7 @@ static int ipp_parse_value(ipp_request_t *req)
         ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
         return result;
     }
-    attr = ipp_create_attr(recdex, req->attr_value_len, req->attr_value);
+    attr = ipp_create_attr(recdex, req->attr_value, req->attr_value_len);
     if (! attr)
     {
         butil_log(0, "Can't alloc attr\n");
@@ -334,13 +304,7 @@ int ipp_request(ipp_request_t *req)
     result |= http_append_reply(client, "Content-Type: application/ipp");
     result |= http_append_reply(client, "Transfer-Encoding: chunked");
     result |= http_append_connection_to_reply(client, false);
-    result |= http_append_reply(client, "");
-
-    // reserve 6 bytes for reply chunk count at top of reply
-    req->chunk_pos = client->out.head;
-    ipp_write_uint32(&client->out, 0);
-    ipp_write_uint8(&client->out, '\r');
-    ipp_write_uint8(&client->out, '\n');
+    // don't add a blank line, the chunk count will do that
     result = 0;
     return result;
 }
@@ -462,55 +426,207 @@ int ipp_dispatch(ipp_request_t *req)
     return 0;
 }
 
+int ipp_send_attribute(ipp_request_t *req)
+{
+    ipp_attr_rec_t *attrec;
+    ipp_attr_t *attr;
+    int room;
+    int result;
+    ipp_tag_t tag;
+    bool isarray;
+    size_t len;
+    uint16_t namelen;
+    uint16_t vallen;
+
+    // get current attribute sending
+    //
+    attr = req->cur_out_attr;
+    if (! attr)
+    {
+        return ipp_pop_state(req);
+    }
+    // get name for attr
+    //
+    result = ipp_get_attr_rec(attr, &attrec);
+    if (result || ! attrec)
+    {
+        return -1;
+    }
+    // translate internal syntax to ipp syntax for value type
+    //
+    result = ipp_syntax_for_enc_type(attrec->syntax, &tag, &isarray);
+    if (result)
+    {
+        return result;
+    }
+    // make sure there is room in the output buffer for the attribute's name/value
+    //
+    namelen = strlen(attrec->name);
+    vallen  = attr->value_len;
+
+    room = req->out.size - req->out.count;
+
+    len = (size_t)namelen + (size_t)vallen + 5;
+
+    if (len >= (HTTP_IO_SIZE - 8))
+    {
+        // the value is really big, send name first, then value
+        // we expect name at least to fit, but values can be huge
+        // so they are split into their own chunks if needed
+        //
+        if ((namelen + 3) > room)
+        {
+            // flush and come back exactly to here, room will be bigger
+            //
+            butil_log(5, "Flush output to add attribute name\n");
+            result = ipp_push_state(req, reqWriteOutput);
+        }
+        else
+        {
+            // setup to incrementally send value bytes
+            //
+            req->attr_out_value = attr->value;
+            req->attr_value_len = attr->value_len;
+
+            // write out name and come back to write value
+            //
+            result  = ipp_write_attribute_name(&req->out, tag, attrec->name);
+            result |= ipp_move_state(req, reqReplyAttributeValue);
+            if (! result)
+            {
+                result = ipp_push_state(req, reqWriteOutput);
+            }
+        }
+    }
+    else
+    {
+        if (len > room)
+        {
+            butil_log(5, "Flush output to add attribute\n");
+            result = ipp_push_state(req, reqWriteOutput);
+        }
+        else
+        {
+            result  = ipp_write_attribute_name(&req->out, tag, attrec->name);
+            result |= ipp_write_bytes(&req->out, attr->value, attr->value_len);
+            if (! result)
+            {
+                result = ipp_pop_state(req);
+            }
+            else
+            {
+                ipp_pop_state(req);
+            }
+            // move to next out attr to send
+            //
+            req->cur_out_attr = req->cur_out_attr->next;
+        }
+    }
+    return result;
+}
+
+int ipp_send_attribute_value(ipp_request_t *req)
+{
+    ipp_attr_t *attr;
+    int room;
+    int result;
+    size_t len;
+
+    // get current attribute sending
+    //
+    attr = req->cur_out_attr;
+    if (! attr)
+    {
+        return ipp_pop_state(req);
+    }
+    room = req->out.size - req->out.count;
+
+    if (room < 64)
+    {
+        butil_log(5, "Flush output to add (more) attribute value\n");
+        result = ipp_push_state(req, reqWriteOutput);
+    }
+    else
+    {
+        if (room > req->attr_value_len)
+        {
+            room = req->attr_value_len;
+        }
+        result = ipp_write_bytes(&req->out, req->attr_out_value, room);
+        if (! result)
+        {
+            req->attr_out_value += room;
+            req->attr_value_len -= room;
+
+            if (req->attr_value_len == 0)
+            {
+                butil_log(5, "Finished sending attribute value\n");
+                req->attr_out_value = NULL;
+                result = ipp_pop_state(req);
+
+                // move to next out attr to send
+                //
+                req->cur_out_attr = req->cur_out_attr->next;
+            }
+        }
+        else
+        {
+            ipp_pop_state(req);
+        }
+    }
+    return result;
+}
+
 int ipp_reply(ipp_request_t *req)
 {
     http_client_t *client;
-    int old_count;
-    int bytes_made;
     int result;
 
     if (! req || ! req->client)
     {
         return -1;
     }
-    client = req->client;
-
-    old_count = client->out.count;
-
     // add reply header
-    result  = ipp_write_int8(&client->out, req->vmaj);
-    result |= ipp_write_int8(&client->out, req->vmin);
-    result |= ipp_write_int16(&client->out, req->last_error);
-    result |= ipp_write_int32(&client->out, req->reqid);
+    result  = ipp_write_int8(&req->out, req->vmaj);
+    result |= ipp_write_int8(&req->out, req->vmin);
+    result |= ipp_write_int16(&req->out, req->last_error);
+    result |= ipp_write_int32(&req->out, req->reqid);
 
-    // and reply charset/language
-    result |= ipp_write_int8(&client->out, IPP_TAG_OPERATION);
-    result |= ipp_write_named_attribute(&client->out, IPP_TAG_CHARSET, "attributes-charset");
-    result |= ipp_write_text_attribute(&client->out, "utf-8");
-    result |= ipp_write_named_attribute(&client->out, IPP_TAG_LANGUAGE, "attributes-natural-language");
-    result |= ipp_write_text_attribute(&client->out, "en");
-    result |= ipp_write_int8(&client->out, IPP_TAG_END);
+    // and reply charset/language, always
+    result |= ipp_write_int8(&req->out, IPP_TAG_OPERATION);
+    result |= ipp_write_attribute_name(&req->out, IPP_TAG_CHARSET, "attributes-charset");
+    result |= ipp_write_attribute_text(&req->out, "utf-8");
+    result |= ipp_write_attribute_name(&req->out, IPP_TAG_LANGUAGE, "attributes-natural-language");
+    result |= ipp_write_attribute_text(&req->out, "en");
 
-    bytes_made = client->out.count - old_count;
-
-    // append a 0 chunk
-    result = ipp_write_chunk_count(&client->out, 0);
-
-    // back-annotate the chunk count
-    result = ipp_update_chunk_count(&client->out, req->chunk_pos, bytes_made);
-    if (result)
+    // if returning an error, ignore response attr groups and flush response
+    //
+    if (req->last_error != IPP_STATUS_OK)
     {
-        // not sure what to do here, really can't happen
-        BERROR("hdr write");
-        return result;
+        // finish operations group and go to done
+        //
+        result |= ipp_write_int8(&req->out, IPP_TAG_END);
+        if (result)
+        {
+            // means output buffer too small? can't happen in?
+            BERROR("hdr write");
+            return result;
+        }
+        result = ipp_move_state(req, reqDone);
     }
-    // send the reply
-    result = http_send_out_data(client, httpSendReply, httpKeepAlive);
-    if (result)
+    else
     {
-        return result;
+        // setup to incrementally upload response attributes
+        //
+        req->cur_out_group = IPP_OPER_ATTRS;
+        req->cur_out_attr = req->out_attrs[IPP_OPER_ATTRS];
+
+        // send the reply but come back to upload the response, starting
+        // with operation attributes
+        //
+        result = ipp_move_state(req, reqReplyOperationAttributes);
     }
-    return 0;
+    return result;
 }
 
 int ipp_process(ipp_request_t *req)
@@ -779,10 +895,93 @@ int ipp_process(ipp_request_t *req)
     case reqReply:
 
         result = ipp_reply(req);
+        break;
+
+    case reqReplyOneAttribute:
+
+        if (! req->cur_out_attr)
+        {
+            result = ipp_pop_state(req);
+        }
+        result = ipp_send_attribute(req);
+        break;
+
+    case reqReplyAttributeValue:
+
+        if (! req->attr_out_value || ! req->attr_value_len)
+        {
+            result = ipp_pop_state(req);
+        }
+        result = ipp_send_attribute_value(req);
+        break;
+
+    case reqReplyOperationAttributes:
+
         if (! result)
         {
+            req->cur_out_group = IPP_JOB_ATTRS;
+            req->cur_out_attr = req->out_attrs[IPP_JOB_ATTRS];
+            if (req->cur_out_attr)
+            {
+                result = ipp_move_state(req, reqReplyJobAttributes);
+                if (! result)
+                {
+                    result = ipp_write_int8(&req->out, IPP_TAG_JOB);
+                }
+                break;
+            }
+            req->cur_out_group = IPP_PRT_ATTRS;
+            req->cur_out_attr = req->out_attrs[IPP_PRT_ATTRS];
+            if (req->cur_out_attr)
+            {
+                if (! result)
+                {
+                    result = ipp_write_int8(&req->out, IPP_TAG_PRINTER);
+                }
+                result = ipp_move_state(req, reqReplyPrinterAttributes);
+                break;
+            }
+        }
+        result = ipp_move_state(req, reqDone);
+        break;
+
+    case reqReplyJobAttributes:
+
+        if (req->cur_out_attr)
+        {
+            req->cur_out_attr = req->cur_out_attr->next;
+        }
+        else
+        {
+            if (! result)
+            {
+                req->cur_out_group = IPP_PRT_ATTRS;
+                req->cur_out_attr = req->out_attrs[IPP_PRT_ATTRS];
+                if (req->cur_out_attr)
+                {
+                    if (! result)
+                    {
+                        result = ipp_write_int8(&req->out, IPP_TAG_PRINTER);
+                    }
+                    result = ipp_move_state(req, reqReplyPrinterAttributes);
+                    break;
+                }
+            }
             result = ipp_move_state(req, reqDone);
-            break;
+        }
+        break;
+
+    case reqReplyPrinterAttributes:
+
+        if (req->cur_out_attr)
+        {
+            ipp_push_state(req, reqReplyOneAttribute);
+        }
+        else
+        {
+            // end printer group, and move to done
+            result = ipp_write_int8(&req->out, IPP_TAG_END);
+            result = ipp_move_state(req, reqDone);
         }
         break;
 
@@ -803,6 +1002,21 @@ int ipp_process(ipp_request_t *req)
         }
         break;
 
+    case reqWriteOutput:
+
+        if (client->out.count == 0 && req->out.count == 0)
+        {
+            // nothing queued to send, go back to whatever we were doing
+            //
+            result = ipp_pop_state(req);
+            break;
+        }
+        // flush any buffered output to make room, buffer will already have
+        // chunk counts etc properly in it already
+        //
+        result = http_send_out_data(client, httpBodyUpload, httpBodyUpload);
+        break;
+
     default:
         break;
     }
@@ -820,6 +1034,10 @@ int ipp_process(ipp_request_t *req)
                 ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
             }
             result = ipp_move_state(req, reqReply);
+        }
+        else
+        {
+            result = ipp_move_state(req, reqDone);
         }
         result = 0;
     }

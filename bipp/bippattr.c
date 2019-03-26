@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 #include "bippattr.h"
+#include "bstreamio.h"
+#include "bippreq.h"
 #include "bipp.h"
 
 // include generated attribute tables
@@ -21,49 +23,7 @@
 #include "biana_attribs.h"
 #include "biana_attribs.c"
 
-ipp_attr_t *ipp_create_attr(size_t recdex, size_t value_len, uint8_t *value)
-{
-    ipp_attr_t *attr;
-
-    attr = (ipp_attr_t *)malloc(sizeof(ipp_attr_t));
-    if (! attr)
-    {
-        return NULL;
-    }
-    attr->recdex = recdex;
-    attr->len = 0;
-    attr->alloc_len = 0;
-    attr->val = NULL;
-
-    if (value && value_len)
-    {
-        attr->alloc_len = value_len;
-        attr->val = (uint8_t *)malloc(attr->alloc_len);
-        if (! attr->val)
-        {
-            free(attr);
-            return NULL;
-        }
-        memcpy(attr->val, value, value_len);
-    }
-    return attr;
-}
-
-int ipp_destroy_attr(ipp_attr_t *attr)
-{
-    if (! attr)
-    {
-        return -1;
-    }
-    if (attr->alloc_len)
-    {
-        free(attr->val);
-    }
-    free(attr);
-    return 0;
-}
-
-int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattr)
+int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattrec)
 {
     ipp_attr_t *attr;
     size_t top;
@@ -98,9 +58,9 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattr)
             {
                 *index = cur;
             }
-            if (pattr)
+            if (pattrec)
             {
-                *pattr = &s_ipp_attributes[cur];
+                *pattrec = &s_ipp_attributes[cur];
             }
             return 0;
         }
@@ -133,21 +93,293 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattr)
     {
         *index = 0;
     }
-    if (pattr)
+    if (pattrec)
     {
-        *pattr = NULL;
+        *pattrec = NULL;
     }
     butil_log(6, "Didn't find %s\n", name);
     return -1;
 }
 
+int ipp_get_attr_rec(ipp_attr_t *attr, ipp_attr_rec_t **pattrec)
+{
+    if (! attr)
+    {
+        return -1;
+    }
+    if (attr->recdex >= NUM_IPP_ATTRIBUTES)
+    {
+        return -2;
+    }
+    if (pattrec)
+    {
+        *pattrec = &s_ipp_attributes[attr->recdex];
+    }
+    return 0;
+}
+
 const char *ipp_name_of_attr(ipp_attr_t *attr)
 {
-    if (! attr || attr->recdex >= NUM_IPP_ATTRIBUTES)
+    ipp_attr_rec_t *attrec;
+    int result;
+
+    result = ipp_get_attr_rec(attr, &attrec);
+    if (result)
     {
         return "<nil>";
     }
-    return s_ipp_attributes[attr->recdex].name;
+    return attrec->name;
+}
+
+int ipp_syntax_for_enc_type(ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_t *tag, bool *is_array)
+{
+    if (! tag || ! is_array)
+    {
+        return -1;
+    }
+    *is_array = (enctag[0] | IPP_ARRAY) ? true : false;
+
+    switch (enctag[0] & ~IPP_ARRAY)
+    {
+    case IPP_CHARSET:
+        *tag = IPP_TAG_CHARSET;
+        break;
+    case IPP_LANGUAGE:
+        *tag = IPP_TAG_LANGUAGE;
+        break;
+    case IPP_INTEGER:
+        *tag = IPP_TAG_INTEGER;
+        break;
+    case IPP_BOOLEAN:
+        *tag = IPP_TAG_BOOLEAN;
+        break;
+    case IPP_ENUM:
+        *tag = IPP_TAG_ENUM;
+        break;
+    case IPP_KEYWORD:
+        *tag = IPP_TAG_KEYWORD;
+        break;
+
+    case IPP_TEXT:
+        *tag = IPP_TAG_TEXT;
+        break;
+    case IPP_NAME:
+        *tag = IPP_TAG_NAME;
+        break;
+    case IPP_OCTETSTRING:
+        *tag = IPP_TAG_STRING;
+        break;
+    case IPP_URI:
+        *tag = IPP_TAG_URI;
+        break;
+    case IPP_URISCHEME:
+        *tag = IPP_TAG_URISCHEME;
+        break;
+    case IPP_MIME:
+        *tag = IPP_TAG_MIMETYPE;
+        break;
+
+    case IPP_RESOLUTION:
+        *tag = IPP_TAG_RESOLUTION;
+        break;
+    case IPP_RANGEOFINT:
+        *tag = IPP_TAG_RANGE;
+        break;
+    case IPP_DATETIME:
+        *tag = IPP_TAG_DATE;
+        break;
+    case IPP_COLLECTION:
+        *tag = IPP_TAG_BEGIN_COLLECTION;
+        break;
+
+    default:
+        BERROR("Bad enctype");
+        *tag = IPP_TAG_UNKNOWN;
+        return -1;
+    }
+    return 0;
+}
+
+int ipp_set_attr_value(ipp_attr_t *attr, uint8_t *value, size_t value_len)
+{
+    if (! attr || ! value)
+    {
+        return -1;
+    }
+    if (attr->alloc_len < value_len || ! attr->value)
+    {
+        if (attr->value)
+        {
+            free(attr->value);
+            attr->value = NULL;
+        }
+        attr->alloc_len = value_len;
+        attr->value = (uint8_t *)malloc(value_len);
+        if (! attr->value)
+        {
+            return -1;
+        }
+    }
+    attr->value_len = value_len;
+    memcpy(attr->value, value, value_len);
+    return 0;
+}
+
+int ipp_add_attr_value(ipp_attr_t *attr, uint8_t *value, size_t *value_len)
+{
+}
+
+int ipp_get_first_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len)
+{
+    if (! attr)
+    {
+        return -1;
+    }
+    if (! attr->value)
+    {
+        return -2;
+    }
+    if (value)
+    {
+        *value = attr->value;
+    }
+    if (value_len)
+    {
+        *value_len = attr->value_len;
+    }
+    return 0;
+}
+
+int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len)
+{
+}
+
+int ipp_get_attr_by_index(const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr)
+{
+    ipp_group_xref_t *gxref;
+    ipp_attr_t *attr;
+    size_t count;
+
+    if (group >= IPP_GROUPING_MAX_GROUP)
+    {
+        return -1;
+    }
+    ///@todo sort the attributes in group by record and binary search on them?
+    /// instead of this linear search. it wouldn't be hard in ianaimport
+
+    gxref = &s_ipp_group_xref[group];
+
+    for (attr = gxref->group_attrs, count = 0; count < gxref->num_attr; attr++)
+    {
+        if (attr->recdex == recdex)
+        {
+            if (pattr)
+            {
+                *pattr = attr;
+            }
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int ipp_get_attr_by_name(const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr)
+{
+    ipp_attr_t *attr;
+    size_t recdex;
+    int result;
+
+    if (! name || ! pattr)
+    {
+        return -1;
+    }
+    result = ipp_find_attr_rec(name, &recdex, NULL);
+    if (result)
+    {
+        return result;
+    }
+    return ipp_get_attr_by_index(recdex, group, pattr);
+}
+
+int ipp_set_attr_string_value_by_name(const char *name, ipp_attr_grouping_code_t group, const char *str)
+{
+    ipp_attr_t *attr;
+    int result;
+
+    if (! name || ! str)
+    {
+        return -1;
+    }
+    result = ipp_get_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_set_attr_value(attr, (uint8_t *)str, strlen(str));
+    if (result)
+    {
+        return result;
+    }
+    return 0;
+}
+
+int ipp_get_attr_value_by_name(const char *name, ipp_attr_grouping_code_t group, uint8_t **value, size_t *value_len)
+{
+    ipp_attr_t *attr;
+    int result;
+
+    result = ipp_get_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_get_first_attr_value(attr, NULL, value, value_len);
+    if (result)
+    {
+        return result;
+    }
+    return 0;
+}
+
+ipp_attr_t *ipp_create_attr(size_t recdex, uint8_t *value, size_t value_len)
+{
+    ipp_attr_t *attr;
+    size_t result;
+
+    attr = (ipp_attr_t *)malloc(sizeof(ipp_attr_t));
+    if (! attr)
+    {
+        return NULL;
+    }
+    attr->recdex = recdex;
+    attr->value_len = 0;
+    attr->alloc_len = 0;
+    attr->value = NULL;
+
+    if (value)
+    {
+        result = ipp_set_attr_value(attr, value, value_len);
+        if (result)
+        {
+            free(attr);
+            return NULL;
+        }
+    }
+    return attr;
+}
+
+int ipp_destroy_attr(ipp_attr_t *attr)
+{
+    if (! attr)
+    {
+        return -1;
+    }
+    if (attr->alloc_len)
+    {
+        free(attr->value);
+    }
+    free(attr);
+    return 0;
 }
 
 int test_find_attr_rec()
@@ -195,3 +427,40 @@ int test_find_attr_rec()
     }
     return 0;
 }
+
+int test_set_get_string_attr()
+{
+    uint8_t *value;
+    size_t   value_len;
+    uint16_t vlen;
+    char *strval;
+    int result;
+
+    strval = "this is OK";
+
+    result = ipp_set_attr_string_value_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, strval);
+    if (result)
+    {
+        butil_log(0, "set str attr failed\n");
+        return result;
+    }
+    result = ipp_get_attr_value_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, &value, &value_len);
+    if (result)
+    {
+        butil_log(0, "get attr failed\n");
+        return result;
+    }
+    if (value_len != strlen(strval))
+    {
+        butil_log(0, "expected %u chars, got %zu\n", strlen(strval), value_len);
+        return -1;
+    }
+    if (strncmp((char*)value, strval, value_len))
+    {
+        butil_log(0, "value is not expected:%s\n", strval);
+        return -1;
+    }
+    return 0;
+
+}
+

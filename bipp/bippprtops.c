@@ -27,7 +27,7 @@ int ipp_printer_op_dispatch(ipp_request_t *req)
     {
         return -1;
     }
-    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "print-uri", &attr);
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "printer-uri", &attr);
     if (result)
     {
         ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
@@ -36,8 +36,14 @@ int ipp_printer_op_dispatch(ipp_request_t *req)
     switch (req->opid)
     {
     case IPP_OP_GET_PRINTER_ATTRIBUTES:
-        // fetch printer-uri-supported and add to printer attributes return
-        result = ipp_add_req_out_attribute(req, IPP_OPER_ATTRS, attr);
+        // fetch printer-attributes group and add to return
+        result = ipp_get_attr_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, &attr);
+        if (result)
+        {
+            ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+            break;
+        }
+        result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, attr);
         break;
     case IPP_OP_PRINT_JOB:
     case IPP_OP_PRINT_URI:
@@ -137,9 +143,9 @@ int ipp_printer_op_dispatch(ipp_request_t *req)
     case IPP_OP_STARTUP_ALL_PRINTERS:
     default:
         ipp_set_error(req, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED);
-        return 1;
+        result = -1;
     }
-    return 0;
+    return result;
 }
 
 

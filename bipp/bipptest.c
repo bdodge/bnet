@@ -122,7 +122,12 @@ int main(int argc, char **argv)
     {
         // unit test
         result = test_find_attr_rec();
+        result |= test_set_get_string_attr();
+        return result;
     }
-    return ipp_server(program, port, false);
+    else
+    {
+        return ipp_server(program, port, false);
+    }
 }
 

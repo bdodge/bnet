@@ -206,11 +206,11 @@ int ipp_write_int32(ioring_t *out, int32_t val)
 	return ipp_write_uint32(out, (uint32_t)val);
 }
 
-int ipp_write_text(ioring_t *out, const char *text, uint16_t len)
+int ipp_write_bytes(ioring_t *out, const uint8_t *bytes, uint16_t len)
 {
 	int result;
 
-	if (! out || ! text)
+	if (! out || ! bytes)
 	{
 		return -1;
 	}
@@ -221,14 +221,19 @@ int ipp_write_text(ioring_t *out, const char *text, uint16_t len)
 	result = ipp_write_uint16(out, len);
 	if (! result && (len > 0))
 	{
-		memcpy(out->data + out->head, text, len);
+		memcpy(out->data + out->head, bytes, len);
 		out->head += len;
-		out->count -= len;
+		out->count += len;
 	}
 	return result;
 }
 
-int ipp_write_text_attribute(ioring_t *out, const char *text)
+int ipp_write_text(ioring_t *out, const char *text, uint16_t len)
+{
+	return ipp_write_bytes(out, (const uint8_t *)text, len);
+}
+
+int ipp_write_attribute_text(ioring_t *out, const char *text)
 {
 	int result;
 	size_t len;
@@ -238,14 +243,14 @@ int ipp_write_text_attribute(ioring_t *out, const char *text)
 		return -1;
 	}
 	len = strlen(text);
-	if (len > 65535)
+	if (len > IPP_MAX_LENGTH)
 	{
 		return -2;
 	}
 	return ipp_write_text(out, text, len);
 }
 
-int ipp_write_named_attribute(ioring_t *out, int8_t tag, const char *text)
+int ipp_write_attribute_name(ioring_t *out, int8_t tag, const char *text)
 {
 	int result;
 
@@ -258,59 +263,7 @@ int ipp_write_named_attribute(ioring_t *out, int8_t tag, const char *text)
 	{
 		return result;
 	}
-	return ipp_write_text_attribute(out, text);
-}
-
-int ipp_write_chunk_count(ioring_t *out, int chunk)
-{
-	char chunk_str[8];
-	int result;
-
-	if (! out)
-	{
-		return -1;
-	}
-	snprintf(chunk_str, sizeof(chunk_str), "%04X", chunk);
-
-	result  = ipp_write_uint8(out, chunk_str[0]);
-	result |= ipp_write_uint8(out, chunk_str[1]);
-	result |= ipp_write_uint8(out, chunk_str[2]);
-	result |= ipp_write_uint8(out, chunk_str[3]);
-    result |= ipp_write_uint8(out, '\r');
-    result |= ipp_write_uint8(out, '\n');
-	if (chunk == 0)
-	{
-	    result |= ipp_write_uint8(out, '\r');
-	    result |= ipp_write_uint8(out, '\n');
-	}
-	return result;
-}
-
-int ipp_update_chunk_count(ioring_t *out, int chunkpos, int chunksize)
-{
-	char chunk_str[8];
-	int cur_head;
-	int cur_count;
-	int result;
-
-	if (! out)
-	{
-		return -1;
-	}
-	// save current position and count in out buffer
-	cur_head  = out->head;
-	cur_count = out->count;
-
-	// seek to place reserved chunk count was placed
-	out->head = chunkpos;
-
-	// write the chunk count there
-	result = ipp_write_chunk_count(out, chunksize);
-
-	// restore position and count (had already reserved it)
-	out->head  = cur_head;
-	out->count = cur_count;
-	return result;
+	return ipp_write_attribute_text(out, text);
 }
 
 int ipp_get_req_in_attribute(ipp_request_t *req, ipp_io_groups_t group, const char *name, ipp_attr_t **pattr)
@@ -380,6 +333,13 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 	req->in.size = 0;
 	req->in.head = 0;
 	req->in.tail = 0;
+	req->in.data = NULL;
+
+	req->out.count = 0;
+	req->out.size = 0;
+	req->out.head = 0;
+	req->out.tail = 0;
+	req->out.data = NULL;
 
 	req->op_attr_count = 0;
 	req->job_attr_count = 0;

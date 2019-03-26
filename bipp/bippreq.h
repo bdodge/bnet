@@ -18,6 +18,7 @@
 
 #include "bippproto.h"
 #include "bippattr.h"
+#include "bhttp.h"
 
 struct tag_ipp_server;
 
@@ -40,6 +41,11 @@ typedef enum
     reqValidation,
     reqDispatch,
     reqReply,
+    reqReplyOneAttribute,
+    reqReplyAttributeValue,
+    reqReplyOperationAttributes,
+    reqReplyJobAttributes,
+    reqReplyPrinterAttributes,
     reqReadInput,
     reqWriteOutput,
     reqDone
@@ -65,6 +71,7 @@ typedef struct tag_ipp_request
     size_t          top;
 
     ioring_t        in;
+    ioring_t        out;
     size_t          bytes_needed;
     int             chunk_pos;
     http_client_t  *client;
@@ -99,19 +106,9 @@ typedef struct tag_ipp_request
     char            attr_value[IPP_MAX_LENGTH];
     uint16_t        attr_value_len;
     uint16_t        attr_bytes_read;
-    /*
-    union
-    {
-        int8_t      i8v;
-        uint8_t     u8v;
-        int16_t     i16v;
-        uint16_t    u16v;
-        int32_t     i32v;
-        uint32_t    u32v;
-        char        tv[IPP_MAX_TEXT];
-    }
-                    attr_value;
-    */
+
+    // for incrementally sending attr value
+    uint8_t        *attr_out_value;
 }
 ipp_request_t;
 
@@ -133,12 +130,10 @@ int ipp_write_int8      (ioring_t *in, int8_t val);
 int ipp_write_int16     (ioring_t *in, int16_t val);
 int ipp_write_int32     (ioring_t *in, int32_t val);
 
+int ipp_write_bytes             (ioring_t *out, const uint8_t *bytes, uint16_t len);
 int ipp_write_text              (ioring_t *out, const char *text, uint16_t len);
-int ipp_write_text_attribute    (ioring_t *out, const char *text);
-int ipp_write_named_attribute   (ioring_t *out, int8_t tag, const char *text);
-
-int ipp_write_chunk_count       (ioring_t *out, int chunk);
-int ipp_update_chunk_count      (ioring_t *out, int chunkpos, int chunksize);
+int ipp_write_attribute_text    (ioring_t *out, const char *text);
+int ipp_write_attribute_name    (ioring_t *out, int8_t tag, const char *text);
 
 int ipp_get_req_in_attribute    (
                                 ipp_request_t  *req,

@@ -17,6 +17,7 @@
 #define BIPPATTR_H 1
 
 #include "bnetheaders.h"
+#include "bippproto.h"
 
 /// IPP data types. This is for internal representation only. It would be
 /// nice to use the same types as IPP but they are haphazard and can't
@@ -67,6 +68,7 @@ typedef enum
     IPP_GROUPING_PRINTER_STATUS,
     IPP_GROUPING_SUBSCRIPTION_STATUS,
     IPP_GROUPING_SUBSCRIPTION_TEMPLATE,
+    IPP_GROUPING_MAX_GROUP
 }
 ipp_attr_grouping_code_t;
 
@@ -95,20 +97,44 @@ ipp_attr_rec_t;
 typedef struct tag_attr
 {
     size_t                  recdex;     ///< index into attributes describing this one
-    size_t                  len;        ///< length of encoded attribute (bytes)
+    size_t                  value_len;  ///< length of encoded attribute (bytes)
     size_t                  alloc_len;  ///< bytes allocated for encoded store
-    uint8_t                *val;        ///< encoded attribute value(s)
+    uint8_t                *value;      ///< encoded attribute value(s)
     struct tag_attr        *next;       ///< for listing, in general
 }
 ipp_attr_t;
 
-ipp_attr_t *ipp_create_attr     (size_t recdex, size_t value_len, uint8_t *value);
-int         ipp_destroy_attr    (ipp_attr_t *attr);
+/// Attribute value iterator context
+//
+typedef struct tag_attr_iter
+{
+    size_t                  val_count;  ///< which value iteration is on
+    uint8_t                *val_ptr;    ///< where in value
+}
+ipp_attr_iter_t;
 
 int         ipp_find_attr_rec   (const char *name, size_t *pindex, ipp_attr_rec_t **pattr);
+int         ipp_get_attr_rec    (ipp_attr_t *attr, ipp_attr_rec_t **pattrec);
 const char *ipp_name_of_attr    (ipp_attr_t *attr);
 
+int ipp_syntax_for_enc_type     (ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_t *tag, bool *is_array);
+
+int ipp_set_attr_value          (ipp_attr_t *attr, uint8_t *value, size_t value_len);
+int ipp_add_attr_value          (ipp_attr_t *attr, uint8_t *value, size_t *value_len);
+int ipp_get_first_attr_value    (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
+int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len);
+
+int ipp_get_attr_by_index       (const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
+int ipp_get_attr_by_name        (const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
+
+int ipp_set_attr_string_value_by_name(const char *name, ipp_attr_grouping_code_t group, const char *str);
+int ipp_get_attr_value_by_name  (const char *name, ipp_attr_grouping_code_t group, uint8_t **value, size_t *value_len);
+
+ipp_attr_t *ipp_create_attr     (size_t recdex, uint8_t *value, size_t value_len);
+int         ipp_destroy_attr    (ipp_attr_t *attr);
+
 int test_find_attr_rec(void);
+int test_set_get_string_attr(void);
 
 #endif
 

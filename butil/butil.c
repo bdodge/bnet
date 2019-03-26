@@ -607,6 +607,8 @@ int butil_paste_url(
     size_t len;
     uint16_t useport = port;
     const char *schemestr;
+    char schemelc[BUTIL_MAX_URL_SCHEME];
+    char *ps;
 
     if (! url)
     {
@@ -619,6 +621,17 @@ int butil_paste_url(
         BERROR("Invalid Scheme");
         return -1;
     }
+    // convert scheme name to lower case to be consistent with url schemes
+    //
+    strncpy(schemelc, schemestr, sizeof(schemelc) - 1);
+    schemelc[sizeof(schemelc) - 1] = '\0';
+    for (ps = schemelc; *ps; ps++)
+    {
+        if (*ps >= 'A' && *ps <= 'Z')
+        {
+            *ps = *ps - 'A' + 'a';
+        }
+    }
     if (! host)
     {
         BERROR("Missing Hostname");
@@ -626,14 +639,18 @@ int butil_paste_url(
     }
     if (! useport)
     {
-        useport = strcasecmp(schemestr, "https") ? 443 : 80;
+        useport = strcasecmp(schemelc, "https") ? 443 : 80;
     }
     if (! path)
     {
         path = "";
     }
+    if (*path == '/')
+    {
+        path++;
+    }
     len = snprintf(url, nurl,
-            "%s://%s:%u/%s", schemestr, host, useport, path);
+            "%s://%s:%u/%s", schemelc, host, useport, path);
     if (len < 0 || len >= nurl)
     {
         BERROR("Pasted url too long");

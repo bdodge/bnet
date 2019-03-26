@@ -2340,14 +2340,18 @@ int http_client_slice(http_client_t *client)
             uint8_t *content;
             size_t   count, room;
 
-            // rotate output buffer to ensure max contiguous data
-            // this should be a noop, unless something went wrong
+            // rotate output buffer to ensure max contiguous data area
+            // to hand to upload callback. normally this is already aligned
+            // but callback code might want to combine reply with data in one
+            // chunk for performance/convenience, or combine incrementally
+            // generated output for the same reasons, so out might have data
+            // in it already. In any case, this is more performant for m
+            // callback code vs. it having to check for head wrap, etc.
             //
-            if (client->out.tail != 0)
-            {
-                HTTP_ERROR("Out buffer not normalized");
-                iostream_normalize_ring(&client->out, NULL);
-            }
+            iostream_normalize_ring(&client->out, NULL);
+
+            // point to out buffer the caller can use to fill data into
+            //
             content = client->out.data + client->out.head;
             room    = client->out.size - client->out.count;
 
@@ -2491,7 +2495,7 @@ int http_client_slice(http_client_t *client)
                 if (count > 0 && client->out_transfer_type == httpChunked)
                 {
                     // back annotate chunk count
-                    snprintf((char *)content - 8, 8, "\r\n%04X\r", i);
+                    snprintf((char *)content - 8, 8, "\r\n%04X\r", bodyCount);
                     content[-1] = '\n';
                     bodyCount += 8;
                 }

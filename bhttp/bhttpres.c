@@ -631,7 +631,7 @@ http_resource_t *http_match_resource(
 
     for (resource = resources; resource; resource = resource->next)
     {
-        http_log(5, "Compare resource %s:%s:%s to %s:%s:%s\n",
+        http_log(7, "Compare resource %s:%s:%s to %s:%s:%s\n",
                 butil_scheme_name(resource->scheme),
                 http_restype_name(resource->type),
                 resource->urlbase,
@@ -642,7 +642,7 @@ http_resource_t *http_match_resource(
         {
             if (! pattern_match(urlpath, resource->urlbase))
             {
-                http_log(5, "Matched resource %s:%s:%s to %s:%s:%s\n",
+                http_log(6, "Matched resource %s:%s:%s to %s:%s:%s\n",
                         butil_scheme_name(resource->scheme),
                         http_restype_name(resource->type),
                         resource->urlbase,

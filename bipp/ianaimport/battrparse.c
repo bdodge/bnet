@@ -536,8 +536,8 @@ int add_attr(art_t **tree, ipp_attr_rec_t *attr)
 	{
 		// ensure attrs type match?
 		butil_log(5, "Duplicate attr %s\n", attr->name);
-		return 0;
 	}
+	return 0;
 }
 
 static ipp_attr_rec_t *create_attr(
@@ -571,6 +571,18 @@ static ipp_attr_rec_t *create_attr(
 	attr->minval = minval;
 	attr->maxval = maxval;
 	return attr;
+}
+
+static void destroy_attr(ipp_attr_rec_t *attr)
+{
+	if (attr)
+	{
+		if (attr->name)
+		{
+			free((char*)attr->name);
+		}
+		free(attr);
+	}
 }
 
 static void emit_attrs(FILE *outfile, art_t *tree)
@@ -608,6 +620,25 @@ static void emit_attrs(FILE *outfile, art_t *tree)
 	}
 }
 
+static void delete_tree(art_t *tree)
+{
+	if (! tree)
+	{
+		return;
+	}
+	if (tree->left)
+	{
+		delete_tree(tree->left);
+		tree->left = NULL;
+	}
+	if (tree->right)
+	{
+		delete_tree(tree->right);
+		tree->right = NULL;
+	}
+	free(tree);
+}
+
 static art_t *find_attr(art_t *tree, const char *name)
 {
 	int cmp;
@@ -628,19 +659,13 @@ static art_t *find_attr(art_t *tree, const char *name)
 	return tree;
 }
 
-static void emit_attr_val(FILE *outfile, art_t *attr_tree, art_t *tree)
+static int add_attr_by_index(art_t *attr_tree, art_t *tree, art_t **newtree)
 {
+	art_t *ptree;
 	art_t *art;
-	size_t index;
+	int index;
+	int cmp;
 
-	if (! tree || ! attr_tree)
-	{
-		return;
-	}
-	if (tree->left)
-	{
-		emit_attr_val(outfile, attr_tree, tree->left);
-	}
 	art = find_attr(attr_tree, tree->attr->name);
 	if (art)
 	{
@@ -649,17 +674,95 @@ static void emit_attr_val(FILE *outfile, art_t *attr_tree, art_t *tree)
 	else
 	{
 		butil_log(1, "Attr %s not in list\n", attr_tree->attr->name);
+		return -1;
+	}
+	if (! *newtree)
+	{
+		art = (art_t *)malloc(sizeof(art_t));
+		if (! art)
+		{
+			return -1;
+		}
+		art->left = NULL;
+		art->right = NULL;
+		art->attr = tree->attr;
+		art->index = index;
+		*newtree = art;
+		return 0;
+	}
+	ptree = *newtree;
+
+	if (index < ptree->index)
+	{
+		return add_attr_by_index(attr_tree, tree, &ptree->left);
+	}
+	else if (index > ptree->index)
+	{
+		return add_attr_by_index(attr_tree, tree, &ptree->right);
+	}
+	else
+	{
+		// ensure attrs type match?
+		butil_log(5, "Duplicate attr by index %s %zu\n", tree->attr->name, index);
+		return -1;
+	}
+	return 0;
+}
+
+static int resort_tree_by_index(art_t *attr_tree, art_t *tree, art_t **newtree)
+{
+	int result;
+
+	if (! newtree)
+	{
+		return -1;
+	}
+	if (! tree)
+	{
+		*newtree = NULL;
+		return 0;
+	}
+	if (tree->left)
+	{
+		result = resort_tree_by_index(attr_tree, tree->left, newtree);
+		if (result)
+		{
+			return result;
+		}
+	}
+	if (tree->right)
+	{
+		result = resort_tree_by_index(attr_tree, tree->right, newtree);
+		if (result)
+		{
+			return result;
+		}
+	}
+	return add_attr_by_index(attr_tree, tree, newtree);
+}
+
+static void emit_attr_val(FILE *outfile, art_t *tree)
+{
+	art_t *art;
+
+	if (! tree)
+	{
 		return;
 	}
+	if (tree->left)
+	{
+		emit_attr_val(outfile, tree->left);
+	}
+
 	fprintf(outfile, "    {\n");
-	fprintf(outfile, "        %zu, // %s\n", index, tree->attr->name);
+	fprintf(outfile, "        %zu, // %s\n", tree->index, tree->attr->name);
 	fprintf(outfile, "        %d,%d,\n", 0, 0);
 	fprintf(outfile, "        NULL,NULL\n");
 	fprintf(outfile, "    },\n");
 
 	if (tree->right)
 	{
-		emit_attr_val(outfile, attr_tree, tree->right);
+		emit_attr_val(outfile, tree->right);
 	}
 }
 
@@ -800,6 +903,7 @@ int iana_parse_attributes(
 	ipp_syntax_enc_t typespecs[IPP_MAX_ALT_TYPES];
 	art_t *atree;
 	art_t *gtrees[IPP_GROUPING_SUBSCRIPTION_TEMPLATE + 1];
+	art_t *sorted_tree;
 	art_list_t *curcol;
 	art_list_t *collections;
 	art_t **ptree;
@@ -1186,13 +1290,24 @@ int iana_parse_attributes(
 	fprintf(srcfile, "};\n\n");
 	fprintf(srcfile, "#define NUM_IPP_ATTRIBUTES (sizeof(s_ipp_attributes) / sizeof(ipp_attr_rec_t))\n\n");
 
-	// for each group, output a group tree for holding values
+	// for each group, output a group tree for holding values, resorting the
+	// group-tree by index instead of name
 	//
 	for (typedex = 0; typedex < IPP_GROUPING_SUBSCRIPTION_TEMPLATE; typedex++)
 	{
 		fprintf(srcfile, "ipp_attr_t s_ipp_attr_group_%s[] =\n{\n",
 				group_code_to_name(typedex, true));
-		emit_attr_val(srcfile, atree, gtrees[typedex]);
+		sorted_tree = NULL;
+		result = resort_tree_by_index(atree, gtrees[typedex], &sorted_tree);
+		if (result)
+		{
+			return result;
+		}
+		emit_attr_val(srcfile, sorted_tree);
+		delete_tree(gtrees[typedex]);
+		gtrees[typedex] = NULL;
+		delete_tree(sorted_tree);
+		sorted_tree = NULL;
 		fprintf(srcfile, "};\n\n");
 	}
 

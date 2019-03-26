@@ -2,7 +2,7 @@
 #include "battrparse.h"
 #include "bipp.h"
 #include "bippattr.h"
-#include "bipperror.h"
+#include "bippproto.h"
 #include "butil.h"
 
 #define MAX_CSV_LINE	(256)

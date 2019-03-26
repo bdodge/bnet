@@ -611,7 +611,7 @@ static int http_process_header(http_client_t *client, char *header)
 {
     char *value;
 
-    http_log(4, "hdr %s\n", header);
+    http_log(5, "hdr %s\n", header);
 
     header = http_skip_white(header);
     value = http_skip_nonwhite(header);
@@ -1023,7 +1023,7 @@ int http_client_slice(http_client_t *client)
 
     if (client->prev_state != client->state)
     {
-        http_log(4, "cl:%u: %s %s%s   in:%u  out:%u\n",
+        http_log(6, "cl:%u: %s %s%s   in:%u  out:%u\n",
             client->id, http_state_name(client->state),
             client->state == httpReadline ? "->" : "",
             client->state == httpReadline ? http_state_name(client->next_state) : "",
@@ -1322,7 +1322,7 @@ int http_client_slice(http_client_t *client)
             pline++;
             client->vmin = (uint8_t)strtoul(pline, &pline, 10);
         }
-        http_log(3, "cl:%u %s %s %s/%u.%u\n", client->id,
+        http_log(5, "cl:%u %s %s %s/%u.%u\n", client->id,
                 http_method_name(client->method),
                 client->path,
                 http_scheme_base_name(client->scheme),
@@ -1802,7 +1802,7 @@ int http_client_slice(http_client_t *client)
             break;
         }
         client->in_content_length = (size_t)strtoul((char*)client->line, NULL, 16);
-        http_log(3, "cl:%u: next chunk %u\n", client->id, client->in_content_length);
+        http_log(5, "cl:%u: next chunk %u\n", client->id, client->in_content_length);
         if (client->in_content_length == 0)
         {
             // reading 0 means last chunk, switch to length xfer to stop

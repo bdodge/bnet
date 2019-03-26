@@ -16,7 +16,7 @@
 #ifndef BIPPREQ_H
 #define BIPPREQ_H 1
 
-#include "bipperror.h"
+#include "bippproto.h"
 #include "bippattr.h"
 
 struct tag_ipp_server;
@@ -139,6 +139,18 @@ int ipp_write_named_attribute   (ioring_t *out, int8_t tag, const char *text);
 
 int ipp_write_chunk_count       (ioring_t *out, int chunk);
 int ipp_update_chunk_count      (ioring_t *out, int chunkpos, int chunksize);
+
+int ipp_get_req_in_attribute    (
+                                ipp_request_t  *req,
+                                ipp_io_groups_t group,
+                                const char     *name,
+                                ipp_attr_t    **pattr
+                                );
+int ipp_add_req_out_attribute   (
+                                ipp_request_t  *req,
+                                ipp_io_groups_t group,
+                                ipp_attr_t     *pattr
+                                );
 
 ipp_request_t *ipp_req_create   (struct tag_ipp_server *ipp, http_client_t *client);
 int ipp_req_destroy             (struct tag_ipp_server *ipp, ipp_request_t *req);

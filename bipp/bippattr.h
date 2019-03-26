@@ -106,6 +106,7 @@ ipp_attr_t *ipp_create_attr     (size_t recdex, size_t value_len, uint8_t *value
 int         ipp_destroy_attr    (ipp_attr_t *attr);
 
 int         ipp_find_attr_rec   (const char *name, size_t *pindex, ipp_attr_rec_t **pattr);
+const char *ipp_name_of_attr    (ipp_attr_t *attr);
 
 int test_find_attr_rec(void);
 

@@ -33,8 +33,14 @@ typedef struct tag_ipp_server
 }
 ipp_server_t;
 
-int ipp_request(ipp_request_t *req);
-int ipp_process(ipp_request_t *req);
+#if 1
+#define ipp_set_error(a, b) ipp_set_error_dbg(__FILE__, __LINE__, a, b)
+int ipp_set_error_dbg (const char* fname, int line, ipp_request_t *req, int16_t ecode);
+#else
+int ipp_set_error     (ipp_request_t *req, int16_t ecode);
+#endif
+int ipp_request        (ipp_request_t *req);
+int ipp_process        (ipp_request_t *req);
 
 #endif
 

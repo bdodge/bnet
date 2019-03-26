@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 #include "bipp.h"
-#include "bipperror.h"
+#include "bippproto.h"
+#include "bippprtops.h"
+#include "bippjobops.h"
 #include "butil.h"
 
 static const char *ipp_state_string(ipp_req_state_t state)
@@ -79,8 +81,32 @@ static int ipp_wait_for_bytes(ipp_request_t *req, size_t bytes)
     return ipp_push_state(req, reqReadInput);
 }
 
+#if 1
+#define ipp_set_error(a, b) ipp_set_error_dbg(__FILE__, __LINE__, a, b)
+int ipp_set_error_dbg(const char* fname, int line, ipp_request_t *req, int16_t ecode)
+{
+    butil_log(((ecode == IPP_STATUS_OK) ? 7 : 1),
+            "***** %s:%d set error %u\n", fname, line, ecode);
+    if (req)
+    {
+        req->last_error = ecode;
+    }
+    return 0;
+}
+#else
+int ipp_set_error(ipp_request_t *req, int16_t ecode)
+{
+    butil_log(1, "***** Set error %u\n", ecode);
+    if (req)
+    {
+        req->last_error = ecode;
+    }
+    return 0;
+}
+#endif
+
 /*
-int ipp_get_attribute_and_value(ipp_request_t *req, int8_t tag)
+int ipp_parse_attribute_and_value(ipp_request_t *req, int8_t tag)
 {
     switch (tag)
     {
@@ -114,7 +140,7 @@ int ipp_get_attribute_and_value(ipp_request_t *req, int8_t tag)
 }
 */
 
-static int ipp_get_value(ipp_request_t *req)
+static int ipp_parse_value(ipp_request_t *req)
 {
     ipp_attr_t *attr;
     size_t recdex;
@@ -141,7 +167,7 @@ static int ipp_get_value(ipp_request_t *req)
             //
             return ipp_wait_for_bytes(req, 1);
         }
-        req->attr_value[req->attr_bytes_read++] = vb;;
+        req->attr_value[req->attr_bytes_read++] = vb;
     }
     // got all value bytes, create and add the attribute to the group
     //
@@ -151,14 +177,14 @@ static int ipp_get_value(ipp_request_t *req)
     if (result)
     {
         butil_log(1, "No such attribute: %s\n", req->attr_name);
-        req->last_error = IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES;
+        ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
         return result;
     }
     attr = ipp_create_attr(recdex, req->attr_value_len, req->attr_value);
     if (! attr)
     {
         butil_log(0, "Can't alloc attr\n");
-        req->last_error = IPP_STATUS_ERROR_INTERNAL;
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return -1;
     }
     // add it to the right in group
@@ -179,7 +205,7 @@ static int ipp_get_value(ipp_request_t *req)
     return ipp_pop_state(req);
 }
 
-static int ipp_get_value_length(ipp_request_t *req)
+static int ipp_parse_value_length(ipp_request_t *req)
 {
     int result;
 
@@ -202,14 +228,14 @@ static int ipp_get_value_length(ipp_request_t *req)
     if (req->attr_value_len > IPP_MAX_LENGTH)
     {
         butil_log(0, "Length %u too long\n", req->attr_value_len);
-        req->last_error = IPP_STATUS_ERROR_BAD_REQUEST;
+        ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
         return -1;
     }
     req->attr_bytes_read = 0;
     return ipp_move_state(req, reqAttributeValue);
 }
 
-static int ipp_get_name_text(ipp_request_t *req)
+static int ipp_parse_name_text(ipp_request_t *req)
 {
     int result;
 
@@ -229,10 +255,11 @@ static int ipp_get_name_text(ipp_request_t *req)
         //
         return ipp_wait_for_bytes(req, req->attr_name_len);
     }
+    req->attr_name[req->attr_name_len] = '\0';
     return ipp_move_state(req, reqAttributeValueLength);
 }
 
-static int ipp_get_name_length(ipp_request_t *req)
+static int ipp_parse_name_length(ipp_request_t *req)
 {
     int result;
 
@@ -252,10 +279,16 @@ static int ipp_get_name_length(ipp_request_t *req)
         //
         return ipp_wait_for_bytes(req, 2);
     }
+    if (req->attr_name_len >= IPP_MAX_TEXT)
+    {
+        butil_log(0, "Name Length %u too long\n", req->attr_name_len);
+        ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
+        return -1;
+    }
     return ipp_move_state(req, reqAttributeNameText);
 }
 
-static int ipp_get_attribute(ipp_request_t *req)
+static int ipp_parse_attribute(ipp_request_t *req)
 {
     int result;
 
@@ -314,15 +347,18 @@ int ipp_request(ipp_request_t *req)
 
 int ipp_dispatch(ipp_request_t *req)
 {
+    ipp_attr_t *attr;
+    int result;
+
     if (! req)
     {
         return -1;
     }
-    // assume we don't support this
-    req->last_error = IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED;
-
     switch (req->opid)
     {
+    case IPP_OP_GET_PRINTER_ATTRIBUTES:
+        result = ipp_printer_op_dispatch(req);
+        break;
     case IPP_OP_PRINT_JOB:
     case IPP_OP_PRINT_URI:
     case IPP_OP_VALIDATE_JOB:
@@ -332,10 +368,6 @@ int ipp_dispatch(ipp_request_t *req)
     case IPP_OP_CANCEL_JOB:
     case IPP_OP_GET_JOB_ATTRIBUTES:
     case IPP_OP_GET_JOBS:
-        break;
-    case IPP_OP_GET_PRINTER_ATTRIBUTES:
-        req->last_error = IPP_STATUS_OK;
-        break;
     case IPP_OP_HOLD_JOB:
     case IPP_OP_RELEASE_JOB:
     case IPP_OP_RESTART_JOB:
@@ -424,6 +456,7 @@ int ipp_dispatch(ipp_request_t *req)
     case IPP_OP_SHUTDOWN_ALL_PRINTERS:
     case IPP_OP_STARTUP_ALL_PRINTERS:
     default:
+        ipp_set_error(req, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED);
         return 1;
     }
     return 0;
@@ -546,9 +579,9 @@ int ipp_process(ipp_request_t *req)
                 // be exercised by normal IPP testing tools as they always
                 // insert operation attributes, so just go dispatch it
                 //
-                butil_log(5, "IPP Attributes all read, dispatch\n");
+                butil_log(5, "IPP Attributes all read, validate and dispatch\n");
 
-                result = ipp_move_state(req, reqDispatch);
+                result = ipp_move_state(req, reqValidation);
                 break;
             }
             else
@@ -577,7 +610,7 @@ int ipp_process(ipp_request_t *req)
             break;
 
         default:
-            req->last_error = IPP_STATUS_ERROR_BAD_REQUEST;
+            ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
             result = ipp_move_state(req, reqReply);
             break;
         }
@@ -594,7 +627,7 @@ int ipp_process(ipp_request_t *req)
     case reqAttributeTag:
 
         // fetch an attribute, or end-tag (which pops state)
-        result = ipp_get_attribute(req);
+        result = ipp_parse_attribute(req);
         if (! result)
         {
             // if got an end tag, state will be lower than this state
@@ -610,44 +643,123 @@ int ipp_process(ipp_request_t *req)
 
     case reqAttributeNameLength:
 
-        result = ipp_get_name_length(req);
+        result = ipp_parse_name_length(req);
         break;
 
     case reqAttributeNameText:
 
-        result = ipp_get_name_text(req);
+        result = ipp_parse_name_text(req);
         break;
 
     case reqAttributeValueLength:
 
-        result = ipp_get_value_length(req);
+        result = ipp_parse_value_length(req);
         break;
 
     case reqAttributeValue:
 
-        result = ipp_get_value(req);
+        result = ipp_parse_value(req);
         break;
 
     case reqValidation: // got all the attributes we're getting, so validate
 
-        req->last_error = IPP_STATUS_OK;
-
-        do //TRY
+        if (req->last_error != IPP_STATUS_OK)
         {
+            butil_log(5, "Skipping validation due to pre-existing condition\n");
+            result = ipp_move_state(req, reqReply);
+            break;
+        }
+        ipp_set_error(req, IPP_STATUS_OK);
+
+        do // try
+        {
+            ipp_attr_t *attr;
+            size_t recdex;
+
             // validate the request. mostly this is to pass conformance testing
             // since the protocol itself is pretty simple and would just work
-            // without all this insistance on ordering/presence
+            // ok without all this insistance on ordering/presence
             //
             // RFC 8011 section 4.1.1 - no 0 request id
             if (req->reqid == 0)
             {
-                req->last_error = IPP_STATUS_ERROR_BAD_REQUEST;
+                butil_log(2, "Fail: Request ID is 0\n");
+                ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
+                result = -1;
                 break;
             }
-            // RFC 8011 section 4.1.4 - charset+natural language are first two
-            // attributes.
+            // RFC 8011 section 4.1.4 - charset+natural language are first two and present
+            result = -1;
+            do  // try
+            {
+                attr = req->in_attrs[IPP_OPER_ATTRS];
+
+                if (! attr)
+                {
+                    butil_log(1, "Fail: No operation attributes\n");
+                    break;
+                }
+                if (ipp_find_attr_rec("attributes-charset", &recdex, NULL))
+                {
+                    butil_log(1, "Fail: internal: attribute table missing charset\n");
+                    break;
+                }
+                if (attr->recdex != recdex)
+                {
+                    butil_log(1, "Fail: First operation attribute not charset, got %s\n",
+                                    ipp_name_of_attr(attr));
+                    break;
+                }
+                if (! attr->next)
+                {
+                    butil_log(1, "Fail: No natural-language attribute\n");
+                    break;
+                }
+                attr = attr->next;
+
+                if (ipp_find_attr_rec("attributes-natural-language", &recdex, NULL))
+                {
+                    butil_log(1, "Fail: internal: attribute table missing natlang\n");
+                    break;
+                }
+                if (attr->recdex != recdex)
+                {
+                    butil_log(1, "Fail: Second operation attribute not natural-language, got %s\n",
+                                    ipp_name_of_attr(attr));
+                    break;
+                }
+                result = 0;
+            }
+            while (0); // catch
+
+            if (result)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
+                break;
+            }
+            // RFC 8011 section 4.1.8 - Bad Version
+            if (
+                    (req->vmaj < IPP_MAJOR_VERSION_MIN)
+                |   (req->vmaj > IPP_MAJOR_VERSION_MAX)
+                |   (req->vmaj == IPP_MAJOR_VERSION_MAX && req->vmin > IPP_MINOR_VERSION_MAX)
+                |   (req->vmaj == IPP_MAJOR_VERSION_MIN && req->vmin < IPP_MINOR_VERSION_MIN)
+            )
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_VERSION_NOT_SUPPORTED);
+                result = -1;
+                break;
+            }
+
         }
         while (0); // catch
+
+        if (result)
+        {
+            break;
+        }
+        // validated OK, go dispatch
+        //
+        butil_log(5, "Pass: Valid Request ID %u\n", req->reqid);
 
         result = ipp_move_state(req, reqDispatch);
         break;
@@ -693,6 +805,23 @@ int ipp_process(ipp_request_t *req)
 
     default:
         break;
+    }
+    if (result)
+    {
+        // http server calling us doesn't care about the result code really, it just
+        // cancels the request handing. if we find errors we will report them back
+        // in an IPP reply, so just go to that state and make sure last_error is set
+        //
+        req->top = 0; // unwind state
+        if (req->state[req->top] < reqReply)
+        {
+            if (req->last_error == IPP_STATUS_OK)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+            }
+            result = ipp_move_state(req, reqReply);
+        }
+        result = 0;
     }
     return result;
 }

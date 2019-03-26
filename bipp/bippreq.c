@@ -313,6 +313,49 @@ int ipp_update_chunk_count(ioring_t *out, int chunkpos, int chunksize)
 	return result;
 }
 
+int ipp_get_req_in_attribute(ipp_request_t *req, ipp_io_groups_t group, const char *name, ipp_attr_t **pattr)
+{
+	ipp_attr_t *attr;
+
+	if (! req || ! name || ! pattr || group >= IPP_MAX_IO_ATTRS)
+	{
+		return -1;
+	}
+	*pattr = NULL;
+	for (attr = req->in_attrs[group]; attr; attr = attr->next)
+	{
+		if (! strcmp(name, ipp_name_of_attr(attr)))
+		{
+			*pattr = attr;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+int ipp_add_req_out_attribute(ipp_request_t *req, ipp_io_groups_t group, ipp_attr_t *pattr)
+{
+	ipp_attr_t *attr;
+
+	if (! req || ! pattr || group >= IPP_MAX_IO_ATTRS)
+	{
+		return -1;
+	}
+	if (! req->out_attrs[group])
+	{
+		req->out_attrs[group] = pattr;
+	}
+	else
+	{
+		for (attr = req->out_attrs[group]; attr->next;)
+		{
+			attr = attr->next;
+		}
+		attr->next = pattr;
+	}
+	return 0;
+}
+
 ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 {
 	ipp_request_t *req;
@@ -327,6 +370,8 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 
 	req->ipp = ipp;
 	req->client = client;
+
+	req->last_error = IPP_STATUS_OK;
 
 	req->bytes_needed = 0;
 	req->download_complete = false;

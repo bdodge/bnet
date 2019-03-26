@@ -30,6 +30,7 @@ ipp_attr_t *ipp_create_attr(size_t recdex, size_t value_len, uint8_t *value)
     {
         return NULL;
     }
+    attr->recdex = recdex;
     attr->len = 0;
     attr->alloc_len = 0;
     attr->val = NULL;
@@ -67,6 +68,8 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattr)
     ipp_attr_t *attr;
     size_t top;
     size_t bot;
+    size_t prevtop;
+    size_t prevbot;
     size_t cur;
     size_t prevcur;
     int cmp;
@@ -84,8 +87,10 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattr)
     cur = (bot + top) / 2;
     do
     {
+        prevtop = top;
+        prevbot = bot;
         cmp = strcmp(name, s_ipp_attributes[cur].name);
-        butil_log(5, "%zu %zu %zu  %s vs %s -> %d\n",
+        butil_log(6, "%zu %zu %zu  %s vs %s -> %d\n",
                 top, cur, bot, name, s_ipp_attributes[cur].name, cmp);
         if (cmp == 0)
         {
@@ -118,12 +123,11 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattr)
             //
             if (cur != bot)
             {
-                butil_log(5, "BOT out\n");
                 cur = bot;
             }
         }
     }
-    while (cur != prevcur);
+    while (prevtop != top || prevbot != bot);
 
     if (index)
     {
@@ -133,8 +137,17 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattr)
     {
         *pattr = NULL;
     }
-    butil_log(5, "Didn't find %s\n", name);
+    butil_log(6, "Didn't find %s\n", name);
     return -1;
+}
+
+const char *ipp_name_of_attr(ipp_attr_t *attr)
+{
+    if (! attr || attr->recdex >= NUM_IPP_ATTRIBUTES)
+    {
+        return "<nil>";
+    }
+    return s_ipp_attributes[attr->recdex].name;
 }
 
 int test_find_attr_rec()
@@ -169,6 +182,12 @@ int test_find_attr_rec()
         return -1;
     }
     result = ipp_find_attr_rec("aaa", NULL, &rec);
+    if (! result)
+    {
+        butil_log(0, "Found bogus rec\n", rec->name);
+        return -1;
+    }
+    result = ipp_find_attr_rec("printer-urinatural-language", NULL, &rec);
     if (! result)
     {
         butil_log(0, "Found bogus rec\n", rec->name);

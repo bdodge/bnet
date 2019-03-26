@@ -1184,6 +1184,7 @@ int iana_parse_attributes(
 	s_attr_index = 0;
 	emit_attrs(srcfile, atree);
 	fprintf(srcfile, "};\n\n");
+	fprintf(srcfile, "#define NUM_IPP_ATTRIBUTES (sizeof(s_ipp_attributes) / sizeof(ipp_attr_rec_t))\n\n");
 
 	// for each group, output a group tree for holding values
 	//

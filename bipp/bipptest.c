@@ -14,13 +14,28 @@
  * limitations under the License.
  */
 #include "bipp.h"
+#include "bippattr.h"
 #include "bipplib.h"
+
+static uint16_t s_ipp_port = 6310;
+
+static int usage (const char *program)
+{
+    fprintf(stderr, "Use: %s [-lpu]\n", program);
+    fprintf(stderr, "     -u    Run unit tests\n");
+    fprintf(stderr, "     -l    Set debug log level (default 1: errors/warnings only)\n");
+    fprintf(stderr, "     -p    Use port number (default %u)\n", s_ipp_port);
+    return 1;
+}
 
 int main(int argc, char **argv)
 {
     const char *program;
     int result;
+    uint32_t uval;
     uint16_t port;
+    int loglevel;
+    bool s_unit_test;
     char *arg;
 
 #ifdef Windows
@@ -38,37 +53,75 @@ int main(int argc, char **argv)
     program = *argv++;
     argc--;
 
+    loglevel = 5;
+    butil_set_log_level(loglevel);
+
+    port = s_ipp_port;
+    s_unit_test = false;
     port = 6310;
 
     while (argc > 0 && ! result)
     {
-        arg = *argv++;
-        argc--;
+        arg = *argv;
         if (arg[0] == '-')
         {
             switch (arg[1])
             {
+            case 'l':
             case 'p':
-                if (argc > 0)
+            {
+                if (arg[2] == '\0')
                 {
-                    port = strtoul(*argv, NULL, 0);
-                    argv++;
-                    argc--;
+                    if (argc > 0)
+                    {
+                        argc--;
+                        argv++;
+                        uval = strtoul(*argv, NULL, 0);
+                    }
+                    else
+                    {
+                        return usage(program);
+                    }
                 }
                 else
                 {
-                    fprintf(stderr, "Use: -p [port]");
+                    uval = strtoul((arg + 2), NULL, 0);
                 }
+                if (arg[1] == 'l')
+                {
+                    loglevel = uval;
+                }
+                else if (arg[1] == 'p')
+                {
+                    port = uval;
+                }
+                else
+                {
+                    return usage(program);
+                }
+                break;
+            }
+            case 'u':
+                s_unit_test = true;
                 break;
             default:
                 fprintf(stderr, "Bad Switch: %s\n", arg);
                 break;
             }
+            argc--;
+            argv++;
         }
         else
         {
-            printf("Ignore parm %s\n", arg);
+            return usage(program);
         }
+    }
+    butil_set_log_level(loglevel);
+
+    if (s_unit_test)
+    {
+        // unit test
+        result = test_find_attr_rec();
     }
     return ipp_server(program, port, false);
 }

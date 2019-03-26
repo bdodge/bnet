@@ -17,6 +17,7 @@
 #define BIPPREQ_H 1
 
 #include "bipperror.h"
+#include "bippattr.h"
 
 struct tag_ipp_server;
 
@@ -45,6 +46,15 @@ typedef enum
 }
 ipp_req_state_t;
 
+typedef enum
+{
+    IPP_OPER_ATTRS,
+    IPP_PRT_ATTRS,
+    IPP_JOB_ATTRS,
+    IPP_MAX_IO_ATTRS
+}
+ipp_io_groups_t;
+
 /// Context for a single IPP request/response
 //
 typedef struct tag_ipp_request
@@ -65,6 +75,15 @@ typedef struct tag_ipp_request
 
     int16_t         last_error;
 
+    // attribute groups, input
+    //
+    ipp_attr_t     *in_attrs[IPP_MAX_IO_ATTRS];
+    ipp_attr_t     *out_attrs[IPP_MAX_IO_ATTRS];
+    ipp_io_groups_t cur_in_group;
+    ipp_io_groups_t cur_out_group;
+    ipp_attr_t     *cur_in_attr;
+    ipp_attr_t     *cur_out_attr;
+
     // IPP request header. Yes spec says they are signed
     //
     int8_t          vmaj, vmin;
@@ -77,8 +96,10 @@ typedef struct tag_ipp_request
     int8_t          attr_tag;
     uint16_t        attr_name_len;
     char            attr_name[IPP_MAX_TEXT];
+    char            attr_value[IPP_MAX_LENGTH];
     uint16_t        attr_value_len;
-    uint16_t        attr_bytes_remain;
+    uint16_t        attr_bytes_read;
+    /*
     union
     {
         int8_t      i8v;
@@ -90,6 +111,7 @@ typedef struct tag_ipp_request
         char        tv[IPP_MAX_TEXT];
     }
                     attr_value;
+    */
 }
 ipp_request_t;
 

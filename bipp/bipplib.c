@@ -244,8 +244,6 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
     int result;
     int i;
 
-    butil_set_log_level(5);
-
 #if HTTP_SUPPORT_TLS
     result = iostream_tls_prolog();
     if (result)
@@ -259,6 +257,7 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
     {
         BERROR("can't init reqs");
     }
+
     // register a custom scheme
     result = butil_register_scheme("ipp", &s_ipp_scheme);
     if (result)

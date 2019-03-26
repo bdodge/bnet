@@ -5596,6 +5596,8 @@ ipp_attr_rec_t s_ipp_attributes[] =
     },
 };
 
+#define NUM_IPP_ATTRIBUTES (sizeof(s_ipp_attributes) / sizeof(ipp_attr_rec_t))
+
 ipp_attr_t s_ipp_attr_group_decdesc[] =
 {
     {

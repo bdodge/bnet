@@ -316,6 +316,7 @@ int ipp_update_chunk_count(ioring_t *out, int chunkpos, int chunksize)
 ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 {
 	ipp_request_t *req;
+	size_t attrdex;
 
 	if (! ipp || ! ipp->req_free)
 	{
@@ -337,6 +338,16 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 
 	req->op_attr_count = 0;
 	req->job_attr_count = 0;
+
+	for (attrdex = 0; attrdex < IPP_MAX_IO_ATTRS; attrdex++)
+	{
+		req->in_attrs[attrdex] = NULL;
+		req->out_attrs[attrdex] = NULL;
+	}
+	req->cur_in_group = IPP_OPER_ATTRS;
+	req->cur_out_group = IPP_OPER_ATTRS;
+	req->cur_in_attr = NULL;
+	req->cur_out_attr = NULL;
 
 	req->top = 0;
 	req->state[0] = reqHeader;

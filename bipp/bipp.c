@@ -17,7 +17,7 @@
 #include "bipperror.h"
 #include "butil.h"
 
-static const char *ipp_state_string(ipp_state_t state)
+static const char *ipp_state_string(ipp_req_state_t state)
 {
     switch (state)
     {
@@ -116,14 +116,14 @@ int ipp_get_attribute_and_value(ipp_request_t *req, int8_t tag)
 
 static int ipp_get_value(ipp_request_t *req)
 {
+    ipp_attr_t *attr;
+    size_t recdex;
     int result;
     uint8_t vb;
 
-    // setup for incrementally reading value bytes
+    // incrementally reading value bytes
     //
-    req->attr_bytes_remain = req->attr_value_len;
-
-    while (req->attr_bytes_remain != 0)
+    while (req->attr_bytes_read < req->attr_value_len)
     {
         result = ipp_read_uint8(&req->in, &vb);
         if (result < 0)
@@ -141,9 +141,40 @@ static int ipp_get_value(ipp_request_t *req)
             //
             return ipp_wait_for_bytes(req, 1);
         }
-        req->attr_bytes_remain--;
+        req->attr_value[req->attr_bytes_read++] = vb;;
     }
-    // got all value bytes, go back to wherever we got here from
+    // got all value bytes, create and add the attribute to the group
+    //
+    // make sure it's actually an attr
+    //
+    result = ipp_find_attr_rec(req->attr_name, &recdex, NULL);
+    if (result)
+    {
+        butil_log(1, "No such attribute: %s\n", req->attr_name);
+        req->last_error = IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES;
+        return result;
+    }
+    attr = ipp_create_attr(recdex, req->attr_value_len, req->attr_value);
+    if (! attr)
+    {
+        butil_log(0, "Can't alloc attr\n");
+        req->last_error = IPP_STATUS_ERROR_INTERNAL;
+        return -1;
+    }
+    // add it to the right in group
+    //
+    if (req->in_attrs[req->cur_in_group] == NULL)
+    {
+        req->in_attrs[req->cur_in_group] = attr;
+    }
+    else
+    {
+        req->cur_in_attr->next = attr;
+    }
+    req->cur_in_attr = attr;
+    attr->next = NULL;
+
+    // and then go back to wherever we got here from
     //
     return ipp_pop_state(req);
 }
@@ -168,6 +199,13 @@ static int ipp_get_value_length(ipp_request_t *req)
         //
         return ipp_wait_for_bytes(req, 2);
     }
+    if (req->attr_value_len > IPP_MAX_LENGTH)
+    {
+        butil_log(0, "Length %u too long\n", req->attr_value_len);
+        req->last_error = IPP_STATUS_ERROR_BAD_REQUEST;
+        return -1;
+    }
+    req->attr_bytes_read = 0;
     return ipp_move_state(req, reqAttributeValue);
 }
 
@@ -524,14 +562,17 @@ int ipp_process(ipp_request_t *req)
         switch (tag)
         {
         case IPP_TAG_OPERATION:
+            req->cur_in_group = IPP_OPER_ATTRS;
             result = ipp_push_state(req, reqOperationAttributes);
             break;
 
         case IPP_TAG_JOB:
+            req->cur_in_group = IPP_JOB_ATTRS;
             result = ipp_push_state(req, reqJobAttributes);
             break;
 
         case IPP_TAG_PRINTER:
+            req->cur_in_group = IPP_PRT_ATTRS;
             result = ipp_push_state(req, reqPrinterAttributes);
             break;
 

@@ -2495,7 +2495,7 @@ int http_client_slice(http_client_t *client)
                 if (count > 0 && client->out_transfer_type == httpChunked)
                 {
                     // back annotate chunk count
-                    snprintf((char *)content - 8, 8, "\r\n%04X\r", bodyCount);
+                    snprintf((char *)content - 8, 8, "\r\n%04X\r", (uint32_t)bodyCount);
                     content[-1] = '\n';
                     bodyCount += 8;
                 }
@@ -2938,6 +2938,7 @@ int http_server_init(
     server->resources = resources;
     server->clients = NULL;
     server->connections = 0;
+    server->aborted = false;
 
     // create server socket
     //
@@ -3012,6 +3013,15 @@ void http_server_cleanup(http_server_t *server)
         close_socket(server->socket);
     }
     server->socket = INVALID_SOCKET;
+}
+
+int http_server_abort(http_server_t *server)
+{
+    if (server)
+    {
+        server->aborted = true;
+    }
+    return 0;
 }
 
 int http_server_slice(http_server_t *server, int to_secs, int to_usecs)
@@ -3302,6 +3312,7 @@ int http_wait_for_server_event(http_server_t *servers)
 int http_serve(http_server_t *servers)
 {
     http_server_t *server;
+    http_server_t *prevserver;
     int result;
 
     do
@@ -3314,17 +3325,34 @@ int http_serve(http_server_t *servers)
         {
             result = 0;
         }
+        prevserver = NULL;
+
         for (server = servers; ! result && server != NULL; server = server->next)
         {
+            if (server->aborted)
+            {
+                if (server == servers)
+                {
+                    servers = server->next;
+                }
+                else
+                {
+                    prevserver->next = server->next;
+                }
+                http_server_cleanup(server);
+                break;
+            }
             result = http_server_slice(server, 0, 0);
             if (result < 0)
             {
                 // remove server?
             }
+            prevserver = server;
         }
     }
-    while (! result);
+    while (! result && servers);
 
+    butil_log(4, "HTTP Server ends\n");
     return result;
 }
 

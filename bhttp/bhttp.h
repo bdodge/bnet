@@ -217,6 +217,7 @@ typedef struct http_server
     http_client_t      *clients;
     uint16_t            port;
     bool                secure;
+    bool                aborted;
     http_transport_t    transport;
     uint32_t            connections;
     socket_t            socket;
@@ -265,6 +266,7 @@ int http_server_init(
                         bool secure
                       );
 void http_server_cleanup(http_server_t *server);
+int http_server_abort(http_server_t *server);
 
 int http_server_slice(http_server_t *server, int to_secs, int to_usecs);
 int http_serve(http_server_t *servers);

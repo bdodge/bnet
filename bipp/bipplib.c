@@ -159,6 +159,16 @@ int ipp_resource_callback(
         // see how many bytes we took from data, to update client
         //
         *count = (*count - req->in.count);
+
+        // if the request has already got to reply state (because
+        // of errors for example) then move to upload state
+        //
+        if (req->state[req->top] >= reqReply)
+        {
+            client->state = httpBodyUpload;
+            client->out_content_length = 0x100000;
+            client->out_transfer_type = httpChunked;
+        }
         break;
 
     case httpDownloadDone:

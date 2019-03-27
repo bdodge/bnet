@@ -331,16 +331,6 @@ typedef enum ipp_sstate_e		/**** system-state values ****/
 }
 ipp_sstate_t;
 
-typedef enum ipp_state_e		/**** ipp_t state values ****/
-{
-    IPP_STATE_ERROR = -1,			/* An error occurred */
-    IPP_STATE_IDLE,			/* Nothing is happening/request completed */
-    IPP_STATE_HEADER,			/* The request header needs to be sent/received */
-    IPP_STATE_ATTRIBUTE,			/* One or more attributes need to be sent/received */
-    IPP_STATE_DATA			/* IPP request data needs to be sent/received */
-}
-ipp_state_t;
-
 typedef enum ipp_status_e		/**** IPP status code values ****/
 {
     IPP_STATUS_CUPS_INVALID = -1,		/* Invalid status name for @link ippErrorValue@ */

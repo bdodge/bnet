@@ -282,8 +282,36 @@ static int ipp_parse_attribute(ipp_request_t *req)
     }
     if (req->attr_tag == IPP_TAG_END)
     {
-        butil_log(5, "End of attr group, %s\n", ipp_state_string(req->state[req->top]));
-        return ipp_pop_state(req);
+        butil_log(5, "End of attr in group, %s\n", ipp_state_string(req->state[req->top]));
+        result = ipp_pop_state(req);
+        if (result)
+        {
+            return result;
+        }
+        result = ipp_pop_state(req);
+        if (result)
+        {
+            return result;
+        }
+        if (req->state[req->top] != reqAttributes)
+        {
+            BERROR("expected reqAttributes state");
+            return -1;
+        }
+        butil_log(5, "IPP Attributes parsed, validate and dispatch\n");
+        return ipp_move_state(req, reqValidation);
+    }
+    if (req->attr_tag == IPP_TAG_JOB)
+    {
+        req->cur_in_group = IPP_JOB_ATTRS;
+        butil_log(5, "Move to JOB attr from group, %s\n", ipp_state_string(req->state[req->top]));
+        return ipp_move_state(req, reqJobAttributes);
+    }
+    if (req->attr_tag == IPP_TAG_PRINTER)
+    {
+        req->cur_in_group = IPP_PRT_ATTRS;
+        butil_log(5, "Move to PRT attr from group, %s\n", ipp_state_string(req->state[req->top]));
+        return ipp_move_state(req, reqPrinterAttributes);
     }
     return ipp_move_state(req, reqAttributeNameLength);
 }
@@ -321,9 +349,10 @@ int ipp_dispatch(ipp_request_t *req)
     switch (req->opid)
     {
     case IPP_OP_GET_PRINTER_ATTRIBUTES:
+    case IPP_OP_PRINT_JOB:
         result = ipp_printer_op_dispatch(req);
         break;
-    case IPP_OP_PRINT_JOB:
+
     case IPP_OP_PRINT_URI:
     case IPP_OP_VALIDATE_JOB:
     case IPP_OP_CREATE_JOB:
@@ -672,10 +701,10 @@ int ipp_process(ipp_request_t *req)
         result = ipp_move_state(req, reqAttributes);
         break;
 
-    case reqAttributes: // incrementally parse attrubute groups
+    case reqAttributes: // incrementally parse attribute groups
 
         // According to RFC 8010 3.1.1, there are 0 or more groups of
-        // attributes, so having no more input is here not a failure case
+        // attributes, so having no more input here is not a failure case
         // even though all the IPP test suites insist that a request
         // has a charset and natural language operation attributes
         //
@@ -695,7 +724,7 @@ int ipp_process(ipp_request_t *req)
                 // be exercised by normal IPP testing tools as they always
                 // insert operation attributes, so just go dispatch it
                 //
-                butil_log(5, "IPP Attributes all read, validate and dispatch\n");
+                butil_log(5, "IPP Attributes blank, validate and dispatch\n");
 
                 result = ipp_move_state(req, reqValidation);
                 break;
@@ -713,16 +742,6 @@ int ipp_process(ipp_request_t *req)
         case IPP_TAG_OPERATION:
             req->cur_in_group = IPP_OPER_ATTRS;
             result = ipp_push_state(req, reqOperationAttributes);
-            break;
-
-        case IPP_TAG_JOB:
-            req->cur_in_group = IPP_JOB_ATTRS;
-            result = ipp_push_state(req, reqJobAttributes);
-            break;
-
-        case IPP_TAG_PRINTER:
-            req->cur_in_group = IPP_PRT_ATTRS;
-            result = ipp_push_state(req, reqPrinterAttributes);
             break;
 
         default:
@@ -746,7 +765,9 @@ int ipp_process(ipp_request_t *req)
         result = ipp_parse_attribute(req);
         if (! result)
         {
-            // if got an end tag, state will be lower than this state
+            // if got an end tag or other, that would have popped the state
+            // back to the group state, so pop it again to get to
+            // Attribute state, then move
             // now, in which case, pop once more to get out of group
             //
             if (req->state[req->top] < reqAttributeTag)
@@ -917,57 +938,42 @@ int ipp_process(ipp_request_t *req)
 
     case reqReplyOperationAttributes:
 
-        if (! result)
+        if (req->cur_out_attr)
+        {
+            ipp_push_state(req, reqReplyOneAttribute);
+        }
+        else
         {
             req->cur_out_group = IPP_JOB_ATTRS;
             req->cur_out_attr = req->out_attrs[IPP_JOB_ATTRS];
             if (req->cur_out_attr)
             {
-                result = ipp_move_state(req, reqReplyJobAttributes);
-                if (! result)
-                {
-                    result = ipp_write_int8(&req->out, IPP_TAG_JOB);
-                }
-                break;
+                // there are job attrs in response, send them
+                result = ipp_write_int8(&req->out, IPP_TAG_JOB);
             }
-            req->cur_out_group = IPP_PRT_ATTRS;
-            req->cur_out_attr = req->out_attrs[IPP_PRT_ATTRS];
-            if (req->cur_out_attr)
-            {
-                if (! result)
-                {
-                    result = ipp_write_int8(&req->out, IPP_TAG_PRINTER);
-                }
-                result = ipp_move_state(req, reqReplyPrinterAttributes);
-                break;
-            }
+            // but go to jobattr state in all cases, to move thing along
+            result = ipp_move_state(req, reqReplyJobAttributes);
         }
-        result = ipp_move_state(req, reqDone);
         break;
 
     case reqReplyJobAttributes:
 
         if (req->cur_out_attr)
         {
-            req->cur_out_attr = req->cur_out_attr->next;
+            ipp_push_state(req, reqReplyOneAttribute);
         }
         else
         {
-            if (! result)
+            // end job group, amove to printer group
+            req->cur_out_group = IPP_PRT_ATTRS;
+            req->cur_out_attr = req->out_attrs[IPP_PRT_ATTRS];
+            if (req->cur_out_attr)
             {
-                req->cur_out_group = IPP_PRT_ATTRS;
-                req->cur_out_attr = req->out_attrs[IPP_PRT_ATTRS];
-                if (req->cur_out_attr)
-                {
-                    if (! result)
-                    {
-                        result = ipp_write_int8(&req->out, IPP_TAG_PRINTER);
-                    }
-                    result = ipp_move_state(req, reqReplyPrinterAttributes);
-                    break;
-                }
+                // there are prt attrs in response, send them
+                result = ipp_write_int8(&req->out, IPP_TAG_PRINTER);
             }
-            result = ipp_move_state(req, reqDone);
+            // but go to
+            result = ipp_move_state(req, reqReplyPrinterAttributes);
         }
         break;
 

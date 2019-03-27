@@ -210,15 +210,19 @@ int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
     {
         if (attr->value)
         {
-            free(attr->value);
+            if (attr->alloc_len)
+            {
+                free(attr->value);
+            }
             attr->value = NULL;
+            attr->alloc_len = 0;
         }
-        attr->alloc_len = value_len;
         attr->value = (uint8_t *)malloc(value_len);
         if (! attr->value)
         {
             return -1;
         }
+        attr->alloc_len = value_len;
     }
     attr->value_len = value_len;
     memcpy(attr->value, value, value_len);

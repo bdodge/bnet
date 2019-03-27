@@ -21,6 +21,7 @@
 static int ipp_get_printer_attributes(ipp_request_t *req)
 {
     ipp_attr_t *attr;
+    ipp_attr_t *nattr;
     int result;
 
     // fetch printer-attributes group and add to return
@@ -30,7 +31,13 @@ static int ipp_get_printer_attributes(ipp_request_t *req)
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, attr);
+    result = ipp_dupe_attr(attr, &nattr);
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
     return result;
 }
 

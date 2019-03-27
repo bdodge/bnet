@@ -281,7 +281,11 @@ int ipp_resource_callback(
             client->ctxpriv = NULL;
         }
 #ifdef BMEM_H
+        #if 1
+        bmem_stats(5);
+        #else
         http_server_abort(&ipp->server);
+        #endif
 #endif
         break;
 

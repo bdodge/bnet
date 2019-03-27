@@ -7,6 +7,17 @@
 
 #define MAX_CSV_LINE	(256)
 
+// since attributes are sorted alphabetically, and then
+// assigned an index in the table as the table is made
+// then the indexes are also in alphabetical sort order
+// so the group attribute tables will already be sorted
+// by index. If the attribute table sort changes, define
+// this to non-0 to keep groups sorted by index
+// (code that uses these tables can search faster when the
+//  the tables are sorted)
+//
+#define SORT_GROUPS_BY_INDEX 0
+
 static size_t s_attr_index = 0;
 
 static struct tag_name_to_xtype
@@ -741,19 +752,32 @@ static int resort_tree_by_index(art_t *attr_tree, art_t *tree, art_t **newtree)
 	return add_attr_by_index(attr_tree, tree, newtree);
 }
 
-static void emit_attr_val(FILE *outfile, art_t *tree)
+static void emit_attr_val(FILE *outfile, art_t *attr_tree, art_t *tree)
 {
-	art_t *art;
-
 	if (! tree)
 	{
 		return;
 	}
 	if (tree->left)
 	{
-		emit_attr_val(outfile, tree->left);
+		emit_attr_val(outfile, attr_tree, tree->left);
 	}
+#if !(SORT_GROUPS_BY_INDEX)
+	{
+	art_t *art;
 
+	art = find_attr(attr_tree, tree->attr->name);
+	if (art)
+	{
+		tree->index = art->index;
+	}
+	else
+	{
+		butil_log(1, "Attr %s not in list\n", attr_tree->attr->name);
+		return;
+	}
+	}
+#endif
 	fprintf(outfile, "    {\n");
 	fprintf(outfile, "        %zu, // %s\n", tree->index, tree->attr->name);
 	fprintf(outfile, "        %d,%d,\n", 0, 0);
@@ -762,7 +786,7 @@ static void emit_attr_val(FILE *outfile, art_t *tree)
 
 	if (tree->right)
 	{
-		emit_attr_val(outfile, tree->right);
+		emit_attr_val(outfile, attr_tree, tree->right);
 	}
 }
 
@@ -1297,17 +1321,21 @@ int iana_parse_attributes(
 	{
 		fprintf(srcfile, "ipp_attr_t s_ipp_attr_group_%s[] =\n{\n",
 				group_code_to_name(typedex, true));
+	#if SORT_GROUPS_BY_INDEX
 		sorted_tree = NULL;
 		result = resort_tree_by_index(atree, gtrees[typedex], &sorted_tree);
 		if (result)
 		{
 			return result;
 		}
-		emit_attr_val(srcfile, sorted_tree);
+		emit_attr_val(srcfile, atree, sorted_tree);
 		delete_tree(gtrees[typedex]);
 		gtrees[typedex] = NULL;
 		delete_tree(sorted_tree);
 		sorted_tree = NULL;
+	#else
+		emit_attr_val(srcfile, atree, gtrees[typedex]);
+	#endif
 		fprintf(srcfile, "};\n\n");
 	}
 

@@ -9807,6 +9807,60 @@ ipp_attr_t s_ipp_attr_group_substat[] =
     },
 };
 
+ipp_attr_t s_ipp_attr_group_subtemp[] =
+{
+    {
+        406, // notify-attributes
+        0,0,
+        NULL,NULL
+    },
+    {
+        408, // notify-charset
+        0,0,
+        NULL,NULL
+    },
+    {
+        409, // notify-events
+        0,0,
+        NULL,NULL
+    },
+    {
+        414, // notify-lease-duration
+        0,0,
+        NULL,NULL
+    },
+    {
+        418, // notify-max-events-supported
+        0,0,
+        NULL,NULL
+    },
+    {
+        419, // notify-natural-language
+        0,0,
+        NULL,NULL
+    },
+    {
+        422, // notify-pull-method
+        0,0,
+        NULL,NULL
+    },
+    {
+        424, // notify-recipient-uri
+        0,0,
+        NULL,NULL
+    },
+    {
+        436, // notify-time-interval
+        0,0,
+        NULL,NULL
+    },
+    {
+        437, // notify-user-data
+        0,0,
+        NULL,NULL
+    },
+};
+
 ipp_group_xref_t s_ipp_group_xref[] =
 {
     { IPP_GROUPING_DOCUMENT_DESCRIPTION, s_ipp_attr_group_decdesc, (sizeof(s_ipp_attr_group_decdesc)/sizeof(ipp_attr_t)) },
@@ -9820,5 +9874,6 @@ ipp_group_xref_t s_ipp_group_xref[] =
     { IPP_GROUPING_PRINTER_DESCRIPTION, s_ipp_attr_group_prtdesc, (sizeof(s_ipp_attr_group_prtdesc)/sizeof(ipp_attr_t)) },
     { IPP_GROUPING_PRINTER_STATUS, s_ipp_attr_group_prtstat, (sizeof(s_ipp_attr_group_prtstat)/sizeof(ipp_attr_t)) },
     { IPP_GROUPING_SUBSCRIPTION_STATUS, s_ipp_attr_group_substat, (sizeof(s_ipp_attr_group_substat)/sizeof(ipp_attr_t)) },
+    { IPP_GROUPING_SUBSCRIPTION_TEMPLATE, s_ipp_attr_group_subtemp, (sizeof(s_ipp_attr_group_subtemp)/sizeof(ipp_attr_t)) },
 };
 

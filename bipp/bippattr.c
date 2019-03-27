@@ -254,22 +254,35 @@ int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **va
 {
 }
 
+#define IPPATTR_XREF_LINEAR 0
+
 int ipp_get_attr_by_index(const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr)
 {
-    ipp_group_xref_t *gxref;
+    ipp_group_xref_t *xreftab;
     ipp_attr_t *attr;
+#if IPPATTR_XREF_LINEAR
     size_t count;
-
+#else
+    size_t top;
+    size_t bot;
+    size_t cur;
+    size_t prevtop;
+    size_t prevbot;
+    size_t prevcur;
+#endif
+    if (pattr)
+    {
+        *pattr = NULL;
+    }
     if (group >= IPP_GROUPING_MAX_GROUP)
     {
         return -1;
     }
-    ///@todo sort the attributes in group by record and binary search on them?
-    /// instead of this linear search. it wouldn't be hard in ianaimport
+    xreftab = &s_ipp_group_xref[group];
 
-    gxref = &s_ipp_group_xref[group];
-
-    for (attr = gxref->group_attrs, count = 0; count < gxref->num_attr; attr++)
+#if IPPATTR_XREF_LINEAR
+    // linear search
+    for (attr = xreftab->group_attrs, count = 0; count < xreftab->num_attr; attr++)
     {
         if (attr->recdex == recdex)
         {
@@ -280,7 +293,54 @@ int ipp_get_attr_by_index(const size_t recdex, ipp_attr_grouping_code_t group, i
             return 0;
         }
     }
-    return 1;
+    return -1;
+#else
+    // binary search
+    top = 0;
+    bot = xreftab->num_attr - 1;
+    cur = (top + bot) / 2;
+
+    butil_log(6, "Look for dex %zu in group %u\n", recdex, group);
+
+    if (top == bot)
+    {
+        return -1;
+    }
+    do
+    {
+        butil_log(7, " %zu %zu %zu\n", top, cur, bot);
+        prevtop = top;
+        prevbot = bot;
+        prevcur = cur;
+
+        if (xreftab->group_attrs[cur].recdex == recdex)
+        {
+            if (pattr)
+            {
+                *pattr = &xreftab->group_attrs[cur];
+            }
+            return 0;
+        }
+        if (xreftab->group_attrs[cur].recdex < recdex)
+        {
+            top = cur;
+        }
+        else // xref recdex > recdex
+        {
+            bot = cur;
+        }
+        cur = (top + bot) / 2;
+
+        if (cur == prevcur && cur != bot)
+        {
+            // since averaging rounds down, special case this
+            cur = bot;
+        }
+    }
+    while (top != prevtop || bot != prevbot);
+
+#endif
+    return -1;
 }
 
 int ipp_get_attr_by_name(const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr)
@@ -463,4 +523,42 @@ int test_set_get_string_attr()
     return 0;
 
 }
+
+int test_find_xref_rec()
+{
+    ipp_attr_grouping_code_t group;
+    ipp_group_xref_t *xreftab;
+    ipp_attr_t *attr;
+    ipp_attr_t *retattr;
+    size_t count;
+    int result;
+
+    for (group = IPP_GROUPING_DOCUMENT_DESCRIPTION; group < IPP_GROUPING_MAX_GROUP; group++)
+    {
+        xreftab = &s_ipp_group_xref[group];
+
+        for (attr = xreftab->group_attrs, count = 0; count < xreftab->num_attr; count++, attr++)
+        {
+            result = ipp_get_attr_by_index(attr->recdex, group, &retattr);
+            if (result)
+            {
+                butil_log(0, "failed to get record %zu in group %u, looking for attr %zu of %zu\n",
+                            attr->recdex, group, count, xreftab->num_attr);
+                return result;
+            }
+            if (retattr == NULL)
+            {
+                butil_log(0, "failed to return record for dex %zu in group %u\n", attr->recdex, group);
+                return -1;
+            }
+            if (retattr->recdex != attr->recdex)
+            {
+                butil_log(0, "returned record at wrong index %zu, not at %zu in group %u\n",
+                           retattr->recdex, attr->recdex, group);
+                return -1;
+            }
+        }
+    }
+}
+
 

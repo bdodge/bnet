@@ -135,6 +135,7 @@ int         ipp_destroy_attr    (ipp_attr_t *attr);
 
 int test_find_attr_rec(void);
 int test_set_get_string_attr(void);
+int test_find_xref_rec(void);
 
 #endif
 

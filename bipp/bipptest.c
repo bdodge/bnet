@@ -123,6 +123,7 @@ int main(int argc, char **argv)
         // unit test
         result = test_find_attr_rec();
         result |= test_set_get_string_attr();
+        result |= test_find_xref_rec();
         return result;
     }
     else

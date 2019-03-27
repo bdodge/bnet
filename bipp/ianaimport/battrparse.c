@@ -1317,7 +1317,7 @@ int iana_parse_attributes(
 	// for each group, output a group tree for holding values, resorting the
 	// group-tree by index instead of name
 	//
-	for (typedex = 0; typedex < IPP_GROUPING_SUBSCRIPTION_TEMPLATE; typedex++)
+	for (typedex = 0; typedex < IPP_GROUPING_MAX_GROUP; typedex++)
 	{
 		fprintf(srcfile, "ipp_attr_t s_ipp_attr_group_%s[] =\n{\n",
 				group_code_to_name(typedex, true));
@@ -1349,7 +1349,7 @@ int iana_parse_attributes(
 
 	fprintf(srcfile, "ipp_group_xref_t s_ipp_group_xref[] =\n{\n");
 
-	for (typedex = 0; typedex < IPP_GROUPING_SUBSCRIPTION_TEMPLATE; typedex++)
+	for (typedex = 0; typedex < IPP_GROUPING_MAX_GROUP; typedex++)
 	{
 		fprintf(srcfile, "    { %s, s_ipp_attr_group_%s, "
 				"(sizeof(s_ipp_attr_group_%s)/sizeof(ipp_attr_t)) },\n",

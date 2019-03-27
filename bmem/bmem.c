@@ -194,8 +194,10 @@ int bmem_add_pool(void *base, size_t bytes, size_t blocksize)
             entry_bytes = (pp->blocks + 7) / 8;
             pp->entries = (entry_bytes + sizeof(bmapf_t) - 1) / sizeof(bmapf_t);
 
-            // sort pool into index by size
-            if (! s_pztab || (pp->bytes < s_pztab->bytes))
+            // sort pool into list by block size so allocs are done out of
+            // the pool with the closest fit to alloc size
+            //
+            if (! s_pztab || (pp->blocksize < s_pztab->blocksize))
             {
                     pp->next = s_pztab;
                     s_pztab = pp;
@@ -206,7 +208,7 @@ int bmem_add_pool(void *base, size_t bytes, size_t blocksize)
 
                 for (ppn = s_pztab, ppv = NULL; ppn->next; ppn = ppn->next)
                 {
-                    if (ppn->next->bytes > pp->bytes)
+                    if (ppn->next->blocksize > pp->blocksize)
                     {
                         pp->next = ppn->next;
                         ppn->next = pp;

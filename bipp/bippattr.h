@@ -130,6 +130,7 @@ int ipp_get_attr_by_name        (const char *name, ipp_attr_grouping_code_t grou
 int ipp_set_attr_string_value_by_name(const char *name, ipp_attr_grouping_code_t group, const char *str);
 int ipp_get_attr_value_by_name  (const char *name, ipp_attr_grouping_code_t group, uint8_t **value, size_t *value_len);
 
+int         ipp_dupe_attr       (ipp_attr_t *attr, ipp_attr_t **dupeattr);
 ipp_attr_t *ipp_create_attr     (size_t recdex, uint8_t *value, size_t value_len);
 int         ipp_destroy_attr    (ipp_attr_t *attr);
 

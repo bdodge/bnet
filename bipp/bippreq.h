@@ -24,7 +24,7 @@ struct tag_ipp_server;
 
 // How deep the parsing state stack can go
 //
-#define IPP_REQ_MAX_STACK 16
+#define IPP_REQ_MAX_STACK 4
 
 typedef enum
 {
@@ -40,6 +40,7 @@ typedef enum
     reqAttributeValue,
     reqValidation,
     reqDispatch,
+    reqPrintData,
     reqReply,
     reqReplyOneAttribute,
     reqReplyAttributeValue,

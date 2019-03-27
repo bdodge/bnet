@@ -401,6 +401,26 @@ int ipp_get_attr_value_by_name(const char *name, ipp_attr_grouping_code_t group,
     return 0;
 }
 
+int ipp_dupe_attr(ipp_attr_t *attr, ipp_attr_t **dupeattr)
+{
+    ipp_attr_t *nattr;
+    int result;
+
+    if (! attr || ! dupeattr)
+    {
+        return -1;
+    }
+    nattr = ipp_create_attr(attr->recdex, attr->value, attr->value_len);
+
+    *dupeattr = nattr;
+
+    if (! nattr)
+    {
+        return -1;
+    }
+    return 0;
+}
+
 ipp_attr_t *ipp_create_attr(size_t recdex, uint8_t *value, size_t value_len)
 {
     ipp_attr_t *attr;
@@ -415,6 +435,7 @@ ipp_attr_t *ipp_create_attr(size_t recdex, uint8_t *value, size_t value_len)
     attr->value_len = 0;
     attr->alloc_len = 0;
     attr->value = NULL;
+    attr->next = NULL;
 
     if (value)
     {

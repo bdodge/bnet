@@ -37,6 +37,7 @@ static int ipp_get_printer_attributes(ipp_request_t *req)
 static int ipp_print_job(ipp_request_t *req)
 {
     ipp_attr_t *attr;
+    ipp_attr_t *nattr;
     char uri[IPP_MAX_TEXT];
     char mimestr[IPP_MAX_TEXT];
     int32_t jobid = 0x1234beef;
@@ -69,13 +70,19 @@ static int ipp_print_job(ipp_request_t *req)
     }
     snprintf(uri, sizeof(uri), "%s/job/%d", req->ipp->uri, jobid);
 
-    result = ipp_set_attr_value(attr, (uint8_t*)uri, strlen(uri));
+    result = ipp_dupe_attr(attr, &nattr);
     if (result)
     {
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, attr);
+    result = ipp_set_attr_value(nattr, (uint8_t*)uri, strlen(uri));
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
 
     // put job id into response
     //
@@ -85,14 +92,20 @@ static int ipp_print_job(ipp_request_t *req)
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    jobid = htonl(jobid);
-    result = ipp_set_attr_value(attr, (uint8_t*)&jobid, sizeof(jobid));
+    result = ipp_dupe_attr(attr, &nattr);
     if (result)
     {
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, attr);
+    jobid = htonl(jobid);
+    result = ipp_set_attr_value(nattr, (uint8_t*)&jobid, sizeof(jobid));
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
 
     // put job-state into response
     //
@@ -102,14 +115,20 @@ static int ipp_print_job(ipp_request_t *req)
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    jobstate = htonl(IPP_JSTATE_COMPLETED);
-    result = ipp_set_attr_value(attr, (uint8_t*)&jobstate, sizeof(jobstate));
+    result = ipp_dupe_attr(attr, &nattr);
     if (result)
     {
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, attr);
+    jobstate = htonl(IPP_JSTATE_COMPLETED);
+    result = ipp_set_attr_value(nattr, (uint8_t*)&jobstate, sizeof(jobstate));
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
 
     // put job-state-reasons into response
     //
@@ -119,14 +138,20 @@ static int ipp_print_job(ipp_request_t *req)
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    jobstatereasons = "job-completed-successfully";
-    result = ipp_set_attr_value(attr, (uint8_t*)jobstatereasons, strlen(jobstatereasons));
+    result = ipp_dupe_attr(attr, &nattr);
     if (result)
     {
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, attr);
+    jobstatereasons = "job-completed-successfully";
+    result = ipp_set_attr_value(nattr, (uint8_t*)jobstatereasons, strlen(jobstatereasons));
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
     return result;
 }
 

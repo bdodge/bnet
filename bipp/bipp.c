@@ -35,6 +35,7 @@ static const char *ipp_state_string(ipp_req_state_t state)
     case reqAttributeValue:         return "AttributeValue";
     case reqValidation:             return "Validation";
     case reqDispatch:               return "Dispatch";
+    case reqPrintData:              return "PrintData";
     case reqReply:                  return "Reply";
     case reqReplyOneAttribute:      return "ReplyOneAttribute";
     case reqReplyAttributeValue:    return "ReplyAttributeValue";
@@ -908,9 +909,32 @@ int ipp_process(ipp_request_t *req)
         result = ipp_dispatch(req);
         if (! result)
         {
+            // if there is print data for this request, wait
+            // till download complete before replying
+            //
+            if (req->download_complete)
+            {
+                result = ipp_move_state(req, reqReply);
+            }
+            else
+            {
+                result = ipp_move_state(req, reqPrintData);
+            }
+            break;
+        }
+        break;
+
+    case reqPrintData:
+
+        if (req->download_complete)
+        {
+            butil_log(0, "End of print data\n");
             result = ipp_move_state(req, reqReply);
             break;
         }
+        butil_log(5, "Absorb %d bytes print data\n", req->in.count);
+        req->in.tail += req->in.count;
+        req->in.count = 0;
         break;
 
     case reqReply:

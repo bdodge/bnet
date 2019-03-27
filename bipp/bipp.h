@@ -23,6 +23,13 @@
 #include "butil.h"
 #include "bippreq.h"
 
+#if 1// define to include memory tracing debug
+#define BMEM_TRACE_ALLOCS 1
+#include "bmem.h"
+#define malloc bmem_alloc
+#define free bmem_free
+#endif
+
 /// Context for an IPP entity (a printer / print-server)
 //
 typedef struct tag_ipp_server
@@ -34,12 +41,19 @@ typedef struct tag_ipp_server
     /// serving uri, for convenience
     char uri[IPP_MAX_TEXT];
 
+    /// ipp scheme handle
+    butil_url_scheme_t scheme;
+
+    /// http server context
+    http_server_t server;
+
     /// pool of ipp request contexts
     ipp_request_t req_pool[IPP_MAX_REQUESTS];
     ipp_request_t *req_free;
 }
 ipp_server_t;
 
+const char *ipp_state_string(ipp_req_state_t state);
 #if 1
 #define ipp_set_error(a, b) ipp_set_error_dbg(__FILE__, __LINE__, a, b)
 int ipp_set_error_dbg (const char* fname, int line, ipp_request_t *req, int16_t ecode);

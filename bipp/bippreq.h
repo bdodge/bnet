@@ -104,7 +104,7 @@ typedef struct tag_ipp_request
     int8_t          attr_tag;
     uint16_t        attr_name_len;
     char            attr_name[IPP_MAX_TEXT];
-    char            attr_value[IPP_MAX_LENGTH];
+    uint8_t         attr_value[IPP_MAX_LENGTH];
     uint16_t        attr_value_len;
     uint16_t        attr_bytes_read;
 
@@ -146,6 +146,28 @@ int ipp_add_req_out_attribute   (
                                 ipp_request_t  *req,
                                 ipp_io_groups_t group,
                                 ipp_attr_t     *pattr
+                                );
+
+int ipp_set_req_out_bytes_attr(
+                                ipp_request_t *req,
+                                ipp_io_groups_t group,
+                                const char *name,
+                                const uint8_t *value,
+                                size_t value_len
+                                );
+
+int ipp_set_req_out_string_attr(
+                                ipp_request_t *req,
+                                ipp_io_groups_t group,
+                                const char *name,
+                                const char *value
+                                );
+
+int ipp_set_req_out_int32_attr(
+                                ipp_request_t *req,
+                                ipp_io_groups_t group,
+                                const char *name,
+                                const int32_t value
                                 );
 
 ipp_request_t *ipp_req_create   (struct tag_ipp_server *ipp, http_client_t *client);

@@ -19,7 +19,7 @@
 #include "bippjobops.h"
 #include "butil.h"
 
-static const char *ipp_state_string(ipp_req_state_t state)
+const char *ipp_state_string(ipp_req_state_t state)
 {
     switch (state)
     {
@@ -354,9 +354,12 @@ int ipp_dispatch(ipp_request_t *req)
         result = ipp_printer_op_dispatch(req);
         break;
 
-    case IPP_OP_PRINT_URI:
     case IPP_OP_VALIDATE_JOB:
     case IPP_OP_CREATE_JOB:
+        result = ipp_job_op_dispatch(req);
+        break;
+
+    case IPP_OP_PRINT_URI:
     case IPP_OP_SEND_DOCUMENT:
     case IPP_OP_SEND_URI:
     case IPP_OP_CANCEL_JOB:

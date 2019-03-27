@@ -200,7 +200,7 @@ int ipp_syntax_for_enc_type(ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_
     return 0;
 }
 
-int ipp_set_attr_value(ipp_attr_t *attr, uint8_t *value, size_t value_len)
+int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
     if (! attr || ! value)
     {
@@ -225,8 +225,9 @@ int ipp_set_attr_value(ipp_attr_t *attr, uint8_t *value, size_t value_len)
     return 0;
 }
 
-int ipp_add_attr_value(ipp_attr_t *attr, uint8_t *value, size_t *value_len)
+int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t *value_len)
 {
+    return 1;
 }
 
 int ipp_get_first_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len)
@@ -252,6 +253,7 @@ int ipp_get_first_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **
 
 int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len)
 {
+    return 1;
 }
 
 #define IPPATTR_XREF_LINEAR 0
@@ -580,6 +582,7 @@ int test_find_xref_rec()
             }
         }
     }
+    return 0;
 }
 
 

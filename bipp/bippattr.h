@@ -119,8 +119,8 @@ const char *ipp_name_of_attr    (ipp_attr_t *attr);
 
 int ipp_syntax_for_enc_type     (ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_t *tag, bool *is_array);
 
-int ipp_set_attr_value          (ipp_attr_t *attr, uint8_t *value, size_t value_len);
-int ipp_add_attr_value          (ipp_attr_t *attr, uint8_t *value, size_t *value_len);
+int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
+int ipp_add_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t *value_len);
 int ipp_get_first_attr_value    (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
 int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len);
 

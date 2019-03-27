@@ -15,7 +15,6 @@
  */
 #include "bipp.h"
 
-static butil_url_scheme_t s_ipp_scheme;
 static ipp_server_t s_ipp_server;
 
 int ipp_canned_resource_callback(
@@ -173,7 +172,8 @@ int ipp_resource_callback(
 
     case httpDownloadDone:
 
-        butil_log(5, "IPP download done cb\n");
+        butil_log(5, "IPP download done cb in state %s\n",
+                ipp_state_string(req->state[req->top]));
 
         // indicate no more body data
         req->download_complete = true;
@@ -184,10 +184,10 @@ int ipp_resource_callback(
         // drive response building and sending where http client takes
         // care of chunking, etc.  we just give it a big content length
         //
+        result = 0;
+
         while (! result && req->state[req->top] < reqReply)
         {
-            req->in.count = 0; // wouldn't be here if any data left
-
             result = ipp_process(req);
             if (result)
             {
@@ -209,6 +209,7 @@ int ipp_resource_callback(
         {
             // something went very wrong?
             //
+            butil_log(0, "Ending in cb, not expected\n");
             client->state = httpDone; //??
             client->out_content_length = 0x100000;
         }
@@ -279,6 +280,9 @@ int ipp_resource_callback(
             result = ipp_req_destroy(ipp, req);
             client->ctxpriv = NULL;
         }
+#ifdef BMEM_H
+        http_server_abort(&ipp->server);
+#endif
         break;
 
     default:
@@ -300,7 +304,7 @@ int ipp_set_environment(ipp_server_t *ipp)
     }
     // for uri of printers ipp url
     //
-    result = butil_paste_url(ipp->uri, sizeof(ipp->uri), s_ipp_scheme, hostname, ipp->port, ipp->path);
+    result = butil_paste_url(ipp->uri, sizeof(ipp->uri), ipp->scheme, hostname, ipp->port, ipp->path);
     if (result)
     {
         return result;
@@ -314,7 +318,6 @@ int ipp_set_environment(ipp_server_t *ipp)
 int ipp_server(const char *program, uint16_t port, bool isTLS)
 {
     ipp_server_t *ipp;
-    http_server_t server;
     http_resource_t *resources = NULL;
     http_credentials_t creds;
 
@@ -337,7 +340,7 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
     ipp = &s_ipp_server;
 
     // register a custom scheme
-    result = butil_register_scheme("ipp", &s_ipp_scheme);
+    result = butil_register_scheme("ipp", &ipp->scheme);
     if (result)
     {
         BERROR("can't register scheme");
@@ -371,18 +374,18 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
     }
     // set use-tls for certain ports
     //
-    result = http_server_init(&server, resources, ipp->port, httpTCP, isTLS);
+    result = http_server_init(&ipp->server, resources, ipp->port, httpTCP, isTLS);
     if (result)
     {
         BERROR("can't start server");
         return result;
     }
-    result = http_serve(&server);
+    result = http_serve(&ipp->server);
     if (result)
     {
-        butil_log(2, "server on port %u ends\n", server.port);
+        butil_log(2, "server on port %u ends\n", ipp->server.port);
     }
-    http_server_cleanup(&server);
+    http_server_cleanup(&ipp->server);
     return result;
 }
 

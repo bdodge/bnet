@@ -128,7 +128,57 @@ int main(int argc, char **argv)
     }
     else
     {
-        return ipp_server(program, port, false);
+#ifdef BMEM_H
+        static uint8_t g_spool[0x200000];
+        static uint8_t g_mpool[0x200000];
+        static uint8_t g_lpool[0x100000];
+
+        void *pool;
+        size_t pool_size, pool_chunk;
+        size_t size;
+        int result;
+
+        result = bmem_init();
+        if (result)
+        {
+            BERROR("Can't init pool\n");
+            return result;
+        }
+        pool_size = sizeof(g_spool);
+        pool_chunk = 128;
+        pool = g_spool;
+        result = bmem_add_pool(pool, pool_size, pool_chunk);
+        if (result)
+        {
+            BERROR("Can't add small pool\n");
+            return result;
+        }
+        pool_size = sizeof(g_mpool);
+        pool_chunk = 512;
+        pool = g_mpool;
+        result = bmem_add_pool(pool, pool_size, pool_chunk);
+        if (result)
+        {
+            BERROR("Can't add medium pool\n");
+            return result;
+        }
+        pool_size = sizeof(g_lpool);
+        pool_chunk = 16384;
+        pool = g_lpool;
+        result = bmem_add_pool(pool, pool_size, pool_chunk);
+        if (result)
+        {
+            BERROR("Can't add large pool\n");
+            return result;
+        }
+#endif
+        result = ipp_server(program, port, false);
+
+        #ifdef BMEM_H
+        bmem_stats(5);
+        bmem_deinit();
+        #endif
+        return result;
     }
 }
 

@@ -5,15 +5,15 @@
 
 // Members of collection baling.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_baling__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_baling__finishings_col[] =
 {
     {   // index 0
-        "baling-type",   
+        "baling-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "baling-when",   
+        "baling-when",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -21,15 +21,15 @@ ipp_attr_rec_t s_ipp_col_baling__finishings_col[] =
 
 // Members of collection binding.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_binding__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_binding__finishings_col[] =
 {
     {   // index 0
-        "binding-reference-edge",   
+        "binding-reference-edge",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "binding-type",   
+        "binding-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -37,15 +37,15 @@ ipp_attr_rec_t s_ipp_col_binding__finishings_col[] =
 
 // Members of collection coating.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_coating__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_coating__finishings_col[] =
 {
     {   // index 0
-        "coating-sides",   
+        "coating-sides",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "coating-type",   
+        "coating-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -53,7 +53,7 @@ ipp_attr_rec_t s_ipp_col_coating__finishings_col[] =
 
 // Members of collection cover-back
 //
-ipp_attr_rec_t s_ipp_col_cover_back[] = 
+ipp_attr_rec_t s_ipp_col_cover_back[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -64,7 +64,7 @@ ipp_attr_rec_t s_ipp_col_cover_back[] =
 
 // Members of collection cover-back-actual
 //
-ipp_attr_rec_t s_ipp_col_cover_back_actual[] = 
+ipp_attr_rec_t s_ipp_col_cover_back_actual[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -75,7 +75,7 @@ ipp_attr_rec_t s_ipp_col_cover_back_actual[] =
 
 // Members of collection cover-back-default
 //
-ipp_attr_rec_t s_ipp_col_cover_back_default[] = 
+ipp_attr_rec_t s_ipp_col_cover_back_default[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -86,7 +86,7 @@ ipp_attr_rec_t s_ipp_col_cover_back_default[] =
 
 // Members of collection cover-front
 //
-ipp_attr_rec_t s_ipp_col_cover_front[] = 
+ipp_attr_rec_t s_ipp_col_cover_front[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -97,7 +97,7 @@ ipp_attr_rec_t s_ipp_col_cover_front[] =
 
 // Members of collection cover-front-actual
 //
-ipp_attr_rec_t s_ipp_col_cover_front_actual[] = 
+ipp_attr_rec_t s_ipp_col_cover_front_actual[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -108,7 +108,7 @@ ipp_attr_rec_t s_ipp_col_cover_front_actual[] =
 
 // Members of collection cover-front-default
 //
-ipp_attr_rec_t s_ipp_col_cover_front_default[] = 
+ipp_attr_rec_t s_ipp_col_cover_front_default[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -119,35 +119,35 @@ ipp_attr_rec_t s_ipp_col_cover_front_default[] =
 
 // Members of collection cover-sheet-info
 //
-ipp_attr_rec_t s_ipp_col_cover_sheet_info[] = 
+ipp_attr_rec_t s_ipp_col_cover_sheet_info[] =
 {
     {   // index 0
-        "from-name",   
+        "from-name",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "logo",   
+        "logo",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "message",   
+        "message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "organization-name",   
+        "organization-name",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "subject",   
+        "subject",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "to-name",   
+        "to-name",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -155,7 +155,7 @@ ipp_attr_rec_t s_ipp_col_cover_sheet_info[] =
 
 // Members of collection cover-sheet-info-default
 //
-ipp_attr_rec_t s_ipp_col_cover_sheet_info_default[] = 
+ipp_attr_rec_t s_ipp_col_cover_sheet_info_default[] =
 {
     {   // index 0
         "*cover-sheet-info",   // indirect reference to
@@ -166,10 +166,10 @@ ipp_attr_rec_t s_ipp_col_cover_sheet_info_default[] =
 
 // Members of collection covering.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_covering__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_covering__finishings_col[] =
 {
     {   // index 0
-        "covering-name",   
+        "covering-name",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -177,40 +177,40 @@ ipp_attr_rec_t s_ipp_col_covering__finishings_col[] =
 
 // Members of collection destination-accesses
 //
-ipp_attr_rec_t s_ipp_col_destination_accesses[] = 
+ipp_attr_rec_t s_ipp_col_destination_accesses[] =
 {
     {   // index 0
-        "access-oauth-token",   
+        "access-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "access-oauth-uri",   
+        "access-oauth-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "access-password",   
+        "access-password",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "access-pin",   
+        "access-pin",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "access-user-name",   
+        "access-user-name",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "access-x509-certificate",   
+        "access-x509-certificate",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "access-x509-certificate(obsolete)",   
+        "access-x509-certificate(obsolete)",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -218,20 +218,20 @@ ipp_attr_rec_t s_ipp_col_destination_accesses[] =
 
 // Members of collection destination-statuses
 //
-ipp_attr_rec_t s_ipp_col_destination_statuses[] = 
+ipp_attr_rec_t s_ipp_col_destination_statuses[] =
 {
     {   // index 0
-        "destination-uri",   
+        "destination-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "images-completed",   
+        "images-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "transmission-status",   
+        "transmission-status",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -239,55 +239,55 @@ ipp_attr_rec_t s_ipp_col_destination_statuses[] =
 
 // Members of collection destination-uri-ready
 //
-ipp_attr_rec_t s_ipp_col_destination_uri_ready[] = 
+ipp_attr_rec_t s_ipp_col_destination_uri_ready[] =
 {
     {   // index 0
-        "destination-attributes",   
+        "destination-attributes",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "destination-attributes-supported",   
+        "destination-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "destination-info",   
+        "destination-info",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "destination-is-directory",   
+        "destination-is-directory",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "destination-mandatory-access-attributes",   
+        "destination-mandatory-access-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "destination-name",   
+        "destination-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "destination-oauth-scope",   
+        "destination-oauth-scope",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 7
-        "destination-oauth-token",   
+        "destination-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 8
-        "destination-oauth-uri",   
+        "destination-oauth-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 9
-        "destination-uri",   
+        "destination-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -295,30 +295,30 @@ ipp_attr_rec_t s_ipp_col_destination_uri_ready[] =
 
 // Members of collection destination-uris
 //
-ipp_attr_rec_t s_ipp_col_destination_uris[] = 
+ipp_attr_rec_t s_ipp_col_destination_uris[] =
 {
     {   // index 0
-        "destination-attributes",   
+        "destination-attributes",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "destination-uri",   
+        "destination-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "post-dial-string",   
+        "post-dial-string",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "pre-dial-string",   
+        "pre-dial-string",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "t33-subaddress",   
+        "t33-subaddress",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -326,40 +326,40 @@ ipp_attr_rec_t s_ipp_col_destination_uris[] =
 
 // Members of collection document-access
 //
-ipp_attr_rec_t s_ipp_col_document_access[] = 
+ipp_attr_rec_t s_ipp_col_document_access[] =
 {
     {   // index 0
-        "access-oauth-token",   
+        "access-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "access-oauth-uri",   
+        "access-oauth-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "access-password",   
+        "access-password",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "access-pin",   
+        "access-pin",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "access-user-name",   
+        "access-user-name",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "access-x509-certificate",   
+        "access-x509-certificate",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "access-x509-certificate(obsolete)",   
+        "access-x509-certificate(obsolete)",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -367,7 +367,7 @@ ipp_attr_rec_t s_ipp_col_document_access[] =
 
 // Members of collection document-format-details
 //
-ipp_attr_rec_t s_ipp_col_document_format_details[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details[] =
 {
     {   // index 0
         "*document-format-details",   // indirect reference to
@@ -378,7 +378,7 @@ ipp_attr_rec_t s_ipp_col_document_format_details[] =
 
 // Members of collection document-format-details-default
 //
-ipp_attr_rec_t s_ipp_col_document_format_details_default[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details_default[] =
 {
     {   // index 0
         "*document-format-details",   // indirect reference to
@@ -389,7 +389,7 @@ ipp_attr_rec_t s_ipp_col_document_format_details_default[] =
 
 // Members of collection document-format-details-detected
 //
-ipp_attr_rec_t s_ipp_col_document_format_details_detected[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details_detected[] =
 {
     {   // index 0
         "*document-format-details",   // indirect reference to
@@ -400,7 +400,7 @@ ipp_attr_rec_t s_ipp_col_document_format_details_detected[] =
 
 // Members of collection document-format-details-supplied
 //
-ipp_attr_rec_t s_ipp_col_document_format_details_supplied[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details_supplied[] =
 {
     {   // index 0
         "*document-format-details",   // indirect reference to
@@ -411,7 +411,7 @@ ipp_attr_rec_t s_ipp_col_document_format_details_supplied[] =
 
 // Members of collection finishings-col
 //
-ipp_attr_rec_t s_ipp_col_finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -422,7 +422,7 @@ ipp_attr_rec_t s_ipp_col_finishings_col[] =
 
 // Members of collection finishings-col-actual
 //
-ipp_attr_rec_t s_ipp_col_finishings_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col_actual[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -433,7 +433,7 @@ ipp_attr_rec_t s_ipp_col_finishings_col_actual[] =
 
 // Members of collection finishings-col-default
 //
-ipp_attr_rec_t s_ipp_col_finishings_col_default[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col_default[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -444,7 +444,7 @@ ipp_attr_rec_t s_ipp_col_finishings_col_default[] =
 
 // Members of collection finishings-col-ready
 //
-ipp_attr_rec_t s_ipp_col_finishings_col_ready[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col_ready[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -455,20 +455,20 @@ ipp_attr_rec_t s_ipp_col_finishings_col_ready[] =
 
 // Members of collection folding.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_folding__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_folding__finishings_col[] =
 {
     {   // index 0
-        "folding-direction",   
+        "folding-direction",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "folding-offset",   
+        "folding-offset",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "folding-reference-edge",   
+        "folding-reference-edge",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -476,45 +476,45 @@ ipp_attr_rec_t s_ipp_col_folding__finishings_col[] =
 
 // Members of collection impressions-col
 //
-ipp_attr_rec_t s_ipp_col_impressions_col[] = 
+ipp_attr_rec_t s_ipp_col_impressions_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "blank-two-sided",   
+        "blank-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "full-color",   
+        "full-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "full-color-two-sided",   
+        "full-color-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "highlight-color-two-sided",   
+        "highlight-color-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 7
-        "monochrome-two-sided",   
+        "monochrome-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -522,7 +522,7 @@ ipp_attr_rec_t s_ipp_col_impressions_col[] =
 
 // Members of collection impressions-completed-col
 //
-ipp_attr_rec_t s_ipp_col_impressions_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_impressions_completed_col[] =
 {
     {   // index 0
         "*impressions-col",   // indirect reference to
@@ -533,95 +533,95 @@ ipp_attr_rec_t s_ipp_col_impressions_completed_col[] =
 
 // Members of collection input-attributes
 //
-ipp_attr_rec_t s_ipp_col_input_attributes[] = 
+ipp_attr_rec_t s_ipp_col_input_attributes[] =
 {
     {   // index 0
-        "input-auto-scaling",   
+        "input-auto-scaling",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "input-auto-skew-correction",   
+        "input-auto-skew-correction",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "input-brightness",   
+        "input-brightness",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "input-color-mode",   
+        "input-color-mode",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "input-content-type",   
+        "input-content-type",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "input-contrast",   
+        "input-contrast",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "input-film-scan-mode",   
+        "input-film-scan-mode",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 7
-        "input-images-to-transfer",   
+        "input-images-to-transfer",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 8
-        "input-media",   
+        "input-media",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 9
-        "input-orientation-requested",   
+        "input-orientation-requested",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 10
-        "input-quality",   
+        "input-quality",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 11
-        "input-resolution",   
+        "input-resolution",
         { IPP_RESOLUTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 12
-        "input-scaling-height",   
+        "input-scaling-height",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 13
-        "input-scaling-width",   
+        "input-scaling-width",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 14
-        "input-scan-regions",   
+        "input-scan-regions",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 15
-        "input-sharpness",   
+        "input-sharpness",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 16
-        "input-sides",   
+        "input-sides",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 17
-        "input-source",   
+        "input-source",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -629,25 +629,25 @@ ipp_attr_rec_t s_ipp_col_input_attributes[] =
 
 // Members of collection input-scan-regions.input-attributes
 //
-ipp_attr_rec_t s_ipp_col_input_scan_regions__input_attributes[] = 
+ipp_attr_rec_t s_ipp_col_input_scan_regions__input_attributes[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "x-origin",   
+        "x-origin",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "y-origin",   
+        "y-origin",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -655,25 +655,25 @@ ipp_attr_rec_t s_ipp_col_input_scan_regions__input_attributes[] =
 
 // Members of collection input-scan-regions-supported
 //
-ipp_attr_rec_t s_ipp_col_input_scan_regions_supported[] = 
+ipp_attr_rec_t s_ipp_col_input_scan_regions_supported[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "x-origin",   
+        "x-origin",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "y-dimension",   
+        "y-dimension",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "y-origin",   
+        "y-origin",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -681,7 +681,7 @@ ipp_attr_rec_t s_ipp_col_input_scan_regions_supported[] =
 
 // Members of collection insert-sheet
 //
-ipp_attr_rec_t s_ipp_col_insert_sheet[] = 
+ipp_attr_rec_t s_ipp_col_insert_sheet[] =
 {
     {   // index 0
         "*insert-sheet",   // indirect reference to
@@ -692,7 +692,7 @@ ipp_attr_rec_t s_ipp_col_insert_sheet[] =
 
 // Members of collection insert-sheet-actual
 //
-ipp_attr_rec_t s_ipp_col_insert_sheet_actual[] = 
+ipp_attr_rec_t s_ipp_col_insert_sheet_actual[] =
 {
     {   // index 0
         "*insert-sheet",   // indirect reference to
@@ -703,7 +703,7 @@ ipp_attr_rec_t s_ipp_col_insert_sheet_actual[] =
 
 // Members of collection insert-sheet-default
 //
-ipp_attr_rec_t s_ipp_col_insert_sheet_default[] = 
+ipp_attr_rec_t s_ipp_col_insert_sheet_default[] =
 {
     {   // index 0
         "*insert-sheet",   // indirect reference to
@@ -714,25 +714,25 @@ ipp_attr_rec_t s_ipp_col_insert_sheet_default[] =
 
 // Members of collection job-accounting-sheets
 //
-ipp_attr_rec_t s_ipp_col_job_accounting_sheets[] = 
+ipp_attr_rec_t s_ipp_col_job_accounting_sheets[] =
 {
     {   // index 0
-        "job-accounting-output-bin",   
+        "job-accounting-output-bin",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "job-accounting-sheets-type",   
+        "job-accounting-sheets-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "media",   
+        "media",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "media-col",   
+        "media-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -740,7 +740,7 @@ ipp_attr_rec_t s_ipp_col_job_accounting_sheets[] =
 
 // Members of collection job-accounting-sheets-actual
 //
-ipp_attr_rec_t s_ipp_col_job_accounting_sheets_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_accounting_sheets_actual[] =
 {
     {   // index 0
         "*job-accounting-sheets",   // indirect reference to
@@ -751,7 +751,7 @@ ipp_attr_rec_t s_ipp_col_job_accounting_sheets_actual[] =
 
 // Members of collection job-accounting-sheets-default
 //
-ipp_attr_rec_t s_ipp_col_job_accounting_sheets_default[] = 
+ipp_attr_rec_t s_ipp_col_job_accounting_sheets_default[] =
 {
     {   // index 0
         "*job-accounting-sheets",   // indirect reference to
@@ -762,10 +762,10 @@ ipp_attr_rec_t s_ipp_col_job_accounting_sheets_default[] =
 
 // Members of collection job-constraints-supported
 //
-ipp_attr_rec_t s_ipp_col_job_constraints_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_constraints_supported[] =
 {
     {   // index 0
-        "resolver-name",   
+        "resolver-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -773,7 +773,7 @@ ipp_attr_rec_t s_ipp_col_job_constraints_supported[] =
 
 // Members of collection job-cover-back
 //
-ipp_attr_rec_t s_ipp_col_job_cover_back[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_back[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -784,7 +784,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_back[] =
 
 // Members of collection job-cover-back-actual
 //
-ipp_attr_rec_t s_ipp_col_job_cover_back_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_back_actual[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -795,7 +795,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_back_actual[] =
 
 // Members of collection job-cover-back-default
 //
-ipp_attr_rec_t s_ipp_col_job_cover_back_default[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_back_default[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -806,7 +806,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_back_default[] =
 
 // Members of collection job-cover-front
 //
-ipp_attr_rec_t s_ipp_col_job_cover_front[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_front[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -817,7 +817,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_front[] =
 
 // Members of collection job-cover-front-actual
 //
-ipp_attr_rec_t s_ipp_col_job_cover_front_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_front_actual[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -828,7 +828,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_front_actual[] =
 
 // Members of collection job-cover-front-default
 //
-ipp_attr_rec_t s_ipp_col_job_cover_front_default[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_front_default[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -839,25 +839,25 @@ ipp_attr_rec_t s_ipp_col_job_cover_front_default[] =
 
 // Members of collection job-error-sheet
 //
-ipp_attr_rec_t s_ipp_col_job_error_sheet[] = 
+ipp_attr_rec_t s_ipp_col_job_error_sheet[] =
 {
     {   // index 0
-        "job-error-sheet-type",   
+        "job-error-sheet-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "job-error-sheet-when",   
+        "job-error-sheet-when",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "media",   
+        "media",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "media-col",   
+        "media-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -865,7 +865,7 @@ ipp_attr_rec_t s_ipp_col_job_error_sheet[] =
 
 // Members of collection job-error-sheet-actual
 //
-ipp_attr_rec_t s_ipp_col_job_error_sheet_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_error_sheet_actual[] =
 {
     {   // index 0
         "*job-error-sheet",   // indirect reference to
@@ -876,7 +876,7 @@ ipp_attr_rec_t s_ipp_col_job_error_sheet_actual[] =
 
 // Members of collection job-error-sheet-default
 //
-ipp_attr_rec_t s_ipp_col_job_error_sheet_default[] = 
+ipp_attr_rec_t s_ipp_col_job_error_sheet_default[] =
 {
     {   // index 0
         "*job-error-sheet",   // indirect reference to
@@ -887,7 +887,7 @@ ipp_attr_rec_t s_ipp_col_job_error_sheet_default[] =
 
 // Members of collection job-finishings-col
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -898,7 +898,7 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col[] =
 
 // Members of collection job-finishings-col-actual
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col_actual[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -909,7 +909,7 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col_actual[] =
 
 // Members of collection job-finishings-col-default
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col_default[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col_default[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -920,7 +920,7 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col_default[] =
 
 // Members of collection job-finishings-col-ready
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col_ready[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col_ready[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -931,45 +931,45 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col_ready[] =
 
 // Members of collection job-impressions-col
 //
-ipp_attr_rec_t s_ipp_col_job_impressions_col[] = 
+ipp_attr_rec_t s_ipp_col_job_impressions_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "blank-two-sided",   
+        "blank-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "full-color",   
+        "full-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "full-color-two-sided",   
+        "full-color-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "highlight-color-two-sided",   
+        "highlight-color-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 7
-        "monochrome-two-sided",   
+        "monochrome-two-sided",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -977,7 +977,7 @@ ipp_attr_rec_t s_ipp_col_job_impressions_col[] =
 
 // Members of collection job-impressions-completed-col
 //
-ipp_attr_rec_t s_ipp_col_job_impressions_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_job_impressions_completed_col[] =
 {
     {   // index 0
         "*job-impressions-col",   // indirect reference to
@@ -988,25 +988,25 @@ ipp_attr_rec_t s_ipp_col_job_impressions_completed_col[] =
 
 // Members of collection job-media-sheets-col
 //
-ipp_attr_rec_t s_ipp_col_job_media_sheets_col[] = 
+ipp_attr_rec_t s_ipp_col_job_media_sheets_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "full-color",   
+        "full-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1014,7 +1014,7 @@ ipp_attr_rec_t s_ipp_col_job_media_sheets_col[] =
 
 // Members of collection job-media-sheets-completed-col
 //
-ipp_attr_rec_t s_ipp_col_job_media_sheets_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_job_media_sheets_completed_col[] =
 {
     {   // index 0
         "*job-media-sheets-col",   // indirect reference to
@@ -1025,15 +1025,15 @@ ipp_attr_rec_t s_ipp_col_job_media_sheets_completed_col[] =
 
 // Members of collection job-pages-col
 //
-ipp_attr_rec_t s_ipp_col_job_pages_col[] = 
+ipp_attr_rec_t s_ipp_col_job_pages_col[] =
 {
     {   // index 0
-        "full-color",   
+        "full-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1041,7 +1041,7 @@ ipp_attr_rec_t s_ipp_col_job_pages_col[] =
 
 // Members of collection job-pages-completed-col
 //
-ipp_attr_rec_t s_ipp_col_job_pages_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_job_pages_completed_col[] =
 {
     {   // index 0
         "*job-pages-col",   // indirect reference to
@@ -1052,10 +1052,10 @@ ipp_attr_rec_t s_ipp_col_job_pages_completed_col[] =
 
 // Members of collection job-presets-supported
 //
-ipp_attr_rec_t s_ipp_col_job_presets_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_presets_supported[] =
 {
     {   // index 0
-        "preset-name",   
+        "preset-name",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1063,10 +1063,10 @@ ipp_attr_rec_t s_ipp_col_job_presets_supported[] =
 
 // Members of collection job-resolvers-supported
 //
-ipp_attr_rec_t s_ipp_col_job_resolvers_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_resolvers_supported[] =
 {
     {   // index 0
-        "resolver-name",   
+        "resolver-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1074,15 +1074,15 @@ ipp_attr_rec_t s_ipp_col_job_resolvers_supported[] =
 
 // Members of collection job-save-disposition
 //
-ipp_attr_rec_t s_ipp_col_job_save_disposition[] = 
+ipp_attr_rec_t s_ipp_col_job_save_disposition[] =
 {
     {   // index 0
-        "save-disposition",   
+        "save-disposition",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "save-info",   
+        "save-info",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1090,20 +1090,20 @@ ipp_attr_rec_t s_ipp_col_job_save_disposition[] =
 
 // Members of collection job-sheets-col
 //
-ipp_attr_rec_t s_ipp_col_job_sheets_col[] = 
+ipp_attr_rec_t s_ipp_col_job_sheets_col[] =
 {
     {   // index 0
-        "job-sheets",   
+        "job-sheets",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "media",   
+        "media",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "media-col",   
+        "media-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1111,7 +1111,7 @@ ipp_attr_rec_t s_ipp_col_job_sheets_col[] =
 
 // Members of collection job-sheets-col-actual
 //
-ipp_attr_rec_t s_ipp_col_job_sheets_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_sheets_col_actual[] =
 {
     {   // index 0
         "*job-sheets-col",   // indirect reference to
@@ -1122,7 +1122,7 @@ ipp_attr_rec_t s_ipp_col_job_sheets_col_actual[] =
 
 // Members of collection job-sheets-col-default
 //
-ipp_attr_rec_t s_ipp_col_job_sheets_col_default[] = 
+ipp_attr_rec_t s_ipp_col_job_sheets_col_default[] =
 {
     {   // index 0
         "*job-sheets-col",   // indirect reference to
@@ -1133,10 +1133,10 @@ ipp_attr_rec_t s_ipp_col_job_sheets_col_default[] =
 
 // Members of collection job-triggers-supported
 //
-ipp_attr_rec_t s_ipp_col_job_triggers_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_triggers_supported[] =
 {
     {   // index 0
-        "preset-name",   
+        "preset-name",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1144,15 +1144,15 @@ ipp_attr_rec_t s_ipp_col_job_triggers_supported[] =
 
 // Members of collection laminating.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_laminating__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_laminating__finishings_col[] =
 {
     {   // index 0
-        "laminating-sides",   
+        "laminating-sides",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "laminating-type",   
+        "laminating-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1160,75 +1160,75 @@ ipp_attr_rec_t s_ipp_col_laminating__finishings_col[] =
 
 // Members of collection materials-col
 //
-ipp_attr_rec_t s_ipp_col_materials_col[] = 
+ipp_attr_rec_t s_ipp_col_materials_col[] =
 {
     {   // index 0
-        "material-amount",   
+        "material-amount",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "material-amount-units",   
+        "material-amount-units",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "material-color",   
+        "material-color",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "material-diameter",   
+        "material-diameter",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "material-diameter-tolerance",   
+        "material-diameter-tolerance",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "material-fill-density",   
+        "material-fill-density",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "material-key",   
+        "material-key",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 7
-        "material-name",   
+        "material-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 8
-        "material-purpose",   
+        "material-purpose",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 9
-        "material-rate",   
+        "material-rate",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 10
-        "material-rate-units",   
+        "material-rate-units",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 11
-        "material-shell-thickness",   
+        "material-shell-thickness",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 12
-        "material-temperature",   
+        "material-temperature",
         { IPP_INTEGER,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 13
-        "material-type",   
+        "material-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1236,7 +1236,7 @@ ipp_attr_rec_t s_ipp_col_materials_col[] =
 
 // Members of collection media-col
 //
-ipp_attr_rec_t s_ipp_col_media_col[] = 
+ipp_attr_rec_t s_ipp_col_media_col[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1247,7 +1247,7 @@ ipp_attr_rec_t s_ipp_col_media_col[] =
 
 // Members of collection media-col-actual
 //
-ipp_attr_rec_t s_ipp_col_media_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_media_col_actual[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1258,7 +1258,7 @@ ipp_attr_rec_t s_ipp_col_media_col_actual[] =
 
 // Members of collection media-col-database
 //
-ipp_attr_rec_t s_ipp_col_media_col_database[] = 
+ipp_attr_rec_t s_ipp_col_media_col_database[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1266,7 +1266,7 @@ ipp_attr_rec_t s_ipp_col_media_col_database[] =
         0,55
     },
     {   // index 1
-        "media-source-properties",   
+        "media-source-properties",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1274,7 +1274,7 @@ ipp_attr_rec_t s_ipp_col_media_col_database[] =
 
 // Members of collection media-col-default
 //
-ipp_attr_rec_t s_ipp_col_media_col_default[] = 
+ipp_attr_rec_t s_ipp_col_media_col_default[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1285,7 +1285,7 @@ ipp_attr_rec_t s_ipp_col_media_col_default[] =
 
 // Members of collection media-col-ready
 //
-ipp_attr_rec_t s_ipp_col_media_col_ready[] = 
+ipp_attr_rec_t s_ipp_col_media_col_ready[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1293,7 +1293,7 @@ ipp_attr_rec_t s_ipp_col_media_col_ready[] =
         0,55
     },
     {   // index 1
-        "media-source-properties",   
+        "media-source-properties",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1301,25 +1301,25 @@ ipp_attr_rec_t s_ipp_col_media_col_ready[] =
 
 // Members of collection media-sheets-col
 //
-ipp_attr_rec_t s_ipp_col_media_sheets_col[] = 
+ipp_attr_rec_t s_ipp_col_media_sheets_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "full-color",   
+        "full-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1327,7 +1327,7 @@ ipp_attr_rec_t s_ipp_col_media_sheets_col[] =
 
 // Members of collection media-sheets-completed-col
 //
-ipp_attr_rec_t s_ipp_col_media_sheets_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_media_sheets_completed_col[] =
 {
     {   // index 0
         "*media-sheets-col",   // indirect reference to
@@ -1338,15 +1338,15 @@ ipp_attr_rec_t s_ipp_col_media_sheets_completed_col[] =
 
 // Members of collection media-size.media-col
 //
-ipp_attr_rec_t s_ipp_col_media_size__media_col[] = 
+ipp_attr_rec_t s_ipp_col_media_size__media_col[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1354,15 +1354,15 @@ ipp_attr_rec_t s_ipp_col_media_size__media_col[] =
 
 // Members of collection media-size-supported
 //
-ipp_attr_rec_t s_ipp_col_media_size_supported[] = 
+ipp_attr_rec_t s_ipp_col_media_size_supported[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1370,15 +1370,15 @@ ipp_attr_rec_t s_ipp_col_media_size_supported[] =
 
 // Members of collection media-source-properties.media-col-database
 //
-ipp_attr_rec_t s_ipp_col_media_source_properties__media_col_database[] = 
+ipp_attr_rec_t s_ipp_col_media_source_properties__media_col_database[] =
 {
     {   // index 0
-        "media-source-feed-direction",   
+        "media-source-feed-direction",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "media-source-feed-orientation",   
+        "media-source-feed-orientation",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1386,20 +1386,20 @@ ipp_attr_rec_t s_ipp_col_media_source_properties__media_col_database[] =
 
 // Members of collection object-offset.print-objects
 //
-ipp_attr_rec_t s_ipp_col_object_offset__print_objects[] = 
+ipp_attr_rec_t s_ipp_col_object_offset__print_objects[] =
 {
     {   // index 0
-        "x-offset",   
+        "x-offset",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "y-offset",   
+        "y-offset",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "z-offset",   
+        "z-offset",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1407,20 +1407,20 @@ ipp_attr_rec_t s_ipp_col_object_offset__print_objects[] =
 
 // Members of collection object-size.print-objects
 //
-ipp_attr_rec_t s_ipp_col_object_size__print_objects[] = 
+ipp_attr_rec_t s_ipp_col_object_size__print_objects[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "z-dimension",   
+        "z-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1428,15 +1428,15 @@ ipp_attr_rec_t s_ipp_col_object_size__print_objects[] =
 
 // Members of collection output-attributes
 //
-ipp_attr_rec_t s_ipp_col_output_attributes[] = 
+ipp_attr_rec_t s_ipp_col_output_attributes[] =
 {
     {   // index 0
-        "noise-removal",   
+        "noise-removal",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "output-compression-quality-factor",   
+        "output-compression-quality-factor",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1444,25 +1444,25 @@ ipp_attr_rec_t s_ipp_col_output_attributes[] =
 
 // Members of collection overrides
 //
-ipp_attr_rec_t s_ipp_col_overrides[] = 
+ipp_attr_rec_t s_ipp_col_overrides[] =
 {
     {   // index 0
-        "<Any Job Template attribute>",   
+        "<Any Job Template attribute>",
         { IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "document-copies",   
+        "document-copies",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "document-numbers",   
+        "document-numbers",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "pages",   
+        "pages",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1470,7 +1470,7 @@ ipp_attr_rec_t s_ipp_col_overrides[] =
 
 // Members of collection overrides-actual
 //
-ipp_attr_rec_t s_ipp_col_overrides_actual[] = 
+ipp_attr_rec_t s_ipp_col_overrides_actual[] =
 {
     {   // index 0
         "*overrides",   // indirect reference to
@@ -1481,15 +1481,15 @@ ipp_attr_rec_t s_ipp_col_overrides_actual[] =
 
 // Members of collection pages-col
 //
-ipp_attr_rec_t s_ipp_col_pages_col[] = 
+ipp_attr_rec_t s_ipp_col_pages_col[] =
 {
     {   // index 0
-        "full-color",   
+        "full-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1497,7 +1497,7 @@ ipp_attr_rec_t s_ipp_col_pages_col[] =
 
 // Members of collection pages-completed-col
 //
-ipp_attr_rec_t s_ipp_col_pages_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_pages_completed_col[] =
 {
     {   // index 0
         "*pages-col",   // indirect reference to
@@ -1508,7 +1508,7 @@ ipp_attr_rec_t s_ipp_col_pages_completed_col[] =
 
 // Members of collection pdl-init-file
 //
-ipp_attr_rec_t s_ipp_col_pdl_init_file[] = 
+ipp_attr_rec_t s_ipp_col_pdl_init_file[] =
 {
     {   // index 0
         "*pdl-init-file",   // indirect reference to
@@ -1519,7 +1519,7 @@ ipp_attr_rec_t s_ipp_col_pdl_init_file[] =
 
 // Members of collection pdl-init-file-default
 //
-ipp_attr_rec_t s_ipp_col_pdl_init_file_default[] = 
+ipp_attr_rec_t s_ipp_col_pdl_init_file_default[] =
 {
     {   // index 0
         "*pdl-init-file",   // indirect reference to
@@ -1530,25 +1530,25 @@ ipp_attr_rec_t s_ipp_col_pdl_init_file_default[] =
 
 // Members of collection print-accuracy
 //
-ipp_attr_rec_t s_ipp_col_print_accuracy[] = 
+ipp_attr_rec_t s_ipp_col_print_accuracy[] =
 {
     {   // index 0
-        "accuracy-units",   
+        "accuracy-units",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "x-accuracy",   
+        "x-accuracy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "y-accuracy",   
+        "y-accuracy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "z-accuracy",   
+        "z-accuracy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1556,25 +1556,25 @@ ipp_attr_rec_t s_ipp_col_print_accuracy[] =
 
 // Members of collection print-accuracy-supported
 //
-ipp_attr_rec_t s_ipp_col_print_accuracy_supported[] = 
+ipp_attr_rec_t s_ipp_col_print_accuracy_supported[] =
 {
     {   // index 0
-        "accuracy-units",   
+        "accuracy-units",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "x-accuracy",   
+        "x-accuracy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "y-accuracy",   
+        "y-accuracy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "z-accuracy",   
+        "z-accuracy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1582,25 +1582,25 @@ ipp_attr_rec_t s_ipp_col_print_accuracy_supported[] =
 
 // Members of collection print-objects
 //
-ipp_attr_rec_t s_ipp_col_print_objects[] = 
+ipp_attr_rec_t s_ipp_col_print_objects[] =
 {
     {   // index 0
-        "document-number",   
+        "document-number",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "object-offset",   
+        "object-offset",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "object-size",   
+        "object-size",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "object-uuid",   
+        "object-uuid",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1608,15 +1608,15 @@ ipp_attr_rec_t s_ipp_col_print_objects[] =
 
 // Members of collection printer-icc-profiles
 //
-ipp_attr_rec_t s_ipp_col_printer_icc_profiles[] = 
+ipp_attr_rec_t s_ipp_col_printer_icc_profiles[] =
 {
     {   // index 0
-        "profile-name",   
+        "profile-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "profile-url",   
+        "profile-url",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1624,20 +1624,20 @@ ipp_attr_rec_t s_ipp_col_printer_icc_profiles[] =
 
 // Members of collection printer-volume-supported
 //
-ipp_attr_rec_t s_ipp_col_printer_volume_supported[] = 
+ipp_attr_rec_t s_ipp_col_printer_volume_supported[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "z-dimension",   
+        "z-dimension",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1645,20 +1645,20 @@ ipp_attr_rec_t s_ipp_col_printer_volume_supported[] =
 
 // Members of collection printer-xri-supported
 //
-ipp_attr_rec_t s_ipp_col_printer_xri_supported[] = 
+ipp_attr_rec_t s_ipp_col_printer_xri_supported[] =
 {
     {   // index 0
-        "xri-authentication",   
+        "xri-authentication",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "xri-security",   
+        "xri-security",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "xri-uri",   
+        "xri-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1666,20 +1666,20 @@ ipp_attr_rec_t s_ipp_col_printer_xri_supported[] =
 
 // Members of collection proof-print
 //
-ipp_attr_rec_t s_ipp_col_proof_print[] = 
+ipp_attr_rec_t s_ipp_col_proof_print[] =
 {
     {   // index 0
-        "media",   
+        "media",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "media-col",   
+        "media-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "proof-print-copies",   
+        "proof-print-copies",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1687,7 +1687,7 @@ ipp_attr_rec_t s_ipp_col_proof_print[] =
 
 // Members of collection proof-print-default
 //
-ipp_attr_rec_t s_ipp_col_proof_print_default[] = 
+ipp_attr_rec_t s_ipp_col_proof_print_default[] =
 {
     {   // index 0
         "*proof-print",   // indirect reference to
@@ -1698,20 +1698,20 @@ ipp_attr_rec_t s_ipp_col_proof_print_default[] =
 
 // Members of collection punching.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_punching__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_punching__finishings_col[] =
 {
     {   // index 0
-        "punching-locations",   
+        "punching-locations",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "punching-offset",   
+        "punching-offset",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "punching-reference-edge",   
+        "punching-reference-edge",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1719,20 +1719,20 @@ ipp_attr_rec_t s_ipp_col_punching__finishings_col[] =
 
 // Members of collection save-info.job-save-disposition
 //
-ipp_attr_rec_t s_ipp_col_save_info__job_save_disposition[] = 
+ipp_attr_rec_t s_ipp_col_save_info__job_save_disposition[] =
 {
     {   // index 0
-        "save-document-format",   
+        "save-document-format",
         { IPP_MIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "save-location",   
+        "save-location",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "save-name",   
+        "save-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1740,7 +1740,7 @@ ipp_attr_rec_t s_ipp_col_save_info__job_save_disposition[] =
 
 // Members of collection separator-sheets
 //
-ipp_attr_rec_t s_ipp_col_separator_sheets[] = 
+ipp_attr_rec_t s_ipp_col_separator_sheets[] =
 {
     {   // index 0
         "*separator-sheets",   // indirect reference to
@@ -1751,7 +1751,7 @@ ipp_attr_rec_t s_ipp_col_separator_sheets[] =
 
 // Members of collection separator-sheets-actual
 //
-ipp_attr_rec_t s_ipp_col_separator_sheets_actual[] = 
+ipp_attr_rec_t s_ipp_col_separator_sheets_actual[] =
 {
     {   // index 0
         "*separator-sheets",   // indirect reference to
@@ -1762,7 +1762,7 @@ ipp_attr_rec_t s_ipp_col_separator_sheets_actual[] =
 
 // Members of collection separator-sheets-default
 //
-ipp_attr_rec_t s_ipp_col_separator_sheets_default[] = 
+ipp_attr_rec_t s_ipp_col_separator_sheets_default[] =
 {
     {   // index 0
         "*separator-sheets",   // indirect reference to
@@ -1773,30 +1773,30 @@ ipp_attr_rec_t s_ipp_col_separator_sheets_default[] =
 
 // Members of collection stitching.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_stitching__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_stitching__finishings_col[] =
 {
     {   // index 0
-        "stitching-angle",   
+        "stitching-angle",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "stitching-locations",   
+        "stitching-locations",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "stitching-method",   
+        "stitching-method",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "stitching-offset",   
+        "stitching-offset",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "stitching-reference-edge",   
+        "stitching-reference-edge",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1804,25 +1804,25 @@ ipp_attr_rec_t s_ipp_col_stitching__finishings_col[] =
 
 // Members of collection trimming.finishings-col
 //
-ipp_attr_rec_t s_ipp_col_trimming__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_trimming__finishings_col[] =
 {
     {   // index 0
-        "trimming-offset",   
+        "trimming-offset",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "trimming-reference-edge",   
+        "trimming-reference-edge",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "trimming-type",   
+        "trimming-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "trimming-when",   
+        "trimming-when",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
@@ -1935,3662 +1935,3662 @@ struct tag_col_xref s_ipp_collection_xref[] =
 ipp_attr_rec_t s_ipp_attributes[] =
 {
     {   // index 0
-        "accuracy-units-supported",   
+        "accuracy-units-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 1
-        "attributes-charset",   
+        "attributes-charset",
         { IPP_CHARSET,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 2
-        "attributes-natural-language",   
+        "attributes-natural-language",
         { IPP_LANGUAGE,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 3
-        "baling-type-supported",   
+        "baling-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 4
-        "baling-when-supported",   
+        "baling-when-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 5
-        "binding-reference-edge-supported",   
+        "binding-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 6
-        "binding-type-supported",   
+        "binding-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 7
-        "charge-info-message",   
+        "charge-info-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 8
-        "charset-configured",   
+        "charset-configured",
         { IPP_CHARSET,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 9
-        "charset-supported",   
+        "charset-supported",
         { IPP_CHARSET | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 10
-        "coating-sides-supported",   
+        "coating-sides-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 11
-        "coating-type-supported",   
+        "coating-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 12
-        "color-supported",   
+        "color-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 13
-        "compression",   
+        "compression",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 14
-        "compression-accepted",   
+        "compression-accepted",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 15
-        "compression-supplied",   
+        "compression-supplied",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 16
-        "compression-supported",   
+        "compression-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 17
-        "confirmation-sheet-print",   
+        "confirmation-sheet-print",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 18
-        "confirmation-sheet-print-default",   
+        "confirmation-sheet-print-default",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 19
-        "copies",   
+        "copies",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 20
-        "copies-actual",   
+        "copies-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 21
-        "copies-default",   
+        "copies-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 22
-        "copies-supported",   
+        "copies-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 23
-        "cover-back",   
+        "cover-back",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 24
-        "cover-back-actual",   
+        "cover-back-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 25
-        "cover-back-default",   
+        "cover-back-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 26
-        "cover-back-supported",   
+        "cover-back-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 27
-        "cover-front",   
+        "cover-front",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 28
-        "cover-front-actual",   
+        "cover-front-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 29
-        "cover-front-default",   
+        "cover-front-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 30
-        "cover-front-supported",   
+        "cover-front-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 31
-        "cover-sheet-info",   
+        "cover-sheet-info",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 32
-        "cover-sheet-info-default",   
+        "cover-sheet-info-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 33
-        "cover-sheet-info-supported",   
+        "cover-sheet-info-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 34
-        "covering-name-supported",   
+        "covering-name-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 35
-        "current-page-order",   
+        "current-page-order",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 36
-        "date-time-at-completed",   
+        "date-time-at-completed",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 37
-        "date-time-at-creation",   
+        "date-time-at-creation",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 38
-        "date-time-at-processing",   
+        "date-time-at-processing",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 39
-        "destination-accesses",   
+        "destination-accesses",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 40
-        "destination-accesses-supported",   
+        "destination-accesses-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 41
-        "destination-statuses",   
+        "destination-statuses",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 42
-        "destination-uri-ready",   
+        "destination-uri-ready",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 43
-        "destination-uri-schemes-supported",   
+        "destination-uri-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 44
-        "destination-uris",   
+        "destination-uris",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 45
-        "destination-uris-supported",   
+        "destination-uris-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 46
-        "detailed-status-message",   
+        "detailed-status-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 47
-        "detailed-status-messages",   
+        "detailed-status-messages",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 48
-        "device-service-count",   
+        "device-service-count",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 49
-        "device-uuid",   
+        "device-uuid",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 50
-        "document-access",   
+        "document-access",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 51
-        "document-access-error",   
+        "document-access-error",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 52
-        "document-access-errors",   
+        "document-access-errors",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 53
-        "document-access-supported",   
+        "document-access-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 54
-        "document-charset",   
+        "document-charset",
         { IPP_CHARSET,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 55
-        "document-charset-default",   
+        "document-charset-default",
         { IPP_CHARSET,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 56
-        "document-charset-supplied",   
+        "document-charset-supplied",
         { IPP_CHARSET,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 57
-        "document-charset-supported",   
+        "document-charset-supported",
         { IPP_CHARSET | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 58
-        "document-creation-attributes-supported",   
+        "document-creation-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 59
-        "document-data-get-interval",   
+        "document-data-get-interval",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 60
-        "document-data-wait",   
+        "document-data-wait",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 61
-        "document-digital-signature",   
+        "document-digital-signature",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 62
-        "document-digital-signature-default",   
+        "document-digital-signature-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 63
-        "document-digital-signature-supplied",   
+        "document-digital-signature-supplied",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 64
-        "document-digital-signature-supported",   
+        "document-digital-signature-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 65
-        "document-format",   
+        "document-format",
         { IPP_MIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 66
-        "document-format-accepted",   
+        "document-format-accepted",
         { IPP_MIME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 67
-        "document-format-default",   
+        "document-format-default",
         { IPP_MIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 68
-        "document-format-details",   
+        "document-format-details",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 69
-        "document-format-details-default",   
+        "document-format-details-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 70
-        "document-format-details-detected",   
+        "document-format-details-detected",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 71
-        "document-format-details-supplied",   
+        "document-format-details-supplied",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 72
-        "document-format-details-supported",   
+        "document-format-details-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 73
-        "document-format-detected",   
+        "document-format-detected",
         { IPP_MIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 74
-        "document-format-ready",   
+        "document-format-ready",
         { IPP_MIME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 75
-        "document-format-supplied",   
+        "document-format-supplied",
         { IPP_MIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 76
-        "document-format-supported",   
+        "document-format-supported",
         { IPP_MIME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 77
-        "document-format-varying-attributes",   
+        "document-format-varying-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 78
-        "document-format-version",   
+        "document-format-version",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 79
-        "document-format-version-default",   
+        "document-format-version-default",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 80
-        "document-format-version-detected",   
+        "document-format-version-detected",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 81
-        "document-format-version-supplied",   
+        "document-format-version-supplied",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 82
-        "document-format-version-supported",   
+        "document-format-version-supported",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 83
-        "document-job-id",   
+        "document-job-id",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 84
-        "document-job-uri",   
+        "document-job-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 85
-        "document-message",   
+        "document-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 86
-        "document-message-supplied",   
+        "document-message-supplied",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 87
-        "document-metadata",   
+        "document-metadata",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 88
-        "document-name",   
+        "document-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 89
-        "document-name-supplied",   
+        "document-name-supplied",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 90
-        "document-natural-language",   
+        "document-natural-language",
         { IPP_LANGUAGE,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 91
-        "document-natural-language-default",   
+        "document-natural-language-default",
         { IPP_LANGUAGE,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 92
-        "document-natural-language-supplied",   
+        "document-natural-language-supplied",
         { IPP_LANGUAGE,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 93
-        "document-natural-language-supported",   
+        "document-natural-language-supported",
         { IPP_LANGUAGE | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 94
-        "document-number",   
+        "document-number",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 95
-        "document-password",   
+        "document-password",
         { IPP_OCTETSTRING,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 96
-        "document-password-supported",   
+        "document-password-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 97
-        "document-preprocessed",   
+        "document-preprocessed",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 98
-        "document-printer-uri",   
+        "document-printer-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 99
-        "document-privacy-attributes",   
+        "document-privacy-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 100
-        "document-privacy-scope",   
+        "document-privacy-scope",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 101
-        "document-state",   
+        "document-state",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 102
-        "document-state-message",   
+        "document-state-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 103
-        "document-state-reasons",   
+        "document-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 104
-        "document-uri",   
+        "document-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 105
-        "document-uuid",   
+        "document-uuid",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 106
-        "errors-count",   
+        "errors-count",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 107
-        "feed-orientation",   
+        "feed-orientation",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 108
-        "feed-orientation-default",   
+        "feed-orientation-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 109
-        "feed-orientation-supported",   
+        "feed-orientation-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 110
-        "fetch-document-attributes-supported",   
+        "fetch-document-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 111
-        "fetch-status-code",   
+        "fetch-status-code",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 112
-        "fetch-status-message",   
+        "fetch-status-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 113
-        "finishing-template-supported",   
+        "finishing-template-supported",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 114
-        "finishings",   
+        "finishings",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 115
-        "finishings-actual",   
+        "finishings-actual",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 116
-        "finishings-col",   
+        "finishings-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 117
-        "finishings-col-actual",   
+        "finishings-col-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 118
-        "finishings-col-database",   
+        "finishings-col-database",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 119
-        "finishings-col-default",   
+        "finishings-col-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 120
-        "finishings-col-ready",   
+        "finishings-col-ready",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 121
-        "finishings-col-supported",   
+        "finishings-col-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 122
-        "finishings-default",   
+        "finishings-default",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 123
-        "finishings-ready",   
+        "finishings-ready",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 124
-        "finishings-supported",   
+        "finishings-supported",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 125
-        "first-index",   
+        "first-index",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 126
-        "folding-direction-supported",   
+        "folding-direction-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 127
-        "folding-offset-supported",   
+        "folding-offset-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 128
-        "folding-reference-edge-supported",   
+        "folding-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 129
-        "font-name-requested",   
+        "font-name-requested",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 130
-        "font-name-requested-default",   
+        "font-name-requested-default",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 131
-        "font-name-requested-supported",   
+        "font-name-requested-supported",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 132
-        "font-size-requested",   
+        "font-size-requested",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 133
-        "font-size-requested-default",   
+        "font-size-requested-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 134
-        "font-size-requested-supported",   
+        "font-size-requested-supported",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 135
-        "force-front-side",   
+        "force-front-side",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 136
-        "force-front-side-actual",   
+        "force-front-side-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 137
-        "force-front-side-default (under review)",   
+        "force-front-side-default (under review)",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 138
-        "force-front-side-supported (under review)",   
+        "force-front-side-supported (under review)",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 139
-        "from-name-supported",   
+        "from-name-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 140
-        "generated-natural-language-supported",   
+        "generated-natural-language-supported",
         { IPP_LANGUAGE | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 141
-        "identify-actions",   
+        "identify-actions",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 142
-        "identify-actions-default",   
+        "identify-actions-default",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 143
-        "identify-actions-supported",   
+        "identify-actions-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 144
-        "imposition-template",   
+        "imposition-template",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 145
-        "imposition-template-actual",   
+        "imposition-template-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 146
-        "imposition-template-default",   
+        "imposition-template-default",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 147
-        "imposition-template-supported",   
+        "imposition-template-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 148
-        "impressions",   
+        "impressions",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 149
-        "impressions-col",   
+        "impressions-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 150
-        "impressions-completed",   
+        "impressions-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 151
-        "impressions-completed-col",   
+        "impressions-completed-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 152
-        "impressions-completed-current-copy",   
+        "impressions-completed-current-copy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 153
-        "input-attributes",   
+        "input-attributes",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 154
-        "input-attributes-actual",   
+        "input-attributes-actual",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 155
-        "input-attributes-default",   
+        "input-attributes-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 156
-        "input-attributes-supported",   
+        "input-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 157
-        "input-color-mode-supported",   
+        "input-color-mode-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 158
-        "input-content-type-supported",   
+        "input-content-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 159
-        "input-film-scan-mode-supported",   
+        "input-film-scan-mode-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 160
-        "input-media-supported",   
+        "input-media-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 161
-        "input-orientation-requested-supported",   
+        "input-orientation-requested-supported",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 162
-        "input-quality-supported",   
+        "input-quality-supported",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 163
-        "input-resolution-supported",   
+        "input-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 164
-        "input-scan-regions-supported",   
+        "input-scan-regions-supported",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 165
-        "input-sides-supported",   
+        "input-sides-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 166
-        "input-source-supported",   
+        "input-source-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 167
-        "insert-after-page-number-supported",   
+        "insert-after-page-number-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 168
-        "insert-count-supported",   
+        "insert-count-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 169
-        "insert-sheet",   
+        "insert-sheet",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 170
-        "insert-sheet-actual",   
+        "insert-sheet-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 171
-        "insert-sheet-default",   
+        "insert-sheet-default",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 172
-        "insert-sheet-supported",   
+        "insert-sheet-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 173
-        "ipp-attribute-fidelity",   
+        "ipp-attribute-fidelity",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 174
-        "ipp-features-supported",   
+        "ipp-features-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 175
-        "ipp-versions-supported",   
+        "ipp-versions-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 176
-        "ippget-event-life",   
+        "ippget-event-life",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 177
-        "job-account-id",   
+        "job-account-id",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 178
-        "job-account-id-actual",   
+        "job-account-id-actual",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 179
-        "job-account-id-default",   
+        "job-account-id-default",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 180
-        "job-account-id-supported",   
+        "job-account-id-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 181
-        "job-account-type",   
+        "job-account-type",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 182
-        "job-account-type-actual",   
+        "job-account-type-actual",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 183
-        "job-account-type-default",   
+        "job-account-type-default",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 184
-        "job-account-type-supported",   
+        "job-account-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 185
-        "job-accounting-sheets",   
+        "job-accounting-sheets",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 186
-        "job-accounting-sheets-actual",   
+        "job-accounting-sheets-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 187
-        "job-accounting-sheets-default",   
+        "job-accounting-sheets-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 188
-        "job-accounting-sheets-supported",   
+        "job-accounting-sheets-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 189
-        "job-accounting-user-id",   
+        "job-accounting-user-id",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 190
-        "job-accounting-user-id-actual",   
+        "job-accounting-user-id-actual",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 191
-        "job-accounting-user-id-default",   
+        "job-accounting-user-id-default",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 192
-        "job-accounting-user-id-supported",   
+        "job-accounting-user-id-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 193
-        "job-attribute-fidelity",   
+        "job-attribute-fidelity",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 194
-        "job-authorization-uri",   
+        "job-authorization-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 195
-        "job-authorization-uri-supported",   
+        "job-authorization-uri-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 196
-        "job-charge-info",   
+        "job-charge-info",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 197
-        "job-collation-type",   
+        "job-collation-type",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 198
-        "job-collation-type-actual",   
+        "job-collation-type-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 199
-        "job-constraints-supported",   
+        "job-constraints-supported",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 200
-        "job-copies",   
+        "job-copies",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 201
-        "job-copies-actual",   
+        "job-copies-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 202
-        "job-copies-default",   
+        "job-copies-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 203
-        "job-copies-supported",   
+        "job-copies-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 204
-        "job-cover-back",   
+        "job-cover-back",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 205
-        "job-cover-back-actual",   
+        "job-cover-back-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 206
-        "job-cover-back-default",   
+        "job-cover-back-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 207
-        "job-cover-back-supported",   
+        "job-cover-back-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 208
-        "job-cover-front",   
+        "job-cover-front",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 209
-        "job-cover-front-actual",   
+        "job-cover-front-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 210
-        "job-cover-front-default",   
+        "job-cover-front-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 211
-        "job-cover-front-supported",   
+        "job-cover-front-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 212
-        "job-creation-attributes-supported",   
+        "job-creation-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 213
-        "job-delay-output-until",   
+        "job-delay-output-until",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 214
-        "job-delay-output-until-default",   
+        "job-delay-output-until-default",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 215
-        "job-delay-output-until-supported",   
+        "job-delay-output-until-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 216
-        "job-delay-output-until-time",   
+        "job-delay-output-until-time",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 217
-        "job-delay-output-until-time-supported",   
+        "job-delay-output-until-time-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 218
-        "job-destination-spooling-supported",   
+        "job-destination-spooling-supported",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 219
-        "job-detailed-status-messages",   
+        "job-detailed-status-messages",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 220
-        "job-document-access-errors",   
+        "job-document-access-errors",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 221
-        "job-error-action",   
+        "job-error-action",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 222
-        "job-error-action-default",   
+        "job-error-action-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 223
-        "job-error-action-supported",   
+        "job-error-action-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 224
-        "job-error-sheet",   
+        "job-error-sheet",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 225
-        "job-error-sheet-actual",   
+        "job-error-sheet-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 226
-        "job-error-sheet-default",   
+        "job-error-sheet-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 227
-        "job-error-sheet-supported",   
+        "job-error-sheet-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 228
-        "job-finishings",   
+        "job-finishings",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 229
-        "job-finishings-actual",   
+        "job-finishings-actual",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 230
-        "job-finishings-col",   
+        "job-finishings-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 231
-        "job-finishings-col-actual",   
+        "job-finishings-col-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 232
-        "job-finishings-col-default",   
+        "job-finishings-col-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 233
-        "job-finishings-col-ready",   
+        "job-finishings-col-ready",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 234
-        "job-finishings-col-supported",   
+        "job-finishings-col-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 235
-        "job-finishings-default",   
+        "job-finishings-default",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 236
-        "job-finishings-ready",   
+        "job-finishings-ready",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 237
-        "job-finishings-supported",   
+        "job-finishings-supported",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 238
-        "job-hold-until",   
+        "job-hold-until",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 239
-        "job-hold-until-actual",   
+        "job-hold-until-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 240
-        "job-hold-until-default",   
+        "job-hold-until-default",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 241
-        "job-hold-until-supported",   
+        "job-hold-until-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 242
-        "job-hold-until-time",   
+        "job-hold-until-time",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 243
-        "job-hold-until-time-supported",   
+        "job-hold-until-time-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 244
-        "job-id",   
+        "job-id",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 245
-        "job-ids",   
+        "job-ids",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 246
-        "job-ids-supported",   
+        "job-ids-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 247
-        "job-impressions",   
+        "job-impressions",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 248
-        "job-impressions-col",   
+        "job-impressions-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 249
-        "job-impressions-completed",   
+        "job-impressions-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 250
-        "job-impressions-completed-col",   
+        "job-impressions-completed-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 251
-        "job-impressions-estimated",   
+        "job-impressions-estimated",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 252
-        "job-impressions-supported",   
+        "job-impressions-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 253
-        "job-k-octets",   
+        "job-k-octets",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 254
-        "job-k-octets-processed",   
+        "job-k-octets-processed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 255
-        "job-k-octets-supported",   
+        "job-k-octets-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 256
-        "job-mandatory-attributes",   
+        "job-mandatory-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 257
-        "job-media-sheets",   
+        "job-media-sheets",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 258
-        "job-media-sheets-col",   
+        "job-media-sheets-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 259
-        "job-media-sheets-completed",   
+        "job-media-sheets-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 260
-        "job-media-sheets-completed-col",   
+        "job-media-sheets-completed-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 261
-        "job-media-sheets-supported",   
+        "job-media-sheets-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 262
-        "job-message-from-operator",   
+        "job-message-from-operator",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 263
-        "job-message-to-operator",   
+        "job-message-to-operator",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 264
-        "job-message-to-operator-actual",   
+        "job-message-to-operator-actual",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 265
-        "job-message-to-operator-default",   
+        "job-message-to-operator-default",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 266
-        "job-message-to-operator-supported",   
+        "job-message-to-operator-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 267
-        "job-more-info",   
+        "job-more-info",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 268
-        "job-name",   
+        "job-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 269
-        "job-originating-user-name",   
+        "job-originating-user-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 270
-        "job-originating-user-uri",   
+        "job-originating-user-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 271
-        "job-pages",   
+        "job-pages",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 272
-        "job-pages-col",   
+        "job-pages-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 273
-        "job-pages-completed",   
+        "job-pages-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 274
-        "job-pages-completed-col",   
+        "job-pages-completed-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 275
-        "job-pages-completed-current-copy",   
+        "job-pages-completed-current-copy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 276
-        "job-pages-per-set",   
+        "job-pages-per-set",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 277
-        "job-pages-per-set-supported",   
+        "job-pages-per-set-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 278
-        "job-password",   
+        "job-password",
         { IPP_OCTETSTRING,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 279
-        "job-password-encryption",   
+        "job-password-encryption",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 280
-        "job-password-encryption-supported",   
+        "job-password-encryption-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 281
-        "job-password-length-supported",   
+        "job-password-length-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 282
-        "job-password-repertoire-configured",   
+        "job-password-repertoire-configured",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 283
-        "job-password-repertoire-supported",   
+        "job-password-repertoire-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 284
-        "job-password-supported",   
+        "job-password-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 285
-        "job-phone-number",   
+        "job-phone-number",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 286
-        "job-phone-number-default",   
+        "job-phone-number-default",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 287
-        "job-phone-number-supported",   
+        "job-phone-number-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 288
-        "job-presets-supported",   
+        "job-presets-supported",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 289
-        "job-printer-up-time",   
+        "job-printer-up-time",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 290
-        "job-printer-uri",   
+        "job-printer-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 291
-        "job-priority",   
+        "job-priority",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 292
-        "job-priority-actual",   
+        "job-priority-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 293
-        "job-priority-default",   
+        "job-priority-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 294
-        "job-priority-supported",   
+        "job-priority-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 295
-        "job-privacy-attributes",   
+        "job-privacy-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 296
-        "job-privacy-scope",   
+        "job-privacy-scope",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 297
-        "job-recipient-name",   
+        "job-recipient-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 298
-        "job-recipient-name-default",   
+        "job-recipient-name-default",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 299
-        "job-recipient-name-supported",   
+        "job-recipient-name-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 300
-        "job-resolvers-supported",   
+        "job-resolvers-supported",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 301
-        "job-save-disposition",   
+        "job-save-disposition",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 302
-        "job-save-printer-make-and-model",   
+        "job-save-printer-make-and-model",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 303
-        "job-settable-attributes-supported",   
+        "job-settable-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 304
-        "job-sheet-message",   
+        "job-sheet-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 305
-        "job-sheet-message-actual",   
+        "job-sheet-message-actual",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 306
-        "job-sheet-message-default",   
+        "job-sheet-message-default",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 307
-        "job-sheet-message-supported",   
+        "job-sheet-message-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 308
-        "job-sheets",   
+        "job-sheets",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 309
-        "job-sheets-actual",   
+        "job-sheets-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 310
-        "job-sheets-col",   
+        "job-sheets-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 311
-        "job-sheets-col-actual",   
+        "job-sheets-col-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 312
-        "job-sheets-col-default",   
+        "job-sheets-col-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 313
-        "job-sheets-col-supported",   
+        "job-sheets-col-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 314
-        "job-sheets-default",   
+        "job-sheets-default",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 315
-        "job-sheets-supported",   
+        "job-sheets-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 316
-        "job-spooling-supported",   
+        "job-spooling-supported",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 317
-        "job-state",   
+        "job-state",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 318
-        "job-state-message",   
+        "job-state-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 319
-        "job-state-reasons",   
+        "job-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 320
-        "job-triggers-supported",   
+        "job-triggers-supported",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 321
-        "job-uri",   
+        "job-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 322
-        "job-uuid",   
+        "job-uuid",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 323
-        "jpeg-features-supported",   
+        "jpeg-features-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 324
-        "jpeg-k-octets-supported",   
+        "jpeg-k-octets-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 325
-        "jpeg-x-dimension-supported",   
+        "jpeg-x-dimension-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 326
-        "jpeg-y-dimension-supported",   
+        "jpeg-y-dimension-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 327
-        "k-octets",   
+        "k-octets",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 328
-        "k-octets-processed",   
+        "k-octets-processed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 329
-        "laminating-sides-supported",   
+        "laminating-sides-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 330
-        "laminating-type-supported",   
+        "laminating-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 331
-        "last-document",   
+        "last-document",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 332
-        "limit",   
+        "limit",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 333
-        "logo-uri-formats-supported",   
+        "logo-uri-formats-supported",
         { IPP_MIME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 334
-        "logo-uri-schemes-supported",   
+        "logo-uri-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 335
-        "material-amount-units-supported",   
+        "material-amount-units-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 336
-        "material-diameter-supported",   
+        "material-diameter-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 337
-        "material-purpose-supported",   
+        "material-purpose-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 338
-        "material-rate-supported",   
+        "material-rate-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 339
-        "material-rate-units-supported",   
+        "material-rate-units-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 340
-        "material-shell-thickness-supported",   
+        "material-shell-thickness-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 341
-        "material-temperature-supported",   
+        "material-temperature-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 342
-        "material-type-supported",   
+        "material-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 343
-        "materials-col",   
+        "materials-col",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 344
-        "materials-col-actual",   
+        "materials-col-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 345
-        "materials-col-database",   
+        "materials-col-database",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 346
-        "materials-col-default",   
+        "materials-col-default",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 347
-        "materials-col-ready",   
+        "materials-col-ready",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 348
-        "materials-col-supported",   
+        "materials-col-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 349
-        "max-materials-col-supported",   
+        "max-materials-col-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 350
-        "max-save-info-supported",   
+        "max-save-info-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 351
-        "max-stitching-locations-supported",   
+        "max-stitching-locations-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 352
-        "media",   
+        "media",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 353
-        "media-actual",   
+        "media-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 354
-        "media-back-coating-supported",   
+        "media-back-coating-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 355
-        "media-bottom-margin-supported",   
+        "media-bottom-margin-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 356
-        "media-col",   
+        "media-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 357
-        "media-col-actual",   
+        "media-col-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 358
-        "media-col-database",   
+        "media-col-database",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 359
-        "media-col-default",   
+        "media-col-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 360
-        "media-col-ready",   
+        "media-col-ready",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 361
-        "media-col-supported",   
+        "media-col-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 362
-        "media-color-supported",   
+        "media-color-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 363
-        "media-default",   
+        "media-default",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 364
-        "media-front-coating-supported",   
+        "media-front-coating-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 365
-        "media-grain-supported",   
+        "media-grain-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 366
-        "media-hole-count-supported",   
+        "media-hole-count-supported",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 367
-        "media-info-supported",   
+        "media-info-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 368
-        "media-input-tray-check",   
+        "media-input-tray-check",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 369
-        "media-input-tray-check-actual",   
+        "media-input-tray-check-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 370
-        "media-key-supported",   
+        "media-key-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 371
-        "media-left-margin-supported",   
+        "media-left-margin-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 372
-        "media-order-count-supported",   
+        "media-order-count-supported",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 373
-        "media-pre-printed-supported",   
+        "media-pre-printed-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 374
-        "media-ready",   
+        "media-ready",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 375
-        "media-recycled-supported",   
+        "media-recycled-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 376
-        "media-right-margin-supported",   
+        "media-right-margin-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 377
-        "media-sheets",   
+        "media-sheets",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 378
-        "media-sheets-col",   
+        "media-sheets-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 379
-        "media-sheets-completed",   
+        "media-sheets-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 380
-        "media-sheets-completed-col",   
+        "media-sheets-completed-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 381
-        "media-size-supported",   
+        "media-size-supported",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 382
-        "media-source-supported",   
+        "media-source-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 383
-        "media-supported",   
+        "media-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 384
-        "media-thickness-supported",   
+        "media-thickness-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 385
-        "media-tooth-supported",   
+        "media-tooth-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 386
-        "media-top-margin-supported",   
+        "media-top-margin-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 387
-        "media-type-supported",   
+        "media-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 388
-        "media-weight-metric-supported",   
+        "media-weight-metric-supported",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 389
-        "message",   
+        "message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 390
-        "message-supported",   
+        "message-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 391
-        "more-info",   
+        "more-info",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 392
-        "multiple-destination-uris-supported",   
+        "multiple-destination-uris-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 393
-        "multiple-document-handling",   
+        "multiple-document-handling",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 394
-        "multiple-document-handling-actual",   
+        "multiple-document-handling-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 395
-        "multiple-document-handling-default",   
+        "multiple-document-handling-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 396
-        "multiple-document-handling-supported",   
+        "multiple-document-handling-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 397
-        "multiple-document-jobs-supported",   
+        "multiple-document-jobs-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 398
-        "multiple-object-handling",   
+        "multiple-object-handling",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 399
-        "multiple-object-handling-actual",   
+        "multiple-object-handling-actual",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 400
-        "multiple-object-handling-default",   
+        "multiple-object-handling-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 401
-        "multiple-object-handling-supported",   
+        "multiple-object-handling-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 402
-        "multiple-operation-time-out",   
+        "multiple-operation-time-out",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 403
-        "multiple-operation-time-out-action",   
+        "multiple-operation-time-out-action",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 404
-        "my-jobs",   
+        "my-jobs",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 405
-        "natural-language-configured",   
+        "natural-language-configured",
         { IPP_LANGUAGE,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 406
-        "notify-attributes",   
+        "notify-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 407
-        "notify-attributes-supported",   
+        "notify-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 408
-        "notify-charset",   
+        "notify-charset",
         { IPP_CHARSET,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 409
-        "notify-events",   
+        "notify-events",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 410
-        "notify-events-default",   
+        "notify-events-default",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 411
-        "notify-events-supported",   
+        "notify-events-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 412
-        "notify-get-interval",   
+        "notify-get-interval",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 413
-        "notify-job-id",   
+        "notify-job-id",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 414
-        "notify-lease-duration",   
+        "notify-lease-duration",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 415
-        "notify-lease-duration-default",   
+        "notify-lease-duration-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 416
-        "notify-lease-duration-supported",   
+        "notify-lease-duration-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 417
-        "notify-lease-expiration-time",   
+        "notify-lease-expiration-time",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 418
-        "notify-max-events-supported",   
+        "notify-max-events-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 419
-        "notify-natural-language",   
+        "notify-natural-language",
         { IPP_LANGUAGE,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 420
-        "notify-printer-up-time",   
+        "notify-printer-up-time",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 421
-        "notify-printer-uri",   
+        "notify-printer-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 422
-        "notify-pull-method",   
+        "notify-pull-method",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 423
-        "notify-pull-method-supported",   
+        "notify-pull-method-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 424
-        "notify-recipient-uri",   
+        "notify-recipient-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 425
-        "notify-schemes-supported",   
+        "notify-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 426
-        "notify-sequence-number",   
+        "notify-sequence-number",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 427
-        "notify-sequence-numbers",   
+        "notify-sequence-numbers",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 428
-        "notify-status-code",   
+        "notify-status-code",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 429
-        "notify-subscribed-event",   
+        "notify-subscribed-event",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 430
-        "notify-subscriber-user-name",   
+        "notify-subscriber-user-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 431
-        "notify-subscriber-user-uri",   
+        "notify-subscriber-user-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 432
-        "notify-subscription-id",   
+        "notify-subscription-id",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 433
-        "notify-subscription-ids",   
+        "notify-subscription-ids",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 434
-        "notify-subscription-uuid",   
+        "notify-subscription-uuid",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 435
-        "notify-text",   
+        "notify-text",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 436
-        "notify-time-interval",   
+        "notify-time-interval",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 437
-        "notify-user-data",   
+        "notify-user-data",
         { IPP_OCTETSTRING,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 438
-        "notify-wait",   
+        "notify-wait",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 439
-        "number-of-documents",   
+        "number-of-documents",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 440
-        "number-of-intervening-jobs",   
+        "number-of-intervening-jobs",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 441
-        "number-of-retries",   
+        "number-of-retries",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 442
-        "number-of-retries-default",   
+        "number-of-retries-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 443
-        "number-of-retries-supported",   
+        "number-of-retries-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 444
-        "number-up",   
+        "number-up",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 445
-        "number-up-actual",   
+        "number-up-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 446
-        "number-up-default",   
+        "number-up-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 447
-        "number-up-supported",   
+        "number-up-supported",
         { IPP_INTEGER,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 448
-        "oauth-authorization-server-uri",   
+        "oauth-authorization-server-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 449
-        "operations-supported",   
+        "operations-supported",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 450
-        "organization-name-supported",   
+        "organization-name-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 451
-        "orientation-requested",   
+        "orientation-requested",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 452
-        "orientation-requested-actual",   
+        "orientation-requested-actual",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 453
-        "orientation-requested-default",   
+        "orientation-requested-default",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 454
-        "orientation-requested-supported",   
+        "orientation-requested-supported",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 455
-        "original-requesting-user-name",   
+        "original-requesting-user-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 456
-        "output-attributes",   
+        "output-attributes",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 457
-        "output-attributes-actual",   
+        "output-attributes-actual",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 458
-        "output-attributes-default",   
+        "output-attributes-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 459
-        "output-attributes-supported",   
+        "output-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 460
-        "output-bin",   
+        "output-bin",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 461
-        "output-bin-actual",   
+        "output-bin-actual",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 462
-        "output-bin-default",   
+        "output-bin-default",
         { IPP_KEYWORD,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 463
-        "output-bin-supported",   
+        "output-bin-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 464
-        "output-device",   
+        "output-device",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 465
-        "output-device-actual",   
+        "output-device-actual",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 466
-        "output-device-assigned",   
+        "output-device-assigned",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 467
-        "output-device-document-state",   
+        "output-device-document-state",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 468
-        "output-device-document-state-message",   
+        "output-device-document-state-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 469
-        "output-device-document-state-reasons",   
+        "output-device-document-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 470
-        "output-device-job-state",   
+        "output-device-job-state",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 471
-        "output-device-job-state-message",   
+        "output-device-job-state-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 472
-        "output-device-job-state-reasons",   
+        "output-device-job-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 473
-        "output-device-job-states",   
+        "output-device-job-states",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 474
-        "output-device-supported",   
+        "output-device-supported",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 475
-        "output-device-uuid",   
+        "output-device-uuid",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 476
-        "output-device-uuid-assigned",   
+        "output-device-uuid-assigned",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 477
-        "output-device-uuid-supported",   
+        "output-device-uuid-supported",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 478
-        "overrides",   
+        "overrides",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 479
-        "overrides-actual",   
+        "overrides-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 480
-        "overrides-supported",   
+        "overrides-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 481
-        "page-delivery",   
+        "page-delivery",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 482
-        "page-delivery-actual",   
+        "page-delivery-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 483
-        "page-delivery-default",   
+        "page-delivery-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 484
-        "page-delivery-supported",   
+        "page-delivery-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 485
-        "page-order-received",   
+        "page-order-received",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 486
-        "page-order-received-actual",   
+        "page-order-received-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 487
-        "page-order-received-default",   
+        "page-order-received-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 488
-        "page-order-received-supported",   
+        "page-order-received-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 489
-        "page-ranges",   
+        "page-ranges",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 490
-        "page-ranges-actual",   
+        "page-ranges-actual",
         { IPP_RANGEOFINT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 491
-        "page-ranges-supported",   
+        "page-ranges-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 492
-        "pages",   
+        "pages",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 493
-        "pages-col",   
+        "pages-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 494
-        "pages-completed",   
+        "pages-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 495
-        "pages-completed-col",   
+        "pages-completed-col",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 496
-        "pages-completed-current-copy",   
+        "pages-completed-current-copy",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 497
-        "pages-per-minute",   
+        "pages-per-minute",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 498
-        "pages-per-minute-color",   
+        "pages-per-minute-color",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 499
-        "pages-per-subset",   
+        "pages-per-subset",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 500
-        "pages-per-subset-supported",   
+        "pages-per-subset-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 501
-        "parent-printers-supported",   
+        "parent-printers-supported",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 502
-        "pclm-raster-back-side",   
+        "pclm-raster-back-side",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 503
-        "pclm-source-resolution",   
+        "pclm-source-resolution",
         { IPP_RESOLUTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 504
-        "pclm-source-resolution-supported",   
+        "pclm-source-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 505
-        "pclm-strip-height-preferred",   
+        "pclm-strip-height-preferred",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 506
-        "pclm-strip-height-supported",   
+        "pclm-strip-height-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 507
-        "pdf-features-supported",   
+        "pdf-features-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 508
-        "pdf-k-octets-supported",   
+        "pdf-k-octets-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 509
-        "pdf-versions-supported",   
+        "pdf-versions-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 510
-        "pdl-init-file",   
+        "pdl-init-file",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 511
-        "pdl-init-file-default",   
+        "pdl-init-file-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 512
-        "pdl-init-file-entry-supported",   
+        "pdl-init-file-entry-supported",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 513
-        "pdl-init-file-location-supported",   
+        "pdl-init-file-location-supported",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 514
-        "pdl-init-file-name-subdirectory-supported",   
+        "pdl-init-file-name-subdirectory-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 515
-        "pdl-init-file-name-supported",   
+        "pdl-init-file-name-supported",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 516
-        "pdl-init-file-supported",   
+        "pdl-init-file-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 517
-        "pdl-override-guaranteed-supported",   
+        "pdl-override-guaranteed-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 518
-        "pdl-override-supported",   
+        "pdl-override-supported",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 519
-        "platform-shape",   
+        "platform-shape",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 520
-        "platform-temperature",   
+        "platform-temperature",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 521
-        "platform-temperature-actual",   
+        "platform-temperature-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 522
-        "platform-temperature-default",   
+        "platform-temperature-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 523
-        "platform-temperature-supported",   
+        "platform-temperature-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 524
-        "preferred-attributes",   
+        "preferred-attributes",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 525
-        "preferred-attributes-supported",   
+        "preferred-attributes-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 526
-        "presentation-direction-number-up",   
+        "presentation-direction-number-up",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 527
-        "presentation-direction-number-up-actual",   
+        "presentation-direction-number-up-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 528
-        "presentation-direction-number-up-default",   
+        "presentation-direction-number-up-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 529
-        "presentation-direction-number-up-supported",   
+        "presentation-direction-number-up-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 530
-        "print-accuracy",   
+        "print-accuracy",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 531
-        "print-accuracy-actual",   
+        "print-accuracy-actual",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 532
-        "print-accuracy-supported",   
+        "print-accuracy-supported",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 533
-        "print-base",   
+        "print-base",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 534
-        "print-base-actual",   
+        "print-base-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 535
-        "print-base-default",   
+        "print-base-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 536
-        "print-base-supported",   
+        "print-base-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 537
-        "print-color-mode",   
+        "print-color-mode",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 538
-        "print-color-mode-actual",   
+        "print-color-mode-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 539
-        "print-color-mode-default",   
+        "print-color-mode-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 540
-        "print-color-mode-supported",   
+        "print-color-mode-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 541
-        "print-content-optimize",   
+        "print-content-optimize",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 542
-        "print-content-optimize-actual",   
+        "print-content-optimize-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 543
-        "print-content-optimize-default",   
+        "print-content-optimize-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 544
-        "print-content-optimize-supported",   
+        "print-content-optimize-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 545
-        "print-objects",   
+        "print-objects",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 546
-        "print-objects-actual",   
+        "print-objects-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 547
-        "print-objects-supported",   
+        "print-objects-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 548
-        "print-quality",   
+        "print-quality",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 549
-        "print-quality-actual",   
+        "print-quality-actual",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 550
-        "print-quality-default",   
+        "print-quality-default",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 551
-        "print-quality-supported",   
+        "print-quality-supported",
         { IPP_ENUM | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 552
-        "print-rendering-intent",   
+        "print-rendering-intent",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 553
-        "print-rendering-intent-actual",   
+        "print-rendering-intent-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 554
-        "print-rendering-intent-default",   
+        "print-rendering-intent-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 555
-        "print-rendering-intent-supported",   
+        "print-rendering-intent-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 556
-        "print-scaling",   
+        "print-scaling",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 557
-        "print-scaling-default",   
+        "print-scaling-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 558
-        "print-scaling-supported",   
+        "print-scaling-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 559
-        "print-supports",   
+        "print-supports",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 560
-        "print-supports-actual",   
+        "print-supports-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 561
-        "print-supports-default",   
+        "print-supports-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 562
-        "print-supports-supported",   
+        "print-supports-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 563
-        "printer-alert",   
+        "printer-alert",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 564
-        "printer-alert-description",   
+        "printer-alert-description",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 565
-        "printer-camera-image-uri",   
+        "printer-camera-image-uri",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 566
-        "printer-charge-info",   
+        "printer-charge-info",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 567
-        "printer-charge-info-uri",   
+        "printer-charge-info-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 568
-        "printer-config-change-date-time",   
+        "printer-config-change-date-time",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 569
-        "printer-config-change-time",   
+        "printer-config-change-time",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 570
-        "printer-current-time",   
+        "printer-current-time",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 571
-        "printer-detailed-status-messages",   
+        "printer-detailed-status-messages",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 572
-        "printer-device-id",   
+        "printer-device-id",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 573
-        "printer-dns-sd-name",   
+        "printer-dns-sd-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 574
-        "printer-driver-installer",   
+        "printer-driver-installer",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 575
-        "printer-fax-log-uri",   
+        "printer-fax-log-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 576
-        "printer-fax-modem-info",   
+        "printer-fax-modem-info",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 577
-        "printer-fax-modem-name",   
+        "printer-fax-modem-name",
         { IPP_NAME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 578
-        "printer-fax-modem-number",   
+        "printer-fax-modem-number",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 579
-        "printer-finisher",   
+        "printer-finisher",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 580
-        "printer-finisher-description",   
+        "printer-finisher-description",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 581
-        "printer-finisher-supplies",   
+        "printer-finisher-supplies",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 582
-        "printer-finisher-supplies-description",   
+        "printer-finisher-supplies-description",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 583
-        "printer-geo-location",   
+        "printer-geo-location",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 584
-        "printer-get-attributes-supported",   
+        "printer-get-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 585
-        "printer-icc-profiles",   
+        "printer-icc-profiles",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 586
-        "printer-icons",   
+        "printer-icons",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 587
-        "printer-info",   
+        "printer-info",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 588
-        "printer-input-tray",   
+        "printer-input-tray",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 589
-        "printer-is-accepting-jobs",   
+        "printer-is-accepting-jobs",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 590
-        "printer-kind",   
+        "printer-kind",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 591
-        "printer-location",   
+        "printer-location",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 592
-        "printer-make-and-model",   
+        "printer-make-and-model",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 593
-        "printer-mandatory-job-attributes",   
+        "printer-mandatory-job-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 594
-        "printer-message-date-time",   
+        "printer-message-date-time",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 595
-        "printer-message-from-operator",   
+        "printer-message-from-operator",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 596
-        "printer-message-time",   
+        "printer-message-time",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 597
-        "printer-more-info",   
+        "printer-more-info",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 598
-        "printer-more-info-manufacturer",   
+        "printer-more-info-manufacturer",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 599
-        "printer-name",   
+        "printer-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 600
-        "printer-organization",   
+        "printer-organization",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 601
-        "printer-organizational-unit",   
+        "printer-organizational-unit",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 602
-        "printer-output-tray",   
+        "printer-output-tray",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 603
-        "printer-privacy-policy-uri",   
+        "printer-privacy-policy-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 604
-        "printer-resolution",   
+        "printer-resolution",
         { IPP_RESOLUTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 605
-        "printer-resolution-actual",   
+        "printer-resolution-actual",
         { IPP_RESOLUTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 606
-        "printer-resolution-default",   
+        "printer-resolution-default",
         { IPP_RESOLUTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 607
-        "printer-resolution-supported",   
+        "printer-resolution-supported",
         { IPP_RESOLUTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 608
-        "printer-settable-attributes-supported",   
+        "printer-settable-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 609
-        "printer-state",   
+        "printer-state",
         { IPP_ENUM,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 610
-        "printer-state-change-date-time",   
+        "printer-state-change-date-time",
         { IPP_DATETIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 611
-        "printer-state-change-time",   
+        "printer-state-change-time",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 612
-        "printer-state-message",   
+        "printer-state-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 613
-        "printer-state-reasons",   
+        "printer-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 614
-        "printer-static-resource-directory-uri",   
+        "printer-static-resource-directory-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 615
-        "printer-static-resource-k-octets-free",   
+        "printer-static-resource-k-octets-free",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 616
-        "printer-static-resource-k-octets-supported",   
+        "printer-static-resource-k-octets-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 617
-        "printer-strings-languages-supported",   
+        "printer-strings-languages-supported",
         { IPP_LANGUAGE | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 618
-        "printer-strings-uri",   
+        "printer-strings-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 619
-        "printer-supply",   
+        "printer-supply",
         { IPP_OCTETSTRING | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 620
-        "printer-supply-description",   
+        "printer-supply-description",
         { IPP_TEXT | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 621
-        "printer-supply-info-uri",   
+        "printer-supply-info-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 622
-        "printer-up-time",   
+        "printer-up-time",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 623
-        "printer-uri",   
+        "printer-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 624
-        "printer-uri-supported",   
+        "printer-uri-supported",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 625
-        "printer-uuid",   
+        "printer-uuid",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 626
-        "printer-volume-supported",   
+        "printer-volume-supported",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 627
-        "printer-xri-supported",   
+        "printer-xri-supported",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 628
-        "profile-uri-actual",   
+        "profile-uri-actual",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 629
-        "proof-print",   
+        "proof-print",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 630
-        "proof-print-default",   
+        "proof-print-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 631
-        "proof-print-supported",   
+        "proof-print-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 632
-        "punching-hole-diameter-configured",   
+        "punching-hole-diameter-configured",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 633
-        "punching-locations-supported",   
+        "punching-locations-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 634
-        "punching-offset-supported",   
+        "punching-offset-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 635
-        "punching-reference-edge-supported",   
+        "punching-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 636
-        "pwg-raster-document-resolution-supported",   
+        "pwg-raster-document-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 637
-        "pwg-raster-document-sheet-back",   
+        "pwg-raster-document-sheet-back",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 638
-        "pwg-raster-document-type-supported",   
+        "pwg-raster-document-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 639
-        "queued-job-count",   
+        "queued-job-count",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 640
-        "reference-uri-schemes-supported",   
+        "reference-uri-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 641
-        "repertoire-supported",   
+        "repertoire-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NAME,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 642
-        "requested-attributes",   
+        "requested-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 643
-        "requesting-user-name",   
+        "requesting-user-name",
         { IPP_NAME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 644
-        "requesting-user-uri",   
+        "requesting-user-uri",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 645
-        "requesting-user-uri-supported",   
+        "requesting-user-uri-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 646
-        "retry-interval",   
+        "retry-interval",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 647
-        "retry-interval-default",   
+        "retry-interval-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 648
-        "retry-interval-supported",   
+        "retry-interval-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 649
-        "retry-time-out",   
+        "retry-time-out",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 650
-        "retry-time-out-default",   
+        "retry-time-out-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 651
-        "retry-time-out-supported",   
+        "retry-time-out-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 652
-        "save-disposition-supported",   
+        "save-disposition-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 653
-        "save-document-format-default",   
+        "save-document-format-default",
         { IPP_MIME,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 654
-        "save-document-format-supported",   
+        "save-document-format-supported",
         { IPP_MIME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 655
-        "save-location-default",   
+        "save-location-default",
         { IPP_URI,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 656
-        "save-location-supported",   
+        "save-location-supported",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 657
-        "save-name-subdirectory-supported",   
+        "save-name-subdirectory-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 658
-        "save-name-supported",   
+        "save-name-supported",
         { IPP_BOOLEAN,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 659
-        "separator-sheets",   
+        "separator-sheets",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 660
-        "separator-sheets-actual",   
+        "separator-sheets-actual",
         { IPP_COLLECTION | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 661
-        "separator-sheets-default",   
+        "separator-sheets-default",
         { IPP_COLLECTION,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 662
-        "separator-sheets-supported",   
+        "separator-sheets-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 663
-        "sheet-collate",   
+        "sheet-collate",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 664
-        "sheet-collate-actual",   
+        "sheet-collate-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 665
-        "sheet-collate-default",   
+        "sheet-collate-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 666
-        "sheet-collate-supported",   
+        "sheet-collate-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 667
-        "sheet-completed-copy-number",   
+        "sheet-completed-copy-number",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 668
-        "sheet-completed-document-number",   
+        "sheet-completed-document-number",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 669
-        "sides",   
+        "sides",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 670
-        "sides-actual",   
+        "sides-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 671
-        "sides-default",   
+        "sides-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 672
-        "sides-supported",   
+        "sides-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 673
-        "status-message",   
+        "status-message",
         { IPP_TEXT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 674
-        "stitching-angle-supported",   
+        "stitching-angle-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 675
-        "stitching-locations-supported",   
+        "stitching-locations-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 676
-        "stitching-method-supported",   
+        "stitching-method-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 677
-        "stitching-offset-supported",   
+        "stitching-offset-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 678
-        "stitching-reference-edge-supported",   
+        "stitching-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 679
-        "subject-supported",   
+        "subject-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 680
-        "subordinate-printers-supported",   
+        "subordinate-printers-supported",
         { IPP_URI | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 681
-        "subscription-privacy-attributes",   
+        "subscription-privacy-attributes",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 682
-        "subscription-privacy-scope",   
+        "subscription-privacy-scope",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 683
-        "time-at-completed",   
+        "time-at-completed",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 684
-        "time-at-creation",   
+        "time-at-creation",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 685
-        "time-at-processing",   
+        "time-at-processing",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 686
-        "to-name-supported",   
+        "to-name-supported",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 687
-        "trimming-offset-supported",   
+        "trimming-offset-supported",
         { IPP_INTEGER | IPP_ARRAY,IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 688
-        "trimming-reference-edge-supported",   
+        "trimming-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 689
-        "trimming-type-supported",   
+        "trimming-type-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 690
-        "trimming-when-supported",   
+        "trimming-when-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 691
-        "uri-authentication-supported",   
+        "uri-authentication-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 692
-        "uri-security-supported",   
+        "uri-security-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 693
-        "user-defined-values-supported",   
+        "user-defined-values-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 694
-        "warnings-count",   
+        "warnings-count",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 695
-        "which-jobs",   
+        "which-jobs",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 696
-        "which-jobs-supported",   
+        "which-jobs-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 697
-        "x-image-position",   
+        "x-image-position",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 698
-        "x-image-position-actual",   
+        "x-image-position-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 699
-        "x-image-position-default",   
+        "x-image-position-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 700
-        "x-image-position-supported",   
+        "x-image-position-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 701
-        "x-image-shift",   
+        "x-image-shift",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 702
-        "x-image-shift-actual",   
+        "x-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 703
-        "x-image-shift-default",   
+        "x-image-shift-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 704
-        "x-image-shift-supported",   
+        "x-image-shift-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 705
-        "x-side1-image-shift",   
+        "x-side1-image-shift",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 706
-        "x-side1-image-shift-actual",   
+        "x-side1-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 707
-        "x-side1-image-shift-default",   
+        "x-side1-image-shift-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 708
-        "x-side1-image-shift-supported",   
+        "x-side1-image-shift-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 709
-        "x-side2-image-shift",   
+        "x-side2-image-shift",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 710
-        "x-side2-image-shift-actual",   
+        "x-side2-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 711
-        "x-side2-image-shift-default",   
+        "x-side2-image-shift-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 712
-        "x-side2-image-shift-supported",   
+        "x-side2-image-shift-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 713
-        "xri-authentication-supported",   
+        "xri-authentication-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 714
-        "xri-security-supported",   
+        "xri-security-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 715
-        "xri-uri-scheme-supported",   
+        "xri-uri-scheme-supported",
         { IPP_URISCHEME | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 716
-        "y-image-position",   
+        "y-image-position",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 717
-        "y-image-position-actual",   
+        "y-image-position-actual",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 718
-        "y-image-position-default",   
+        "y-image-position-default",
         { IPP_KEYWORD,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 719
-        "y-image-position-supported",   
+        "y-image-position-supported",
         { IPP_KEYWORD | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 720
-        "y-image-shift",   
+        "y-image-shift",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 721
-        "y-image-shift-actual",   
+        "y-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 722
-        "y-image-shift-default",   
+        "y-image-shift-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 723
-        "y-image-shift-supported",   
+        "y-image-shift-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 724
-        "y-side1-image-shift",   
+        "y-side1-image-shift",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 725
-        "y-side1-image-shift-actual",   
+        "y-side1-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 726
-        "y-side1-image-shift-default",   
+        "y-side1-image-shift-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 727
-        "y-side1-image-shift-supported",   
+        "y-side1-image-shift-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 728
-        "y-side2-image-shift",   
+        "y-side2-image-shift",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 729
-        "y-side2-image-shift-actual",   
+        "y-side2-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 730
-        "y-side2-image-shift-default",   
+        "y-side2-image-shift-default",
         { IPP_INTEGER,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },
     {   // index 731
-        "y-side2-image-shift-supported",   
+        "y-side2-image-shift-supported",
         { IPP_RANGEOFINT,IPP_NOTYPE,IPP_NOTYPE,IPP_NOTYPE },
         0,55
     },

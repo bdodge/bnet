@@ -211,16 +211,36 @@ int ipp_syntax_for_enc_type(ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_
     return 0;
 }
 
+int ipp_syntax_for_attr(ipp_attr_t *attr, ipp_tag_t *tag, bool *is_array)
+{
+    int result;
+
+    if (! attr)
+    {
+        return 1;
+    }
+    result = ipp_syntax_for_enc_type(
+                                    s_ipp_attributes[attr->recdex].syntax,
+                                    tag,
+                                    is_array
+                                    );
+    return result;
+}
+
 int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
+    size_t totlen;
+
     if (! attr)
     {
         return -1;
     }
-    if (attr->alloc_len < value_len || ! attr->value || ! value)
+    totlen = value_len + 2;
+
+    if (attr->alloc_len < totlen || ! attr->value || ! value)
     {
         // no room for new value, or no new value at all
-        // so free any exising value
+        // so free any exising value and alloc for new
         //
         if (attr->value)
         {
@@ -231,53 +251,228 @@ int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
             attr->value = NULL;
             attr->alloc_len = 0;
         }
+        // and if there is a new value, alloc for that
+        //
         if (value)
         {
-            attr->alloc_len = ipp_alloc_size(value_len);
+            attr->alloc_len = ipp_alloc_size(totlen);
             attr->value = (uint8_t *)malloc(attr->alloc_len);
             if (! attr->value)
             {
+                BERROR("Alloc value");
                 return -1;
             }
         }
     }
     if (value)
     {
-        attr->value_len = value_len;
-        memcpy(attr->value, value, value_len);
+        attr->value_len = 0;
+
+        // append a 2 byte value-length (in network byte order!)
+        //
+        attr->value[attr->value_len++] = (uint8_t)(value_len >> 8);
+        attr->value[attr->value_len++] = (uint8_t)(value_len & 0xFF);
+
+        // then append value itself
+        //
+        memcpy(attr->value + attr->value_len, value, value_len);
+        attr->value_len += value_len;
     }
     return 0;
 }
 
 int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
-    return 1;
-}
+    ipp_tag_t tag;
+    bool is_array;
+    size_t totlen;
+    int result;
 
-int ipp_get_first_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len)
-{
-    if (! attr)
+    if (! attr || ! value || ! value_len)
     {
         return -1;
     }
     if (! attr->value)
     {
-        return -2;
+        // no first value, error
+        return -1;
     }
-    if (value)
+    result = ipp_syntax_for_attr(attr, &tag, &is_array);
+    if (result)
     {
-        *value = attr->value;
+        return -1;
     }
-    if (value_len)
+    if (! is_array)
     {
-        *value_len = attr->value_len;
+        // no more than one value allowed
+        return -1;
     }
+    // get needed total len
+    //
+    totlen = attr->value_len + value_len + 5;
+    if (totlen > attr->alloc_len)
+    {
+        size_t new_alloc_len;
+        uint8_t *new_value;
+
+        // need to realloc
+        //
+        new_alloc_len = ipp_alloc_size(totlen);
+        new_value = (uint8_t*)malloc(new_alloc_len);
+        if (new_value == NULL)
+        {
+            BERROR("Alloc add value");
+            return -1;
+        }
+        memcpy(new_value, attr->value, attr->value_len);
+        free(attr->value);
+        attr->value = new_value;
+        attr->alloc_len = new_alloc_len;
+    }
+    // append the tag
+    //
+    attr->value[attr->value_len++] = tag;
+
+    // append a 2 byte 0-length namelength. this lets
+    // the value be sent on the wire directly
+    //
+    attr->value[attr->value_len++] = 0;
+    attr->value[attr->value_len++] = 0;
+
+    // append a 2 byte value-length
+    //
+    attr->value[attr->value_len++] = (uint8_t)(value_len >> 8);
+    attr->value[attr->value_len++] = (uint8_t)(value_len & 0xFF);
+
+    // append new value
+    memcpy(attr->value + attr->value_len, value, value_len);
+    attr->value_len += value_len;
+
     return 0;
 }
 
-int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len)
+int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len)
 {
-    return 1;
+    size_t bytesleft;
+    uint16_t vallen;
+
+    if (! attr || ! iter)
+    {
+        return -1;
+    }
+    if (! attr->value || ! iter->val_ptr)
+    {
+        return -2;
+    }
+    // check if any values can remain
+    //
+    bytesleft = attr->value_len - (iter->val_ptr - attr->value);
+    if (bytesleft < 2)
+    {
+        return 1;
+    }
+    // length of each value encoded as first 2 bytes in value bytes
+    //
+    vallen = *iter->val_ptr++;
+    vallen <<= 8;
+    vallen |= *iter->val_ptr++;
+
+    bytesleft -= 2;
+
+    if (bytesleft < vallen)
+    {
+        BERROR("value length issue");
+        return 2;
+    }
+    // for array types, skip namelength for subsequent values
+    //
+    if (iter->val_count > 0)
+    {
+        iter->val_ptr += 2;
+    }
+    if (value)
+    {
+        *value = iter->val_ptr;
+    }
+    if (value_len)
+    {
+        *value_len = (size_t)vallen;
+    }
+    iter->val_count++;
+    return 0;
+}
+
+int ipp_get_next_attr_bool_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *value)
+{
+    uint8_t *uval;
+    size_t  vallen;
+    uint8_t ival;
+    int result;
+
+    result = ipp_get_next_attr_value(attr, iter, &uval, &vallen);
+    if (result)
+    {
+        return result;
+    }
+    if (vallen != 1)
+    {
+        butil_log(1, "Wrong size for bool\n");
+        return -1;
+    }
+    *value = (ival != 0) ? 1 : 0;
+    return 0;
+}
+
+int ipp_get_next_attr_int32_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *value)
+{
+    uint8_t *uval;
+    size_t  vallen;
+    int32_t ival;
+    int result;
+
+    result = ipp_get_next_attr_value(attr, iter, &uval, &vallen);
+    if (result)
+    {
+        return result;
+    }
+    if (vallen != sizeof(int32_t))
+    {
+        butil_log(1, "Wrong size for int32\n");
+        return -1;
+    }
+    memcpy((uint8_t *)&ival, uval, vallen);
+    *value = htonl(ival);
+    return 0;
+}
+
+int ipp_open_attr_value(ipp_attr_t *attr, ipp_attr_iter_t **piter)
+{
+    ipp_attr_iter_t *iter;
+
+    if (! attr || ! piter)
+    {
+        return -1;
+    }
+    iter = (ipp_attr_iter_t *)malloc(sizeof(ipp_attr_iter_t));
+    if (! iter)
+    {
+        return -1;
+    }
+    iter->attr = attr;
+    iter->val_count = 0;
+    iter->val_ptr = attr->value;
+    *piter = iter;
+    return 0;
+}
+
+int ipp_close_attr_value(ipp_attr_iter_t *iter)
+{
+    if (! iter)
+    {
+        return -1;
+    }
+    free(iter);
+    return 0;
 }
 
 int ipp_get_attr_for_grouping(ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs)
@@ -404,6 +599,127 @@ int ipp_get_attr_by_name(const char *name, ipp_attr_grouping_code_t group, ipp_a
     return ipp_get_attr_by_index(recdex, group, pattr);
 }
 
+int ipp_set_attr_bool_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "bool val, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    int value;
+    uint8_t bvalue;
+    size_t value_len;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nvalues);
+
+    value = (int)va_arg(args, int);
+    bvalue = value ? 0x01 : 0x00;
+    value_len = 1;
+
+    nvalues--;
+    result = ipp_set_attr_value(attr, &bvalue, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nvalues-- > 0)
+    {
+        value = (int)va_arg(args, int);
+        bvalue = value ? 0x01 : 0x00;
+
+        result = ipp_add_attr_value(attr, &bvalue, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+int ipp_set_attr_range_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    int32_t minvalue;
+    int32_t maxvalue;
+    uint8_t value[8];
+    size_t value_len;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nvalues);
+
+    minvalue = (int32_t)va_arg(args, int32_t);
+    minvalue = htonl(minvalue);
+    maxvalue = (int32_t)va_arg(args, int32_t);
+    maxvalue = htonl(maxvalue);
+
+    memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
+    memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
+    value_len = 2 * sizeof(int32_t);
+
+    nvalues--;
+    result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nvalues-- > 0)
+    {
+        minvalue = (int32_t)va_arg(args, int32_t);
+        minvalue = htonl(minvalue);
+        maxvalue = (int32_t)va_arg(args, int32_t);
+        maxvalue = htonl(maxvalue);
+
+        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
+        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
 int ipp_set_attr_int32_value_by_name(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
@@ -450,7 +766,7 @@ int ipp_set_attr_int32_value_by_name(
         value = (int32_t)va_arg(args, int32_t);
         value = htonl(value);
 
-        result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
         if (result)
         {
             return result;
@@ -581,24 +897,6 @@ int ipp_set_attr_string_value_by_name(
     return 0;
 }
 
-int ipp_get_attr_value_by_name(const char *name, ipp_attr_grouping_code_t group, uint8_t **value, size_t *value_len)
-{
-    ipp_attr_t *attr;
-    int result;
-
-    result = ipp_get_attr_by_name(name, group, &attr);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_get_first_attr_value(attr, NULL, value, value_len);
-    if (result)
-    {
-        return result;
-    }
-    return 0;
-}
-
 int ipp_dupe_attr(ipp_attr_t *attr, ipp_attr_t **dupeattr)
 {
     ipp_attr_t *nattr;
@@ -608,13 +906,26 @@ int ipp_dupe_attr(ipp_attr_t *attr, ipp_attr_t **dupeattr)
     {
         return -1;
     }
-    nattr = ipp_create_attr(attr->recdex, attr->value, attr->value_len);
+    nattr = ipp_create_attr(attr->recdex, NULL, 0);
 
     *dupeattr = nattr;
 
     if (! nattr)
     {
         return -1;
+    }
+    nattr->alloc_len = attr->alloc_len;
+    if (attr->value)
+    {
+        nattr->value = (uint8_t *)malloc(nattr->alloc_len);
+        if (! nattr->value)
+        {
+            BERROR("Alloc dupe value");
+            free (nattr);
+            return -1;
+        }
+        memcpy(nattr->value, attr->value, attr->value_len);
+        nattr->value_len = attr->value_len;
     }
     return 0;
 }
@@ -627,6 +938,7 @@ ipp_attr_t *ipp_create_attr(size_t recdex, uint8_t *value, size_t value_len)
     attr = (ipp_attr_t *)malloc(sizeof(ipp_attr_t));
     if (! attr)
     {
+        BERROR("Alloc attr");
         return NULL;
     }
     attr->recdex = recdex;
@@ -733,6 +1045,8 @@ int test_find_attr_rec()
 
 int test_set_get_string_attr()
 {
+    ipp_attr_t *attr;
+    ipp_attr_iter_t *iter;
     uint8_t *value;
     size_t   value_len;
     uint16_t vlen;
@@ -747,12 +1061,19 @@ int test_set_get_string_attr()
         butil_log(0, "set str attr failed\n");
         return result;
     }
-    result = ipp_get_attr_value_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, &value, &value_len);
+    result = ipp_get_attr_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, &attr);
     if (result)
     {
         butil_log(0, "get attr failed\n");
         return result;
     }
+    result = ipp_open_attr_value(attr, &iter);
+    if (result)
+    {
+        butil_log(0, "open attr failed\n");
+        return result;
+    }
+    result = ipp_get_next_attr_value(attr, iter, &value, &value_len);
     if (value_len != strlen(strval))
     {
         butil_log(0, "expected %u chars, got %zu\n", strlen(strval), value_len);
@@ -763,8 +1084,48 @@ int test_set_get_string_attr()
         butil_log(0, "value is not expected:%s\n", strval);
         return -1;
     }
-    return 0;
+    result = ipp_close_attr_value(iter);
+    if (result)
+    {
+        return result;
+    }
 
+    result = ipp_set_attr_int32_value_by_name("operations-supported", IPP_GROUPING_PRINTER_DESCRIPTION,
+                        10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    if (result)
+    {
+        butil_log(0, "set int attr failed\n");
+        return result;
+    }
+    result = ipp_get_attr_by_name("operations-supported", IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+    if (result)
+    {
+        butil_log(0, "get int attr failed\n");
+        return result;
+    }
+    result = ipp_open_attr_value(attr, &iter);
+    if (result)
+    {
+        butil_log(0, "open int attr failed\n");
+        return result;
+    }
+    for (int i = 0; i < 10; i++)
+    {
+        int32_t ival;
+
+        result = ipp_get_next_attr_int32_value(attr, iter, &ival);
+        if (ival != i)
+        {
+            butil_log(0, "value is %d, not expected %d\n", ival, i);
+            return -1;
+        }
+    }
+    result = ipp_close_attr_value(iter);
+    if (result)
+    {
+        return result;
+    }
+    return 0;
 }
 
 int test_find_xref_rec()

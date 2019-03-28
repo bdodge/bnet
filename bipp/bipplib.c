@@ -300,9 +300,127 @@ int ipp_set_static_environment(ipp_server_t *ipp)
 {
     int result;
 
-    result = ipp_set_attr_int32_value_by_name("operations-supported",
-                                IPP_GROUPING_PRINTER_DESCRIPTION,
-                                7, IPP_OP_GET_PRINTER_ATTRIBUTES, IPP_OP_PRINT_JOB, 4, 8, 9, 10, 11);
+    result = ipp_set_attr_string_value_by_name(
+                                                "charset-configured",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "utf-8"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "charset-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "utf-8"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "compression-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "none"
+                                                );
+
+    result |= ipp_set_attr_int32_value_by_name(
+                                                "copies-default",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                1
+                                                );
+
+    result |= ipp_set_attr_range_value_by_name(
+                                                "copies-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                1, 99
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "document-format-default",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "text/plain"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "document-format-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "text/plain"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "generated-natural-language-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "en"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "ipp-versions-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                2,
+                                                "1.1",
+                                                "1.2"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "pdl-override-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "attempted"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "natural-language-configured",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "en"
+                                                );
+
+    result |= ipp_set_attr_int32_value_by_name(
+                                                "operations-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                7,
+                                                IPP_OP_GET_PRINTER_ATTRIBUTES,
+                                                IPP_OP_PRINT_JOB,
+                                                IPP_OP_VALIDATE_JOB,
+                                                IPP_OP_CREATE_JOB,
+                                                IPP_OP_CANCEL_JOB,
+                                                IPP_OP_GET_JOB_ATTRIBUTES,
+                                                IPP_OP_GET_JOBS
+                                             );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "printer-name",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "bnetipp"
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "uri-authentication-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "none"
+                                                    /*
+                                                "requesting-user-name",
+                                                "basic",
+                                                "digest"
+                                                    */
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "uri-security-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                "none"
+                                                    /*
+                                                "none",
+                                                "s",
+                                                "gest"
+                                                    */
+                                                );
     return result;
 }
 
@@ -326,11 +444,47 @@ int ipp_set_environment(ipp_server_t *ipp)
     // set printer-uri in printer status group
     //
     result = ipp_set_attr_string_value_by_name(
-                                        "printer-uri-supported",
-                                        IPP_GROUPING_PRINTER_STATUS,
-                                        1,
-                                        ipp->uri
-                                        );
+                                                "printer-uri-supported",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1,
+                                                ipp->uri
+                                                );
+
+    result |= ipp_set_attr_bool_value_by_name(
+                                                "printer-is-accepting-jobs",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1,
+                                                1
+                                                );
+
+    result |= ipp_set_attr_int32_value_by_name(
+                                                "printer-state",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1,
+                                                3
+                                                );
+
+    result |= ipp_set_attr_string_value_by_name(
+                                                "printer-state-reasons",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1,
+                                                "none"
+                                                );
+
+    result |= ipp_set_attr_int32_value_by_name(
+                                                "printer-up-time",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1,
+                                                1000
+                                                );
+
+    result |= ipp_set_attr_int32_value_by_name(
+                                                "queued-job-count",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1,
+                                                0
+                                                );
+
     return result;
 }
 

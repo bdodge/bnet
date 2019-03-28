@@ -356,23 +356,23 @@ int ipp_dispatch(ipp_request_t *req)
 
     case IPP_OP_VALIDATE_JOB:
     case IPP_OP_CREATE_JOB:
-        result = ipp_job_op_dispatch(req);
-        break;
-
-    case IPP_OP_PRINT_URI:
-    case IPP_OP_SEND_DOCUMENT:
-    case IPP_OP_SEND_URI:
     case IPP_OP_CANCEL_JOB:
     case IPP_OP_GET_JOB_ATTRIBUTES:
     case IPP_OP_GET_JOBS:
     case IPP_OP_HOLD_JOB:
     case IPP_OP_RELEASE_JOB:
     case IPP_OP_RESTART_JOB:
+    case IPP_OP_PURGE_JOBS:
+    case IPP_OP_SET_JOB_ATTRIBUTES:
+        result = ipp_job_op_dispatch(req);
+        break;
+
+    case IPP_OP_PRINT_URI:
+    case IPP_OP_SEND_DOCUMENT:
+    case IPP_OP_SEND_URI:
     case IPP_OP_PAUSE_PRINTER:
     case IPP_OP_RESUME_PRINTER:
-    case IPP_OP_PURGE_JOBS:
     case IPP_OP_SET_PRINTER_ATTRIBUTES:
-    case IPP_OP_SET_JOB_ATTRIBUTES:
     case IPP_OP_GET_PRINTER_SUPPORTED_VALUES:
     case IPP_OP_CREATE_PRINTER_SUBSCRIPTIONS:
     case IPP_OP_CREATE_JOB_SUBSCRIPTIONS:

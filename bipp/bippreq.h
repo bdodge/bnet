@@ -132,6 +132,7 @@ int ipp_write_int16     (ioring_t *in, int16_t val);
 int ipp_write_int32     (ioring_t *in, int32_t val);
 
 int ipp_write_bytes             (ioring_t *out, const uint8_t *bytes, uint16_t len);
+int ipp_write_length_and_bytes  (ioring_t *out, const uint8_t *bytes, uint16_t len);
 int ipp_write_text              (ioring_t *out, const char *text, uint16_t len);
 int ipp_write_attribute_text    (ioring_t *out, const char *text);
 int ipp_write_attribute_name    (ioring_t *out, int8_t tag, const char *text);

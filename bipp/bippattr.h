@@ -110,6 +110,7 @@ ipp_attr_t;
 //
 typedef struct tag_attr_iter
 {
+    ipp_attr_t             *attr;       ///< iterator on this attribute
     size_t                  val_count;  ///< which value iteration is on
     uint8_t                *val_ptr;    ///< where in value
 }
@@ -123,14 +124,32 @@ int ipp_syntax_for_enc_type     (ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp
 
 int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
 int ipp_add_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
-int ipp_get_first_attr_value    (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
-int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len);
+
+int ipp_open_attr_value         (ipp_attr_t *attr, ipp_attr_iter_t **iter);
+int ipp_close_attr_value        (ipp_attr_iter_t *iter);
+int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
+int ipp_get_next_attr_bool_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int *value);
+int ipp_get_next_attr_int32_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *value);
 
 int ipp_get_attr_for_grouping   (ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs);
 
 int ipp_get_attr_by_index       (const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 int ipp_get_attr_by_name        (const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 
+int ipp_set_attr_bool_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "bool val, ..." */
+                                );
+int ipp_set_attr_range_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
+                                );
 int ipp_set_attr_int32_value_by_name(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
@@ -151,12 +170,6 @@ int ipp_set_attr_string_value_by_name(
                                 int nstrings,
                                 ...
                                 /* parm list of type "const char *str, ..." */
-                                );
-int ipp_get_attr_value_by_name  (
-                                const char *name,
-                                ipp_attr_grouping_code_t group,
-                                uint8_t **value,
-                                size_t *value_len
                                 );
 
 int         ipp_dupe_attr       (ipp_attr_t *attr, ipp_attr_t **dupeattr);

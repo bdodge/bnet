@@ -20,12 +20,103 @@
 
 static int ipp_get_printer_attributes(ipp_request_t *req)
 {
+    ipp_attr_iter_t *reqiterator;
+    ipp_attr_t *reqattrs;
     ipp_attr_t *attr;
     ipp_attr_t *nattr;
     int result;
 
-#if 1
-    // iterate over printer dezcription group adding each set attribute
+    // see if there are requested return attributes list
+    //
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requested-attributes", &reqattrs);
+    if (result)
+    {
+        butil_log(5, "No requested attributes, returning all\n");
+        reqattrs = NULL;
+        result = 0;
+    }
+    if (reqattrs)
+    {
+        char reqname[IPP_MAX_TEXT];
+        uint8_t *value;
+        size_t   value_len;
+
+        // iterate over requested attributes and return, if we can,
+        // any that are set in printer description or status
+        //
+        result = ipp_open_attr_value(reqattrs, &reqiterator);
+        if (result)
+        {
+            ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+            return result;
+        }
+        do
+        {
+            result = ipp_get_next_attr_value(
+                                            reqattrs,
+                                            reqiterator,
+                                            &value,
+                                            &value_len
+                                            );
+            if (result > 0)
+            {
+                // end of values
+                result = 0;
+                break;
+            }
+            if (result < 0)
+            {
+                // error getting them
+                break;
+            }
+            // format value into proper c string
+            //
+            if (value_len >= IPP_MAX_TEXT)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+                return -1;
+            }
+            memcpy(reqname, value, value_len);
+            reqname[value_len] = '\0';
+
+            // look up the requested name in the usual places
+            //
+            result = ipp_get_attr_by_name(reqname, IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+            if (result)
+            {
+                result = ipp_get_attr_by_name(reqname, IPP_GROUPING_PRINTER_STATUS, &attr);
+            }
+            if (result)
+            {
+                butil_log(1, "Can't find %s in printer status/description\n", reqname);
+                ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+                return result;
+            }
+            if (attr->value)
+            {
+                result = ipp_dupe_attr(attr, &nattr);
+                if (result)
+                {
+                    ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                    return result;
+                }
+                result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
+                if (result)
+                {
+                    return result;
+                }
+            }
+        }
+        while (! result);
+
+        result = ipp_close_attr_value(reqiterator);
+        if (result)
+        {
+            ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        }
+        return result;
+    }
+    // iterate over printer description group adding each set attribute
     // into the response
     //
     result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
@@ -79,22 +170,6 @@ static int ipp_get_printer_attributes(ipp_request_t *req)
         }
         attr = attr->next;
     }
-#else
-    // fetch printer-attributes group and add to return
-    result = ipp_get_attr_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, &attr);
-    if (result)
-    {
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-        return result;
-    }
-    result = ipp_dupe_attr(attr, &nattr);
-    if (result)
-    {
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-        return result;
-    }
-    result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
-#endif
     return result;
 }
 
@@ -172,11 +247,9 @@ int ipp_printer_op_dispatch(ipp_request_t *req)
     {
     case IPP_OP_GET_PRINTER_ATTRIBUTES:
         return ipp_get_printer_attributes(req);
-        break;
 
     case IPP_OP_PRINT_JOB:
         return ipp_print_job(req);
-        break;
 
     case IPP_OP_PRINT_URI:
     case IPP_OP_VALIDATE_JOB:

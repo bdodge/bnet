@@ -208,6 +208,23 @@ int ipp_write_int32(ioring_t *out, int32_t val)
 
 int ipp_write_bytes(ioring_t *out, const uint8_t *bytes, uint16_t len)
 {
+    if (! out || ! bytes)
+    {
+        return -1;
+    }
+    if (out->count > (out->size - len))
+    {
+        return 1;
+    }
+    memcpy(out->data + out->head, bytes, len);
+    out->head += len;
+    out->count += len;
+
+    return 0;
+}
+
+int ipp_write_length_and_bytes(ioring_t *out, const uint8_t *bytes, uint16_t len)
+{
     int result;
 
     if (! out || ! bytes)
@@ -230,7 +247,7 @@ int ipp_write_bytes(ioring_t *out, const uint8_t *bytes, uint16_t len)
 
 int ipp_write_text(ioring_t *out, const char *text, uint16_t len)
 {
-    return ipp_write_bytes(out, (const uint8_t *)text, len);
+    return ipp_write_length_and_bytes(out, (const uint8_t *)text, len);
 }
 
 int ipp_write_attribute_text(ioring_t *out, const char *text)

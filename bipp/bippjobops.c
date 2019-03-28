@@ -18,7 +18,341 @@
 #include "bippproto.h"
 #include "butil.h"
 
-static int ipp_get_job_attributes(ipp_request_t *req)
+static int ipp_op_validate_job(ipp_request_t *req)
+{
+    return 0;
+}
+
+static int ipp_req_job_attrs(ipp_request_t *req, ipp_attr_t *reqattrs, ipp_job_t *job)
+{
+    char uri[IPP_MAX_TEXT];
+    int result;
+
+    if (! req || ! job)
+    {
+        return -1;
+    }
+    if (! reqattrs)
+    {
+        // put job id into response
+        //
+        result = ipp_set_req_out_int32_attr(req, IPP_JOB_ATTRS, "job-id", job->id);
+        if (result)
+        {
+            return result;
+        }
+        // put job uri into response
+        //
+        snprintf(uri, sizeof(uri), "%s/job/%d", req->ipp->uri, job->id);
+
+        result = ipp_set_req_out_string_attr(req, IPP_JOB_ATTRS, "job-uri", uri);
+        if (result)
+        {
+            return result;
+        }
+    }
+    else
+    {
+        ipp_attr_t *attr;
+        ipp_attr_t *nattr;
+        char text[IPP_MAX_TEXT];
+        ipp_attr_iter_t *iterator;
+        bool retall = false;
+
+        // for each reqattr, lookup attr and add to response
+        //
+        result = ipp_open_attr_value(reqattrs, &iterator);
+        if (result)
+        {
+            return result;
+        }
+        do
+        {
+            result = ipp_get_next_attr_string_value(
+                        reqattrs, iterator, text, sizeof(text));
+            if (result > 0)
+            {
+                // end of values
+                result = 0;
+                break;
+            }
+            if (result)
+            {
+                break;
+            }
+            // if "all" is found, enumerate all
+            //
+            if (! strcmp(text, "all"))
+            {
+                retall = true;
+                break;
+            }
+            // find the requested attribute
+            //
+            result = ipp_get_attr_by_name(text, job->job_stat_attr, &attr);
+            if (result)
+            {
+                result = ipp_get_attr_by_name(text, job->job_desc_attr, &attr);
+            }
+            if (result)
+            {
+                butil_log(1, "Can't find %s in job status/description\n", text);
+                // todo - add to unsupported?
+                ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+                return result;
+            }
+            result = ipp_dupe_attr(attr, &nattr);
+            if (result)
+            {
+                return result;
+            }
+            result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
+            if (result)
+            {
+                return result;
+            }
+        }
+        while (! result);
+
+        ipp_close_attr_value(iterator);
+
+        if (! retall || result)
+        {
+            return result;
+        }
+        // return all attributes in job description
+        //
+        attr = job->job_stat_attr;
+        while (attr)
+        {
+            if (attr->value)
+            {
+                result = ipp_dupe_attr(attr, &nattr);
+                if (result)
+                {
+                    return result;
+                }
+                result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
+                if (result)
+                {
+                    return result;
+                }
+            }
+            attr = attr->next;
+        }
+        attr = job->job_desc_attr;
+        while (attr)
+        {
+            if (attr->value)
+            {
+                result = ipp_dupe_attr(attr, &nattr);
+                if (result)
+                {
+                    return result;
+                }
+                result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
+                if (result)
+                {
+                    return result;
+                }
+            }
+            attr = attr->next;
+        }
+    }
+    return result;
+}
+
+static int ipp_op_get_jobs(ipp_request_t *req)
+{
+    ipp_attr_t *reqattr;
+    ipp_attr_t *attr;
+    ipp_attr_t *nattr;
+    ipp_job_t  *job;
+    size_t      njobs;
+    enum { opgjAll, opgjUser, opgjActive, opgjCompleted } which_jobs;
+    char text[IPP_MAX_TEXT];
+    char user[IPP_MAX_TEXT];
+    int32_t     limit;
+    int         myjobs;
+    const char *jobstatereasons;
+    int result;
+
+    which_jobs = opgjAll;
+    njobs = 0;
+    limit = 0;
+    myjobs = false;
+    user[0] = '\0';
+
+    // check for which-jobs
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "which-jobs", &reqattr);
+    if (! result)
+    {
+        result = ipp_get_only_attr_string_value(reqattr, text, sizeof(text));
+        if (! strcmp(text, "completed"))
+        {
+            which_jobs = opgjCompleted;
+        }
+        else if (! strcmp(text, "not-completed"))
+        {
+            which_jobs = opgjActive;
+        }
+        else
+        {
+            butil_log(2, "Not sure what which-jobs=%s means\n", text);
+        }
+    }
+    // check for user
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requesting-user-name", &reqattr);
+    if (! result)
+    {
+        result = ipp_get_only_attr_string_value(reqattr, user, sizeof(user));
+        if (result)
+        {
+            return result;
+        }
+    }
+    // check for limit
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "limit", &reqattr);
+    if (! result)
+    {
+        result = ipp_get_only_attr_int32_value(reqattr, &limit);
+        if (result)
+        {
+            return result;
+        }
+    }
+    // check for my-jobs
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "my-jobs", &reqattr);
+    if (! result)
+    {
+        result = ipp_get_only_attr_bool_value(reqattr, &myjobs);
+        if (result)
+        {
+            return result;
+        }
+    }
+    // finally, check for requested-attributes, and leave in reqattr
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requested-attributes", &reqattr);
+    if (result)
+    {
+        reqattr = NULL;
+    }
+    butil_log(5, "Get-Jobs limit=%d myjobs=%u user=%s reqattr=%p which=%u\n",
+                    limit, myjobs, user, reqattr, which_jobs);
+    // iterate over active
+    //
+    if (which_jobs == opgjAll || which_jobs == opgjActive)
+    {
+        result = ipp_get_active_jobs(req->ipp, &job);
+        if (result)
+        {
+            job = NULL;
+        }
+        while (job)
+        {
+            // if reached limit, end
+            //
+            if (limit > 0 && njobs >= limit)
+            {
+                break;
+            }
+            // match job against requesting user if my-job set
+            //
+            if (myjobs)
+            {
+                ;
+            }
+            // if this isn't first job, add new start tag into response
+            //
+            if (njobs > 0)
+            {
+                result = ipp_set_req_out_tag(req, IPP_JOB_ATTRS, IPP_TAG_JOB);
+                if (result)
+                {
+                    return result;
+                }
+            }
+            result = ipp_req_job_attrs(req, reqattr, job);
+            if (result)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                return result;
+            }
+            njobs++;
+            job = job->next;
+        }
+    }
+    // iterate over completed
+    if (which_jobs == opgjAll || which_jobs == opgjCompleted)
+    {
+        result = ipp_get_active_jobs(req->ipp, &job);
+        if (result)
+        {
+            job = NULL;
+        }
+        while (job)
+        {
+            // if reached limit, end
+            //
+            if (limit > 0 && njobs >= limit)
+            {
+                break;
+            }
+            // match job against requesting user if my-job set
+            //
+            if (myjobs)
+            {
+                ;
+            }
+            if (njobs > 0)
+            {
+                result = ipp_set_req_out_tag(req, IPP_JOB_ATTRS, IPP_TAG_JOB);
+                if (result)
+                {
+                    ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                    return result;
+                }
+            }
+            result = ipp_req_job_attrs(req, reqattr, job);
+            if (result)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                return result;
+            }
+            njobs++;
+            job = job->next;
+        }
+    }
+    return result;
+}
+
+static int ipp_op_create_job(ipp_request_t *req)
+{
+    ipp_job_t *job;
+    int result;
+
+    if (! req || ! req->ipp)
+    {
+        return -1;
+    }
+    result = ipp_create_job(req->ipp, req, &job);
+    if (result || ! job)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return -1;
+    }
+    result = ipp_start_job(req->ipp, job);
+    if (result)
+    {
+        butil_log(1, "Can't activate job %u\n", job->id);
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        result = ipp_destroy_job(req->ipp, job);
+        return -1;
+    }
+    return result;
+}
+
+static int ipp_op_get_job_attributes(ipp_request_t *req)
 {
     ipp_attr_iter_t *reqiterator;
     ipp_attr_t *reqattrs;
@@ -210,15 +544,17 @@ int ipp_job_op_dispatch(ipp_request_t *req)
     switch (req->opid)
     {
     case IPP_OP_VALIDATE_JOB:
-        return 0;
+        return ipp_op_validate_job(req);
 
     case IPP_OP_GET_JOBS:
-        return 0;
+        return ipp_op_get_jobs(req);
 
     case IPP_OP_GET_JOB_ATTRIBUTES:
-        return ipp_get_job_attributes(req);
+        return ipp_op_get_job_attributes(req);
 
     case IPP_OP_CREATE_JOB:
+        return ipp_op_create_job(req);
+
     case IPP_OP_SEND_DOCUMENT:
     case IPP_OP_SEND_URI:
     case IPP_OP_CANCEL_JOB:

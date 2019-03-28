@@ -19,6 +19,7 @@ include $(SRCROOT)/common/makecommon.mk
 
 SOURCES=$(SRCDIR)/bipplib.c		\
 		$(SRCDIR)/bipp.c		\
+		$(SRCDIR)/bippjobs.c	\
 		$(SRCDIR)/bippprtops.c	\
 		$(SRCDIR)/bippjobops.c	\
 		$(SRCDIR)/bippreq.c		\
@@ -59,6 +60,7 @@ $(OBJDIR)/bipptest.o: $(SRCDIR)/bipptest.c $(HEADERS)
 
 $(OBJDIR)/bipplib.o: $(SRCDIR)/bipplib.c $(HEADERS)
 $(OBJDIR)/bipp.o: $(SRCDIR)/bipp.c $(HEADERS)
+$(OBJDIR)/bippjobs.o: $(SRCDIR)/bippjobs.c $(HEADERS)
 $(OBJDIR)/bippprtops.o: $(SRCDIR)/bippprtops.c $(HEADERS)
 $(OBJDIR)/bippjobops.o: $(SRCDIR)/bippjobops.c $(HEADERS)
 $(OBJDIR)/bippreq.o: $(SRCDIR)/bippreq.c $(HEADERS)

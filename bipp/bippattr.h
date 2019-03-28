@@ -19,6 +19,10 @@
 #include "bnetheaders.h"
 #include "bippproto.h"
 
+/// Special attribute record index values
+//
+#define IPP_RECDEX_TAG (0x70000000) ///< attribute is really a tag
+
 /// IPP data types. This is for internal representation only. It would be
 /// nice to use the same types as IPP but they are haphazard and can't
 /// carry the extra meaning (bit fields) we use here which is done to
@@ -130,43 +134,88 @@ int ipp_close_attr_value        (ipp_attr_iter_t *iter);
 int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
 int ipp_get_next_attr_bool_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int *value);
 int ipp_get_next_attr_int32_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *value);
+int ipp_get_next_attr_string_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, char *value, size_t nvalue);
+
+int ipp_get_only_attr_value     (ipp_attr_t *attr, uint8_t **value, size_t *value_len);
+int ipp_get_only_attr_bool_value(ipp_attr_t *attr, int *value);
+int ipp_get_only_attr_int32_value(ipp_attr_t *attr, int32_t *value);
+int ipp_get_only_attr_string_value(ipp_attr_t *attr, char *value, size_t nvalue);
 
 int ipp_get_attr_for_grouping   (ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs);
+int ipp_dupe_grouping           (ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs);
 
-int ipp_get_attr_by_index       (const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
-int ipp_get_attr_by_name        (const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
+int ipp_get_group_attr_by_index (const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
+int ipp_get_group_attr_by_name  (const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 
-int ipp_set_attr_bool_value_by_name(
+int ipp_set_group_attr_bool_value(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
                                 size_t nvalues,
                                 ...
                                 /* parm list of type "bool val, ..." */
                                 );
-int ipp_set_attr_range_value_by_name(
+int ipp_set_group_attr_range_value(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
                                 size_t nvalues,
                                 ...
                                 /* parm list of type "int32_t minval, int32_t maxval, ..." */
                                 );
-int ipp_set_attr_int32_value_by_name(
+int ipp_set_group_attr_int32_value(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
                                 size_t nvalues,
                                 ...
                                 /* parm list of type "int32_t val, ..." */
                                 );
-int ipp_set_attr_bytes_value_by_name(
+int ipp_set_group_attr_bytes_value(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
                                 size_t nvalues,
                                 ...
                                 /* parm list of type "const uint8_t *value, size_t value_len, ..." */
                                 );
-int ipp_set_attr_string_value_by_name(
+int ipp_set_group_attr_string_value(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
+                                int nstrings,
+                                ...
+                                /* parm list of type "const char *str, ..." */
+                                );
+
+int ipp_get_attr_by_name        (const char *name, ipp_attr_t *attrlist, ipp_attr_t **pattr);
+
+int ipp_set_attr_bool_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "bool val, ..." */
+                                );
+int ipp_set_attr_range_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
+                                );
+int ipp_set_attr_int32_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t val, ..." */
+                                );
+int ipp_set_attr_bytes_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "const uint8_t *value, size_t value_len, ..." */
+                                );
+int ipp_set_attr_string_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
                                 int nstrings,
                                 ...
                                 /* parm list of type "const char *str, ..." */

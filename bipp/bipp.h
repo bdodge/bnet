@@ -17,11 +17,12 @@
 #define BIPP_H 1
 
 #include "bippconfig.h"
+#include "bippjobs.h"
+#include "bippreq.h"
 #include "bhttpconfig.h"
 #include "bhttp.h"
 #include "bstreamio.h"
 #include "butil.h"
-#include "bippreq.h"
 
 #if 1// define to include memory tracing debug
 #define BMEM_TRACE_ALLOCS 1
@@ -35,21 +36,30 @@
 typedef struct tag_ipp_server
 {
     /// path and port we serve on
-    char path[IPP_MAX_TEXT];
-    uint16_t port;
+    char                path[IPP_MAX_TEXT];
+    uint16_t            port;
 
     /// serving uri, for convenience
-    char uri[IPP_MAX_TEXT];
+    char                uri[IPP_MAX_TEXT];
 
     /// ipp scheme handle
-    butil_url_scheme_t scheme;
+    butil_url_scheme_t   scheme;
 
     /// http server context
-    http_server_t server;
+    http_server_t       server;
+
+    /// next job id
+    uint32_t            job_id;
+
+    /// pool of job contexts
+    ipp_job_t           job_pool[IPP_MAX_JOBS];
+    ipp_job_t          *jobs_free;
+    ipp_job_t          *jobs_active;
+    ipp_job_t          *jobs_completed;
 
     /// pool of ipp request contexts
-    ipp_request_t req_pool[IPP_MAX_REQUESTS];
-    ipp_request_t *req_free;
+    ipp_request_t       req_pool[IPP_MAX_REQUESTS];
+    ipp_request_t      *req_free;
 }
 ipp_server_t;
 

@@ -18,7 +18,7 @@
 #include "bippproto.h"
 #include "butil.h"
 
-static int ipp_get_printer_attributes(ipp_request_t *req)
+static int ipp_op_get_printer_attributes(ipp_request_t *req)
 {
     ipp_attr_iter_t *reqiterator;
     ipp_attr_t *reqattrs;
@@ -81,10 +81,10 @@ static int ipp_get_printer_attributes(ipp_request_t *req)
 
             // look up the requested name in the usual places
             //
-            result = ipp_get_attr_by_name(reqname, IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+            result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
             if (result)
             {
-                result = ipp_get_attr_by_name(reqname, IPP_GROUPING_PRINTER_STATUS, &attr);
+                result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_PRINTER_STATUS, &attr);
             }
             if (result)
             {
@@ -173,17 +173,20 @@ static int ipp_get_printer_attributes(ipp_request_t *req)
     return result;
 }
 
-static int ipp_print_job(ipp_request_t *req)
+static int ipp_op_print_job(ipp_request_t *req)
 {
+    ipp_job_t *job;
     ipp_attr_t *attr;
     ipp_attr_t *nattr;
     char uri[IPP_MAX_TEXT];
     char mimestr[IPP_MAX_TEXT];
-    int32_t jobid = 0x1234beef;
-    int32_t jobstate;
     char *jobstatereasons;
     int result;
 
+    if (! req || ! req->ipp)
+    {
+        return -1;
+    }
     // get job document format
     //
     result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "document-format", &attr);
@@ -199,9 +202,31 @@ static int ipp_print_job(ipp_request_t *req)
 
     //ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
 
+    result = ipp_create_job(req->ipp, req, &job);
+    if (result || ! job)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return -1;
+    }
+    result = ipp_start_job(req->ipp, job);
+    if (result)
+    {
+        butil_log(1, "Can't activate job %u\n", job->id);
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        result = ipp_destroy_job(req->ipp, job);
+        return -1;
+    }
+    result = ipp_complete_job(req->ipp, job);
+    if (result)
+    {
+        butil_log(1, "Can't complete job %u\n", job->id);
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        result = ipp_destroy_job(req->ipp, job);
+        return -1;
+    }
     // put job uri into response
     //
-    snprintf(uri, sizeof(uri), "%s/job/%d", req->ipp->uri, jobid);
+    snprintf(uri, sizeof(uri), "%s/job/%d", req->ipp->uri, job->id);
 
     result = ipp_set_req_out_string_attr(req, IPP_JOB_ATTRS, "job-uri", uri);
     if (result)
@@ -210,12 +235,12 @@ static int ipp_print_job(ipp_request_t *req)
     }
     // put job id into response
     //
-    result = ipp_set_req_out_int32_attr(req, IPP_JOB_ATTRS, "job-id", jobid);
+    result = ipp_set_req_out_int32_attr(req, IPP_JOB_ATTRS, "job-id", job->id);
 
     // put job-state into response
     //
-    jobstate = IPP_JSTATE_COMPLETED;
-    result = ipp_set_req_out_int32_attr(req, IPP_JOB_ATTRS, "job-state", jobstate);
+    job->state = IPP_JSTATE_COMPLETED;
+    result = ipp_set_req_out_int32_attr(req, IPP_JOB_ATTRS, "job-state", job->state);
 
     // put job-state-reasons into response
     //
@@ -246,10 +271,10 @@ int ipp_printer_op_dispatch(ipp_request_t *req)
     switch (req->opid)
     {
     case IPP_OP_GET_PRINTER_ATTRIBUTES:
-        return ipp_get_printer_attributes(req);
+        return ipp_op_get_printer_attributes(req);
 
     case IPP_OP_PRINT_JOB:
-        return ipp_print_job(req);
+        return ipp_op_print_job(req);
 
     case IPP_OP_PRINT_URI:
     case IPP_OP_VALIDATE_JOB:

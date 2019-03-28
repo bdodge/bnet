@@ -171,6 +171,12 @@ int ipp_set_req_out_int32_attr(
                                 const int32_t value
                                 );
 
+int ipp_set_req_out_tag(
+                                ipp_request_t *req,
+                                ipp_io_groups_t group,
+                                ipp_tag_t       tag
+                                );
+
 ipp_request_t *ipp_req_create   (struct tag_ipp_server *ipp, http_client_t *client);
 int ipp_req_destroy             (struct tag_ipp_server *ipp, ipp_request_t *req);
 int ipp_req_init                (struct tag_ipp_server *ipp);

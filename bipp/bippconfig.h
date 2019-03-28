@@ -18,7 +18,12 @@
 
 /// Bytes in io buffersm should hold a whole TCP/IP packet
 //
-#define IPP_IO_SIZE                     (2048)
+#define IPP_IO_SIZE         (2048)
+
+/// Size of job pool. IPP wants to know about historic
+/// jobs so this should be larger than the jobs in-flight
+//
+#define IPP_MAX_JOBS        (32)
 
 /// Size of request pool. max number of concurrent ipp
 /// requests in process. If this is more than one, then

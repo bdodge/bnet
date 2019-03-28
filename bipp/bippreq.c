@@ -368,7 +368,7 @@ int ipp_get_attr_template(
         return result;
     }
     // lookup name in group table
-    result = ipp_get_attr_by_name(name, grouping, &attr);
+    result = ipp_get_group_attr_by_name(name, grouping, &attr);
     if (result)
     {
         butil_log(1, "No attribute %s in grouping %u\n", name, grouping);
@@ -478,6 +478,43 @@ int ipp_set_req_out_int32_attr(
                                         (uint8_t*)&nvalue,
                                         sizeof(int32_t)
                                         );
+    return result;
+}
+
+int ipp_set_req_out_tag(
+                                ipp_request_t *req,
+                                ipp_io_groups_t group,
+                                ipp_tag_t       tag
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+
+    attr = ipp_create_attr(IPP_RECDEX_TAG, NULL, 0);
+    if (! attr)
+    {
+        BERROR("Create attr");
+        return -1;
+    }
+    attr->alloc_len = 2;
+    attr->value = (uint8_t*)malloc(attr->alloc_len);
+    if (! attr->value)
+    {
+        BERROR("alloc tag val");
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        ipp_destroy_attr(attr);
+        return -1;
+    }
+    attr->value[0] = tag;
+    attr->value_len = 1;
+
+    result = ipp_add_req_out_attribute(req, group, attr);
+    if (result)
+    {
+        butil_log(0, "Add tag %u into response failed\n", tag);
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
     return result;
 }
 

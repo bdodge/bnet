@@ -454,9 +454,44 @@ int ipp_dispatch(ipp_request_t *req)
     case IPP_OP_STARTUP_ALL_PRINTERS:
     default:
         ipp_set_error(req, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED);
-        return 1;
+        result = -1;
     }
-    return 0;
+    return result;
+}
+
+int ipp_send_tag(ipp_request_t *req)
+{
+    ipp_attr_t *attr;
+    int result;
+
+    // get current attribute sending
+    //
+    attr = req->cur_out_attr;
+    if (! attr)
+    {
+        return ipp_pop_state(req);
+    }
+    if (req->out.count == req->out.size)
+    {
+        butil_log(5, "Flush output to add tag\n");
+        result = ipp_push_state(req, reqWriteOutput);
+    }
+    else
+    {
+        result = ipp_write_bytes(&req->out, attr->value, attr->value_len);
+        if (! result)
+        {
+            result = ipp_pop_state(req);
+        }
+        else
+        {
+            ipp_pop_state(req);
+        }
+        // move to next out attr to send
+        //
+        req->cur_out_attr = req->cur_out_attr->next;
+    }
+    return result;
 }
 
 int ipp_send_attribute(ipp_request_t *req)
@@ -477,6 +512,12 @@ int ipp_send_attribute(ipp_request_t *req)
     if (! attr)
     {
         return ipp_pop_state(req);
+    }
+    // if its a special (tag) send it
+    //
+    if (attr->recdex == IPP_RECDEX_TAG)
+    {
+        return ipp_send_tag(req);
     }
     // get name for attr
     //

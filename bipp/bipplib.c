@@ -300,63 +300,63 @@ int ipp_set_static_environment(ipp_server_t *ipp)
 {
     int result;
 
-    result = ipp_set_attr_string_value_by_name(
+    result = ipp_set_group_attr_string_value(
                                                 "charset-configured",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "utf-8"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "charset-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "utf-8"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "compression-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "none"
                                                 );
 
-    result |= ipp_set_attr_int32_value_by_name(
+    result |= ipp_set_group_attr_int32_value(
                                                 "copies-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 1
                                                 );
 
-    result |= ipp_set_attr_range_value_by_name(
+    result |= ipp_set_group_attr_range_value(
                                                 "copies-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 1, 99
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "document-format-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "text/plain"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "document-format-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "text/plain"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "generated-natural-language-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "en"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "ipp-versions-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 2,
@@ -364,21 +364,21 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 "1.2"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "pdl-override-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "attempted"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "natural-language-configured",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "en"
                                                 );
 
-    result |= ipp_set_attr_int32_value_by_name(
+    result |= ipp_set_group_attr_int32_value(
                                                 "operations-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 7,
@@ -391,14 +391,14 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_OP_GET_JOBS
                                              );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "printer-name",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
                                                 "bnetipp"
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "uri-authentication-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
@@ -410,7 +410,7 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                     */
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "uri-security-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1,
@@ -443,42 +443,42 @@ int ipp_set_environment(ipp_server_t *ipp)
     }
     // set printer-uri in printer status group
     //
-    result = ipp_set_attr_string_value_by_name(
+    result = ipp_set_group_attr_string_value(
                                                 "printer-uri-supported",
                                                 IPP_GROUPING_PRINTER_STATUS,
                                                 1,
                                                 ipp->uri
                                                 );
 
-    result |= ipp_set_attr_bool_value_by_name(
+    result |= ipp_set_group_attr_bool_value(
                                                 "printer-is-accepting-jobs",
                                                 IPP_GROUPING_PRINTER_STATUS,
                                                 1,
                                                 1
                                                 );
 
-    result |= ipp_set_attr_int32_value_by_name(
+    result |= ipp_set_group_attr_int32_value(
                                                 "printer-state",
                                                 IPP_GROUPING_PRINTER_STATUS,
                                                 1,
                                                 3
                                                 );
 
-    result |= ipp_set_attr_string_value_by_name(
+    result |= ipp_set_group_attr_string_value(
                                                 "printer-state-reasons",
                                                 IPP_GROUPING_PRINTER_STATUS,
                                                 1,
                                                 "none"
                                                 );
 
-    result |= ipp_set_attr_int32_value_by_name(
+    result |= ipp_set_group_attr_int32_value(
                                                 "printer-up-time",
                                                 IPP_GROUPING_PRINTER_STATUS,
                                                 1,
                                                 1000
                                                 );
 
-    result |= ipp_set_attr_int32_value_by_name(
+    result |= ipp_set_group_attr_int32_value(
                                                 "queued-job-count",
                                                 IPP_GROUPING_PRINTER_STATUS,
                                                 1,
@@ -505,18 +505,23 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
         return -1;
     }
 #endif
-    result = ipp_req_init(&s_ipp_server);
+    ipp = &s_ipp_server;
+
+    result = ipp_req_init(ipp);
     if (result)
     {
         BERROR("can't init reqs");
+    }
+    result = ipp_job_init(ipp);
+    if (result)
+    {
+        BERROR("can't init jobs");
     }
     result = ipp_attr_init();
     if (result)
     {
         BERROR("can't init attrs");
     }
-    ipp = &s_ipp_server;
-
     // register a custom scheme
     result = butil_register_scheme("ipp", &ipp->scheme);
     if (result)

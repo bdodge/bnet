@@ -18,24 +18,23 @@
 
 /// Bytes in io buffersm should hold a whole TCP/IP packet
 //
-#define IPP_IO_SIZE						(2048)
+#define IPP_IO_SIZE                     (2048)
 
 /// Size of request pool. max number of concurrent ipp
 /// requests in process. If this is more than one, then
 /// locking is implemented for db access
 //
-#define IPP_MAX_REQUESTS	(1)
+#define IPP_MAX_REQUESTS    (1)
 
 /// version supported range
 ///
 /// minimum major/minor
 ///
-#define IPP_MAJOR_VERSION_MIN	(1)
-#define IPP_MINOR_VERSION_MIN	(0)
+#define IPP_MAJOR_VERSION_MIN   (1)
+#define IPP_MINOR_VERSION_MIN   (0)
 
-#define IPP_MAJOR_VERSION_MAX	(1)
-#define IPP_MINOR_VERSION_MAX	(1)
-
+#define IPP_MAJOR_VERSION_MAX   (1)
+#define IPP_MINOR_VERSION_MAX   (1)
 
 #endif
 

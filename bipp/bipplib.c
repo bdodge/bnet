@@ -296,6 +296,16 @@ int ipp_resource_callback(
     return 0;
 }
 
+int ipp_set_static_environment(ipp_server_t *ipp)
+{
+    int result;
+
+    result = ipp_set_attr_int32_value_by_name("operations-supported",
+                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                7, IPP_OP_GET_PRINTER_ATTRIBUTES, IPP_OP_PRINT_JOB, 4, 8, 9, 10, 11);
+    return result;
+}
+
 int ipp_set_environment(ipp_server_t *ipp)
 {
     char hostname[HTTP_MAX_PATH];
@@ -315,7 +325,12 @@ int ipp_set_environment(ipp_server_t *ipp)
     }
     // set printer-uri in printer status group
     //
-    result = ipp_set_attr_string_value_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, ipp->uri);
+    result = ipp_set_attr_string_value_by_name(
+                                        "printer-uri-supported",
+                                        IPP_GROUPING_PRINTER_STATUS,
+                                        1,
+                                        ipp->uri
+                                        );
     return result;
 }
 
@@ -341,6 +356,11 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
     {
         BERROR("can't init reqs");
     }
+    result = ipp_attr_init();
+    if (result)
+    {
+        BERROR("can't init attrs");
+    }
     ipp = &s_ipp_server;
 
     // register a custom scheme
@@ -365,7 +385,16 @@ int ipp_server(const char *program, uint16_t port, bool isTLS)
     strncpy(ipp->path, "/ipp", sizeof(ipp->path) - 1);
     ipp->path[sizeof(ipp->path) - 1] = '\0';
 
+    result = ipp_set_static_environment(ipp);
+    if (result)
+    {
+        return result;
+    }
     result = ipp_set_environment(ipp);
+    if (result)
+    {
+        return result;
+    }
 
     // handle all HTTP scheme urls in callback
     //

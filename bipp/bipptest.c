@@ -129,8 +129,9 @@ int main(int argc, char **argv)
     else
     {
 #ifdef BMEM_H
-        static uint8_t g_spool[0x200000];
-        static uint8_t g_mpool[0x200000];
+        static uint8_t g_spool1[0x100000];
+        static uint8_t g_spool2[0x100000];
+        static uint8_t g_mpool[0x100000];
         static uint8_t g_lpool[0x100000];
 
         void *pool;
@@ -144,13 +145,22 @@ int main(int argc, char **argv)
             BERROR("Can't init pool\n");
             return result;
         }
-        pool_size = sizeof(g_spool);
-        pool_chunk = 128;
-        pool = g_spool;
+        pool_size = sizeof(g_spool1);
+        pool_chunk = 32;
+        pool = g_spool1;
         result = bmem_add_pool(pool, pool_size, pool_chunk);
         if (result)
         {
-            BERROR("Can't add small pool\n");
+            BERROR("Can't add small pool 1\n");
+            return result;
+        }
+        pool_size = sizeof(g_spool2);
+        pool_chunk = 64;
+        pool = g_spool2;
+        result = bmem_add_pool(pool, pool_size, pool_chunk);
+        if (result)
+        {
+            BERROR("Can't add small pool 2\n");
             return result;
         }
         pool_size = sizeof(g_mpool);

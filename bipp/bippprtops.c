@@ -24,6 +24,62 @@ static int ipp_get_printer_attributes(ipp_request_t *req)
     ipp_attr_t *nattr;
     int result;
 
+#if 1
+    // iterate over printer dezcription group adding each set attribute
+    // into the response
+    //
+    result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    while (attr)
+    {
+        if (attr->value)
+        {
+            result = ipp_dupe_attr(attr, &nattr);
+            if (result)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                return result;
+            }
+            result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
+            if (result)
+            {
+                return result;
+            }
+        }
+        attr = attr->next;
+    }
+    // iterate over printer status group adding each set attribute
+    // into the response
+    //
+    result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_STATUS, &attr);
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    while (attr)
+    {
+        if (attr->value)
+        {
+            result = ipp_dupe_attr(attr, &nattr);
+            if (result)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                return result;
+            }
+            result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
+            if (result)
+            {
+                return result;
+            }
+        }
+        attr = attr->next;
+    }
+#else
     // fetch printer-attributes group and add to return
     result = ipp_get_attr_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, &attr);
     if (result)
@@ -38,6 +94,7 @@ static int ipp_get_printer_attributes(ipp_request_t *req)
         return result;
     }
     result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
+#endif
     return result;
 }
 

@@ -310,8 +310,8 @@ int ipp_add_req_out_attribute(ipp_request_t *req, ipp_io_groups_t group, ipp_att
 }
 
 int ipp_grouping_for_io_group(
-                           		ipp_io_groups_t group,
-                            	ipp_attr_grouping_code_t *grouping
+                                ipp_io_groups_t group,
+                                ipp_attr_grouping_code_t *grouping
                               )
 {
     switch (group)
@@ -335,7 +335,7 @@ int ipp_get_attr_template(
                                ipp_request_t *req,
                                ipp_io_groups_t group,
                                const char *name,
-								ipp_attr_t **pattr
+                                ipp_attr_t **pattr
                         )
 {
     ipp_attr_grouping_code_t grouping;
@@ -366,7 +366,7 @@ int ipp_get_attr_template(
         ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         return result;
     }
-	return result;
+    return result;
 }
 
 int ipp_set_req_out_bytes_attr(
@@ -516,30 +516,30 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 
 int ipp_req_destroy(ipp_server_t *ipp, ipp_request_t *req)
 {
-	ipp_attr_t *attr;
-	ipp_attr_t *nattr;
-	ipp_io_groups_t gdex;
+    ipp_attr_t *attr;
+    ipp_attr_t *nattr;
+    ipp_io_groups_t gdex;
 
     if (! ipp || ! req)
     {
         return -1;
     }
-	// free any attribute lists
-	for (gdex = IPP_OPER_ATTRS; gdex < IPP_MAX_IO_ATTRS; gdex++)
-	{
-		for (attr = req->in_attrs[gdex]; attr;)
-		{
-			nattr = attr->next;
-			ipp_destroy_attr(attr);
-			attr = nattr;
-		}
-		for (attr = req->out_attrs[gdex]; attr;)
-		{
-			nattr = attr->next;
-			ipp_destroy_attr(attr);
-			attr = nattr;
-		}
-	}
+    // free any attribute lists
+    for (gdex = IPP_OPER_ATTRS; gdex < IPP_MAX_IO_ATTRS; gdex++)
+    {
+        for (attr = req->in_attrs[gdex]; attr;)
+        {
+            nattr = attr->next;
+            ipp_destroy_attr(attr);
+            attr = nattr;
+        }
+        for (attr = req->out_attrs[gdex]; attr;)
+        {
+            nattr = attr->next;
+            ipp_destroy_attr(attr);
+            attr = nattr;
+        }
+    }
     req->next = ipp->req_free;
     ipp->req_free = req;
     return 0;

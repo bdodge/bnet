@@ -23,6 +23,17 @@
 #include "biana_attribs.h"
 #include "biana_attribs.c"
 
+static size_t ipp_alloc_size(size_t len)
+{
+    size_t a;
+
+    for (a = 8; a < len;)
+    {
+        a <<= 1;
+    }
+    return a;
+}
+
 int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattrec)
 {
     ipp_attr_t *attr;
@@ -202,12 +213,15 @@ int ipp_syntax_for_enc_type(ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_
 
 int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
-    if (! attr || ! value)
+    if (! attr)
     {
         return -1;
     }
-    if (attr->alloc_len < value_len || ! attr->value)
+    if (attr->alloc_len < value_len || ! attr->value || ! value)
     {
+        // no room for new value, or no new value at all
+        // so free any exising value
+        //
         if (attr->value)
         {
             if (attr->alloc_len)
@@ -217,19 +231,25 @@ int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
             attr->value = NULL;
             attr->alloc_len = 0;
         }
-        attr->value = (uint8_t *)malloc(value_len);
-        if (! attr->value)
+        if (value)
         {
-            return -1;
+            attr->alloc_len = ipp_alloc_size(value_len);
+            attr->value = (uint8_t *)malloc(attr->alloc_len);
+            if (! attr->value)
+            {
+                return -1;
+            }
         }
-        attr->alloc_len = value_len;
     }
-    attr->value_len = value_len;
-    memcpy(attr->value, value, value_len);
+    if (value)
+    {
+        attr->value_len = value_len;
+        memcpy(attr->value, value, value_len);
+    }
     return 0;
 }
 
-int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t *value_len)
+int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
     return 1;
 }
@@ -258,6 +278,23 @@ int ipp_get_first_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **
 int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len)
 {
     return 1;
+}
+
+int ipp_get_attr_for_grouping(ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs)
+{
+    ipp_group_xref_t *xreftab;
+
+    if (! pattrs)
+    {
+        return -1;
+    }
+    if (grouping >= IPP_GROUPING_MAX_GROUP)
+    {
+        return -1;
+    }
+    xreftab = &s_ipp_group_xref[grouping];
+    *pattrs = xreftab->group_attrs;
+    return 0;
 }
 
 #define IPPATTR_XREF_LINEAR 0
@@ -367,24 +404,179 @@ int ipp_get_attr_by_name(const char *name, ipp_attr_grouping_code_t group, ipp_a
     return ipp_get_attr_by_index(recdex, group, pattr);
 }
 
-int ipp_set_attr_string_value_by_name(const char *name, ipp_attr_grouping_code_t group, const char *str)
+int ipp_set_attr_int32_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t val, ..." */
+                                )
 {
     ipp_attr_t *attr;
     int result;
+    va_list args;
+    int32_t value;
+    size_t value_len;
 
-    if (! name || ! str)
+    if (! name)
     {
         return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
     }
     result = ipp_get_attr_by_name(name, group, &attr);
     if (result)
     {
         return result;
     }
-    result = ipp_set_attr_value(attr, (uint8_t *)str, strlen(str));
+    va_start(args, nvalues);
+
+    value = (int32_t)va_arg(args, int32_t);
+    value = htonl(value);
+
+    value_len = sizeof(int32_t);
+
+    nvalues--;
+    result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
     if (result)
     {
         return result;
+    }
+    while (nvalues-- > 0)
+    {
+        value = (int32_t)va_arg(args, int32_t);
+        value = htonl(value);
+
+        result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+int ipp_set_attr_bytes_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "const uint8_t *value, size_t value_len, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    uint8_t *value;
+    size_t value_len;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nvalues);
+
+    value = (uint8_t *)va_arg(args, uint8_t *);
+    if (! value)
+    {
+        return -1;
+    }
+    value_len = (size_t)va_arg(args, size_t);
+
+    nvalues--;
+    result = ipp_set_attr_value(attr, value, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nvalues-- > 0)
+    {
+        value = (uint8_t *)va_arg(args, uint8_t *);
+        if (! value)
+        {
+            return -1;
+        }
+        value_len = (size_t)va_arg(args, size_t);
+
+        result = ipp_add_attr_value(attr, value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+int ipp_set_attr_string_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                int nstrings,
+                                ...
+                                /* parm list of type "const char *str, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    char *value;
+    size_t value_len;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nstrings == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nstrings);
+
+    value = (char *)va_arg(args, char *);
+    if (! value)
+    {
+        return -1;
+    }
+    value_len = strlen(value);
+
+    nstrings--;
+    result = ipp_set_attr_value(attr, (uint8_t *)value, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nstrings-- > 0)
+    {
+        value = (char *)va_arg(args, char *);
+        if (! value)
+        {
+            return -1;
+        }
+        value_len = strlen(value);
+
+        result = ipp_add_attr_value(attr, (uint8_t*)value, value_len);
+        if (result)
+        {
+            return result;
+        }
     }
     return 0;
 }
@@ -469,6 +661,30 @@ int ipp_destroy_attr(ipp_attr_t *attr)
     return 0;
 }
 
+int ipp_attr_init()
+{
+    ipp_group_xref_t *xreftab;
+    ipp_attr_grouping_code_t gdex;
+    size_t adex;
+
+    // link all the group tables for convenience
+    //
+    for (gdex = IPP_GROUPING_DOCUMENT_DESCRIPTION; gdex < IPP_GROUPING_MAX_GROUP; gdex++)
+    {
+        xreftab = &s_ipp_group_xref[gdex];
+
+        if (xreftab->num_attr > 0)
+        {
+            for (adex = 0; adex < xreftab->num_attr - 1; adex++)
+            {
+                xreftab->group_attrs[adex].next = &xreftab->group_attrs[adex + 1];
+            }
+            xreftab->group_attrs[adex].next = NULL;
+        }
+    }
+    return 0;
+}
+
 int test_find_attr_rec()
 {
     ipp_attr_rec_t *rec;
@@ -525,7 +741,7 @@ int test_set_get_string_attr()
 
     strval = "this is OK";
 
-    result = ipp_set_attr_string_value_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, strval);
+    result = ipp_set_attr_string_value_by_name("printer-uri-supported", IPP_GROUPING_PRINTER_STATUS, 1, strval);
     if (result)
     {
         butil_log(0, "set str attr failed\n");

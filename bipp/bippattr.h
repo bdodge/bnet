@@ -81,6 +81,8 @@ typedef uint8_t ipp_syntax_enc_t;
 //
 #define IPP_MAX_ALT_TYPES (4)
 
+/// Allocating memori
+
 /// IPP Attribute record. Describes a single attribute properties (not value)
 //
 typedef struct tag_attr_record
@@ -120,19 +122,48 @@ const char *ipp_name_of_attr    (ipp_attr_t *attr);
 int ipp_syntax_for_enc_type     (ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_t *tag, bool *is_array);
 
 int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
-int ipp_add_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t *value_len);
+int ipp_add_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
 int ipp_get_first_attr_value    (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
 int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t iter, uint8_t **value, size_t *value_len);
+
+int ipp_get_attr_for_grouping   (ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs);
 
 int ipp_get_attr_by_index       (const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 int ipp_get_attr_by_name        (const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 
-int ipp_set_attr_string_value_by_name(const char *name, ipp_attr_grouping_code_t group, const char *str);
-int ipp_get_attr_value_by_name  (const char *name, ipp_attr_grouping_code_t group, uint8_t **value, size_t *value_len);
+int ipp_set_attr_int32_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t val, ..." */
+                                );
+int ipp_set_attr_bytes_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "const uint8_t *value, size_t value_len, ..." */
+                                );
+int ipp_set_attr_string_value_by_name(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                int nstrings,
+                                ...
+                                /* parm list of type "const char *str, ..." */
+                                );
+int ipp_get_attr_value_by_name  (
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                uint8_t **value,
+                                size_t *value_len
+                                );
 
 int         ipp_dupe_attr       (ipp_attr_t *attr, ipp_attr_t **dupeattr);
 ipp_attr_t *ipp_create_attr     (size_t recdex, uint8_t *value, size_t value_len);
 int         ipp_destroy_attr    (ipp_attr_t *attr);
+
+int         ipp_attr_init       (void);
 
 int test_find_attr_rec(void);
 int test_set_get_string_attr(void);

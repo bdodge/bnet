@@ -30,6 +30,7 @@ HTTP_PATH=$(SRCROOT)/bhttp
 FTP_PATH=$(SRCROOT)/bftp
 XMPP_PATH=$(SRCROOT)/bxmpp
 MQTT_PATH=$(SRCROOT)/bmqtt
+MDNS_PATH=$(SRCROOT)/bmdns
 SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
 SIP_PATH=$(SRCROOT)/bsip
@@ -124,6 +125,7 @@ HTTPLIB=$(HTTP_PATH)/$(OBJDIR)/libbhttp.a
 FTPLIB=$(FTP_PATH)/$(OBJDIR)/libbftp.a
 XMPPLIB=$(XMPP_PATH)/$(OBJDIR)/libbxmpp.a
 MQTTLIB=$(MQTT_PATH)/$(OBJDIR)/libbmqtt.a
+MDNSLIB=$(MDNS_PATH)/$(OBJDIR)/libbmdns.a
 SMTPLIB=$(SMTP_PATH)/$(OBJDIR)/libbsmtp.a
 SNMPLIB=$(SNMP_PATH)/$(OBJDIR)/libbsnmp.a
 SIPLIB=$(SIP_PATH)/$(OBJDIR)/libbsip.a
@@ -172,6 +174,9 @@ $(XMPP_PATH)/%.a:
 
 $(MQTT_PATH)/%.a:
 	make -C $(MQTT_PATH) library
+
+$(MDNS_PATH)/%.a:
+	make -C $(MDNS_PATH) library
 
 $(SNMP_PATH)/%.a:
 	make -C $(SNMP_PATH) library

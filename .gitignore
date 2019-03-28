@@ -5,6 +5,7 @@ bhttp/media/
 bjson/bjsontest
 bmem/bmemtest
 bmqtt/mqtt
+bmdns/mdnsr
 bosal/bosaltest
 bsasl/bsasltest
 bstreamio/bstreamiotest

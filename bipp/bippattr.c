@@ -227,52 +227,165 @@ int ipp_syntax_for_attr(ipp_attr_t *attr, ipp_tag_t *tag, bool *is_array)
     return result;
 }
 
-int ipp_base_enc_syntax_for_attr(ipp_attr_t *attr, ipp_syntax_enc_t *penc)
+static struct tag_name_to_xtype
 {
-    ipp_syntax_enc_t enc;
-    int sdex;
+    const char     *name;
+    ipp_syntax_enc_t type;
+}
+s_syntax_to_type[] =
+{
+    { "charset",        IPP_CHARSET     },
+    { "naturalLanguage",IPP_LANGUAGE    },
+    { "integer",        IPP_INTEGER     },
+    { "boolean",        IPP_BOOLEAN     },
+    { "enum",           IPP_ENUM        },
+    { "keyword",        IPP_KEYWORD     },
 
-    if (! attr)
+    { "text",           IPP_TEXT        },
+    { "name",           IPP_NAME        },
+    { "octetString",    IPP_OCTETSTRING },
+    { "uri",            IPP_URI         },
+    { "uriScheme",      IPP_URISCHEME   },
+    { "mimeMediaType",  IPP_MIME        },
+
+    { "resolution",     IPP_RESOLUTION  },
+    { "rangeOfInteger", IPP_RANGEOFINT  },
+    { "dateTime",       IPP_DATETIME    },
+    { "collection",     IPP_COLLECTION  },
+
+    { "1setOf",         IPP_ARRAY       }, // adds array bit
+    { "type1",          IPP_NOTYPE      }, // ignored
+    { "type2",          IPP_NOTYPE      }, // ignored
+    { "no-value",       IPP_NOTYPE      }, // ignored
+    { "unknown",        IPP_NOTYPE      }, // ignored
+    { "|",              IPP_NOTYPE      }, // advances type index
+};
+
+#define IPP_NUM_TYPE_ENCS (sizeof(s_syntax_to_type)/sizeof(struct tag_name_to_xtype))
+
+int ipp_type_string(ipp_syntax_enc_t type[IPP_MAX_ALT_TYPES], char *buffer, size_t nbuffer)
+{
+    ipp_syntax_enc_t typecode;
+    size_t typedex;
+    size_t cmpdex;
+    int room;
+    int len;
+    bool opened;
+
+    room = nbuffer;
+
+    buffer[0] = '\0';
+    opened = false;
+
+    for (typedex = 0; typedex < IPP_MAX_ALT_TYPES; typedex++)
     {
-        return -1;
+        typecode = type[typedex];
+
+        if (typecode == IPP_NOTYPE)
+        {
+            break;
+        }
+        if (typecode & IPP_ARRAY)
+        {
+            len = snprintf(buffer, room, "1setOf ");
+            buffer += len;
+            room -= len;
+        }
+        typecode &= ~IPP_ARRAY;
+
+        if (typecode == IPP_NOTYPE)
+        {
+            opened = true;
+            len = snprintf(buffer, room, "( ");
+            buffer += len;
+            room -= len;
+        }
+        else
+        {
+            for (cmpdex = 0; cmpdex < IPP_NUM_TYPE_ENCS; cmpdex++)
+            {
+                if (s_syntax_to_type[cmpdex].type == typecode)
+                {
+                    break;
+                }
+            }
+            if (cmpdex >= IPP_NUM_TYPE_ENCS)
+            {
+                len = snprintf(buffer, room, "??? ");
+                buffer += len;
+                room -= len;
+            }
+            else
+            {
+                len = snprintf(buffer, room, "%s %s",
+                        s_syntax_to_type[cmpdex].name,
+                        (typedex < (IPP_MAX_ALT_TYPES - 1) ?
+                            ((type[typedex + 1] != IPP_NOTYPE) ? "| " : "")
+                            :   "")
+                        );
+                buffer += len;
+                room -= len;
+            }
+        }
     }
-    sdex = 0;
-    enc = s_ipp_attributes[attr->recdex].syntax[sdex];
-    if (enc == IPP_ARRAY)
+    if (opened)
     {
-        sdex++;
-        enc = s_ipp_attributes[attr->recdex].syntax[sdex];
+        len = snprintf(buffer, room, "}");
+        buffer += len;
+        room -= len;
     }
-    *penc = enc;
     return 0;
 }
 
 int ipp_check_type_is(ipp_attr_t *attr, size_t ntypes, ...)
 {
-    ipp_syntax_enc_t attr_syntax, ok_syntax;
+    ipp_syntax_enc_t *encsyntax;
+    ipp_syntax_enc_t attr_syntax;
+    ipp_syntax_enc_t base_syntax[IPP_MAX_ALT_TYPES];
+    ipp_syntax_enc_t ok_syntax;
+    char actual[32];
+    char expected[32];
     va_list args;
+    size_t startdex;
+    size_t xdex;
     int result;
 
-    result = ipp_base_enc_syntax_for_attr(attr, &attr_syntax);
-    if (result)
+    startdex = 0;
+    encsyntax = s_ipp_attributes[attr->recdex].syntax;
+    if (encsyntax[0] == IPP_ARRAY)
     {
-        return result;
+        // ignore 1setof modifier alone
+        startdex++;
     }
-    attr_syntax &= ~IPP_ARRAY;
 
     va_start(args, ntypes);
 
+    ok_syntax = (ipp_syntax_enc_t)va_arg(args, int);
+    base_syntax[0] = ok_syntax;
+    base_syntax[1] = IPP_NOTYPE;
+
     while (ntypes-- > 0)
     {
-        ok_syntax = (ipp_syntax_enc_t)va_arg(args, int);
-
-        // check that type is one we care about
-        if (attr_syntax == ok_syntax)
+        for (xdex = startdex; xdex < IPP_MAX_ALT_TYPES; xdex++)
         {
-            return 0;
+            attr_syntax = encsyntax[xdex] & ~IPP_ARRAY;
+
+            if (attr_syntax == ok_syntax)
+            {
+                return 0;
+            }
+            //butil_log(5, "type %02X is not %02X\n", attr_syntax, ok_syntax);
+        }
+        if (ntypes > 0)
+        {
+            ok_syntax = (ipp_syntax_enc_t)va_arg(args, int);
         }
     }
-    butil_log(1, "Attempt to use bool to set type %02X\n", attr_syntax);
+   ipp_type_string(encsyntax, actual, sizeof(actual));
+   ipp_type_string(base_syntax, expected, sizeof(expected));
+
+    butil_log(1, "Attempt to set %s, an %s, with a type like %s\n",
+                   ipp_name_of_attr(attr), actual, expected);
     return -1;
 }
 
@@ -873,6 +986,11 @@ int ipp_set_group_attr_range_value(
     {
         return result;
     }
+    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
+    if (result)
+    {
+        return result;
+    }
     va_start(args, nvalues);
 
     minvalue = (int32_t)va_arg(args, int32_t);
@@ -933,6 +1051,11 @@ int ipp_set_group_attr_int32_value(
         return 0;
     }
     result = ipp_get_group_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 2, IPP_INTEGER, IPP_ENUM);
     if (result)
     {
         return result;
@@ -1053,12 +1176,13 @@ int ipp_set_group_attr_string_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_OCTETSTRING);
+    result = ipp_check_type_is(attr, 9,
+                    IPP_TEXT, IPP_CHARSET, IPP_LANGUAGE, IPP_KEYWORD,
+                    IPP_NAME, IPP_OCTETSTRING, IPP_URI, IPP_URISCHEME, IPP_MIME);
     if (result)
     {
         return result;
     }
-
     va_start(args, nstrings);
 
     value = (char *)va_arg(args, char *);
@@ -1194,6 +1318,11 @@ int ipp_set_attr_bool_value(
     {
         return result;
     }
+    result = ipp_check_type_is(attr, 1, IPP_BOOLEAN);
+    if (result)
+    {
+        return result;
+    }
     va_start(args, nvalues);
 
     value = (int)va_arg(args, int);
@@ -1246,6 +1375,11 @@ int ipp_set_attr_range_value(
         return 0;
     }
     result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
     if (result)
     {
         return result;
@@ -1310,6 +1444,11 @@ int ipp_set_attr_int32_value(
         return 0;
     }
     result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 2, IPP_INTEGER, IPP_ENUM);
     if (result)
     {
         return result;
@@ -1426,6 +1565,13 @@ int ipp_set_attr_string_value(
         return 0;
     }
     result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 9,
+                    IPP_TEXT, IPP_CHARSET, IPP_LANGUAGE, IPP_KEYWORD,
+                    IPP_NAME, IPP_OCTETSTRING, IPP_URI, IPP_URISCHEME, IPP_MIME);
     if (result)
     {
         return result;

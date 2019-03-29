@@ -411,7 +411,7 @@ static int ipp_op_get_jobs(ipp_request_t *req)
     // iterate over completed
     if (which_jobs == opgjAll || which_jobs == opgjCompleted)
     {
-        result = ipp_get_active_jobs(req->ipp, &job);
+        result = ipp_get_completed_jobs(req->ipp, &job);
         if (result)
         {
             job = NULL;

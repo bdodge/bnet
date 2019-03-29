@@ -22,11 +22,8 @@ int ipp_sink_job_data(ipp_request_t *req)
 {
     ipp_job_t *job;
     int result;
-    time_t now;
 
     result = 0;
-
-    time(&now);
 
     job = req->job;
     if (! job || ! job->print_stream)
@@ -36,12 +33,29 @@ int ipp_sink_job_data(ipp_request_t *req)
         req->in.count = 0;
         return 0;
     }
-    job->last_byte_time = now;
+    if (req->in.count > 0)
+    {
+        time_t now;
 
+        time(&now);
+        job->last_byte_time = now;
+    }
     if (job->print_stream)
     {
         int wc;
 
+        if (req->in.count == 0 && req->download_complete)
+        {
+            butil_log(5, "No more data, finish job %d\n", job->id);
+
+            // no more data coming, close up
+            //
+            result = job->print_stream->close(job->print_stream);
+            // ignore result, nothing can be done
+
+            result = ipp_complete_job(req->ipp, job);
+            // again, not much can be done
+        }
         result = job->print_stream->poll(
                     job->print_stream, writeable, 0, 100000);
         if (result < 0)
@@ -261,8 +275,8 @@ int ipp_complete_job(ipp_server_t *ipp, ipp_job_t *job)
             }
         }
     }
-    job->next = NULL;
-
+    // and link into completed
+    //
     if (! ipp->jobs_completed)
     {
         ipp->jobs_completed = job;

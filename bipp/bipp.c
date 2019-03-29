@@ -986,6 +986,10 @@ int ipp_process(ipp_request_t *req)
         if (req->download_complete)
         {
             butil_log(5, "End of print data\n");
+            if (req->job)
+            {
+                result = ipp_sink_job_data(req);
+            }
             result = ipp_move_state(req, reqReply);
             break;
         }

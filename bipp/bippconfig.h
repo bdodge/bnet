@@ -51,7 +51,7 @@
 #define IPP_MAJOR_VERSION_MIN   (1)
 #define IPP_MINOR_VERSION_MIN   (1)
 
-#define IPP_MAJOR_VERSION_MAX   (2)
+#define IPP_MAJOR_VERSION_MAX   (1)
 #define IPP_MINOR_VERSION_MAX   (2)
 
 /// how long a job can go without data before it gets aborted

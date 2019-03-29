@@ -31,20 +31,20 @@
 typedef enum
 {
     IPP_NOTYPE      = 0x00, // meta-type
-    IPP_CHARSET     = 0x01,
-    IPP_LANGUAGE    = 0x02,
     IPP_INTEGER     = 0x03,
     IPP_BOOLEAN     = 0x04,
     IPP_ENUM        = 0x05,
-    IPP_KEYWORD     = 0x06,
 
     IPP_STRINGTYPE  = 0x20, // meta-type, bit indicates type is a string
     IPP_TEXT        = 0x21,
-    IPP_NAME        = 0x22,
-    IPP_OCTETSTRING = 0x23,
-    IPP_URI         = 0x24,
-    IPP_URISCHEME   = 0x25,
-    IPP_MIME        = 0x26,
+    IPP_CHARSET     = 0x22,
+    IPP_LANGUAGE    = 0x23,
+    IPP_KEYWORD     = 0x24,
+    IPP_NAME        = 0x25,
+    IPP_OCTETSTRING = 0x26,
+    IPP_URI         = 0x27,
+    IPP_URISCHEME   = 0x28,
+    IPP_MIME        = 0x29,
 
     IPP_COMPOSITE   = 0x40, // meta-type bit indicates composite type
     IPP_RESOLUTION  = 0x41,

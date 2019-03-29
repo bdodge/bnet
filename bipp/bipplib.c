@@ -503,10 +503,10 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 1,
                                                 "none"
                                                 );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_bool_value(
                                                 "color-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, true
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "finishings-default",
@@ -518,10 +518,10 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "ippget-event-life",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 230
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "job-creation-attributes-supported",
@@ -638,15 +638,15 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "number-up-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 1
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "number-up-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 4
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "orientation-requested-default",
@@ -673,15 +673,15 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_bool_value(
                                                 "page-ranges-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, true
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "pages-per-minute",
                                                 IPP_GROUPING_PRINTER_STATUS,
-                                                1, "none"
+                                                1, 2000
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "print-quality-default",
@@ -748,10 +748,10 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_STATUS,
                                                 1, "none"
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "printer-state-change-time",
                                                 IPP_GROUPING_PRINTER_STATUS,
-                                                1, "none"
+                                                1, 0
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "sides-default",

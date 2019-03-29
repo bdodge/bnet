@@ -125,6 +125,7 @@ int         ipp_get_attr_rec    (ipp_attr_t *attr, ipp_attr_rec_t **pattrec);
 const char *ipp_name_of_attr    (ipp_attr_t *attr);
 
 int ipp_syntax_for_enc_type     (ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_t *tag, bool *is_array);
+int ipp_base_enc_syntax_for_attr(ipp_attr_t *attr, ipp_syntax_enc_t *penc);
 
 int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
 int ipp_add_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);

@@ -3309,7 +3309,7 @@ int http_wait_for_server_event(http_server_t *servers)
     return result;
 }
 
-int http_serve(http_server_t *servers)
+int http_serve(http_server_t *servers, http_idle_callback_t on_idle, void *priv)
 {
     http_server_t *server;
     http_server_t *prevserver;
@@ -3348,6 +3348,14 @@ int http_serve(http_server_t *servers)
                 // remove server?
             }
             prevserver = server;
+        }
+        if (on_idle)
+        {
+            result = on_idle(priv);
+            if (result)
+            {
+                butil_log(1, "Idle callback stops serving\n");
+            }
         }
     }
     while (! result && servers);

@@ -18,6 +18,80 @@
 #include "bippproto.h"
 #include "butil.h"
 
+int ipp_sink_job_data(ipp_request_t *req)
+{
+    ipp_job_t *job;
+    int result;
+    time_t now;
+
+    result = 0;
+
+    time(&now);
+
+    job = req->job;
+    if (! job || ! job->print_stream)
+    {
+        butil_log(5-1, "Absorb %d bytes print data\n", req->in.count);
+        req->in.tail += req->in.count;
+        req->in.count = 0;
+        return 0;
+    }
+    job->last_byte_time = now;
+
+    if (job->print_stream)
+    {
+        int wc;
+
+        result = job->print_stream->poll(
+                    job->print_stream, writeable, 0, 100000);
+        if (result < 0)
+        {
+            butil_log(1, "Print stream not ready\n");
+            return result;
+        }
+        if (result == 0)
+        {
+            return 0;
+        }
+        result = 0;
+
+        wc = job->print_stream->write(job->print_stream,
+                    req->in.data, req->in.count);
+        if (wc < 0)
+        {
+            butil_log(1, "Print stream disconnected\n");
+            return -1;
+        }
+        req->in.tail += wc;
+        req->in.count -= wc;
+    }
+    return result;
+}
+
+int ipp_job_check_timeout(struct tag_ipp_server *ipp)
+{
+    ipp_job_t *job;
+    time_t now;
+    int result;
+
+    time(&now);
+
+    if (! ipp)
+    {
+        return -1;
+    }
+    for (job = ipp->jobs_active; job; job = job->next)
+    {
+        if ((job->last_byte_time + job->max_idle_time) < now)
+        {
+            butil_log(2, "Aborting stalled job %d\n", job->id);
+            result = ipp_abort_job(ipp, job);
+            result = 0; // keep going
+        }
+    }
+    return 0;
+}
+
 int ipp_get_active_jobs(ipp_server_t *ipp, ipp_job_t **pjobs)
 {
     if (! ipp || ! pjobs)
@@ -40,8 +114,10 @@ int ipp_get_completed_jobs(ipp_server_t *ipp, ipp_job_t **pjobs)
 
 int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
 {
+    ipp_attr_t *attr;
     ipp_job_t *aj;
     char uri[IPP_MAX_TEXT];
+    char job_name[IPP_MAX_TEXT];
     time_t now;
     int result;
 
@@ -59,6 +135,8 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
         return result;
     }
     time(&now);
+    job->last_byte_time = now;
+    job->max_idle_time = IPP_MAX_JOB_IDLE_SECONDS;
     job->state = IPP_JSTATE_PROCESSING;
     result  = ipp_set_attr_int32_value("time-at-creation", job->job_stat_attr, 1, now);
     result |= ipp_set_attr_int32_value("time-at-processing", job->job_stat_attr, 1, now);
@@ -67,7 +145,6 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
     {
         return result;
     }
-
     // set initial value of non-static content
     //
     result = ipp_set_attr_int32_value("job-id", job->job_stat_attr, 1, job->id);
@@ -94,6 +171,27 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
     }
     butil_log(5, "JOB Started id=%d\n", ipp->job_id);
 
+    // open a print stream for the job if printing to file
+    //
+    snprintf(job_name, sizeof(job_name), "none");
+    result = ipp_get_attr_by_name("job-name", job->job_desc_attr, &attr);
+    if (! result)
+    {
+        result = ipp_get_only_attr_string_value(attr, job_name, sizeof(job_name));
+        if (result)
+        {
+            result = 0;
+        }
+    }
+    result = 0;
+    snprintf(uri, sizeof(uri), "%s/job_%s_%d", ipp->stream_path, job_name, job->id);
+
+    job->print_stream = iostream_create_writer_from_file(uri);
+    if (! job->print_stream)
+    {
+        butil_log(0, "Can't open %s\n", uri);
+        // ignore erorr, just can't print for now
+    }
     if (! ipp->jobs_active)
     {
         ipp->jobs_active = job;
@@ -108,6 +206,19 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
     }
     job->next = NULL;
     return 0;
+}
+
+int ipp_abort_job(ipp_server_t *ipp, ipp_job_t *job)
+{
+    int result;
+
+    result = ipp_complete_job(ipp, job);
+
+    job->state = IPP_JSTATE_ABORTED;
+
+    butil_log(5, "JOB Aborted id=%d\n", ipp->job_id);
+    result = ipp_set_attr_int32_value("job-state", job->job_stat_attr, 1, job->state);
+    return result;
 }
 
 int ipp_cancel_job(ipp_server_t *ipp, ipp_job_t *job)
@@ -133,6 +244,25 @@ int ipp_complete_job(ipp_server_t *ipp, ipp_job_t *job)
     {
         return -1;
     }
+    // unlink from active
+    //
+    if (job == ipp->jobs_active)
+    {
+        ipp->jobs_active = job->next;
+    }
+    else
+    {
+        for (aj = ipp->jobs_active; aj->next; aj = aj->next)
+        {
+            if (aj->next == job)
+            {
+                aj->next = job->next;
+                break;
+            }
+        }
+    }
+    job->next = NULL;
+
     if (! ipp->jobs_completed)
     {
         ipp->jobs_completed = job;

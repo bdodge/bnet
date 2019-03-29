@@ -227,6 +227,55 @@ int ipp_syntax_for_attr(ipp_attr_t *attr, ipp_tag_t *tag, bool *is_array)
     return result;
 }
 
+int ipp_base_enc_syntax_for_attr(ipp_attr_t *attr, ipp_syntax_enc_t *penc)
+{
+    ipp_syntax_enc_t enc;
+    int sdex;
+
+    if (! attr)
+    {
+        return -1;
+    }
+    sdex = 0;
+    enc = s_ipp_attributes[attr->recdex].syntax[sdex];
+    if (enc == IPP_ARRAY)
+    {
+        sdex++;
+        enc = s_ipp_attributes[attr->recdex].syntax[sdex];
+    }
+    *penc = enc;
+    return 0;
+}
+
+int ipp_check_type_is(ipp_attr_t *attr, size_t ntypes, ...)
+{
+    ipp_syntax_enc_t attr_syntax, ok_syntax;
+    va_list args;
+    int result;
+
+    result = ipp_base_enc_syntax_for_attr(attr, &attr_syntax);
+    if (result)
+    {
+        return result;
+    }
+    attr_syntax &= ~IPP_ARRAY;
+
+    va_start(args, ntypes);
+
+    while (ntypes-- > 0)
+    {
+        ok_syntax = (ipp_syntax_enc_t)va_arg(args, int);
+
+        // check that type is one we care about
+        if (attr_syntax == ok_syntax)
+        {
+            return 0;
+        }
+    }
+    butil_log(1, "Attempt to use bool to set type %02X\n", attr_syntax);
+    return -1;
+}
+
 int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
     size_t totlen;
@@ -725,7 +774,12 @@ int ipp_get_group_attr_by_name(const char *name, ipp_attr_grouping_code_t group,
     {
         return result;
     }
-    return ipp_get_group_attr_by_index(recdex, group, pattr);
+    result = ipp_get_group_attr_by_index(recdex, group, pattr);
+    if (result)
+    {
+        butil_log(2, "Didn't find %s in group %u\n", name, group);
+    }
+    return result;
 }
 
 int ipp_set_group_attr_bool_value(
@@ -737,6 +791,7 @@ int ipp_set_group_attr_bool_value(
                                 )
 {
     ipp_attr_t *attr;
+    ipp_syntax_enc_t encoded_syntax;
     int result;
     va_list args;
     int value;
@@ -753,6 +808,11 @@ int ipp_set_group_attr_bool_value(
         return 0;
     }
     result = ipp_get_group_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_BOOLEAN);
     if (result)
     {
         return result;
@@ -993,6 +1053,12 @@ int ipp_set_group_attr_string_value(
     {
         return result;
     }
+    result = ipp_check_type_is(attr, 1, IPP_OCTETSTRING);
+    if (result)
+    {
+        return result;
+    }
+
     va_start(args, nstrings);
 
     value = (char *)va_arg(args, char *);

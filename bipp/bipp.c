@@ -989,9 +989,16 @@ int ipp_process(ipp_request_t *req)
             result = ipp_move_state(req, reqReply);
             break;
         }
-        butil_log(IPPLAP, "Absorb %d bytes print data\n", req->in.count);
-        req->in.tail += req->in.count;
-        req->in.count = 0;
+        if (req->job)
+        {
+            result = ipp_sink_job_data(req);
+        }
+        else
+        {
+            butil_log(IPPLAP, "Absorb %d bytes print data\n", req->in.count);
+            req->in.tail += req->in.count;
+            req->in.count = 0;
+        }
         break;
 
     case reqReply:
@@ -1083,6 +1090,13 @@ int ipp_process(ipp_request_t *req)
 
     case reqDone:
 
+        /*
+        if (req->job)
+        {
+            ipp_complete_job(req->ipp, req->job);
+            req->job = NULL;
+        }
+        */
         result = 0;
         break;
 

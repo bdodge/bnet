@@ -182,7 +182,7 @@ int main(int argc, char **argv)
             return result;
         }
 #endif
-        result = ipp_server(program, port, false);
+        result = ipp_server(program, port, false, "./printout");
 
         #ifdef BMEM_H
         bmem_stats(5);

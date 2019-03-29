@@ -196,6 +196,7 @@ static int ipp_op_print_job(ipp_request_t *req)
     {
         return result;
     }
+    /*
     result = ipp_complete_job(req->ipp, job);
     if (result)
     {
@@ -203,6 +204,7 @@ static int ipp_op_print_job(ipp_request_t *req)
         result = ipp_destroy_job(req->ipp, job);
         return -1;
     }
+    */
     return result;
 }
 

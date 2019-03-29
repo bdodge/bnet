@@ -16,29 +16,38 @@
 #ifndef BIPPJOBS_H
 #define BIPPJOBS_H 1
 
-#include "bippreq.h"
+#include "bnetheaders.h"
+#include "bstreamio.h"
+#include "bippattr.h"
 
 struct tag_ipp_server;
+struct tag_ipp_request;
 
 typedef struct tag_job_context
 {
+    iostream_t             *print_stream;    ///< data output stream
     ipp_attr_t             *job_oper_attr;   ///< Operation attributes (at job create time)
     ipp_attr_t             *job_stat_attr;   ///< job status attributes
     ipp_attr_t             *job_desc_attr;   ///< job description attributes
     uint32_t                id;              ///< job id
+    time_t                  last_byte_time;  ///< time the last byte arrived
+    time_t                  max_idle_time;   ///< how long job can go idle (no data)
     ipp_jstate_t            state;           ///< current job state
     void                   *priv;            ///< for processor to attach
     struct tag_job_context *next;
 }
 ipp_job_t;
 
+int ipp_sink_job_data       (struct tag_ipp_request *req);
+int ipp_job_check_timeout   (struct tag_ipp_server *ipp);
 int ipp_get_active_jobs     (struct tag_ipp_server *ipp, ipp_job_t **pjobs);
 int ipp_get_completed_jobs  (struct tag_ipp_server *ipp, ipp_job_t **pjobs);
 int ipp_start_job           (struct tag_ipp_server *ipp, ipp_job_t *job);
+int ipp_abort_job           (struct tag_ipp_server *ipp, ipp_job_t *job);
 int ipp_cancel_job          (struct tag_ipp_server *ipp, ipp_job_t *job);
 int ipp_complete_job        (struct tag_ipp_server *ipp, ipp_job_t *job);
 int ipp_get_job_by_id       (struct tag_ipp_server *ipp, int32_t jobid, ipp_job_t **pjob);
-int ipp_create_job          (struct tag_ipp_server *ipp, ipp_request_t *req, ipp_job_t **pjob);
+int ipp_create_job          (struct tag_ipp_server *ipp, struct tag_ipp_request *req, ipp_job_t **pjob);
 int ipp_destroy_job         (struct tag_ipp_server *ipp, ipp_job_t *job);
 int ipp_job_init            (struct tag_ipp_server *ipp);
 

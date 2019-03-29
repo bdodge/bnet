@@ -535,6 +535,8 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 
     req->last_error = IPP_STATUS_OK;
 
+    req->job = NULL;
+
     req->bytes_needed = 0;
     req->download_complete = false;
 

@@ -206,7 +206,7 @@ typedef enum ipp_op_e           /**** IPP operations ****/
     IPP_OP_SEND_NOTIFICATIONS,      /* Send-Notifications: Send notification events @private@ */
     IPP_OP_GET_RESOURCE_ATTRIBUTES, /* Get-Resource-Attributes: Get resource information @private@ */
     IPP_OP_GET_RESOURCE_DATA,       /* Get-Resource-Data: Get resource data @private@ @deprecated@ */
-    IPP_OP_GET_RESOURCES,           /* Get-Resources: Get list of resources @private@ */
+    IPP_OP_GET_RESOURCES, /*0x20*/           /* Get-Resources: Get list of resources @private@ */
     IPP_OP_GET_PRINT_SUPPORT_FILES, /* Get-Printer-Support-Files: Get printer support files @private@ */
     IPP_OP_ENABLE_PRINTER,      /* Enable-Printer: Accept new jobs for a printer */
     IPP_OP_DISABLE_PRINTER,     /* Disable-Printer: Reject new jobs for a printer */

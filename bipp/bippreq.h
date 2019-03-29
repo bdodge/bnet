@@ -19,6 +19,7 @@
 #include "bippproto.h"
 #include "bippattr.h"
 #include "bhttp.h"
+#include "bippjobs.h"
 
 struct tag_ipp_server;
 
@@ -82,6 +83,10 @@ typedef struct tag_ipp_request
     int             job_attr_count;
 
     int16_t         last_error;
+
+    // job associated with request (print-job, create-job, send-document)
+    //
+    ipp_job_t      *job;
 
     // attribute groups, input
     //

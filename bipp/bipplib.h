@@ -19,6 +19,6 @@
 #include "bipp.h"
 
 int ipp_set_environment(ipp_server_t *ipp);
-int ipp_server(const char *program, uint16_t port, bool isTLS);
+int ipp_server(const char *program, uint16_t port, bool isTLS, const char *print_path);
 
 #endif

@@ -51,6 +51,12 @@ typedef struct tag_ipp_server
     /// next job id
     uint32_t            job_id;
 
+    /// print stream path
+    char                stream_path[IPP_MAX_TEXT];
+
+    /// last time jobs were checked
+    time_t              idle_time;
+
     /// pool of job contexts
     ipp_job_t           job_pool[IPP_MAX_JOBS];
     ipp_job_t          *jobs_free;

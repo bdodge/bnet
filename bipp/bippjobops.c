@@ -129,6 +129,9 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
     }
     if (pjob)
     {
+        // attach job to request for handing data to job
+        //
+        req->job = job;
         *pjob = job;
     }
     return 0;

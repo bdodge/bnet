@@ -16,6 +16,19 @@
 #ifndef BIPPCONFIG_H
 #define BIPPCONFIG_H 1
 
+/// Is PDF supported
+//
+#define IPP_SUPPORT_PDF       (0)
+
+/// Is JPEG supported
+//
+#define IPP_SUPPORT_JPEG      (1)
+
+/// Is Plain Text supported
+//
+#define IPP_SUPPORT_PLAINTEXT (1)
+
+
 /// Bytes in io buffersm should hold a whole TCP/IP packet
 //
 #define IPP_IO_SIZE         (2048)
@@ -36,10 +49,14 @@
 /// minimum major/minor
 ///
 #define IPP_MAJOR_VERSION_MIN   (1)
-#define IPP_MINOR_VERSION_MIN   (0)
+#define IPP_MINOR_VERSION_MIN   (1)
 
-#define IPP_MAJOR_VERSION_MAX   (1)
-#define IPP_MINOR_VERSION_MAX   (1)
+#define IPP_MAJOR_VERSION_MAX   (2)
+#define IPP_MINOR_VERSION_MAX   (2)
+
+/// how long a job can go without data before it gets aborted
+//
+#define IPP_MAX_JOB_IDLE_SECONDS (10)
 
 #endif
 

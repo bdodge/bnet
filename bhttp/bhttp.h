@@ -197,10 +197,10 @@ typedef struct http_client
     mime_content_type_t out_content_type;
     size_t              out_gotten;
     size_t              out_transferred;
-#if HTTP_SUPPORT_UDP
+    #if HTTP_SUPPORT_UDP
     char                out_host[HTTP_MAX_HOSTNAME];
     uint16_t            out_port;
-#endif
+    #endif
     size_t              start_byte;
     size_t              end_byte;
     time_t              ifmodifiedsince;
@@ -212,17 +212,19 @@ http_client_t;
 
 typedef struct http_server
 {
-    struct http_server *next;
-    http_resource_t    *resources;
-    http_client_t      *clients;
-    uint16_t            port;
-    bool                secure;
-    bool                aborted;
-    http_transport_t    transport;
-    uint32_t            connections;
-    socket_t            socket;
+    struct http_server  *next;
+    http_resource_t     *resources;
+    http_client_t       *clients;
+    uint16_t             port;
+    bool                 secure;
+    bool                 aborted;
+    http_transport_t     transport;
+    uint32_t             connections;
+    socket_t             socket;
 }
 http_server_t;
+
+typedef int (*http_idle_callback_t)(void *priv);
 
 int http_send_data(http_client_t *client, const uint8_t *data, int count);
 int http_send_out_data(http_client_t *client, http_state_t send_state, http_state_t next_state);
@@ -269,7 +271,7 @@ void http_server_cleanup(http_server_t *server);
 int http_server_abort(http_server_t *server);
 
 int http_server_slice(http_server_t *server, int to_secs, int to_usecs);
-int http_serve(http_server_t *servers);
+int http_serve(http_server_t *servers, http_idle_callback_t on_idle, void *priv);
 
 #endif
 

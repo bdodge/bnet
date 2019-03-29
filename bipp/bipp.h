@@ -24,7 +24,7 @@
 #include "bstreamio.h"
 #include "butil.h"
 
-#if 1// define to include memory tracing debug
+#if 0       // define to include memory tracing debug
 #define BMEM_TRACE_ALLOCS 1
 #include "bmem.h"
 #define malloc bmem_alloc

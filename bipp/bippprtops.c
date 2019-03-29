@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "bippprtops.h"
+#include "bippjobops.h"
 #include "bipp.h"
 #include "bippproto.h"
 #include "butil.h"
@@ -178,7 +179,6 @@ static int ipp_op_print_job(ipp_request_t *req)
     ipp_job_t *job;
     ipp_attr_t *attr;
     ipp_attr_t *nattr;
-    char uri[IPP_MAX_TEXT];
     char mimestr[IPP_MAX_TEXT];
     char *jobstatereasons;
     int result;
@@ -187,68 +187,17 @@ static int ipp_op_print_job(ipp_request_t *req)
     {
         return -1;
     }
-    // get job document format
-    //
-    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "document-format", &attr);
+    result = ipp_op_create_job(req, &job);
     if (result)
     {
-        butil_log(5, "No document-format in job attributes\n");
-        ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
         return result;
-    }
-    // check mime type against supported values
-    //
-    butil_log(5, "document-format is %s\n", (char*)attr->value);
-
-    //ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
-
-    result = ipp_create_job(req->ipp, req, &job);
-    if (result || ! job)
-    {
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-        return -1;
-    }
-    result = ipp_start_job(req->ipp, job);
-    if (result)
-    {
-        butil_log(1, "Can't activate job %u\n", job->id);
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-        result = ipp_destroy_job(req->ipp, job);
-        return -1;
     }
     result = ipp_complete_job(req->ipp, job);
     if (result)
     {
         butil_log(1, "Can't complete job %u\n", job->id);
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
         result = ipp_destroy_job(req->ipp, job);
         return -1;
-    }
-    // put job uri into response
-    //
-    snprintf(uri, sizeof(uri), "%s/job/%d", req->ipp->uri, job->id);
-
-    result = ipp_set_req_out_string_attr(req, IPP_JOB_ATTRS, "job-uri", uri);
-    if (result)
-    {
-        return result;
-    }
-    // put job id into response
-    //
-    result = ipp_set_req_out_int32_attr(req, IPP_JOB_ATTRS, "job-id", job->id);
-
-    // put job-state into response
-    //
-    job->state = IPP_JSTATE_COMPLETED;
-    result = ipp_set_req_out_int32_attr(req, IPP_JOB_ATTRS, "job-state", job->state);
-
-    // put job-state-reasons into response
-    //
-    jobstatereasons = "job-completed-successfully";
-    result = ipp_set_req_out_string_attr(req, IPP_JOB_ATTRS, "job-state-reasons", jobstatereasons);
-    if (result)
-    {
-        return result;
     }
     return result;
 }

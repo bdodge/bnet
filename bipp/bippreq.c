@@ -581,18 +581,8 @@ int ipp_req_destroy(ipp_server_t *ipp, ipp_request_t *req)
     // free any attribute lists
     for (gdex = IPP_OPER_ATTRS; gdex < IPP_MAX_IO_ATTRS; gdex++)
     {
-        for (attr = req->in_attrs[gdex]; attr;)
-        {
-            nattr = attr->next;
-            ipp_destroy_attr(attr);
-            attr = nattr;
-        }
-        for (attr = req->out_attrs[gdex]; attr;)
-        {
-            nattr = attr->next;
-            ipp_destroy_attr(attr);
-            attr = nattr;
-        }
+        ipp_destroy_attrlist(req->in_attrs[gdex]);
+        ipp_destroy_attrlist(req->out_attrs[gdex]);
     }
     req->next = ipp->req_free;
     ipp->req_free = req;

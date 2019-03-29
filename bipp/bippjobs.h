@@ -22,6 +22,7 @@ struct tag_ipp_server;
 
 typedef struct tag_job_context
 {
+    ipp_attr_t             *job_oper_attr;   ///< Operation attributes (at job create time)
     ipp_attr_t             *job_stat_attr;   ///< job status attributes
     ipp_attr_t             *job_desc_attr;   ///< job description attributes
     uint32_t                id;              ///< job id
@@ -36,6 +37,7 @@ int ipp_get_completed_jobs  (struct tag_ipp_server *ipp, ipp_job_t **pjobs);
 int ipp_start_job           (struct tag_ipp_server *ipp, ipp_job_t *job);
 int ipp_cancel_job          (struct tag_ipp_server *ipp, ipp_job_t *job);
 int ipp_complete_job        (struct tag_ipp_server *ipp, ipp_job_t *job);
+int ipp_get_job_by_id       (struct tag_ipp_server *ipp, int32_t jobid, ipp_job_t **pjob);
 int ipp_create_job          (struct tag_ipp_server *ipp, ipp_request_t *req, ipp_job_t **pjob);
 int ipp_destroy_job         (struct tag_ipp_server *ipp, ipp_job_t *job);
 int ipp_job_init            (struct tag_ipp_server *ipp);

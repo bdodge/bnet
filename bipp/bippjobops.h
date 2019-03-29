@@ -19,6 +19,9 @@
 #include "bhttp.h"
 #include "bstreamio.h"
 #include "bippreq.h"
+#include "bippjobs.h"
+
+int ipp_op_create_job  (ipp_request_t *req, ipp_job_t **pjob);
 
 int ipp_job_op_dispatch(ipp_request_t *req);
 

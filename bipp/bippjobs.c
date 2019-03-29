@@ -42,6 +42,7 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
 {
     ipp_job_t *aj;
     char uri[IPP_MAX_TEXT];
+    time_t now;
     int result;
 
     if (! ipp || ! job)
@@ -51,12 +52,22 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
     // duplicate job status and description groups
     // into job attributes lists
     //
-    result  = ipp_dupe_grouping(IPP_GROUPING_JOB_STATUS, &job->job_stat_attr);
-    result |= ipp_dupe_grouping(IPP_GROUPING_JOB_DESCRIPTION, &job->job_desc_attr);
+    result  = ipp_dupe_attr_grouping(IPP_GROUPING_JOB_STATUS, &job->job_stat_attr);
+    result |= ipp_dupe_attr_grouping(IPP_GROUPING_JOB_DESCRIPTION, &job->job_desc_attr);
     if (result)
     {
         return result;
     }
+    time(&now);
+    job->state = IPP_JSTATE_PROCESSING;
+    result  = ipp_set_attr_int32_value("time-at-creation", job->job_stat_attr, 1, now);
+    result |= ipp_set_attr_int32_value("time-at-processing", job->job_stat_attr, 1, now);
+    result |= ipp_set_attr_int32_value("job-printer-up-time", job->job_stat_attr, 1, now);
+    if (result)
+    {
+        return result;
+    }
+
     // set initial value of non-static content
     //
     result = ipp_set_attr_int32_value("job-id", job->job_stat_attr, 1, job->id);
@@ -66,6 +77,17 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
     }
     snprintf(uri, sizeof(uri), "%s/job/%d", ipp->uri, job->id);
     result = ipp_set_attr_string_value("job-uri", job->job_stat_attr, 1, uri);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_set_attr_int32_value("job-state", job->job_stat_attr, 1, job->state);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_set_attr_string_value("job-state-reasons",
+                        job->job_stat_attr, 1, "job-completed-successfully");
     if (result)
     {
         return result;
@@ -83,7 +105,6 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
         aj->next = job;
     }
     job->next = NULL;
-    job->state = IPP_JSTATE_PROCESSING;
     return 0;
 }
 
@@ -92,13 +113,18 @@ int ipp_cancel_job(ipp_server_t *ipp, ipp_job_t *job)
     int result;
 
     result = ipp_complete_job(ipp, job);
+
     job->state = IPP_JSTATE_CANCELED;
+
+    result = ipp_set_attr_int32_value("job-state", job->job_stat_attr, 1, job->state);
     return result;
 }
 
 int ipp_complete_job(ipp_server_t *ipp, ipp_job_t *job)
 {
     ipp_job_t *aj;
+    time_t now;
+    int result;
 
     if (! ipp || ! job)
     {
@@ -118,7 +144,11 @@ int ipp_complete_job(ipp_server_t *ipp, ipp_job_t *job)
     }
     job->next = NULL;
     job->state = IPP_JSTATE_COMPLETED;
-    return 0;
+
+    time(&now);
+    result  = ipp_set_attr_int32_value("time-at-completed", job->job_stat_attr, 1, now);
+    result |= ipp_set_attr_int32_value("job-state", job->job_stat_attr, 1, job->state);
+    return result;
 }
 
 int ipp_create_job(ipp_server_t *ipp, ipp_request_t *req, ipp_job_t **pjob)
@@ -180,11 +210,55 @@ int ipp_create_job(ipp_server_t *ipp, ipp_request_t *req, ipp_job_t **pjob)
     return 0;
 }
 
+int ipp_get_job_by_id(ipp_server_t *ipp, int32_t jobid, ipp_job_t **pjob)
+{
+    ipp_job_t *job;
+
+    if (! ipp || ! pjob)
+    {
+        return -1;
+    }
+    *pjob = NULL;
+
+    for (job = ipp->jobs_active; job; job = job->next)
+    {
+        if (job->id == jobid)
+        {
+            *pjob = job;
+            return 0;
+        }
+    }
+    for (job = ipp->jobs_completed; job; job = job->next)
+    {
+        if (job->id == jobid)
+        {
+            *pjob = job;
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int ipp_destroy_job(ipp_server_t *ipp, ipp_job_t *job)
 {
     if (! ipp || ! job)
     {
         return -1;
+    }
+    if (job->job_oper_attr)
+    {
+        ipp_destroy_attrlist(job->job_oper_attr);
+        job->job_oper_attr = NULL;
+    }
+    if (job->job_stat_attr)
+    {
+        ipp_destroy_attrlist(job->job_stat_attr);
+        job->job_stat_attr = NULL;
+    }
+    if (job->job_desc_attr)
+    {
+        ipp_destroy_attrlist(job->job_desc_attr);
+        job->job_desc_attr = NULL;
     }
     job->next = ipp->jobs_free;
     ipp->jobs_free = job;
@@ -200,10 +274,12 @@ int ipp_job_init(ipp_server_t *ipp)
     for (jdex = 0; jdex < (IPP_MAX_JOBS - 1); jdex++)
     {
         ipp->job_pool[jdex].next = &ipp->job_pool[jdex + 1];
+        ipp->job_pool[jdex].job_oper_attr = NULL;
         ipp->job_pool[jdex].job_stat_attr = NULL;
         ipp->job_pool[jdex].job_desc_attr = NULL;
     }
     ipp->job_pool[jdex].next = NULL;
+    ipp->job_pool[jdex].job_oper_attr = NULL;
     ipp->job_pool[jdex].job_stat_attr = NULL;
     ipp->job_pool[jdex].job_desc_attr = NULL;
 

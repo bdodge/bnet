@@ -384,11 +384,11 @@ int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **v
         BERROR("value length issue");
         return 2;
     }
-    // for array types, skip namelength for subsequent values
+    // for array types, skip tag and namelength for subsequent values
     //
     if (iter->val_count > 0)
     {
-        iter->val_ptr += 2;
+        iter->val_ptr += 3;
     }
     if (value)
     {
@@ -398,6 +398,7 @@ int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **v
     {
         *value_len = (size_t)vallen;
     }
+    iter->val_ptr += vallen;
     iter->val_count++;
     return 0;
 }
@@ -406,7 +407,6 @@ int ipp_get_next_attr_bool_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_
 {
     uint8_t *uval;
     size_t  vallen;
-    uint8_t ival;
     int result;
 
     result = ipp_get_next_attr_value(attr, iter, &uval, &vallen);
@@ -419,7 +419,7 @@ int ipp_get_next_attr_bool_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_
         butil_log(1, "Wrong size for bool\n");
         return -1;
     }
-    *value = (ival != 0) ? 1 : 0;
+    *value = (uval != 0) ? 1 : 0;
     return 0;
 }
 
@@ -458,7 +458,7 @@ int ipp_get_next_attr_string_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, char
     }
     if (value && nvalue)
     {
-        if (value_len < (nvalue - 1))
+        if (value_len > (nvalue - 1))
         {
             value_len = nvalue - 1;
         }
@@ -555,12 +555,52 @@ int ipp_get_attr_for_grouping(ipp_attr_grouping_code_t grouping, ipp_attr_t **pa
     return 0;
 }
 
-int ipp_dupe_grouping(ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs)
+int ipp_dupe_attr_list(ipp_attr_t *attrlist, ipp_attr_t **pdupeattrs)
 {
-    ipp_attr_t *groupattrs;
     ipp_attr_t *newlist;
     ipp_attr_t *attr;
     ipp_attr_t *nattr;
+    int result;
+
+    if (! pdupeattrs)
+    {
+        return -1;
+    }
+    *pdupeattrs = NULL;
+
+    if (! attrlist)
+    {
+        return 0;
+    }
+    result = ipp_dupe_attr(attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    newlist = attr;
+    *pdupeattrs = newlist;
+
+    attrlist = attrlist->next;
+
+    while (attrlist)
+    {
+        result = ipp_dupe_attr(attrlist, &nattr);
+        if (result)
+        {
+            break;
+        }
+        attr->next = nattr;
+        attr = nattr;
+
+        attrlist = attrlist->next;
+    }
+    return result;
+}
+
+int ipp_dupe_attr_grouping(ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs)
+{
+    ipp_attr_t *groupattrs;
+    ipp_attr_t *newlist;
     int result;
 
     if (! pattrs)
@@ -578,29 +618,7 @@ int ipp_dupe_grouping(ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs)
     {
         return 0;
     }
-    result = ipp_dupe_attr(groupattrs, &attr);
-    if (result)
-    {
-        return result;
-    }
-    newlist = attr;
-    *pattrs = newlist;
-
-    groupattrs = groupattrs->next;
-
-    while (groupattrs)
-    {
-        result = ipp_dupe_attr(groupattrs, &nattr);
-        if (result)
-        {
-            break;
-        }
-        attr->next = nattr;
-        attr = nattr;
-
-        groupattrs = groupattrs->next;
-    }
-    return result;
+    return ipp_dupe_attr_list(groupattrs, pattrs);
 }
 
 #define IPPATTR_XREF_LINEAR 0
@@ -1031,6 +1049,56 @@ int ipp_get_attr_by_name(const char *name, ipp_attr_t *attrlist, ipp_attr_t **pa
     return -1;
 }
 
+int ipp_set_attr_attr_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                ipp_attr_t *vattr
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+
+    if (! name || ! attrlist)
+    {
+        return -1;
+    }
+    result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    if (attr->alloc_len < vattr->value_len || ! attr->value || ! vattr->value)
+    {
+        // no room for new value, or no new value at all
+        // so free any exising value and alloc for new
+        //
+        if (attr->value)
+        {
+            if (attr->alloc_len)
+            {
+                free(attr->value);
+            }
+            attr->value = NULL;
+            attr->alloc_len = 0;
+        }
+        // and if there is a new value, alloc for that
+        //
+        if (vattr->value)
+        {
+            attr->alloc_len = ipp_alloc_size(vattr->value_len);
+            attr->value = (uint8_t *)malloc(attr->alloc_len);
+            if (! attr->value)
+            {
+                BERROR("Alloc value");
+                return -1;
+            }
+            memcpy(attr->value, vattr->value, vattr->value_len);
+            attr->value_len = vattr->value_len;
+        }
+    }
+    return 0;
+}
+
 int ipp_set_attr_bool_value(
                                 const char *name,
                                 ipp_attr_t *attrlist,
@@ -1046,7 +1114,7 @@ int ipp_set_attr_bool_value(
     uint8_t bvalue;
     size_t value_len;
 
-    if (! name)
+    if (! name || ! attrlist)
     {
         return -1;
     }
@@ -1102,7 +1170,7 @@ int ipp_set_attr_range_value(
     uint8_t value[8];
     size_t value_len;
 
-    if (! name)
+    if (! name || ! attrlist)
     {
         return -1;
     }
@@ -1166,7 +1234,7 @@ int ipp_set_attr_int32_value(
     int32_t value;
     size_t value_len;
 
-    if (! name)
+    if (! name || ! attrlist)
     {
         return -1;
     }
@@ -1221,7 +1289,7 @@ int ipp_set_attr_bytes_value(
     uint8_t *value;
     size_t value_len;
 
-    if (! name)
+    if (! name || ! attrlist)
     {
         return -1;
     }
@@ -1282,7 +1350,7 @@ int ipp_set_attr_string_value(
     char *value;
     size_t value_len;
 
-    if (! name)
+    if (! name || ! attrlist)
     {
         return -1;
     }
@@ -1397,11 +1465,30 @@ int ipp_destroy_attr(ipp_attr_t *attr)
     {
         return -1;
     }
-    if (attr->alloc_len)
+    if (attr->alloc_len && attr->value)
     {
         free(attr->value);
     }
+    if (attr->next)
+    {
+        butil_log(2, "Destroying linked attribute\n");
+    }
     free(attr);
+    return 0;
+}
+
+int ipp_destroy_attrlist(ipp_attr_t *attrlist)
+{
+    ipp_attr_t *attr;
+    ipp_attr_t *nattr;
+
+    for (attr = attrlist; attr;)
+    {
+        nattr = attr->next;
+        attr->next = NULL;
+        ipp_destroy_attr(attr);
+        attr = nattr;
+    }
     return 0;
 }
 

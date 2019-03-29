@@ -19,10 +19,15 @@
 #include "bippjobops.h"
 #include "butil.h"
 
+// log level for attribute parsing
+#define IPPLAP 6
+
 const char *ipp_state_string(ipp_req_state_t state)
 {
     switch (state)
     {
+    case reqReadInput:              return "ReadInput";
+    case reqWriteOutput:            return "WriteOutput";
     case reqHeader:                 return "Header";
     case reqAttributes:             return "Attributes";
     case reqOperationAttributes:    return "OperationAttributes";
@@ -42,8 +47,6 @@ const char *ipp_state_string(ipp_req_state_t state)
     case reqReplyOperationAttributes:return "ReplyOperationAttributes";
     case reqReplyJobAttributes:     return "ReplyJobAttributes";
     case reqReplyPrinterAttributes: return "ReplyPrinterAttributes";
-    case reqReadInput:              return "ReadInput";
-    case reqWriteOutput:            return "WriteOutput";
     case reqDone:                   return "Done";
     default:                        return "????";
     }
@@ -79,7 +82,7 @@ static int ipp_move_state(ipp_request_t *req, ipp_req_state_t tostate)
 
 static int ipp_wait_for_bytes(ipp_request_t *req, size_t bytes)
 {
-    if (req->client->in.count >= bytes)
+    if (req->in.count >= bytes)
     {
         return 0;
     }
@@ -283,7 +286,7 @@ static int ipp_parse_attribute(ipp_request_t *req)
     }
     if (req->attr_tag == IPP_TAG_END)
     {
-        butil_log(5, "End of attr in group, %s\n", ipp_state_string(req->state[req->top]));
+        butil_log(IPPLAP, "End of attr in group, %s\n", ipp_state_string(req->state[req->top]));
         result = ipp_pop_state(req);
         if (result)
         {
@@ -305,13 +308,13 @@ static int ipp_parse_attribute(ipp_request_t *req)
     if (req->attr_tag == IPP_TAG_JOB)
     {
         req->cur_in_group = IPP_JOB_ATTRS;
-        butil_log(5, "Move to JOB attr from group, %s\n", ipp_state_string(req->state[req->top]));
+        butil_log(IPPLAP, "Move to JOB attr from group, %s\n", ipp_state_string(req->state[req->top]));
         return ipp_move_state(req, reqJobAttributes);
     }
     if (req->attr_tag == IPP_TAG_PRINTER)
     {
         req->cur_in_group = IPP_PRT_ATTRS;
-        butil_log(5, "Move to PRT attr from group, %s\n", ipp_state_string(req->state[req->top]));
+        butil_log(IPPLAP, "Move to PRT attr from group, %s\n", ipp_state_string(req->state[req->top]));
         return ipp_move_state(req, reqPrinterAttributes);
     }
     return ipp_move_state(req, reqAttributeNameLength);
@@ -473,7 +476,7 @@ int ipp_send_tag(ipp_request_t *req)
     }
     if (req->out.count == req->out.size)
     {
-        butil_log(5, "Flush output to add tag\n");
+        butil_log(IPPLAP, "Flush output to add tag\n");
         result = ipp_push_state(req, reqWriteOutput);
     }
     else
@@ -519,6 +522,16 @@ int ipp_send_attribute(ipp_request_t *req)
     {
         return ipp_send_tag(req);
     }
+    // if there's no value, there's no value sending it
+    //
+    if (! attr->value || ! attr->value_len)
+    {
+        // move to next out attr to send
+        //
+        result = ipp_pop_state(req);
+        req->cur_out_attr = req->cur_out_attr->next;
+        return result;
+    }
     // get name for attr
     //
     result = ipp_get_attr_rec(attr, &attrec);
@@ -552,7 +565,7 @@ int ipp_send_attribute(ipp_request_t *req)
         {
             // flush and come back exactly to here, room will be bigger
             //
-            butil_log(5, "Flush output to add attribute name\n");
+            butil_log(IPPLAP, "Flush output to add attribute name\n");
             result = ipp_push_state(req, reqWriteOutput);
         }
         else
@@ -576,7 +589,7 @@ int ipp_send_attribute(ipp_request_t *req)
     {
         if (len > room)
         {
-            butil_log(5, "Flush output to add attribute\n");
+            butil_log(IPPLAP, "Flush output to add attribute\n");
             result = ipp_push_state(req, reqWriteOutput);
         }
         else
@@ -617,7 +630,7 @@ int ipp_send_attribute_value(ipp_request_t *req)
 
     if (room < 64)
     {
-        butil_log(5, "Flush output to add (more) attribute value\n");
+        butil_log(IPPLAP, "Flush output to add (more) attribute value\n");
         result = ipp_push_state(req, reqWriteOutput);
     }
     else
@@ -634,7 +647,7 @@ int ipp_send_attribute_value(ipp_request_t *req)
 
             if (req->attr_value_len == 0)
             {
-                butil_log(5, "Finished sending attribute value\n");
+                butil_log(IPPLAP, "Finished sending attribute value\n");
                 req->attr_out_value = NULL;
                 result = ipp_pop_state(req);
 
@@ -716,7 +729,7 @@ int ipp_process(ipp_request_t *req)
 
     if (req->state[req->top] != prevstate || req->top != prevtop)
     {
-        butil_log(5, "ipp state %s [%d]\n",
+        butil_log(IPPLAP, "ipp state %s [%d]\n",
                 ipp_state_string(req->state[req->top]), req->top);
     }
     result = 0;
@@ -726,10 +739,10 @@ int ipp_process(ipp_request_t *req)
     case reqHeader: // read in the IPP request header
 
         // wait for enough data in to procede
-        result = ipp_wait_for_bytes(req, 8);
-        if (result)
+        //
+        if (req->in.count < 8)
         {
-            break;
+            return ipp_wait_for_bytes(req, 8);
         }
         result  = ipp_read_int8(&req->in, &req->vmaj);
         result |= ipp_read_int8(&req->in, &req->vmin);
@@ -740,7 +753,7 @@ int ipp_process(ipp_request_t *req)
             BERROR("hdr read");
             break;
         }
-        butil_log(5, "IPP (%d) %d.%d op=%04X reqid=%d\n",
+        butil_log(IPPLAP, "IPP (%d) %d.%d op=%04X reqid=%d\n",
                    result, req->vmaj, req->vmin, req->opid, req->reqid);
 
         result = ipp_move_state(req, reqAttributes);
@@ -817,7 +830,7 @@ int ipp_process(ipp_request_t *req)
             //
             if (req->state[req->top] < reqAttributeTag)
             {
-                butil_log(5, "End of Group, %s\n", ipp_state_string(req->state[req->top]));
+                butil_log(IPPLAP, "End of Group, %s\n", ipp_state_string(req->state[req->top]));
                 result = ipp_pop_state(req);
             }
         }
@@ -847,7 +860,7 @@ int ipp_process(ipp_request_t *req)
 
         if (req->last_error != IPP_STATUS_OK)
         {
-            butil_log(5, "Skipping validation due to pre-existing condition\n");
+            butil_log(IPPLAP, "Skipping validation due to pre-existing condition\n");
             result = ipp_move_state(req, reqReply);
             break;
         }
@@ -941,7 +954,7 @@ int ipp_process(ipp_request_t *req)
         }
         // validated OK, go dispatch
         //
-        butil_log(5, "Pass: Valid Request ID %u\n", req->reqid);
+        butil_log(IPPLAP, "Pass: Valid Request ID %u\n", req->reqid);
 
         result = ipp_move_state(req, reqDispatch);
         break;
@@ -1066,8 +1079,9 @@ int ipp_process(ipp_request_t *req)
 
     case reqReadInput:
 
-        if (client->in.count >= req->bytes_needed)
+        if (req->in.count >= req->bytes_needed)
         {
+            butil_log(0, "have %d of %d needed\n", req->in.count, req->bytes_needed);
             result = ipp_pop_state(req);
             if (result)
             {

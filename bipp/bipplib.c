@@ -15,6 +15,10 @@
  */
 #include "bipp.h"
 
+// debug log level for ipp http operations
+//
+#define IPPLHT (6)
+
 static ipp_server_t s_ipp_server;
 
 int ipp_canned_resource_callback(
@@ -25,7 +29,7 @@ int ipp_canned_resource_callback(
                         size_t              *count
                      )
 {
-    butil_log(5, "Canned Resource CB: %d\n", cbtype);
+    butil_log(IPPLHT, "Canned Resource CB: %d\n", cbtype);
 
     http_method_t method;
     int result;
@@ -94,7 +98,7 @@ int ipp_resource_callback(
     {
     case httpRequest:
 
-        butil_log(5, "IPP resource cb (request)  %s: %s\n",
+        butil_log(IPPLHT, "IPP resource cb (request)  %s: %s\n",
                 http_method_name(client->method), data ? (char*)data : "<nil>");
 
         // grab an ipp request context for use during this request
@@ -136,7 +140,7 @@ int ipp_resource_callback(
 
     case httpDownloadData:
 
-        butil_log(5, "IPP download cb (body->): %zu bytes\n", count ? *count : 0);
+        butil_log(IPPLHT, "IPP download cb (body->): %zu bytes\n", count ? *count : 0);
 
         // since the whole request might not fit in a single io buffer the
         // req is processed incrementally each chance we get here
@@ -172,7 +176,7 @@ int ipp_resource_callback(
 
     case httpDownloadDone:
 
-        butil_log(5, "IPP download done cb in state %s\n",
+        butil_log(IPPLHT, "IPP download done cb in state %s\n",
                 ipp_state_string(req->state[req->top]));
 
         // indicate no more body data
@@ -217,7 +221,7 @@ int ipp_resource_callback(
 
     case httpUploadData:
 
-        butil_log(5, "IPP upload cb (<-body)\n");
+        butil_log(IPPLHT, "IPP upload cb (<-body)\n");
 
         // setup request's output buffer as spot in client's out buffer
         //
@@ -251,7 +255,7 @@ int ipp_resource_callback(
                 // so the http client moves on to complete after
                 // sending the data out
                 //
-                butil_log(5, "IPP Done, ending upload of body\n");
+                butil_log(IPPLHT, "IPP Done, ending upload of body\n");
                 client->out_content_length = req->out.count;
             }
             else
@@ -261,7 +265,7 @@ int ipp_resource_callback(
                 //
                 if (req->out.count)
                 {
-                    butil_log(5, "IPP made %d body bytes to upload\n", req->out.count);
+                    butil_log(IPPLHT, "IPP made %d body bytes to upload\n", req->out.count);
                 }
                 client->out_content_length = 0x100000;
             }
@@ -274,7 +278,7 @@ int ipp_resource_callback(
 
     case httpComplete:
 
-        butil_log(5, "IPP done cb\n");
+        butil_log(IPPLHT, "IPP done cb\n");
         if (req)
         {
             result = ipp_req_destroy(ipp, req);

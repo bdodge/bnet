@@ -28,6 +28,8 @@ struct tag_ipp_server;
 
 typedef enum
 {
+    reqReadInput,
+    reqWriteOutput,
     reqHeader,
     reqAttributes,
     reqOperationAttributes,
@@ -47,8 +49,6 @@ typedef enum
     reqReplyOperationAttributes,
     reqReplyJobAttributes,
     reqReplyPrinterAttributes,
-    reqReadInput,
-    reqWriteOutput,
     reqDone
 }
 ipp_req_state_t;

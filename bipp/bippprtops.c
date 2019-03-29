@@ -25,6 +25,7 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
     ipp_attr_t *reqattrs;
     ipp_attr_t *attr;
     ipp_attr_t *nattr;
+    bool retall;
     int result;
 
     // see if there are requested return attributes list
@@ -36,6 +37,8 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
         reqattrs = NULL;
         result = 0;
     }
+    retall = false;
+
     if (reqattrs)
     {
         char reqname[IPP_MAX_TEXT];
@@ -53,11 +56,11 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
         }
         do
         {
-            result = ipp_get_next_attr_value(
+            result = ipp_get_next_attr_string_value(
                                             reqattrs,
                                             reqiterator,
-                                            &value,
-                                            &value_len
+                                            reqname,
+                                            sizeof(reqname)
                                             );
             if (result > 0)
             {
@@ -70,16 +73,13 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
                 // error getting them
                 break;
             }
-            // format value into proper c string
+            // escape if "all" is in there
             //
-            if (value_len >= IPP_MAX_TEXT)
+            if (! strcmp(reqname, "all"))
             {
-                ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
-                return -1;
+                retall = true;
+                break;
             }
-            memcpy(reqname, value, value_len);
-            reqname[value_len] = '\0';
-
             // look up the requested name in the usual places
             //
             result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
@@ -114,8 +114,12 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
         if (result)
         {
             ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+            return result;
         }
-        return result;
+        if (! retall)
+        {
+            return 0;
+        }
     }
     // iterate over printer description group adding each set attribute
     // into the response
@@ -202,6 +206,73 @@ static int ipp_op_print_job(ipp_request_t *req)
     return result;
 }
 
+int ipp_op_send_document(ipp_request_t *req)
+{
+    ipp_attr_t *attr;
+    ipp_job_t  *job;
+    int32_t     jobid;
+    int         islast;
+    int         result;
+
+    if (! req || ! req->ipp)
+    {
+        return -1;
+    }
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "job-id", &attr);
+    if (result)
+    {
+        butil_log(5, "No job-id in oper attributes\n");
+        ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
+        return result;
+    }
+    result = ipp_get_only_attr_int32_value(attr, &jobid);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "last-document", &attr);
+    if (result)
+    {
+        butil_log(5, "No last-document in oper attributes\n");
+        ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
+        return result;
+    }
+    result = ipp_get_only_attr_bool_value(attr, &islast);
+    if (result)
+    {
+        return result;
+    }
+    // look for job id in listings
+    //
+    result = ipp_get_job_by_id(req->ipp, jobid, &job);
+    if (result)
+    {
+        butil_log(5, "No job id %d found\n", jobid);
+        job = NULL;
+        result = 0;
+    }
+    // if cancelled, or completed, can't do it again
+    //
+    if (
+            ! job
+        ||  job->state == IPP_JSTATE_COMPLETED
+        ||  job->state == IPP_JSTATE_CANCELED
+        ||  job->state == IPP_JSTATE_ABORTED
+    )
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_NOT_POSSIBLE);
+        return result;
+    }
+    // add jobs current status attributes list to reply
+    //
+    result = ipp_dupe_attr_list(job->job_stat_attr, &req->out_attrs[IPP_JOB_ATTRS]);
+    if (result)
+    {
+        return result;
+    }
+    return 0;
+}
+
 int ipp_printer_op_dispatch(ipp_request_t *req)
 {
     ipp_attr_t *attr;
@@ -225,10 +296,10 @@ int ipp_printer_op_dispatch(ipp_request_t *req)
     case IPP_OP_PRINT_JOB:
         return ipp_op_print_job(req);
 
-    case IPP_OP_PRINT_URI:
-    case IPP_OP_VALIDATE_JOB:
-    case IPP_OP_CREATE_JOB:
     case IPP_OP_SEND_DOCUMENT:
+        return ipp_op_send_document(req);
+
+    case IPP_OP_PRINT_URI:
     case IPP_OP_SEND_URI:
     default:
         ipp_set_error(req, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED);

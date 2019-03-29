@@ -45,15 +45,23 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
     if (result)
     {
         butil_log(5, "No document-format in job attributes\n");
-        ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
-        return result;
+        if (pjob)
+        {
+            // coming from print-job, need a doc type
+            ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
+            return result;
+        }
+        // wait for send-document to set doc type
+        result = 0;
     }
-    // check mime type against supported values
-    //
-    butil_log(5, "Create-Job: document-format is %s\n", ((char*)attr->value + 2));
+    else
+    {
+        // check mime type against supported values
+        //
+        butil_log(5, "Create-Job: document-format is %s\n", ((char*)attr->value + 2));
 
-    //ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
-
+        //ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
+    }
     job = NULL;
 
     do  // try
@@ -67,12 +75,6 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
         if (result)
         {
             butil_log(1, "Can't activate job %u\n", job->id);
-            break;
-        }
-        result = ipp_complete_job(req->ipp, job);
-        if (result)
-        {
-            butil_log(1, "Can't complete job %u\n", job->id);
             break;
         }
         // copy operation attributes list to job (easier than taking only whats needed
@@ -492,7 +494,10 @@ static int ipp_op_get_job_attributes(ipp_request_t *req)
     result = ipp_get_job_by_id(req->ipp, jobid, &job);
     if (result || ! job)
     {
-        ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+        butil_log(5, "No job id %d found\n", jobid);
+        ipp_set_error(req, result ?
+                    IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES :
+                    IPP_STATUS_ERROR_NOT_POSSIBLE);
         return -1;
     }
     // see if there are requested return attributes list
@@ -554,18 +559,24 @@ int ipp_op_cancel_job(ipp_request_t *req)
     // look for job id in listings
     //
     result = ipp_get_job_by_id(req->ipp, jobid, &job);
-    if (result || ! job)
+    if (result)
     {
-        ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
-        return -1;
+        job = NULL;
+        result = 0;
     }
     // if cancelled, or completed, can't do it again
     //
-    if (job->state == IPP_JSTATE_COMPLETED || job->state == IPP_JSTATE_CANCELED)
+    if (
+            ! job
+        ||  job->state == IPP_JSTATE_COMPLETED
+        ||  job->state == IPP_JSTATE_CANCELED
+        ||  job->state == IPP_JSTATE_ABORTED
+    )
     {
         ipp_set_error(req, IPP_STATUS_ERROR_NOT_POSSIBLE);
         return result;
     }
+    result = ipp_cancel_job(req->ipp, job);
     return result;
 }
 

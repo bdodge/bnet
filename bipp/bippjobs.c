@@ -92,6 +92,8 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
     {
         return result;
     }
+    butil_log(5, "JOB Started id=%d\n", ipp->job_id);
+
     if (! ipp->jobs_active)
     {
         ipp->jobs_active = job;
@@ -116,6 +118,7 @@ int ipp_cancel_job(ipp_server_t *ipp, ipp_job_t *job)
 
     job->state = IPP_JSTATE_CANCELED;
 
+    butil_log(5, "JOB Cancelled id=%d\n", ipp->job_id);
     result = ipp_set_attr_int32_value("job-state", job->job_stat_attr, 1, job->state);
     return result;
 }
@@ -145,6 +148,7 @@ int ipp_complete_job(ipp_server_t *ipp, ipp_job_t *job)
     job->next = NULL;
     job->state = IPP_JSTATE_COMPLETED;
 
+    butil_log(5, "JOB Completed id=%d\n", ipp->job_id);
     time(&now);
     result  = ipp_set_attr_int32_value("time-at-completed", job->job_stat_attr, 1, now);
     result |= ipp_set_attr_int32_value("job-state", job->job_stat_attr, 1, job->state);
@@ -204,6 +208,8 @@ int ipp_create_job(ipp_server_t *ipp, ipp_request_t *req, ipp_job_t **pjob)
     {
         ipp->job_id = 1;
     }
+    butil_log(5, "JOB Created id=%d\n", ipp->job_id);
+    job->job_oper_attr = NULL;
     job->job_stat_attr = NULL;
     job->job_desc_attr = NULL;
     *pjob = job;

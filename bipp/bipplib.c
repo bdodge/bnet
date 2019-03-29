@@ -163,15 +163,6 @@ int ipp_resource_callback(
         //
         *count = (*count - req->in.count);
 
-        // if the request has already got to reply state (because
-        // of errors for example) then move to upload state
-        //
-        if (req->state[req->top] >= reqReply)
-        {
-            client->state = httpBodyUpload;
-            client->out_content_length = 0x100000;
-            client->out_transfer_type = httpChunked;
-        }
         break;
 
     case httpDownloadDone:
@@ -385,14 +376,15 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_int32_value(
                                                 "operations-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                7,
-                                                IPP_OP_GET_PRINTER_ATTRIBUTES,
+                                                8,
                                                 IPP_OP_PRINT_JOB,
                                                 IPP_OP_VALIDATE_JOB,
                                                 IPP_OP_CREATE_JOB,
                                                 IPP_OP_CANCEL_JOB,
+                                                IPP_OP_SEND_DOCUMENT,
                                                 IPP_OP_GET_JOB_ATTRIBUTES,
-                                                IPP_OP_GET_JOBS
+                                                IPP_OP_GET_JOBS,
+                                                IPP_OP_GET_PRINTER_ATTRIBUTES
                                              );
 
     result |= ipp_set_group_attr_string_value(

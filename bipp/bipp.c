@@ -354,6 +354,7 @@ int ipp_dispatch(ipp_request_t *req)
     {
     case IPP_OP_GET_PRINTER_ATTRIBUTES:
     case IPP_OP_PRINT_JOB:
+    case IPP_OP_SEND_DOCUMENT:
         result = ipp_printer_op_dispatch(req);
         break;
 
@@ -371,7 +372,6 @@ int ipp_dispatch(ipp_request_t *req)
         break;
 
     case IPP_OP_PRINT_URI:
-    case IPP_OP_SEND_DOCUMENT:
     case IPP_OP_SEND_URI:
     case IPP_OP_PAUSE_PRINTER:
     case IPP_OP_RESUME_PRINTER:
@@ -985,18 +985,27 @@ int ipp_process(ipp_request_t *req)
 
         if (req->download_complete)
         {
-            butil_log(0, "End of print data\n");
+            butil_log(5, "End of print data\n");
             result = ipp_move_state(req, reqReply);
             break;
         }
-        butil_log(5, "Absorb %d bytes print data\n", req->in.count);
+        butil_log(IPPLAP, "Absorb %d bytes print data\n", req->in.count);
         req->in.tail += req->in.count;
         req->in.count = 0;
         break;
 
     case reqReply:
 
-        result = ipp_reply(req);
+        if (req->download_complete)
+        {
+            butil_log(5, "End of request data, reply now\n");
+            result = ipp_reply(req);
+        }
+        else
+        {
+            butil_log(IPPLAP, "Flush %d bytes request data, reply ready\n", req->in.count);
+            req->in.count = 0;
+        }
         break;
 
     case reqReplyOneAttribute:

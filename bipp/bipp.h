@@ -38,9 +38,13 @@ typedef struct tag_ipp_server
     /// path and port we serve on
     char                path[IPP_MAX_TEXT];
     uint16_t            port;
+    uint16_t            secure_port;
+    uint16_t            web_port;
 
     /// serving uri, for convenience
-    char                uri[IPP_MAX_TEXT];
+    char                print_uri[IPP_MAX_TEXT];
+    char                secure_print_uri[IPP_MAX_TEXT];
+    char                web_uri[IPP_MAX_TEXT];
 
     /// ipp scheme handle
     butil_url_scheme_t   scheme;

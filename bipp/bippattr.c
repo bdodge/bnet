@@ -372,6 +372,7 @@ int ipp_check_type_is(ipp_attr_t *attr, size_t ntypes, ...)
 
             if (attr_syntax == ok_syntax)
             {
+                va_end(args);
                 return 0;
             }
             //butil_log(5, "type %02X is not %02X\n", attr_syntax, ok_syntax);
@@ -381,11 +382,12 @@ int ipp_check_type_is(ipp_attr_t *attr, size_t ntypes, ...)
             ok_syntax = (ipp_syntax_enc_t)va_arg(args, int);
         }
     }
-   ipp_type_string(encsyntax, actual, sizeof(actual));
-   ipp_type_string(base_syntax, expected, sizeof(expected));
+    ipp_type_string(encsyntax, actual, sizeof(actual));
+    ipp_type_string(base_syntax, expected, sizeof(expected));
 
     butil_log(1, "Attempt to set %s, an %s, with a type like %s\n",
                    ipp_name_of_attr(attr), actual, expected);
+    va_end(args);
     return -1;
 }
 
@@ -607,6 +609,59 @@ int ipp_get_next_attr_int32_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32
     return 0;
 }
 
+int ipp_get_next_attr_range_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *minvalue, int32_t *maxvalue)
+{
+    uint8_t *uval;
+    size_t  vallen;
+    int32_t ivalmin;
+    int32_t ivalmax;
+    int result;
+
+    result = ipp_get_next_attr_value(attr, iter, &uval, &vallen);
+    if (result)
+    {
+        return result;
+    }
+    if (vallen != 2 * sizeof(int32_t))
+    {
+        butil_log(1, "Wrong size for range\n");
+        return -1;
+    }
+    memcpy((uint8_t *)&ivalmin, uval, sizeof(int32_t));
+    uval += sizeof(int32_t);
+    memcpy((uint8_t *)&ivalmax, uval, sizeof(int32_t));
+    *minvalue = htonl(ivalmin);
+    *maxvalue = htonl(ivalmax);
+    return 0;
+}
+
+int ipp_get_next_attr_resolution_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *minvalue, int32_t *maxvalue, int32_t *unitvalue)
+{
+    uint8_t *uval;
+    size_t  vallen;
+    int32_t ivalx;
+    int32_t ivaly;
+    int result;
+
+    result = ipp_get_next_attr_value(attr, iter, &uval, &vallen);
+    if (result)
+    {
+        return result;
+    }
+    if (vallen != 2 * sizeof(int32_t) + 1)
+    {
+        butil_log(1, "Wrong size for resolution\n");
+        return -1;
+    }
+    memcpy((uint8_t *)&ivalx, uval, sizeof(int32_t));
+    uval += sizeof(int32_t);
+    memcpy((uint8_t *)&ivaly, uval, sizeof(int32_t));
+    *minvalue = htonl(ivalx);
+    *maxvalue = htonl(ivaly);
+    *unitvalue = uval[8];
+    return 0;
+}
+
 int ipp_get_next_attr_string_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, char *value, size_t nvalue)
 {
     uint8_t *uval;
@@ -688,6 +743,26 @@ int ipp_get_only_attr_int32_value(ipp_attr_t *attr, int32_t *value)
     iter.val_count = 0;
     iter.val_ptr = attr->value;
     return ipp_get_next_attr_int32_value(attr, &iter, value);
+}
+
+int ipp_get_only_attr_range_value(ipp_attr_t *attr, int32_t *minvalue, int32_t *maxvalue)
+{
+    ipp_attr_iter_t iter;
+
+    iter.attr = attr;
+    iter.val_count = 0;
+    iter.val_ptr = attr->value;
+    return ipp_get_next_attr_range_value(attr, &iter, minvalue, maxvalue);
+}
+
+int ipp_get_only_attr_resolution_value(ipp_attr_t *attr, int32_t *xvalue, int32_t *yvalue, int32_t *unitvalue)
+{
+    ipp_attr_iter_t iter;
+
+    iter.attr = attr;
+    iter.val_count = 0;
+    iter.val_ptr = attr->value;
+    return ipp_get_next_attr_resolution_value(attr, &iter, xvalue, yvalue, unitvalue);
 }
 
 int ipp_get_only_attr_string_value(ipp_attr_t *attr, char *value, size_t nvalue)
@@ -940,6 +1015,7 @@ int ipp_set_group_attr_bool_value(
     result = ipp_set_attr_value(attr, &bvalue, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nvalues-- > 0)
@@ -950,80 +1026,11 @@ int ipp_set_group_attr_bool_value(
         result = ipp_add_attr_value(attr, &bvalue, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
-    return 0;
-}
-
-int ipp_set_group_attr_range_value(
-                                const char *name,
-                                ipp_attr_grouping_code_t group,
-                                size_t nvalues,
-                                ...
-                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
-                                )
-{
-    ipp_attr_t *attr;
-    int result;
-    va_list args;
-    int32_t minvalue;
-    int32_t maxvalue;
-    uint8_t value[8];
-    size_t value_len;
-
-    if (! name)
-    {
-        return -1;
-    }
-    if (nvalues == 0)
-    {
-        // todo - think about this
-        return 0;
-    }
-    result = ipp_get_group_attr_by_name(name, group, &attr);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
-    if (result)
-    {
-        return result;
-    }
-    va_start(args, nvalues);
-
-    minvalue = (int32_t)va_arg(args, int32_t);
-    minvalue = htonl(minvalue);
-    maxvalue = (int32_t)va_arg(args, int32_t);
-    maxvalue = htonl(maxvalue);
-
-    memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
-    memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
-    value_len = 2 * sizeof(int32_t);
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
-    if (result)
-    {
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        minvalue = (int32_t)va_arg(args, int32_t);
-        minvalue = htonl(minvalue);
-        maxvalue = (int32_t)va_arg(args, int32_t);
-        maxvalue = htonl(maxvalue);
-
-        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
-        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            return result;
-        }
-    }
+    va_end(args);
     return 0;
 }
 
@@ -1071,6 +1078,7 @@ int ipp_set_group_attr_int32_value(
     result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nvalues-- > 0)
@@ -1081,9 +1089,142 @@ int ipp_set_group_attr_int32_value(
         result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
+    va_end(args);
+    return 0;
+}
+
+int ipp_set_group_attr_range_value(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    int32_t minvalue;
+    int32_t maxvalue;
+    uint8_t value[8];
+    size_t value_len;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_group_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_reset_attr_value(attr);
+
+    va_start(args, nvalues);
+
+    value_len = 2 * sizeof(int32_t);
+
+    while (nvalues-- > 0)
+    {
+        minvalue = (int32_t)va_arg(args, int32_t);
+        minvalue = htonl(minvalue);
+        maxvalue = (int32_t)va_arg(args, int32_t);
+        maxvalue = htonl(maxvalue);
+
+        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
+        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            va_end(args);
+            return result;
+        }
+    }
+    va_end(args);
+    return 0;
+}
+
+int ipp_set_group_attr_resolution_value(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t xres, int32_t yres, int32_t units ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    int32_t xvalue;
+    int32_t yvalue;
+    int8_t  uvalue;
+    uint8_t value[9];
+    size_t value_len;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_group_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_RESOLUTION);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_reset_attr_value(attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nvalues);
+
+    value_len = 2 * sizeof(int32_t) + 1;
+
+    while (nvalues-- > 0)
+    {
+        xvalue = (int32_t)va_arg(args, int32_t);
+        xvalue = htonl(xvalue);
+        yvalue = (int32_t)va_arg(args, int32_t);
+        yvalue = htonl(yvalue);
+        uvalue = (int8_t)va_arg(args, int32_t);
+
+        memcpy(value, (uint8_t *)&xvalue, sizeof(int32_t));
+        memcpy(value + sizeof(int32_t), (uint8_t*)&xvalue, sizeof(int32_t));
+        value[8] = uvalue;
+        value_len = 2 * sizeof(int32_t) + 1;
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            va_end(args);
+            return result;
+        }
+    }
+    va_end(args);
     return 0;
 }
 
@@ -1120,6 +1261,7 @@ int ipp_set_group_attr_bytes_value(
     value = (uint8_t *)va_arg(args, uint8_t *);
     if (! value)
     {
+        va_end(args);
         return -1;
     }
     value_len = (size_t)va_arg(args, size_t);
@@ -1128,6 +1270,7 @@ int ipp_set_group_attr_bytes_value(
     result = ipp_set_attr_value(attr, value, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nvalues-- > 0)
@@ -1135,6 +1278,7 @@ int ipp_set_group_attr_bytes_value(
         value = (uint8_t *)va_arg(args, uint8_t *);
         if (! value)
         {
+            va_end(args);
             return -1;
         }
         value_len = (size_t)va_arg(args, size_t);
@@ -1142,9 +1286,11 @@ int ipp_set_group_attr_bytes_value(
         result = ipp_add_attr_value(attr, value, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
+    va_end(args);
     return 0;
 }
 
@@ -1188,6 +1334,7 @@ int ipp_set_group_attr_string_value(
     value = (char *)va_arg(args, char *);
     if (! value)
     {
+        va_end(args);
         return -1;
     }
     value_len = strlen(value);
@@ -1196,6 +1343,7 @@ int ipp_set_group_attr_string_value(
     result = ipp_set_attr_value(attr, (uint8_t *)value, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nstrings-- > 0)
@@ -1203,6 +1351,7 @@ int ipp_set_group_attr_string_value(
         value = (char *)va_arg(args, char *);
         if (! value)
         {
+            va_end(args);
             return -1;
         }
         value_len = strlen(value);
@@ -1210,9 +1359,11 @@ int ipp_set_group_attr_string_value(
         result = ipp_add_attr_value(attr, (uint8_t*)value, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
+    va_end(args);
     return 0;
 }
 
@@ -1333,6 +1484,7 @@ int ipp_set_attr_bool_value(
     result = ipp_set_attr_value(attr, &bvalue, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nvalues-- > 0)
@@ -1343,80 +1495,11 @@ int ipp_set_attr_bool_value(
         result = ipp_add_attr_value(attr, &bvalue, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
-    return 0;
-}
-
-int ipp_set_attr_range_value(
-                                const char *name,
-                                ipp_attr_t *attrlist,
-                                size_t nvalues,
-                                ...
-                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
-                                )
-{
-    ipp_attr_t *attr;
-    int result;
-    va_list args;
-    int32_t minvalue;
-    int32_t maxvalue;
-    uint8_t value[8];
-    size_t value_len;
-
-    if (! name || ! attrlist)
-    {
-        return -1;
-    }
-    if (nvalues == 0)
-    {
-        // todo - think about this
-        return 0;
-    }
-    result = ipp_get_attr_by_name(name, attrlist, &attr);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
-    if (result)
-    {
-        return result;
-    }
-    va_start(args, nvalues);
-
-    minvalue = (int32_t)va_arg(args, int32_t);
-    minvalue = htonl(minvalue);
-    maxvalue = (int32_t)va_arg(args, int32_t);
-    maxvalue = htonl(maxvalue);
-
-    memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
-    memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
-    value_len = 2 * sizeof(int32_t);
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
-    if (result)
-    {
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        minvalue = (int32_t)va_arg(args, int32_t);
-        minvalue = htonl(minvalue);
-        maxvalue = (int32_t)va_arg(args, int32_t);
-        maxvalue = htonl(maxvalue);
-
-        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
-        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            return result;
-        }
-    }
+    va_end(args);
     return 0;
 }
 
@@ -1464,6 +1547,7 @@ int ipp_set_attr_int32_value(
     result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nvalues-- > 0)
@@ -1474,9 +1558,145 @@ int ipp_set_attr_int32_value(
         result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
+    va_end(args);
+    return 0;
+}
+
+int ipp_set_attr_range_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    int32_t minvalue;
+    int32_t maxvalue;
+    uint8_t value[8];
+    size_t value_len;
+
+    if (! name || ! attrlist)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_reset_attr_value(attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nvalues);
+
+    value_len = 2 * sizeof(int32_t);
+
+    while (nvalues-- > 0)
+    {
+        minvalue = (int32_t)va_arg(args, int32_t);
+        minvalue = htonl(minvalue);
+        maxvalue = (int32_t)va_arg(args, int32_t);
+        maxvalue = htonl(maxvalue);
+
+        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
+        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            return result;
+            va_end(args);
+        }
+    }
+    va_end(args);
+    return 0;
+}
+
+int ipp_set_attr_resolution_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                size_t nvalues,
+                                ...
+                                /* parm list of type "int32_t xres, int32_t yres, int32_t units ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    int32_t xvalue;
+    int32_t yvalue;
+    int8_t  uvalue;
+    uint8_t value[9];
+    size_t value_len;
+
+    if (! name || ! attrlist)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_reset_attr_value(attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nvalues);
+
+    value_len = 2 * sizeof(int32_t) + 1;
+
+    while (nvalues-- > 0)
+    {
+        xvalue = (int32_t)va_arg(args, int32_t);
+        xvalue = htonl(xvalue);
+        yvalue = (int32_t)va_arg(args, int32_t);
+        yvalue = htonl(yvalue);
+        uvalue = (int8_t)va_arg(args, int32_t);
+
+        memcpy(value, (uint8_t *)&xvalue, sizeof(int32_t));
+        memcpy(value + sizeof(int32_t), (uint8_t*)&xvalue, sizeof(int32_t));
+        value[8] = uvalue;
+        value_len = 2 * sizeof(int32_t) + 1;
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            va_end(args);
+            return result;
+        }
+    }
+    va_end(args);
     return 0;
 }
 
@@ -1513,6 +1733,7 @@ int ipp_set_attr_bytes_value(
     value = (uint8_t *)va_arg(args, uint8_t *);
     if (! value)
     {
+        va_end(args);
         return -1;
     }
     value_len = (size_t)va_arg(args, size_t);
@@ -1521,6 +1742,7 @@ int ipp_set_attr_bytes_value(
     result = ipp_set_attr_value(attr, value, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nvalues-- > 0)
@@ -1528,6 +1750,7 @@ int ipp_set_attr_bytes_value(
         value = (uint8_t *)va_arg(args, uint8_t *);
         if (! value)
         {
+            va_end(args);
             return -1;
         }
         value_len = (size_t)va_arg(args, size_t);
@@ -1535,9 +1758,11 @@ int ipp_set_attr_bytes_value(
         result = ipp_add_attr_value(attr, value, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
+    va_end(args);
     return 0;
 }
 
@@ -1557,11 +1782,13 @@ int ipp_set_attr_string_value(
 
     if (! name || ! attrlist)
     {
+        va_end(args);
         return -1;
     }
     if (nstrings == 0)
     {
         // todo - think about this
+        va_end(args);
         return 0;
     }
     result = ipp_get_attr_by_name(name, attrlist, &attr);
@@ -1581,6 +1808,7 @@ int ipp_set_attr_string_value(
     value = (char *)va_arg(args, char *);
     if (! value)
     {
+        va_end(args);
         return -1;
     }
     value_len = strlen(value);
@@ -1589,6 +1817,7 @@ int ipp_set_attr_string_value(
     result = ipp_set_attr_value(attr, (uint8_t *)value, value_len);
     if (result)
     {
+        va_end(args);
         return result;
     }
     while (nstrings-- > 0)
@@ -1596,6 +1825,7 @@ int ipp_set_attr_string_value(
         value = (char *)va_arg(args, char *);
         if (! value)
         {
+            va_end(args);
             return -1;
         }
         value_len = strlen(value);
@@ -1603,9 +1833,11 @@ int ipp_set_attr_string_value(
         result = ipp_add_attr_value(attr, (uint8_t*)value, value_len);
         if (result)
         {
+            va_end(args);
             return result;
         }
     }
+    va_end(args);
     return 0;
 }
 
@@ -1671,7 +1903,7 @@ ipp_attr_t *ipp_create_attr(size_t recdex, uint8_t *value, size_t value_len)
     return attr;
 }
 
-int ipp_destroy_attr(ipp_attr_t *attr)
+int ipp_reset_attr_value(ipp_attr_t *attr)
 {
     if (! attr)
     {
@@ -1681,6 +1913,20 @@ int ipp_destroy_attr(ipp_attr_t *attr)
     {
         free(attr->value);
     }
+    attr->value = NULL;
+    attr->alloc_len = 0;
+    attr->value_len = 0;
+    return 0;
+}
+
+int ipp_destroy_attr(ipp_attr_t *attr)
+{
+    if (! attr)
+    {
+        return -1;
+    }
+    ipp_reset_attr_value(attr);
+
     if (attr->next)
     {
         butil_log(2, "Destroying linked attribute\n");

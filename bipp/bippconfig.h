@@ -16,6 +16,10 @@
 #ifndef BIPPCONFIG_H
 #define BIPPCONFIG_H 1
 
+/// Is there a secure TLS endpoint
+//
+#define IPP_SUPPORT_TLS       (0)
+
 /// Is PDF supported
 //
 #define IPP_SUPPORT_PDF       (0)
@@ -51,7 +55,7 @@
 #define IPP_MAJOR_VERSION_MIN   (1)
 #define IPP_MINOR_VERSION_MIN   (1)
 
-#define IPP_MAJOR_VERSION_MAX   (1)
+#define IPP_MAJOR_VERSION_MAX   (2)
 #define IPP_MINOR_VERSION_MAX   (2)
 
 /// how long a job can go without data before it gets aborted

@@ -295,6 +295,7 @@ int ipp_resource_callback(
 int ipp_set_static_environment(ipp_server_t *ipp)
 {
     ipp_attr_t *attr;
+    char text[IPP_MAX_TEXT];
     int result;
 
     result = ipp_set_group_attr_string_value(
@@ -377,12 +378,14 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 "en"
                                                 );
 
+    snprintf(text, sizeof(text), "%d.%d", IPP_MAJOR_VERSION_MAX, IPP_MINOR_VERSION_MAX);
+
     result |= ipp_set_group_attr_string_value(
                                                 "ipp-versions-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 2,
                                                 "1.1",
-                                                "1.2"
+                                                text
                                                 );
 
     result |= ipp_set_group_attr_string_value(
@@ -508,15 +511,15 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, true
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "finishings-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, IPP_FINISHINGS_NONE
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "finishings-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                2, IPP_FINISHINGS_NONE, IPP_FINISHINGS_STAPLE
                                             );
     result |= ipp_set_group_attr_int32_value(
                                                 "ippget-event-life",
@@ -531,27 +534,27 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_string_value(
                                                 "job-hold-until-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, "no-hold"
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "job-hold-until-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, "no-hold"
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_bool_value(
                                                 "job-ids-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, true
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "job-priority-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 5
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "job-priority-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 5
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "job-settable-attributes-supported",
@@ -568,6 +571,7 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
+#if 0
     result |= ipp_set_group_attr_string_value(
                                                 "media-col-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
@@ -578,6 +582,7 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
+#endif
     result |= ipp_set_group_attr_string_value(
                                                 "media-col-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
@@ -598,15 +603,15 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_bool_value(
                                                 "multiple-document-jobs-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, true
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "multiple-operation-time-out",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, IPP_MAX_JOB_IDLE_SECONDS
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "notify-events-default",
@@ -618,20 +623,20 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "notify-lease-duration-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 10
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "notify-lease-duration-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 10
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "notify-max-events-supported",
                                                 IPP_GROUPING_SUBSCRIPTION_TEMPLATE,
-                                                1, "none"
+                                                1, 16
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "notify-pull-method-supported",
@@ -646,17 +651,17 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_int32_value(
                                                 "number-up-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, 4
+                                                3, 1, 2, 3
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "orientation-requested-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, IPP_ORIENT_PORTRAIT
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "orientation-requested-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                2, IPP_ORIENT_PORTRAIT, IPP_ORIENT_LANDSCAPE
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "output-bin-default",
@@ -681,17 +686,22 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_int32_value(
                                                 "pages-per-minute",
                                                 IPP_GROUPING_PRINTER_STATUS,
-                                                1, 2000
+                                                1, 300
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
+                                                "pages-per-minute-color",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1, 200
+                                            );
+    result |= ipp_set_group_attr_int32_value(
                                                 "print-quality-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, IPP_QUALITY_NORMAL
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_int32_value(
                                                 "print-quality-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                2, IPP_QUALITY_NORMAL, IPP_QUALITY_HIGH
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "printer-alert",
@@ -731,17 +741,19 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_string_value(
                                                 "printer-more-info",
                                                 IPP_GROUPING_PRINTER_STATUS,
-                                                1, "none"
+                                                1, ipp->web_uri
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_resolution_value(
                                                 "printer-resolution-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, 600, 600, IPP_RES_PER_INCH
                                             );
-    result |= ipp_set_group_attr_string_value(
+    result |= ipp_set_group_attr_resolution_value(
                                                 "printer-resolution-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                2,
+                                                600, 600, IPP_RES_PER_INCH,
+                                                1200, 1200, IPP_RES_PER_INCH
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "printer-settable-attributes-supported",
@@ -756,12 +768,12 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_string_value(
                                                 "sides-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, "one-sided"
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "sides-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, "one-sided"
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "which-jobs-supported",
@@ -784,18 +796,22 @@ int ipp_set_environment(ipp_server_t *ipp)
     }
     // for uri of printers ipp url
     //
-    result = butil_paste_url(ipp->uri, sizeof(ipp->uri), ipp->scheme, hostname, ipp->port, ipp->path);
+    result = butil_paste_url(ipp->print_uri, sizeof(ipp->print_uri), ipp->scheme, hostname, ipp->port, ipp->path);
     if (result)
     {
         return result;
     }
-    // set printer-uri in printer status group
-    //
+    result = butil_paste_url(ipp->web_uri, sizeof(ipp->web_uri), schemeHTTP, hostname, ipp->web_port, "/");
+    if (result)
+    {
+        return result;
+    }
     result = ipp_set_group_attr_string_value(
                                                 "printer-uri-supported",
                                                 IPP_GROUPING_PRINTER_STATUS,
-                                                1,
-                                                ipp->uri
+                                                IPP_SUPPORT_TLS ? 2 : 1,
+                                                ipp->print_uri,
+                                                ipp->secure_print_uri
                                                 );
 
     result |= ipp_set_group_attr_bool_value(
@@ -832,7 +848,13 @@ int ipp_set_environment(ipp_server_t *ipp)
                                                 1,
                                                 0
                                                 );
-
+#if  (IPP_MAJOR_VERSION_MAX>=2)
+    result |= ipp_set_group_attr_string_value(
+                                                "printer-more-info",
+                                                IPP_GROUPING_PRINTER_STATUS,
+                                                1, ipp->web_uri
+                                            );
+#endif
     return result;
 }
 
@@ -913,6 +935,9 @@ int ipp_server(const char *program, uint16_t port, bool isTLS, const char *print
     ipp->stream_path[sizeof(ipp->stream_path) - 1] = '\0';
 
     ipp->port = port;
+    ipp->secure_port = 443;
+    ipp->web_port = 8080;
+
     strncpy(ipp->path, "/ipp", sizeof(ipp->path) - 1);
     ipp->path[sizeof(ipp->path) - 1] = '\0';
 

@@ -111,7 +111,7 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
                 break;
             }
         }
-        result = ipp_set_attr_string_value("job-printer-uri", job->job_stat_attr, 1, req->ipp->uri);
+        result = ipp_set_attr_string_value("job-printer-uri", job->job_stat_attr, 1, req->ipp->print_uri);
         if (result)
         {
             break;
@@ -157,7 +157,7 @@ static int ipp_req_job_attrs(ipp_request_t *req, ipp_attr_t *reqattrs, ipp_job_t
         }
         // put job uri into response
         //
-        snprintf(uri, sizeof(uri), "%s/job/%d", req->ipp->uri, job->id);
+        snprintf(uri, sizeof(uri), "%s/job/%d", req->ipp->print_uri, job->id);
 
         result = ipp_set_req_out_string_attr(req, IPP_JOB_ATTRS, "job-uri", uri);
         if (result)

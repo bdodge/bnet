@@ -166,7 +166,7 @@ int ipp_start_job(ipp_server_t *ipp, ipp_job_t *job)
     {
         return result;
     }
-    snprintf(uri, sizeof(uri), "%s/job/%d", ipp->uri, job->id);
+    snprintf(uri, sizeof(uri), "%s/job/%d", ipp->print_uri, job->id);
     result = ipp_set_attr_string_value("job-uri", job->job_stat_attr, 1, uri);
     if (result)
     {

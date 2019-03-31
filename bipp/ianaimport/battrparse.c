@@ -169,13 +169,50 @@ const char *group_code_to_name(ipp_attr_grouping_code_t code, bool plainname)
 	return "??????";
 }
 
-int syntax_name_to_code(char *name, ipp_syntax_enc_t type[IPP_MAX_ALT_TYPES])
+int32_t range_value(char **vstr, bool isstr)
+{
+	char *pv = *vstr;
+
+	if (*pv == 'M')
+	{
+		if (pv[1] == 'A')
+		{
+			if (pv[2] == 'X')
+			{
+				*vstr = pv + 3;
+				if (isstr)
+				{
+					return IPP_MAX_TEXT;
+				}
+				return 0x7fffffff;
+			}
+		}
+		else if (pv[1] = 'I')
+		{
+			if (pv[2] == 'N')
+			{
+				*vstr = pv + 3;
+				return 0x80000000;
+			}
+		}
+	}
+	else if (*pv >= '0' && *pv <= '9')
+	{
+		return strtol(pv, vstr, 0);
+	}
+	butil_log(1, "Bad range value %s\n", pv);
+	return 0;
+}
+
+int syntax_name_to_code(char *name, ipp_syntax_enc_t type[IPP_MAX_ALT_TYPES], int32_t *pminv, int32_t *pmaxv)
 {
 	int result;
 	size_t typedex;
 	size_t cmpdex;
 	ipp_syntax_enc_t typecode;
 	ipp_syntax_enc_t tokentype;
+	int32_t minval;
+	int32_t maxval;
 	enum { tcpLeft, tcpRight } state;
 	char *pn;
 	char xn;
@@ -184,6 +221,9 @@ int syntax_name_to_code(char *name, ipp_syntax_enc_t type[IPP_MAX_ALT_TYPES])
 	{
 		type[typedex] = IPP_NOTYPE;
 	}
+	*pminv = 0;
+	*pmaxv = 0;
+
 	if (! name || ! type)
 	{
 		return -1;
@@ -251,14 +291,37 @@ int syntax_name_to_code(char *name, ipp_syntax_enc_t type[IPP_MAX_ALT_TYPES])
 			//
 			if (*pn == '(')
 			{
-				while (*pn && *pn != ')')
+				pn++;
+				while (*pn == ' ' || *pn == '\t')
 				{
 					pn++;
 				}
-				if (*pn == ')')
+				minval = range_value(&pn, (tokentype & IPP_STRINGTYPE) ? true : false);
+
+				while (*pn && *pn != ')' && *pn != ':')
 				{
 					pn++;
 				}
+				if (*pn != ':')
+				{
+					maxval = minval;
+					minval = 0;
+					if (*pn == ')')
+					{
+						pn++;
+					}
+				}
+				else
+				{
+					pn++;
+					while (*pn == ' ' || *pn == '\t')
+					{
+						pn++;
+					}
+					maxval = range_value(&pn, (tokentype & IPP_STRINGTYPE) ? true : false);
+				}
+				*pminv = minval;
+				*pmaxv = maxval;
 			}
 			// add the type
 			//
@@ -615,14 +678,22 @@ static void emit_attrs(FILE *outfile, art_t *tree)
 	fprintf(outfile, "    {   // index %zu\n", tree->index);
 	fprintf(outfile, "        \"%s\",   %s\n", tree->attr->name,
 			tree->attr->name[0] == '*' ? "// indirect reference to" : "");
-	fprintf(outfile, "        { %s,%s,%s,%s },\n",
+	fprintf(outfile, "        { %s, %s, %s, %s },\n",
 			type_code_to_name(tree->attr->syntax[0], tb1, sizeof(tb1)),
 			type_code_to_name(tree->attr->syntax[1], tb2, sizeof(tb2)),
 			type_code_to_name(tree->attr->syntax[2], tb3, sizeof(tb3)),
 			type_code_to_name(tree->attr->syntax[3], tb4, sizeof(tb4))
 			);
-	fprintf(outfile, "        %d,%d\n",
-			tree->attr->minval, tree->attr->maxval);
+	if (tree->attr->minval == 0 && tree->attr->maxval == IPP_MAX_TEXT &&
+			(tree->attr->syntax[0] & IPP_STRINGTYPE || tree->attr->syntax[1] & IPP_STRINGTYPE))
+	{
+		fprintf(outfile, "        0, IPP_MAX_TEXT\n");
+	}
+	else
+	{
+		fprintf(outfile, "        %d, %d\n",
+				tree->attr->minval, tree->attr->maxval);
+	}
 	fprintf(outfile, "    },\n");
 
 	if (tree->right)
@@ -780,8 +851,8 @@ static void emit_attr_val(FILE *outfile, art_t *attr_tree, art_t *tree)
 #endif
 	fprintf(outfile, "    {\n");
 	fprintf(outfile, "        %zu, // %s\n", tree->index, tree->attr->name);
-	fprintf(outfile, "        %d,%d,\n", 0, 0);
-	fprintf(outfile, "        NULL,NULL\n");
+	fprintf(outfile, "        %d, %d,\n", 0, 0);
+	fprintf(outfile, "        NULL, NULL\n");
 	fprintf(outfile, "    },\n");
 
 	if (tree->right)
@@ -935,6 +1006,8 @@ int iana_parse_attributes(
 	char line[MAX_CSV_LINE];
 	size_t linenum;
 	size_t typedex;
+	int32_t minval;
+	int32_t maxval;
 	char *pl;
 	bool ismember;
 	bool iscollection;
@@ -1056,7 +1129,7 @@ int iana_parse_attributes(
 		}
 		if (! strstr(member_name, "<Member"))
 		{
-			result = syntax_name_to_code(syntax, typespecs);
+			result = syntax_name_to_code(syntax, typespecs, &minval, &maxval);
 			if (result)
 			{
 				butil_log(1, "%s:%zu bad typespec: %s", fname, linenum, syntax);
@@ -1069,7 +1142,7 @@ int iana_parse_attributes(
 
 			// this is an indirect reference to another collection that
 			// specifies the same members (i.e. this is a type reference)
-			// so format the collection name a a reference string
+			// so format the collection name and a reference string
 			//
 			member_name[0] = '*';
 
@@ -1103,6 +1176,121 @@ int iana_parse_attributes(
 			for (typedex = 0; typedex < IPP_MAX_ALT_TYPES; typedex++)
 			{
 				typespecs[typedex] = IPP_NOTYPE;
+			}
+			// in the case the reference name is the SAME name as the attribute name
+			// this is just a "forward reference" to some other group's collection
+			// with the same name, so just skip this collection entirely
+			//
+			if (! strcmp(attr_name, member_name + 1))
+			{
+				butil_log(5, "%s:%s is a fwd ref, ignoring member\n", token, attr_name);
+				attr_name[0] = '\0';
+				member_name[0] = '\0';
+			}
+			else
+			{
+				butil_log(5, "%s:%s:%s is an indirect ref\n", token, attr_name, member_name);
+			}
+		}
+		if (! strstr(sub_member_name, "<Member"))
+		{
+			result = syntax_name_to_code(syntax, typespecs, &minval, &maxval);
+			if (result)
+			{
+				butil_log(1, "%s:%zu bad typespec: %s", fname, linenum, syntax);
+				return result;
+			}
+		}
+		else
+		{
+			char *pref;
+
+			// this is an indirect reference to another collection that
+			// specifies the same members (i.e. this is a type reference)
+			// so format the collection name and a reference string
+			//
+			sub_member_name[0] = '*';
+
+			// look forward for double quotes around coll name
+			//
+			pref = strstr(sub_member_name, "\"\"");
+			if (! pref)
+			{
+				butil_log(1, "%s:%zu No double quote in collection ref\n",
+						fname, linenum);
+				return -1;
+			}
+			// move the refname left
+			memmove(sub_member_name + 1, pref + 2, strlen(pref + 2));
+
+			// look forward for ending double quotes
+			//
+			pref = strstr(sub_member_name + 3, "\"\"");
+			if (! pref)
+			{
+				butil_log(1, "%s:%zu No closing double quote in collection ref\n",
+						fname, linenum);
+				return -1;
+			}
+			// and terminate it
+			//
+			*pref = '\0';
+
+			// and it has no type
+			//
+			for (typedex = 0; typedex < IPP_MAX_ALT_TYPES; typedex++)
+			{
+				typespecs[typedex] = IPP_NOTYPE;
+			}
+			// in the case the reference name is the SAME name as the member name
+			// this is just a "forward reference" to some other collection
+			// with the same name, so just skip this collection entirely, but, since
+			// the member name was already added just before this, back-annotate
+			// that record with the indirection. in the member case, the attr added
+			// and collection added would be flagged as duplicates and not added, so
+			// this back-annotation isn't needed for them
+			//
+			if (! strcmp(member_name, sub_member_name + 1))
+			{
+				butil_log(5, "%s:%s:%s is a fwd ref, ignoring member\n", token, attr_name, member_name);
+
+				if (curcol)
+				{
+					art_t *oldmem;
+
+					oldmem = find_attr(curcol->tree, member_name);
+					if (oldmem)
+					{
+						butil_log(5, "Changing %s to %s\n", oldmem->attr->name, sub_member_name);
+						free((char*)oldmem->attr->name);
+						oldmem->attr->name = (char*)malloc(strlen(sub_member_name) + 1);
+						if (! oldmem->attr->name)
+						{
+							butil_log(0, "Can't alloc collection\n");
+							return -1;
+						}
+						strcpy((char*)oldmem->attr->name, sub_member_name);
+
+						oldmem->attr->syntax[0] = IPP_NOTYPE;
+					}
+					else
+					{
+						butil_log(0, "Expected indirect ref spec %s to be in tree of col %s\n",
+								member_name, curcol->name);
+					}
+				}
+				else
+				{
+					butil_log(0, "No collection  for member %s\n", member_name);
+				}
+				attr_name[0] = '\0';
+				sub_member_name[0] = '\0';
+				member_name[0] = '\0';
+			}
+			else
+			{
+				butil_log(5, "------------------ %s:%s:%s:%s is an indirect ref\n",
+							token, attr_name, member_name, sub_member_name);
 			}
 		}
 		// reference
@@ -1150,7 +1338,7 @@ int iana_parse_attributes(
 				butil_log(5, "    SUBMEMB %s of %s .......... %s\n",
 							sub_member_name, member_name, syntax);
 
-				// make attr_name the member name for listing this in curcol
+				// make attr_name the sub member name for listing this in curcol
 				//
 				strcpy(attr_name, sub_member_name);
 			}
@@ -1170,7 +1358,7 @@ int iana_parse_attributes(
 				strcpy(attr_name, member_name);
 			}
 		}
-		else
+		else if (attr_name[0])
 		{
 			ismember = false;
 
@@ -1188,8 +1376,8 @@ int iana_parse_attributes(
 							attr_name,
 							member_name,
 							typespecs,
-							0,
-							55
+							minval,
+							maxval
 							);
 			if (! attr)
 			{
@@ -1204,38 +1392,47 @@ int iana_parse_attributes(
 				return result;
 			}
 		}
-		// create an attribute for the attr/memb/submemb
-		//
-		attr = create_attr(
-						attr_name,
-						member_name,
-						typespecs,
-						0,
-						55
-						);
-		if (! attr)
+		if (attr_name[0])
 		{
-			butil_log(0, "Can't alloc attr\n");
-			return -1;
-		}
-		if (ismember)
-		{
-			// this is a member of current collection
-			// so add it to current collection tree
+			// create an attribute for the attr/memb/submemb
 			//
-			// add this collection member to current collection tree
-			ptree = &curcol->tree;
-		}
-		else
-		{
-			// add attribute to attribute tree
+			attr = create_attr(
+							attr_name,
+							member_name,
+							typespecs,
+							minval,
+							maxval
+							);
+			if (! attr)
+			{
+				butil_log(0, "Can't alloc attr\n");
+				return -1;
+			}
+			if (ismember)
+			{
+				// this is a member of current collection
+				// so add it to current collection tree
+				//
+				// add this collection member to current collection tree
+				ptree = &curcol->tree;
+
+				result = add_attr(ptree, attr);
+				if (result)
+				{
+					butil_log(0, "Can't add colmem attr\n");
+					return result;
+				}
+			}
+			// add attribute to attribute tree (member or not)
+			//
 			ptree = &atree;
-		}
-		result = add_attr(ptree, attr);
-		if (result)
-		{
-			butil_log(0, "Can't add attr\n");
-			return result;
+
+			result = add_attr(ptree, attr);
+			if (result)
+			{
+				butil_log(0, "Can't add attr\n");
+				return result;
+			}
 		}
 	}
 	// go through collections and emit collection descriptors

@@ -54,6 +54,7 @@ void iostream_reset_ring(ioring_t *ring);
 
 iostream_t *iostream_alloc(void);
 void iostream_free(iostream_t *stream);
+int iostream_posix_poll_filedesc(socket_t fdesc, polldir_t pollfor, int to_secs, int to_usecs);
 int iostream_posix_poll(iostream_t *stream, polldir_t pollfor, int to_secs, int to_usecs);
 iostream_t *iostream_create_reader_from_file(const char *filename);
 iostream_t *iostream_create_writer_from_file(const char *filename);

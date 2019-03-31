@@ -137,13 +137,32 @@ static int iostream_file_write(iostream_t *stream, uint8_t *buf, int len)
     return write(fileno, buf, len);
 }
 
-int iostream_posix_poll(iostream_t *stream, polldir_t pollfor, int to_secs, int to_usecs)
+int iostream_posix_poll_filedesc(int fdesc, polldir_t pollfor, int to_secs, int to_usecs)
 {
     fd_set fds;
     int nfds;
     struct timeval timeout;
-    int fileno;
     int result;
+
+    FD_ZERO(&fds);
+    FD_SET(fdesc, &fds);
+    nfds = fdesc + 1;
+    timeout.tv_sec = to_secs;
+    timeout.tv_usec = to_usecs;
+
+    result = select(
+                    nfds,
+                    (pollfor == readable) ? &fds : NULL,
+                    (pollfor == writeable) ? &fds : NULL,
+                    NULL,
+                    (to_secs >= 0 && to_usecs >= 0) ? &timeout : NULL
+                   );
+    return result;
+}
+
+int iostream_posix_poll(iostream_t *stream, polldir_t pollfor, int to_secs, int to_usecs)
+{
+    int fileno;
 
     if (! stream)
     {
@@ -156,20 +175,7 @@ int iostream_posix_poll(iostream_t *stream, polldir_t pollfor, int to_secs, int 
         BERROR("Bad file");
         return -1;
     }
-    FD_ZERO(&fds);
-    FD_SET(fileno, &fds);
-    nfds = fileno + 1;
-    timeout.tv_sec = to_secs;
-    timeout.tv_usec = to_usecs;
-
-    result = select(
-                    nfds,
-                    (pollfor == readable) ? &fds : NULL,
-                    (pollfor == writeable) ? &fds : NULL,
-                    NULL,
-                    (to_secs >= 0 && to_usecs >= 0) ? &timeout : NULL
-                   );
-    return result;
+    return iostream_posix_poll_filedesc(fileno, pollfor, to_secs, to_usecs);
 }
 
 static int iostream_file_close(iostream_t *stream)

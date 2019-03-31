@@ -295,7 +295,6 @@ int ipp_resource_callback(
 int ipp_set_static_environment(ipp_server_t *ipp)
 {
     ipp_attr_t *attr;
-    ipp_attr_t *colattr;
     size_t      index;
     char text[IPP_MAX_TEXT];
     int result;
@@ -546,7 +545,7 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_bool_value(
                                                 "job-ids-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, true
+                                                1, 1
                                             );
     result |= ipp_set_group_attr_int32_value(
                                                 "job-priority-default",
@@ -582,6 +581,8 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     }
     if (! result)
     {
+        ipp_attr_t *colattr;
+
         result = ipp_dupe_collection("media-col-default", &colattr);
         if (! result)
         {
@@ -612,22 +613,23 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 1, colattr
                                             );
         }
-    }
-    result |= ipp_set_group_attr_collection_value(
+        result |= ipp_set_group_attr_collection_value(
                                                 "media-col-ready",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, colattr
                                             );
+    }
 
     result |= ipp_set_group_attr_string_value(
                                                 "media-col-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                5,
+                                                6,
                                                 "media-top-margin",
                                                 "media-bottom-margin",
                                                 "media-left-margin",
                                                 "media-right-margin",
-                                                "media-source"
+                                                "media-source",
+                                                "media-size"
                                             );
 
     result |= ipp_set_group_attr_string_value(
@@ -640,6 +642,29 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "na_letter_8.5x11in"
                                             );
+    result |= ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+
+    if (! result)
+    {
+        result = ipp_get_attr_by_name("media-size-supported", attr, &attr);
+    }
+    if (! result)
+    {
+        ipp_attr_t *colattr;
+
+        result = ipp_dupe_collection("media-size-supported", &colattr);
+        if (! result)
+        {
+            result |= ipp_set_attr_int32_value("x-dimension", colattr, 1, 850);
+            result |= ipp_set_attr_int32_value("y-dimension", colattr, 1, 1100);
+
+            result |= ipp_set_group_attr_collection_value(
+                                                "media-size-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1, colattr
+                                            );
+        }
+    }
     result |= ipp_set_group_attr_string_value(
                                                 "media-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
@@ -683,7 +708,7 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_string_value(
                                                 "notify-pull-method-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, "ippget"
                                             );
     result |= ipp_set_group_attr_int32_value(
                                                 "number-up-default",
@@ -718,7 +743,7 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_string_value(
                                                 "overrides-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                2, "pages", "document-numbers"
                                             );
     result |= ipp_set_group_attr_bool_value(
                                                 "page-ranges-supported",
@@ -820,7 +845,11 @@ int ipp_set_static_environment(ipp_server_t *ipp)
     result |= ipp_set_group_attr_string_value(
                                                 "which-jobs-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                    #if  (IPP_MAJOR_VERSION_MAX>=2) && (IPP_MINOR_VERSION_MAX>=2)
+                                                3, "completed", "not-completed", "proof-print"
+                    #else
+                                                2, "completed", "not-completed"
+                    #endif
                                             );
 #endif
     return result;

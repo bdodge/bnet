@@ -200,14 +200,14 @@ int ipp_set_group_attr_string_value(
 int ipp_set_group_attr_collection_value(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
-                                int ncollections,
+                                int members,
                                 ...
                                 /* parm list of type ipp_attr_t *members, ..." */
                                 );
 
 int ipp_get_attr_by_name        (const char *name, ipp_attr_t *attrlist, ipp_attr_t **pattr);
 
-int ipp_set_attr_attr_value(
+int ipp_set_attr_from_attr_value(
                                 const char *name,
                                 ipp_attr_t *attrlist,
                                 ipp_attr_t *vattr
@@ -253,6 +253,13 @@ int ipp_set_attr_string_value(
                                 int nstrings,
                                 ...
                                 /* parm list of type "const char *str, ..." */
+                                );
+int ipp_set_attr_collection_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                int nmembers,
+                                ...
+                                /* parm list of type ipp_attr_t *members, ..." */
                                 );
 
 int         ipp_dupe_attr       (ipp_attr_t *attr, ipp_attr_t **dupeattr);

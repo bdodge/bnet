@@ -518,6 +518,47 @@ int ipp_set_req_out_tag(
     return result;
 }
 
+int ipp_add_req_out_group(
+                                ipp_request_t *req,
+                                ipp_attr_grouping_code_t grouping
+                                )
+{
+    ipp_attr_t *attr;
+    ipp_attr_t *nattr;
+    int result;
+
+    if (! req)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return -1;
+    }
+    result = ipp_get_attr_for_grouping(grouping, &attr);
+    if (result)
+    {
+        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+        return result;
+    }
+    while (attr)
+    {
+        if (attr->value)
+        {
+            result = ipp_dupe_attr(attr, &nattr);
+            if (result)
+            {
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                return result;
+            }
+            result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
+            if (result)
+            {
+                return result;
+            }
+        }
+        attr = attr->next;
+    }
+    return 0;
+}
+
 ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
 {
     ipp_request_t *req;

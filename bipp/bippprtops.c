@@ -124,57 +124,16 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
     // iterate over printer description group adding each set attribute
     // into the response
     //
-    result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
-    if (result)
-    {
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-        return result;
-    }
-    while (attr)
-    {
-        if (attr->value)
-        {
-            result = ipp_dupe_attr(attr, &nattr);
-            if (result)
-            {
-                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-                return result;
-            }
-            result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
-            if (result)
-            {
-                return result;
-            }
-        }
-        attr = attr->next;
-    }
+    result = ipp_add_req_out_group(req, IPP_GROUPING_PRINTER_DESCRIPTION);
+
     // iterate over printer status group adding each set attribute
-    // into the response
     //
-    result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_STATUS, &attr);
-    if (result)
-    {
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-        return result;
-    }
-    while (attr)
-    {
-        if (attr->value)
-        {
-            result = ipp_dupe_attr(attr, &nattr);
-            if (result)
-            {
-                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-                return result;
-            }
-            result = ipp_add_req_out_attribute(req, IPP_PRT_ATTRS, nattr);
-            if (result)
-            {
-                return result;
-            }
-        }
-        attr = attr->next;
-    }
+    result |= ipp_add_req_out_group(req, IPP_GROUPING_PRINTER_STATUS);
+
+    // iterate over subscription template too, adding each set attribute
+    //
+    result |= ipp_add_req_out_group(req, IPP_GROUPING_SUBSCRIPTION_TEMPLATE);
+
     return result;
 }
 

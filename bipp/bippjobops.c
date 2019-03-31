@@ -96,7 +96,7 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
         result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "job-name", &attr);
         if (! result)
         {
-            result = ipp_set_attr_attr_value("job-name", job->job_desc_attr, attr);
+            result = ipp_set_attr_from_attr_value("job-name", job->job_desc_attr, attr);
             if (result)
             {
                 break;
@@ -105,7 +105,7 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
         result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requesting-user-name", &attr);
         if (! result)
         {
-            result = ipp_set_attr_attr_value("job-originating-user-name", job->job_stat_attr, attr);
+            result = ipp_set_attr_from_attr_value("job-originating-user-name", job->job_stat_attr, attr);
             if (result)
             {
                 break;

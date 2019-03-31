@@ -579,6 +579,235 @@ int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
     return result;
 }
 
+int ipp_add_attr_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
+{
+    ipp_tag_t tag;
+    bool is_array;
+    size_t totlen;
+    int result;
+
+    if (! dstattr || ! srcattr)
+    {
+        return -1;
+    }
+    // get ipp tag type for result attr type
+    //
+    result = ipp_syntax_for_attr(dstattr, &tag, &is_array);
+    if (result)
+    {
+        return -1;
+    }
+    // insist thtat src attr tag is the same
+    //
+    if (srcattr->value)
+    {
+        if (tag != srcattr->value[0])
+        {
+            butil_log(1, "Attempt to add attr value tag %0X to an attr %s tag %02X\n",
+                            srcattr->value[0], ipp_name_of_attr(dstattr), tag);
+            return -1;
+        }
+    }
+    totlen = dstattr->value_len + srcattr->value_len + 3;
+
+    if (dstattr->alloc_len < totlen || ! dstattr->value)
+    {
+        // no room to add new value, or no existing value
+        //
+        // if there is a new value, alloc for tot len
+        //
+        if (srcattr->value)
+        {
+            uint8_t *newval;
+
+            dstattr->alloc_len = ipp_alloc_size(totlen);
+            newval = (uint8_t *)malloc(dstattr->alloc_len);
+            if (! newval)
+            {
+                BERROR("Alloc value");
+                return -1;
+            }
+            if (dstattr->value)
+            {
+                memcpy(newval, dstattr->value, dstattr->value_len);
+                free(dstattr->value);
+            }
+            dstattr->value = newval;
+        }
+    }
+    if (srcattr->value && srcattr->value_len)
+    {
+        dstattr->value[dstattr->value_len++] = srcattr->value[0];
+        if (dstattr->value && dstattr->value_len > 1)
+        {
+            // 0 namelen for secondary value
+            dstattr->value[dstattr->value_len++] = 0;
+            dstattr->value[dstattr->value_len++] = 0;
+        }
+        memcpy(dstattr->value + dstattr->value_len, srcattr->value + 1, srcattr->value_len - 1);
+        dstattr->value_len += srcattr->value_len - 1;
+    }
+    return 0;
+}
+
+int ipp_set_attr_from_attr_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                ipp_attr_t *vattr
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+
+    if (! name || ! attr)
+    {
+        return -1;
+    }
+    result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_reset_attr_value(attr);
+    if (result)
+    {
+        return result;
+    }
+    return ipp_add_attr_to_attr(attr, vattr);
+}
+
+int ipp_add_member_attr_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
+{
+    ipp_tag_t tag;
+    bool is_array;
+    const char *srcname;
+    size_t srcnamelen;
+    size_t totlen;
+    int result;
+
+    if (! dstattr || ! srcattr)
+    {
+        return -1;
+    }
+    // get ipp tag type for result attr type
+    //
+    result = ipp_syntax_for_attr(dstattr, &tag, &is_array);
+    if (result)
+    {
+        return -1;
+    }
+    // the only attribute that can have attribute values
+    // is a collection, so insist that that is true
+    //
+    if (tag != IPP_TAG_BEGIN_COLLECTION)
+    {
+        butil_log(1, "Attempt to add attr value to non-collection %s\n",
+                        ipp_name_of_attr(dstattr));
+        return -1;
+    }
+    // get the name of the new member attr
+    //
+    srcname = ipp_name_of_attr(srcattr);
+    if (! srcname)
+    {
+        BERROR("no name for attr");
+        return -2;
+    }
+    srcnamelen = strlen(srcname);
+
+    totlen = dstattr->value_len + srcattr->value_len + srcnamelen + 7 + 5;
+
+    if (! dstattr->value)
+    {
+        // the first value in gets a collection tag and 0 value-len
+        //
+        totlen += 1;
+    }
+    else
+    {
+        // back down over the end-of-collection we appended before
+        //
+        if (dstattr->value_len < 6)
+        {
+            BERROR("no appended end_collection");
+            return -1;
+        }
+        dstattr->value_len -= 5;
+    }
+    if (dstattr->alloc_len < totlen || ! dstattr->value)
+    {
+        // no room to add new value, or no existing value
+        //
+        // if there is a new value, alloc for tot len
+        //
+        if (srcattr->value)
+        {
+            uint8_t *newval;
+
+            dstattr->alloc_len = ipp_alloc_size(totlen);
+            newval = (uint8_t *)malloc(dstattr->alloc_len);
+            if (! newval)
+            {
+                BERROR("Alloc value");
+                return -1;
+            }
+            if (dstattr->value)
+            {
+                memcpy(newval, dstattr->value, dstattr->value_len);
+                free(dstattr->value);
+            }
+            dstattr->value = newval;
+        }
+        if (dstattr->value_len == 0)
+        {
+            // prepend collection tag
+            dstattr->value[dstattr->value_len++] = tag;
+        }
+    }
+    if (srcattr->value && srcattr->value_len)
+    {
+        // begin member - (adds 8 bytes + namelen + vallen - 1) to attr
+
+        // member value tag
+        dstattr->value[dstattr->value_len++] = IPP_TAG_MEMBERNAME;
+
+        // 0 name len
+        dstattr->value[dstattr->value_len++] = 0;
+        dstattr->value[dstattr->value_len++] = 0;
+
+        // member actual name len
+        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen >> 8);
+        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen & 0xff);
+
+        // member name
+        while (srcnamelen-- > 0)
+        {
+            dstattr->value[dstattr->value_len++] = *srcname++;
+        }
+        // member tag
+        dstattr->value[dstattr->value_len++] = srcattr->value[0];
+
+        // 0 name len
+        dstattr->value[dstattr->value_len++] = 0;
+        dstattr->value[dstattr->value_len++] = 0;
+
+        // member value (including its len, the total len isn't ever encoded)
+        memcpy(dstattr->value + dstattr->value_len, srcattr->value + 1, srcattr->value_len - 1);
+
+        dstattr->value_len += srcattr->value_len - 1;
+    }
+    // now (re)append the end_collection tag. this is a bit work but
+    // makes sending this out on the wire super simple later
+    //
+    dstattr->value[dstattr->value_len++] = IPP_TAG_END_COLLECTION;
+    dstattr->value[dstattr->value_len++] = 0;
+    dstattr->value[dstattr->value_len++] = 0;
+    dstattr->value[dstattr->value_len++] = 0;
+    dstattr->value[dstattr->value_len++] = 0;
+
+    return 0;
+}
+
 int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len)
 {
     size_t bytesleft;
@@ -1089,6 +1318,370 @@ int ipp_get_group_attr_by_index(const size_t recdex, ipp_attr_grouping_code_t gr
     return -1;
 }
 
+static int vset_attr_bool_value(
+                                ipp_attr_t *attr,
+                                size_t nvalues,
+                                va_list args
+                                /* parm list of type "bool val, ..." */
+                                )
+{
+    int result;
+    int value;
+    uint8_t bvalue;
+    size_t value_len;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        return 0;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_BOOLEAN);
+    if (result)
+    {
+        return result;
+    }
+    value = (int)va_arg(args, int);
+    bvalue = value ? 0x01 : 0x00;
+    value_len = 1;
+
+    nvalues--;
+    result = ipp_set_attr_value(attr, &bvalue, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nvalues-- > 0)
+    {
+        value = (int)va_arg(args, int);
+        bvalue = value ? 0x01 : 0x00;
+
+        result = ipp_add_attr_value(attr, &bvalue, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+static int vset_attr_int32_value(
+                                ipp_attr_t *attr,
+                                size_t nvalues,
+                                va_list args
+                                /* parm list of type "int32_t val, ..." */
+                                )
+{
+    int result;
+    int32_t value;
+    size_t value_len;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_check_type_is(attr, 2, IPP_INTEGER, IPP_ENUM);
+    if (result)
+    {
+        return result;
+    }
+    value = (int32_t)va_arg(args, int32_t);
+    value = htonl(value);
+
+    value_len = sizeof(int32_t);
+
+    nvalues--;
+    result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nvalues-- > 0)
+    {
+        value = (int32_t)va_arg(args, int32_t);
+        value = htonl(value);
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+static int vset_attr_range_value(
+                                ipp_attr_t *attr,
+                                size_t nvalues,
+                                va_list args
+                                /* parm list of type "int32_t minval, int32_t maxval, ..." */
+                                )
+{
+    int32_t minvalue;
+    int32_t maxvalue;
+    uint8_t value[8];
+    size_t value_len;
+    int result;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_reset_attr_value(attr);
+    if (result)
+    {
+        return result;
+    }
+    value_len = 2 * sizeof(int32_t);
+
+    while (nvalues-- > 0)
+    {
+        minvalue = (int32_t)va_arg(args, int32_t);
+        minvalue = htonl(minvalue);
+        maxvalue = (int32_t)va_arg(args, int32_t);
+        maxvalue = htonl(maxvalue);
+
+        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
+        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+static int vset_attr_resolution_value(
+                                ipp_attr_t *attr,
+                                size_t nvalues,
+                                va_list args
+                                /* parm list of type "int32_t xres, int32_t yres, int32_t units ..." */
+                                )
+{
+    int32_t xvalue;
+    int32_t yvalue;
+    int8_t  uvalue;
+    uint8_t value[9];
+    size_t value_len;
+    int result;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_RESOLUTION);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_reset_attr_value(attr);
+    if (result)
+    {
+        return result;
+    }
+    value_len = 2 * sizeof(int32_t) + 1;
+
+    while (nvalues-- > 0)
+    {
+        xvalue = (int32_t)va_arg(args, int32_t);
+        xvalue = htonl(xvalue);
+        yvalue = (int32_t)va_arg(args, int32_t);
+        yvalue = htonl(yvalue);
+        uvalue = (int8_t)va_arg(args, int32_t);
+
+        memcpy(value, (uint8_t *)&xvalue, sizeof(int32_t));
+        memcpy(value + sizeof(int32_t), (uint8_t*)&xvalue, sizeof(int32_t));
+        value[8] = uvalue;
+        value_len = 2 * sizeof(int32_t) + 1;
+
+        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+static int vset_attr_bytes_value(
+                                ipp_attr_t *attr,
+                                size_t nvalues,
+                                va_list args
+                                /* parm list of type "const uint8_t *value, size_t value_len, ..." */
+                                )
+{
+    uint8_t *value;
+    size_t value_len;
+    int result;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nvalues == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    value = (uint8_t *)va_arg(args, uint8_t *);
+    if (! value)
+    {
+        return -1;
+    }
+    value_len = (size_t)va_arg(args, size_t);
+
+    nvalues--;
+    result = ipp_set_attr_value(attr, value, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nvalues-- > 0)
+    {
+        value = (uint8_t *)va_arg(args, uint8_t *);
+        if (! value)
+        {
+            return -1;
+        }
+        value_len = (size_t)va_arg(args, size_t);
+
+        result = ipp_add_attr_value(attr, value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+static int vset_attr_string_value(
+                                ipp_attr_t *attr,
+                                int nstrings,
+                                va_list args
+                                /* parm list of type "const char *str, ..." */
+                                )
+{
+    char *value;
+    size_t value_len;
+    int result;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nstrings == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_check_type_is(attr, 9,
+                    IPP_TEXT, IPP_CHARSET, IPP_LANGUAGE, IPP_KEYWORD,
+                    IPP_NAME, IPP_OCTETSTRING, IPP_URI, IPP_URISCHEME, IPP_MIME);
+    if (result)
+    {
+        return result;
+    }
+    value = (char *)va_arg(args, char *);
+    if (! value)
+    {
+        return -1;
+    }
+    value_len = strlen(value);
+
+    nstrings--;
+    result = ipp_set_attr_value(attr, (uint8_t *)value, value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nstrings-- > 0)
+    {
+        value = (char *)va_arg(args, char *);
+        if (! value)
+        {
+            return -1;
+        }
+        value_len = strlen(value);
+
+        result = ipp_add_attr_value(attr, (uint8_t*)value, value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
+static int vset_attr_collection_value(
+                                ipp_attr_t *attr,
+                                int nmembers,
+                                va_list args
+                                /* parm list of type "ipp_attr_t *member, ..." */
+                                )
+{
+    ipp_attr_t *vattr;
+    size_t value_len;
+    int result;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nmembers == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_COLLECTION);
+    if (result)
+    {
+        return result;
+    }
+    ipp_reset_attr_value(attr);
+
+    while (nmembers-- > 0 && ! result)
+    {
+        vattr = (ipp_attr_t *)va_arg(args, ipp_attr_t *);
+        if (! vattr)
+        {
+            return -1;
+        }
+        while (vattr && ! result)
+        {
+            if (vattr->value)
+            {
+                result = ipp_add_member_attr_to_attr(attr, vattr);
+            }
+            vattr = vattr->next;
+        }
+    }
+    return result;
+}
+
 int ipp_get_group_attr_by_name(const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr)
 {
     ipp_attr_t *attr;
@@ -1121,12 +1714,8 @@ int ipp_set_group_attr_bool_value(
                                 )
 {
     ipp_attr_t *attr;
-    ipp_syntax_enc_t encoded_syntax;
-    int result;
     va_list args;
-    int value;
-    uint8_t bvalue;
-    size_t value_len;
+    int result;
 
     if (! name)
     {
@@ -1142,38 +1731,10 @@ int ipp_set_group_attr_bool_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_BOOLEAN);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nvalues);
-
-    value = (int)va_arg(args, int);
-    bvalue = value ? 0x01 : 0x00;
-    value_len = 1;
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, &bvalue, value_len);
-    if (result)
-    {
-        va_end(args);
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        value = (int)va_arg(args, int);
-        bvalue = value ? 0x01 : 0x00;
-
-        result = ipp_add_attr_value(attr, &bvalue, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_bool_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_group_attr_int32_value(
@@ -1185,10 +1746,8 @@ int ipp_set_group_attr_int32_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    int32_t value;
-    size_t value_len;
+    int result;
 
     if (! name)
     {
@@ -1204,39 +1763,10 @@ int ipp_set_group_attr_int32_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 2, IPP_INTEGER, IPP_ENUM);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nvalues);
-
-    value = (int32_t)va_arg(args, int32_t);
-    value = htonl(value);
-
-    value_len = sizeof(int32_t);
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
-    if (result)
-    {
-        va_end(args);
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        value = (int32_t)va_arg(args, int32_t);
-        value = htonl(value);
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_int32_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_group_attr_range_value(
@@ -1248,12 +1778,8 @@ int ipp_set_group_attr_range_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    int32_t minvalue;
-    int32_t maxvalue;
-    uint8_t value[8];
-    size_t value_len;
+    int result;
 
     if (! name)
     {
@@ -1269,36 +1795,10 @@ int ipp_set_group_attr_range_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_reset_attr_value(attr);
-
     va_start(args, nvalues);
-
-    value_len = 2 * sizeof(int32_t);
-
-    while (nvalues-- > 0)
-    {
-        minvalue = (int32_t)va_arg(args, int32_t);
-        minvalue = htonl(minvalue);
-        maxvalue = (int32_t)va_arg(args, int32_t);
-        maxvalue = htonl(maxvalue);
-
-        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
-        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_range_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_group_attr_resolution_value(
@@ -1310,13 +1810,8 @@ int ipp_set_group_attr_resolution_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    int32_t xvalue;
-    int32_t yvalue;
-    int8_t  uvalue;
-    uint8_t value[9];
-    size_t value_len;
+    int result;
 
     if (! name)
     {
@@ -1332,42 +1827,10 @@ int ipp_set_group_attr_resolution_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_RESOLUTION);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_reset_attr_value(attr);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nvalues);
-
-    value_len = 2 * sizeof(int32_t) + 1;
-
-    while (nvalues-- > 0)
-    {
-        xvalue = (int32_t)va_arg(args, int32_t);
-        xvalue = htonl(xvalue);
-        yvalue = (int32_t)va_arg(args, int32_t);
-        yvalue = htonl(yvalue);
-        uvalue = (int8_t)va_arg(args, int32_t);
-
-        memcpy(value, (uint8_t *)&xvalue, sizeof(int32_t));
-        memcpy(value + sizeof(int32_t), (uint8_t*)&xvalue, sizeof(int32_t));
-        value[8] = uvalue;
-        value_len = 2 * sizeof(int32_t) + 1;
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_resolution_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_group_attr_bytes_value(
@@ -1379,10 +1842,8 @@ int ipp_set_group_attr_bytes_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    uint8_t *value;
-    size_t value_len;
+    int result;
 
     if (! name)
     {
@@ -1399,41 +1860,9 @@ int ipp_set_group_attr_bytes_value(
         return result;
     }
     va_start(args, nvalues);
-
-    value = (uint8_t *)va_arg(args, uint8_t *);
-    if (! value)
-    {
-        va_end(args);
-        return -1;
-    }
-    value_len = (size_t)va_arg(args, size_t);
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, value, value_len);
-    if (result)
-    {
-        va_end(args);
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        value = (uint8_t *)va_arg(args, uint8_t *);
-        if (! value)
-        {
-            va_end(args);
-            return -1;
-        }
-        value_len = (size_t)va_arg(args, size_t);
-
-        result = ipp_add_attr_value(attr, value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_bytes_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_group_attr_string_value(
@@ -1445,10 +1874,8 @@ int ipp_set_group_attr_string_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    char *value;
-    size_t value_len;
+    int result;
 
     if (! name)
     {
@@ -1464,183 +1891,10 @@ int ipp_set_group_attr_string_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 9,
-                    IPP_TEXT, IPP_CHARSET, IPP_LANGUAGE, IPP_KEYWORD,
-                    IPP_NAME, IPP_OCTETSTRING, IPP_URI, IPP_URISCHEME, IPP_MIME);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nstrings);
-
-    value = (char *)va_arg(args, char *);
-    if (! value)
-    {
-        va_end(args);
-        return -1;
-    }
-    value_len = strlen(value);
-
-    nstrings--;
-    result = ipp_set_attr_value(attr, (uint8_t *)value, value_len);
-    if (result)
-    {
-        va_end(args);
-        return result;
-    }
-    while (nstrings-- > 0)
-    {
-        value = (char *)va_arg(args, char *);
-        if (! value)
-        {
-            va_end(args);
-            return -1;
-        }
-        value_len = strlen(value);
-
-        result = ipp_add_attr_value(attr, (uint8_t*)value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_string_value(attr, nstrings, args);
     va_end(args);
-    return 0;
-}
-
-int ipp_add_attr_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
-{
-    ipp_tag_t tag;
-    bool is_array;
-    const char *srcname;
-    size_t srcnamelen;
-    size_t totlen;
-    size_t tmplen;
-    uint8_t *tmpval;
-    int result;
-
-    if (! dstattr || ! srcattr)
-    {
-        return -1;
-    }
-    // get ipp tag type for result attr type
-    //
-    result = ipp_syntax_for_attr(dstattr, &tag, &is_array);
-    if (result)
-    {
-        return -1;
-    }
-    // the only attribute that can have attribute values
-    // is a collection, so insist that that is true
-    //
-    if (tag != IPP_TAG_BEGIN_COLLECTION)
-    {
-        butil_log(1, "Attempt to add attr value to non-collection %s\n",
-                        ipp_name_of_attr(dstattr));
-        return -1;
-    }
-    // get the name of the new member attr
-    //
-    srcname = ipp_name_of_attr(srcattr);
-    if (! srcname)
-    {
-        BERROR("no name for attr");
-        return -2;
-    }
-    srcnamelen = strlen(srcname);
-
-    totlen = dstattr->value_len + srcattr->value_len + srcnamelen + 7 + 5;
-
-    if (! dstattr->value)
-    {
-        // the first value in gets a collection tag and 0 value-len
-        //
-        totlen += 1;
-    }
-    else
-    {
-        // back down over the end-of-collection we appended before
-        //
-        if (dstattr->value_len < 6)
-        {
-            BERROR("no appended end_collection");
-            return -1;
-        }
-        dstattr->value_len -= 5;
-    }
-    if (dstattr->alloc_len < totlen || ! dstattr->value)
-    {
-        // no room to add new value, or no existing value
-        //
-        // if there is a new value, alloc for tot len
-        //
-        if (srcattr->value)
-        {
-            uint8_t *newval;
-
-            dstattr->alloc_len = ipp_alloc_size(totlen);
-            newval = (uint8_t *)malloc(dstattr->alloc_len);
-            if (! newval)
-            {
-                BERROR("Alloc value");
-                return -1;
-            }
-            if (dstattr->value)
-            {
-                memcpy(newval, dstattr->value, dstattr->value_len);
-                free(dstattr->value);
-            }
-            dstattr->value = newval;
-        }
-        if (dstattr->value_len == 0)
-        {
-            // prepend collection tag
-            dstattr->value[dstattr->value_len++] = tag;
-        }
-    }
-    if (srcattr->value && srcattr->value_len)
-    {
-        // begin member - (adds 8 bytes + namelen + vallen - 1) to attr
-
-        // member value tag
-        dstattr->value[dstattr->value_len++] = IPP_TAG_MEMBERNAME;
-
-        // 0 name len
-        dstattr->value[dstattr->value_len++] = 0;
-        dstattr->value[dstattr->value_len++] = 0;
-
-        // member actual name len
-        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen >> 8);
-        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen & 0xff);
-
-        // member name
-        while (srcnamelen-- > 0)
-        {
-            dstattr->value[dstattr->value_len++] = *srcname++;
-        }
-        // member tag
-        dstattr->value[dstattr->value_len++] = srcattr->value[0];
-
-        // 0 name len
-        dstattr->value[dstattr->value_len++] = 0;
-        dstattr->value[dstattr->value_len++] = 0;
-
-        // member value (including its len, the total len isn't ever encoded)
-        memcpy(dstattr->value + dstattr->value_len, srcattr->value + 1, srcattr->value_len - 1);
-
-        dstattr->value_len += srcattr->value_len - 1;
-    }
-    // now (re)append the end_collection tag. this is a bit work but
-    // makes sending this out on the wire super simple later
-    //
-    dstattr->value[dstattr->value_len++] = IPP_TAG_END_COLLECTION;
-    dstattr->value[dstattr->value_len++] = 0;
-    dstattr->value[dstattr->value_len++] = 0;
-    dstattr->value[dstattr->value_len++] = 0;
-    dstattr->value[dstattr->value_len++] = 0;
-
-    return 0;
+    return result;
 }
 
 int ipp_set_group_attr_collection_value(
@@ -1652,10 +1906,8 @@ int ipp_set_group_attr_collection_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    ipp_attr_t *vattr;
-    size_t value_len;
+    int result;
 
     if (! name)
     {
@@ -1671,32 +1923,8 @@ int ipp_set_group_attr_collection_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_COLLECTION);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nmembers);
-
-    ipp_reset_attr_value(attr);
-
-    while (nmembers-- > 0 && ! result)
-    {
-        vattr = (ipp_attr_t *)va_arg(args, ipp_attr_t *);
-        if (! vattr)
-        {
-            va_end(args);
-            return -1;
-        }
-        while (vattr && ! result)
-        {
-            if (vattr->value)
-            {
-                result = ipp_add_attr_to_attr(attr, vattr);
-            }
-            vattr = vattr->next;
-        }
-    }
+    result = vset_attr_collection_value(attr, nmembers, args);
     va_end(args);
     return result;
 }
@@ -1724,32 +1952,6 @@ int ipp_get_attr_by_name(const char *name, ipp_attr_t *attrlist, ipp_attr_t **pa
     return -1;
 }
 
-int ipp_set_attr_attr_value(
-                                const char *name,
-                                ipp_attr_t *attrlist,
-                                ipp_attr_t *vattr
-                                )
-{
-    ipp_attr_t *attr;
-    int result;
-
-    if (! name || ! attr)
-    {
-        return -1;
-    }
-    result = ipp_get_attr_by_name(name, attrlist, &attr);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_reset_attr_value(attr);
-    if (result)
-    {
-        return result;
-    }
-    return ipp_add_attr_to_attr(attr, vattr);
-}
-
 int ipp_set_attr_bool_value(
                                 const char *name,
                                 ipp_attr_t *attrlist,
@@ -1759,11 +1961,8 @@ int ipp_set_attr_bool_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    int value;
-    uint8_t bvalue;
-    size_t value_len;
+    int result;
 
     if (! name || ! attrlist)
     {
@@ -1779,38 +1978,10 @@ int ipp_set_attr_bool_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_BOOLEAN);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nvalues);
-
-    value = (int)va_arg(args, int);
-    bvalue = value ? 0x01 : 0x00;
-    value_len = 1;
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, &bvalue, value_len);
-    if (result)
-    {
-        va_end(args);
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        value = (int)va_arg(args, int);
-        bvalue = value ? 0x01 : 0x00;
-
-        result = ipp_add_attr_value(attr, &bvalue, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_bool_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_attr_int32_value(
@@ -1822,10 +1993,8 @@ int ipp_set_attr_int32_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    int32_t value;
-    size_t value_len;
+    int result;
 
     if (! name || ! attrlist)
     {
@@ -1841,39 +2010,10 @@ int ipp_set_attr_int32_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 2, IPP_INTEGER, IPP_ENUM);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nvalues);
-
-    value = (int32_t)va_arg(args, int32_t);
-    value = htonl(value);
-
-    value_len = sizeof(int32_t);
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, (uint8_t*)&value, value_len);
-    if (result)
-    {
-        va_end(args);
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        value = (int32_t)va_arg(args, int32_t);
-        value = htonl(value);
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_int32_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_attr_range_value(
@@ -1885,12 +2025,8 @@ int ipp_set_attr_range_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    int32_t minvalue;
-    int32_t maxvalue;
-    uint8_t value[8];
-    size_t value_len;
+    int result;
 
     if (! name || ! attrlist)
     {
@@ -1906,39 +2042,10 @@ int ipp_set_attr_range_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_reset_attr_value(attr);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nvalues);
-
-    value_len = 2 * sizeof(int32_t);
-
-    while (nvalues-- > 0)
-    {
-        minvalue = (int32_t)va_arg(args, int32_t);
-        minvalue = htonl(minvalue);
-        maxvalue = (int32_t)va_arg(args, int32_t);
-        maxvalue = htonl(maxvalue);
-
-        memcpy(value, (uint8_t *)&minvalue, sizeof(int32_t));
-        memcpy(value + sizeof(int32_t), (uint8_t*)&maxvalue, sizeof(int32_t));
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            return result;
-            va_end(args);
-        }
-    }
+    result = vset_attr_range_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_attr_resolution_value(
@@ -1950,13 +2057,8 @@ int ipp_set_attr_resolution_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    int32_t xvalue;
-    int32_t yvalue;
-    int8_t  uvalue;
-    uint8_t value[9];
-    size_t value_len;
+    int result;
 
     if (! name || ! attrlist)
     {
@@ -1972,42 +2074,10 @@ int ipp_set_attr_resolution_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 1, IPP_RANGEOFINT);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_reset_attr_value(attr);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nvalues);
-
-    value_len = 2 * sizeof(int32_t) + 1;
-
-    while (nvalues-- > 0)
-    {
-        xvalue = (int32_t)va_arg(args, int32_t);
-        xvalue = htonl(xvalue);
-        yvalue = (int32_t)va_arg(args, int32_t);
-        yvalue = htonl(yvalue);
-        uvalue = (int8_t)va_arg(args, int32_t);
-
-        memcpy(value, (uint8_t *)&xvalue, sizeof(int32_t));
-        memcpy(value + sizeof(int32_t), (uint8_t*)&xvalue, sizeof(int32_t));
-        value[8] = uvalue;
-        value_len = 2 * sizeof(int32_t) + 1;
-
-        result = ipp_add_attr_value(attr, (uint8_t*)&value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_resolution_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_attr_bytes_value(
@@ -2019,10 +2089,8 @@ int ipp_set_attr_bytes_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    uint8_t *value;
-    size_t value_len;
+    int result;
 
     if (! name || ! attrlist)
     {
@@ -2039,41 +2107,9 @@ int ipp_set_attr_bytes_value(
         return result;
     }
     va_start(args, nvalues);
-
-    value = (uint8_t *)va_arg(args, uint8_t *);
-    if (! value)
-    {
-        va_end(args);
-        return -1;
-    }
-    value_len = (size_t)va_arg(args, size_t);
-
-    nvalues--;
-    result = ipp_set_attr_value(attr, value, value_len);
-    if (result)
-    {
-        va_end(args);
-        return result;
-    }
-    while (nvalues-- > 0)
-    {
-        value = (uint8_t *)va_arg(args, uint8_t *);
-        if (! value)
-        {
-            va_end(args);
-            return -1;
-        }
-        value_len = (size_t)va_arg(args, size_t);
-
-        result = ipp_add_attr_value(attr, value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    result = vset_attr_bytes_value(attr, nvalues, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_set_attr_string_value(
@@ -2085,10 +2121,8 @@ int ipp_set_attr_string_value(
                                 )
 {
     ipp_attr_t *attr;
-    int result;
     va_list args;
-    char *value;
-    size_t value_len;
+    int result;
 
     if (! name || ! attrlist)
     {
@@ -2106,49 +2140,42 @@ int ipp_set_attr_string_value(
     {
         return result;
     }
-    result = ipp_check_type_is(attr, 9,
-                    IPP_TEXT, IPP_CHARSET, IPP_LANGUAGE, IPP_KEYWORD,
-                    IPP_NAME, IPP_OCTETSTRING, IPP_URI, IPP_URISCHEME, IPP_MIME);
-    if (result)
-    {
-        return result;
-    }
     va_start(args, nstrings);
+    result = vset_attr_string_value(attr, nstrings, args);
+    va_end(args);
+    return result;
+}
 
-    value = (char *)va_arg(args, char *);
-    if (! value)
+int ipp_set_attr_collection_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                int nmembers,
+                                ...
+                                /* parm list of type "ipp_attr_t *member, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    va_list args;
+    int result;
+
+    if (! name)
     {
-        va_end(args);
         return -1;
     }
-    value_len = strlen(value);
-
-    nstrings--;
-    result = ipp_set_attr_value(attr, (uint8_t *)value, value_len);
+    if (nmembers == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, attrlist, &attr);
     if (result)
     {
-        va_end(args);
         return result;
     }
-    while (nstrings-- > 0)
-    {
-        value = (char *)va_arg(args, char *);
-        if (! value)
-        {
-            va_end(args);
-            return -1;
-        }
-        value_len = strlen(value);
-
-        result = ipp_add_attr_value(attr, (uint8_t*)value, value_len);
-        if (result)
-        {
-            va_end(args);
-            return result;
-        }
-    }
+    va_start(args, nmembers);
+    result = vset_attr_collection_value(attr, nmembers, args);
     va_end(args);
-    return 0;
+    return result;
 }
 
 int ipp_dupe_attr(ipp_attr_t *attr, ipp_attr_t **dupeattr)

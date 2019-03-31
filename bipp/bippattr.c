@@ -676,13 +676,14 @@ int ipp_set_attr_from_attr_value(
     return ipp_add_attr_to_attr(attr, vattr);
 }
 
-int ipp_add_member_attr_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
+int ipp_add_member_attrs_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
 {
     ipp_tag_t tag;
     bool is_array;
     const char *srcname;
     size_t srcnamelen;
     size_t totlen;
+    bool firstvalue;
     int result;
 
     if (! dstattr || ! srcattr)
@@ -705,107 +706,140 @@ int ipp_add_member_attr_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
                         ipp_name_of_attr(dstattr));
         return -1;
     }
-    // get the name of the new member attr
-    //
-    srcname = ipp_name_of_attr(srcattr);
-    if (! srcname)
-    {
-        BERROR("no name for attr");
-        return -2;
-    }
-    srcnamelen = strlen(srcname);
+    firstvalue = true;
 
-    totlen = dstattr->value_len + srcattr->value_len + srcnamelen + 7 + 5;
-
-    if (! dstattr->value)
+    do
     {
-        // the first value in gets a collection tag and 0 value-len
-        //
-        totlen += 1;
-    }
-    else
-    {
-        // back down over the end-of-collection we appended before
-        //
-        if (dstattr->value_len < 6)
-        {
-            BERROR("no appended end_collection");
-            return -1;
-        }
-        dstattr->value_len -= 5;
-    }
-    if (dstattr->alloc_len < totlen || ! dstattr->value)
-    {
-        // no room to add new value, or no existing value
-        //
-        // if there is a new value, alloc for tot len
-        //
         if (srcattr->value)
         {
-            uint8_t *newval;
-
-            dstattr->alloc_len = ipp_alloc_size(totlen);
-            newval = (uint8_t *)malloc(dstattr->alloc_len);
-            if (! newval)
+            // get the name of the new member attr
+            //
+            srcname = ipp_name_of_attr(srcattr);
+            if (! srcname)
             {
-                BERROR("Alloc value");
-                return -1;
+                BERROR("no name for attr");
+                return -2;
             }
-            if (dstattr->value)
+            srcnamelen = strlen(srcname);
+
+            // note 32 is more than the 16 or so needed, but better to over alloc
+            // here than make mistakes counting bytes needed
+            //
+            totlen = dstattr->value_len + srcattr->value_len + srcnamelen + 32;
+
+            if (dstattr->alloc_len < totlen || ! dstattr->value)
             {
-                memcpy(newval, dstattr->value, dstattr->value_len);
-                free(dstattr->value);
+                uint8_t *newval;
+
+                // no room to add new value
+                //
+                dstattr->alloc_len = ipp_alloc_size(totlen);
+                newval = (uint8_t *)malloc(dstattr->alloc_len);
+                if (! newval)
+                {
+                    BERROR("Alloc value");
+                    return -1;
+                }
+                if (dstattr->value)
+                {
+                    memcpy(newval, dstattr->value, dstattr->value_len);
+                    free(dstattr->value);
+                }
+                dstattr->value = newval;
             }
-            dstattr->value = newval;
+            if (firstvalue)
+            {
+                // prepend collection tag
+                dstattr->value[dstattr->value_len++] = tag;
+
+                // if this is the first member value adding to a collection
+                // that already has values, this is the next collection in
+                // an array of collections, so make sure the base type is
+                // properly an array type, and add a 0 namelen to indicate
+                //
+                if (dstattr->value_len > 1)
+                {
+                    if (! is_array)
+                    {
+                        butil_log(1, "Attempt to add second value to non-array %s\n",
+                                            ipp_name_of_attr(dstattr));
+                        return -1;
+                    }
+                    // and a 0 namelen for secondary collections
+                    dstattr->value[dstattr->value_len++] = 0;
+                    dstattr->value[dstattr->value_len++] = 0;
+
+                    // and collections themselves have a 0 valuelen
+                    dstattr->value[dstattr->value_len++] = 0;
+                    dstattr->value[dstattr->value_len++] = 0;
+                }
+            }
+            // begin member - (adds 8 bytes + namelen + (vallen - 1)) to attr
+#if 1
+            // NOTE - this method matches RFC8010 for encoding member attributes, but the
+            //        code opposite this #if works as well, and might be needed for
+            //        historical IPP client implementation
+            //
+            // member value tag
+            dstattr->value[dstattr->value_len++] = IPP_TAG_MEMBERNAME;
+
+            // 0 name len
+            dstattr->value[dstattr->value_len++] = 0;
+            dstattr->value[dstattr->value_len++] = 0;
+
+            // member actual name len
+            dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen >> 8);
+            dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen & 0xff);
+
+            // member name
+            while (srcnamelen-- > 0)
+            {
+                dstattr->value[dstattr->value_len++] = *srcname++;
+            }
+            // member tag
+            dstattr->value[dstattr->value_len++] = srcattr->value[0];
+
+            // 0 name len
+            dstattr->value[dstattr->value_len++] = 0;
+            dstattr->value[dstattr->value_len++] = 0;
+#else
+            // member tag
+            dstattr->value[dstattr->value_len++] = srcattr->value[0];
+
+            // member actual name len
+            dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen >> 8);
+            dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen & 0xff);
+
+            // member name
+            while (srcnamelen-- > 0)
+            {
+                dstattr->value[dstattr->value_len++] = *srcname++;
+            }
+#endif
+            // member value (including its len, the total len isn't ever encoded)
+            memcpy(dstattr->value + dstattr->value_len, srcattr->value + 1, srcattr->value_len - 1);
+
+            dstattr->value_len += srcattr->value_len - 1;
+
+            firstvalue = false;
         }
-        if (dstattr->value_len == 0)
-        {
-            // prepend collection tag
-            dstattr->value[dstattr->value_len++] = tag;
-        }
+        // get next member
+        //
+        srcattr = srcattr->next;
     }
-    if (srcattr->value && srcattr->value_len)
-    {
-        // begin member - (adds 8 bytes + namelen + vallen - 1) to attr
+    while (! result && srcattr);
 
-        // member value tag
-        dstattr->value[dstattr->value_len++] = IPP_TAG_MEMBERNAME;
-
-        // 0 name len
-        dstattr->value[dstattr->value_len++] = 0;
-        dstattr->value[dstattr->value_len++] = 0;
-
-        // member actual name len
-        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen >> 8);
-        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen & 0xff);
-
-        // member name
-        while (srcnamelen-- > 0)
-        {
-            dstattr->value[dstattr->value_len++] = *srcname++;
-        }
-        // member tag
-        dstattr->value[dstattr->value_len++] = srcattr->value[0];
-
-        // 0 name len
-        dstattr->value[dstattr->value_len++] = 0;
-        dstattr->value[dstattr->value_len++] = 0;
-
-        // member value (including its len, the total len isn't ever encoded)
-        memcpy(dstattr->value + dstattr->value_len, srcattr->value + 1, srcattr->value_len - 1);
-
-        dstattr->value_len += srcattr->value_len - 1;
-    }
-    // now (re)append the end_collection tag. this is a bit work but
-    // makes sending this out on the wire super simple later
+    // if added any values, terminate the collection here
     //
-    dstattr->value[dstattr->value_len++] = IPP_TAG_END_COLLECTION;
-    dstattr->value[dstattr->value_len++] = 0;
-    dstattr->value[dstattr->value_len++] = 0;
-    dstattr->value[dstattr->value_len++] = 0;
-    dstattr->value[dstattr->value_len++] = 0;
-
-    return 0;
+    if (! firstvalue)
+    {
+        dstattr->value[dstattr->value_len++] = IPP_TAG_END_COLLECTION;
+        dstattr->value[dstattr->value_len++] = 0;
+        dstattr->value[dstattr->value_len++] = 0;
+        dstattr->value[dstattr->value_len++] = 0;
+        dstattr->value[dstattr->value_len++] = 0;
+    }
+    return result;
 }
 
 int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len)
@@ -1638,12 +1672,12 @@ static int vset_attr_string_value(
 
 static int vset_attr_collection_value(
                                 ipp_attr_t *attr,
-                                int nmembers,
+                                int ncollections,
                                 va_list args
                                 /* parm list of type "ipp_attr_t *member, ..." */
                                 )
 {
-    ipp_attr_t *vattr;
+    ipp_attr_t *memberattrlist;
     size_t value_len;
     int result;
 
@@ -1651,7 +1685,7 @@ static int vset_attr_collection_value(
     {
         return -1;
     }
-    if (nmembers == 0)
+    if (ncollections == 0)
     {
         // todo - think about this
         return 0;
@@ -1663,21 +1697,14 @@ static int vset_attr_collection_value(
     }
     ipp_reset_attr_value(attr);
 
-    while (nmembers-- > 0 && ! result)
+    while (ncollections-- > 0 && ! result)
     {
-        vattr = (ipp_attr_t *)va_arg(args, ipp_attr_t *);
-        if (! vattr)
+        memberattrlist = (ipp_attr_t *)va_arg(args, ipp_attr_t *);
+        if (! memberattrlist)
         {
             return -1;
         }
-        while (vattr && ! result)
-        {
-            if (vattr->value)
-            {
-                result = ipp_add_member_attr_to_attr(attr, vattr);
-            }
-            vattr = vattr->next;
-        }
+        result = ipp_add_member_attrs_to_attr(attr, memberattrlist);
     }
     return result;
 }

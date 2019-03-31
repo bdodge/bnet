@@ -572,13 +572,6 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
-
-    result |= ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
-
-    if (! result)
-    {
-        result = ipp_get_attr_by_name("media-col-default", attr, &attr);
-    }
     if (! result)
     {
         ipp_attr_t *colattr;
@@ -642,28 +635,29 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "na_letter_8.5x11in"
                                             );
-    result |= ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
 
     if (! result)
     {
-        result = ipp_get_attr_by_name("media-size-supported", attr, &attr);
-    }
-    if (! result)
-    {
-        ipp_attr_t *colattr;
+        ipp_attr_t *letattr;
+        ipp_attr_t *a4attr;
 
-        result = ipp_dupe_collection("media-size-supported", &colattr);
+        result = ipp_dupe_collection("media-size-supported", &letattr);
         if (! result)
         {
-            result |= ipp_set_attr_int32_value("x-dimension", colattr, 1, 850);
-            result |= ipp_set_attr_int32_value("y-dimension", colattr, 1, 1100);
-
-            result |= ipp_set_group_attr_collection_value(
-                                                "media-size-supported",
-                                                IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, colattr
-                                            );
+            result |= ipp_set_attr_int32_value("x-dimension", letattr, 1, 850);
+            result |= ipp_set_attr_int32_value("y-dimension", letattr, 1, 1100);
         }
+        result = ipp_dupe_collection("media-size-supported", &a4attr);
+        if (! result)
+        {
+            result |= ipp_set_attr_int32_value("x-dimension", a4attr, 1, 800);
+            result |= ipp_set_attr_int32_value("y-dimension", a4attr, 1, 1200);
+        }
+        result |= ipp_set_group_attr_collection_value(
+                                            "media-size-supported",
+                                            IPP_GROUPING_PRINTER_DESCRIPTION,
+                                            2, letattr, a4attr
+                                        );
     }
     result |= ipp_set_group_attr_string_value(
                                                 "media-supported",

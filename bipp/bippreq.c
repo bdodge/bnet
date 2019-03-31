@@ -17,8 +17,6 @@
 
 int ipp_read_uint8(ioring_t *in, uint8_t *val)
 {
-    http_client_t *client;
-
     if (! in || ! val)
     {
         return -1;
@@ -35,7 +33,6 @@ int ipp_read_uint8(ioring_t *in, uint8_t *val)
 
 int ipp_read_uint16(ioring_t *in, uint16_t *val)
 {
-    http_client_t *client;
     uint16_t uval;
 
     if (! in || ! val)
@@ -59,7 +56,6 @@ int ipp_read_uint16(ioring_t *in, uint16_t *val)
 
 int ipp_read_uint32(ioring_t *in, uint32_t *val)
 {
-    http_client_t *client;
     uint32_t uval;
 
     if (! in || ! val)

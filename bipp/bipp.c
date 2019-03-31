@@ -539,17 +539,11 @@ int ipp_send_attribute(ipp_request_t *req)
     {
         return -1;
     }
-    // translate internal syntax to ipp syntax for value type
-    //
-    result = ipp_syntax_for_enc_type(attrec->syntax, &tag, &isarray);
-    if (result)
-    {
-        return result;
-    }
     // make sure there is room in the output buffer for the attribute's name/value
     //
     namelen = strlen(attrec->name);
     vallen  = attr->value_len;
+    tag = attr->value[0];
 
     room = req->out.size - req->out.count;
 
@@ -561,7 +555,7 @@ int ipp_send_attribute(ipp_request_t *req)
         // we expect name at least to fit, but values can be huge
         // so they are split into their own chunks if needed
         //
-        if ((namelen + 3) > room)
+        if ((namelen + 5) > room)
         {
             // flush and come back exactly to here, room will be bigger
             //
@@ -572,12 +566,22 @@ int ipp_send_attribute(ipp_request_t *req)
         {
             // setup to incrementally send value bytes
             //
-            req->attr_out_value = attr->value;
-            req->attr_value_len = attr->value_len;
+            req->attr_out_value = attr->value + 1;
+            req->attr_value_len = attr->value_len - 1;
 
             // write out name and come back to write value
             //
-            result  = ipp_write_attribute_name(&req->out, tag, attrec->name);
+            result = ipp_write_attribute_name(&req->out, tag, attrec->name);
+
+            // for collection tags, insert a 0 value length
+            if (tag == IPP_TAG_BEGIN_COLLECTION)
+            {
+                result = ipp_write_int16(&req->out, 0);
+
+                // TODO - each value is actually an attibute, so send them
+                // individually as member-values and when complete, terminate
+                // this collection
+            }
             result |= ipp_move_state(req, reqReplyAttributeValue);
             if (! result)
             {
@@ -594,8 +598,19 @@ int ipp_send_attribute(ipp_request_t *req)
         }
         else
         {
-            result  = ipp_write_attribute_name(&req->out, tag, attrec->name);
-            result |= ipp_write_bytes(&req->out, attr->value, attr->value_len);
+            result = ipp_write_attribute_name(&req->out, tag, attrec->name);
+
+            // for collection tags, insert a 0 value length
+            if (tag == IPP_TAG_BEGIN_COLLECTION)
+            {
+                result |= ipp_write_int16(&req->out, 0);
+
+                // TODO - each value is actually an attibute, so send them
+                // individually as member-values and when complete, terminate
+                // this collection
+            }
+            result |= ipp_write_bytes(&req->out, attr->value + 1, attr->value_len - 1);
+
             if (! result)
             {
                 result = ipp_pop_state(req);

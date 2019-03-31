@@ -295,6 +295,8 @@ int ipp_resource_callback(
 int ipp_set_static_environment(ipp_server_t *ipp)
 {
     ipp_attr_t *attr;
+    ipp_attr_t *colattr;
+    size_t      index;
     char text[IPP_MAX_TEXT];
     int result;
 
@@ -571,37 +573,77 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
                                                 1, "none"
                                             );
-#if 0
-    result |= ipp_set_group_attr_string_value(
+
+    result |= ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+
+    if (! result)
+    {
+        result = ipp_get_attr_by_name("media-col-default", attr, &attr);
+    }
+    if (! result)
+    {
+        result = ipp_dupe_collection("media-col-default", &colattr);
+        if (! result)
+        {
+     //       result |= ipp_set_attr_string_value("media-back-coating", colattr, 1, "crap");
+            result |= ipp_set_attr_int32_value("media-bottom-margin", colattr, 1, 100);
+     //       result |= ipp_set_attr_string_value("media-color", colattr, 1, "white");
+     //       result |= ipp_set_attr_string_value("media-front-coating", colattr, 1, "ola");
+     //       result |= ipp_set_attr_string_value("media-grain", colattr, 1, "long");
+     //       result |= ipp_set_attr_int32_value("media-hole-count", colattr, 1, 333);
+     //       result |= ipp_set_attr_string_value("media-info", colattr, 1, "junk");
+     //       result |= ipp_set_attr_string_value("media-key", colattr, 1, "brass");
+            result |= ipp_set_attr_int32_value("media-left-margin", colattr, 1, 100);
+     //       result |= ipp_set_attr_int32_value("media-order-count", colattr, 1, 222);
+     //       result |= ipp_set_attr_string_value("media-pre-printed", colattr, 1, "yo");
+     //       result |= ipp_set_attr_string_value("media-recycled", colattr, 1, "yoyo");
+            result |= ipp_set_attr_int32_value("media-right-margin", colattr, 1, 100);
+     //       result |= ipp_set_attr_string_value("media-size-name", colattr, 1, "bigger");
+            result |= ipp_set_attr_string_value("media-source", colattr, 1, "tray-1");
+     //       result |= ipp_set_attr_int32_value("media-thickness", colattr, 1, 10);
+     //       result |= ipp_set_attr_string_value("media-tooth", colattr, 1, "blue");
+            result |= ipp_set_attr_int32_value("media-top-margin", colattr, 1, 100);
+            result |= ipp_set_attr_string_value("media-type", colattr, 1, "old");
+     //       result |= ipp_set_attr_int32_value("media-weight-metric", colattr, 1, 100);
+
+            result |= ipp_set_group_attr_collection_value(
                                                 "media-col-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, colattr
                                             );
-    result |= ipp_set_group_attr_string_value(
+        }
+    }
+    result |= ipp_set_group_attr_collection_value(
                                                 "media-col-ready",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, colattr
                                             );
-#endif
+
     result |= ipp_set_group_attr_string_value(
                                                 "media-col-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                5,
+                                                "media-top-margin",
+                                                "media-bottom-margin",
+                                                "media-left-margin",
+                                                "media-right-margin",
+                                                "media-source"
                                             );
+
     result |= ipp_set_group_attr_string_value(
                                                 "media-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, "na_letter_8.5x11in"
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "media-ready",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                1, "na_letter_8.5x11in"
                                             );
     result |= ipp_set_group_attr_string_value(
                                                 "media-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "none"
+                                                2,  "na_letter_8.5x11in", "iso_a4_210x297mm"
                                             );
     result |= ipp_set_group_attr_bool_value(
                                                 "multiple-document-jobs-supported",

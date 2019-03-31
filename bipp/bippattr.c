@@ -112,6 +112,86 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattrec)
     return -1;
 }
 
+#define NUM_IPP_COLLECTIONS (sizeof(s_ipp_collection_xref)/sizeof(ipp_collection_xref_t))
+
+int ipp_find_collection(const char *name, size_t *num_members, ipp_attr_rec_t **pattrec)
+{
+    ipp_attr_t *attr;
+    size_t top;
+    size_t bot;
+    size_t prevtop;
+    size_t prevbot;
+    size_t cur;
+    size_t prevcur;
+    int cmp;
+
+    if (NUM_IPP_COLLECTIONS < 1)
+    {
+        return -1;
+    }
+    // binary search in pre-sorted attribute table for name
+    //
+    top = 0;
+    bot = NUM_IPP_COLLECTIONS - 1;
+
+    prevcur = bot + 1;
+    cur = (bot + top) / 2;
+    do
+    {
+        prevtop = top;
+        prevbot = bot;
+        cmp = strcmp(name, s_ipp_collection_xref[cur].name);
+        butil_log(6, "%zu %zu %zu  %s vs %s -> %d\n",
+                top, cur, bot, name, s_ipp_collection_xref[cur].name, cmp);
+        if (cmp == 0)
+        {
+            if (num_members)
+            {
+                *num_members = s_ipp_collection_xref[cur].num_members;
+            }
+            if (pattrec)
+            {
+                *pattrec = s_ipp_collection_xref[cur].col_attr;
+            }
+            return 0;
+        }
+        else if (cmp < 0)
+        {
+            // too low, look higher
+            bot = cur;
+        }
+        else /* cmp > 0 */
+        {
+            // too high, look lower
+            top = cur;
+        }
+        prevcur = cur;
+        cur = (bot + top) / 2;
+        if (cur == prevcur)
+        {
+            // edge case: test bottom if stalled since the
+            // calculation there rounds down
+            //
+            if (cur != bot)
+            {
+                cur = bot;
+            }
+        }
+    }
+    while (prevtop != top || prevbot != bot);
+
+    if (num_members)
+    {
+        *num_members = 0;
+    }
+    if (pattrec)
+    {
+        *pattrec = NULL;
+    }
+    butil_log(3, "Didn't find coll %s\n", name);
+    return -1;
+}
+
 int ipp_get_attr_rec(ipp_attr_t *attr, ipp_attr_rec_t **pattrec)
 {
     if (! attr)
@@ -391,60 +471,6 @@ int ipp_check_type_is(ipp_attr_t *attr, size_t ntypes, ...)
     return -1;
 }
 
-int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
-{
-    size_t totlen;
-
-    if (! attr)
-    {
-        return -1;
-    }
-    totlen = value_len + 2;
-
-    if (attr->alloc_len < totlen || ! attr->value || ! value)
-    {
-        // no room for new value, or no new value at all
-        // so free any exising value and alloc for new
-        //
-        if (attr->value)
-        {
-            if (attr->alloc_len)
-            {
-                free(attr->value);
-            }
-            attr->value = NULL;
-            attr->alloc_len = 0;
-        }
-        // and if there is a new value, alloc for that
-        //
-        if (value)
-        {
-            attr->alloc_len = ipp_alloc_size(totlen);
-            attr->value = (uint8_t *)malloc(attr->alloc_len);
-            if (! attr->value)
-            {
-                BERROR("Alloc value");
-                return -1;
-            }
-        }
-    }
-    if (value)
-    {
-        attr->value_len = 0;
-
-        // append a 2 byte value-length (in network byte order!)
-        //
-        attr->value[attr->value_len++] = (uint8_t)(value_len >> 8);
-        attr->value[attr->value_len++] = (uint8_t)(value_len & 0xFF);
-
-        // then append value itself
-        //
-        memcpy(attr->value + attr->value_len, value, value_len);
-        attr->value_len += value_len;
-    }
-    return 0;
-}
-
 int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
     ipp_tag_t tag;
@@ -456,20 +482,29 @@ int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
     {
         return -1;
     }
-    if (! attr->value)
-    {
-        // first value, just set as convenience
-        return ipp_set_attr_value(attr, value, value_len);
-    }
+    // get ipp tag type for attr type
+    //
     result = ipp_syntax_for_attr(attr, &tag, &is_array);
     if (result)
     {
         return -1;
     }
-    if (! is_array)
+    if (attr->value)
     {
-        // no more than one value allowed
-        return -1;
+        if (! is_array)
+        {
+            // no more than one value allowed for non-arrays
+            //
+            butil_log(1, "Attempt to add second value to non-array %s\n",
+                                ipp_name_of_attr(attr));
+            return -1;
+        }
+        if (tag != attr->value[0])
+        {
+            butil_log(1, "Attempt to add value of type %02X to array of type %02X\n",
+                                tag, attr->value[0]);
+            return -2;
+        }
     }
     // get needed total len
     //
@@ -493,16 +528,18 @@ int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
         attr->value = new_value;
         attr->alloc_len = new_alloc_len;
     }
-    // append the tag
+    // add the tag
     //
     attr->value[attr->value_len++] = tag;
 
-    // append a 2 byte 0-length namelength. this lets
-    // the value be sent on the wire directly
-    //
-    attr->value[attr->value_len++] = 0;
-    attr->value[attr->value_len++] = 0;
-
+    if (attr->value_len > 1)
+    {
+        // append a 2 byte 0-length namelength for secondary.
+        // values. this lets (most) arrays be sent on the wire directly
+        //
+        attr->value[attr->value_len++] = 0;
+        attr->value[attr->value_len++] = 0;
+    }
     // append a 2 byte value-length
     //
     attr->value[attr->value_len++] = (uint8_t)(value_len >> 8);
@@ -513,6 +550,33 @@ int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
     attr->value_len += value_len;
 
     return 0;
+}
+
+int ipp_set_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
+{
+    int result;
+
+    if (! attr)
+    {
+        return -1;
+    }
+    // remove any existing value from attr
+    //
+    result = ipp_reset_attr_value(attr);
+    if (result)
+    {
+        return result;
+    }
+    // if there is no value, there's no value continuing
+    //
+    if (! value || ! value_len)
+    {
+        return 0;
+    }
+    // and add the value
+    //
+    result = ipp_add_attr_value(attr, value, value_len);
+    return result;
 }
 
 int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len)
@@ -531,17 +595,18 @@ int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **v
     // check if any values can remain
     //
     bytesleft = attr->value_len - (iter->val_ptr - attr->value);
-    if (bytesleft < 2)
+    if (bytesleft < 3)
     {
         return 1;
     }
     // length of each value encoded as first 2 bytes in value bytes
     //
+    iter->val_ptr++;    // skip tag
     vallen = *iter->val_ptr++;
     vallen <<= 8;
     vallen |= *iter->val_ptr++;
 
-    bytesleft -= 2;
+    bytesleft -= 3;
 
     if (bytesleft < vallen)
     {
@@ -856,6 +921,83 @@ int ipp_dupe_attr_grouping(ipp_attr_grouping_code_t grouping, ipp_attr_t **pattr
         return 0;
     }
     return ipp_dupe_attr_list(groupattrs, pattrs);
+}
+
+int ipp_dupe_collection(const char *name, ipp_attr_t **pattrs)
+{
+    ipp_attr_rec_t *colattrec;
+    ipp_attr_t *colattrslist;
+    ipp_attr_t *colattrstail;
+    ipp_attr_t *attr;
+    size_t num_members;
+    size_t member;
+    size_t recdex;
+    int result;
+
+    if (! name || ! pattrs)
+    {
+        return -1;
+    }
+    do
+    {
+        // look up collection members description in xref table
+        //
+        result = ipp_find_collection(name, &num_members, &colattrec);
+        if (result)
+        {
+            return result;
+        }
+        butil_log(6, "Looked for %s, got %s, first of %zu\n", name, colattrec->name, num_members);
+
+        // if its not an indirection, all set
+        //
+        if (colattrec->syntax[0] != IPP_NOTYPE)
+        {
+            colattrslist = NULL;
+
+            for (member = 0; member < num_members && ! result; member++)
+            {
+                // find the referenced attr in the main attribute list
+                //
+                result = ipp_find_attr_rec(colattrec[member].name, &recdex, NULL);
+                if (! result)
+                {
+                    // and make a copy of it and append to return list
+                    //
+                    attr = ipp_create_attr(recdex, NULL, 0);
+                    if (! attr)
+                    {
+                        BERROR("Alloc member attr");
+                        return -1;
+                    }
+                    if (colattrslist == NULL)
+                    {
+                        colattrslist = attr;
+                        colattrstail = attr;
+                    }
+                    colattrstail->next = attr;
+                    colattrstail = attr;
+                    colattrstail->next = NULL;
+                }
+            }
+            *pattrs = colattrslist;
+            return result;
+        }
+        // indirected, look for referenced collection
+        //
+        name = colattrec[0].name;
+
+        if (name[0] == '*')
+        {
+            // first char of name is * to indicate indirection
+            name++;
+        }
+        else
+        {
+            BERROR("Expected indirection");
+        }
+    }
+    while (! result);
 }
 
 #define IPPATTR_XREF_LINEAR 0
@@ -1367,6 +1509,198 @@ int ipp_set_group_attr_string_value(
     return 0;
 }
 
+int ipp_add_attr_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
+{
+    ipp_tag_t tag;
+    bool is_array;
+    const char *srcname;
+    size_t srcnamelen;
+    size_t totlen;
+    size_t tmplen;
+    uint8_t *tmpval;
+    int result;
+
+    if (! dstattr || ! srcattr)
+    {
+        return -1;
+    }
+    // get ipp tag type for result attr type
+    //
+    result = ipp_syntax_for_attr(dstattr, &tag, &is_array);
+    if (result)
+    {
+        return -1;
+    }
+    // the only attribute that can have attribute values
+    // is a collection, so insist that that is true
+    //
+    if (tag != IPP_TAG_BEGIN_COLLECTION)
+    {
+        butil_log(1, "Attempt to add attr value to non-collection %s\n",
+                        ipp_name_of_attr(dstattr));
+        return -1;
+    }
+    // get the name of the new member attr
+    //
+    srcname = ipp_name_of_attr(srcattr);
+    if (! srcname)
+    {
+        BERROR("no name for attr");
+        return -2;
+    }
+    srcnamelen = strlen(srcname);
+
+    totlen = dstattr->value_len + srcattr->value_len + srcnamelen + 7 + 5;
+
+    if (! dstattr->value)
+    {
+        // the first value in gets a collection tag and 0 value-len
+        //
+        totlen += 1;
+    }
+    else
+    {
+        // back down over the end-of-collection we appended before
+        //
+        if (dstattr->value_len < 6)
+        {
+            BERROR("no appended end_collection");
+            return -1;
+        }
+        dstattr->value_len -= 5;
+    }
+    if (dstattr->alloc_len < totlen || ! dstattr->value)
+    {
+        // no room to add new value, or no existing value
+        //
+        // if there is a new value, alloc for tot len
+        //
+        if (srcattr->value)
+        {
+            uint8_t *newval;
+
+            dstattr->alloc_len = ipp_alloc_size(totlen);
+            newval = (uint8_t *)malloc(dstattr->alloc_len);
+            if (! newval)
+            {
+                BERROR("Alloc value");
+                return -1;
+            }
+            if (dstattr->value)
+            {
+                memcpy(newval, dstattr->value, dstattr->value_len);
+                free(dstattr->value);
+            }
+            dstattr->value = newval;
+        }
+        if (dstattr->value_len == 0)
+        {
+            // prepend collection tag
+            dstattr->value[dstattr->value_len++] = tag;
+        }
+    }
+    if (srcattr->value && srcattr->value_len)
+    {
+        // begin member - (adds 8 bytes + namelen + vallen - 1) to attr
+
+        // member value tag
+        dstattr->value[dstattr->value_len++] = IPP_TAG_MEMBERNAME;
+
+        // 0 name len
+        dstattr->value[dstattr->value_len++] = 0;
+        dstattr->value[dstattr->value_len++] = 0;
+
+        // member actual name len
+        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen >> 8);
+        dstattr->value[dstattr->value_len++] = (uint8_t)(srcnamelen & 0xff);
+
+        // member name
+        while (srcnamelen-- > 0)
+        {
+            dstattr->value[dstattr->value_len++] = *srcname++;
+        }
+        // member tag
+        dstattr->value[dstattr->value_len++] = srcattr->value[0];
+
+        // 0 name len
+        dstattr->value[dstattr->value_len++] = 0;
+        dstattr->value[dstattr->value_len++] = 0;
+
+        // member value (including its len, the total len isn't ever encoded)
+        memcpy(dstattr->value + dstattr->value_len, srcattr->value + 1, srcattr->value_len - 1);
+
+        dstattr->value_len += srcattr->value_len - 1;
+    }
+    // now (re)append the end_collection tag. this is a bit work but
+    // makes sending this out on the wire super simple later
+    //
+    dstattr->value[dstattr->value_len++] = IPP_TAG_END_COLLECTION;
+    dstattr->value[dstattr->value_len++] = 0;
+    dstattr->value[dstattr->value_len++] = 0;
+    dstattr->value[dstattr->value_len++] = 0;
+    dstattr->value[dstattr->value_len++] = 0;
+
+    return 0;
+}
+
+int ipp_set_group_attr_collection_value(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                int nmembers,
+                                ...
+                                /* parm list of type "ipp_attr_t *member, ..." */
+                                )
+{
+    ipp_attr_t *attr;
+    int result;
+    va_list args;
+    ipp_attr_t *vattr;
+    size_t value_len;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nmembers == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_group_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    result = ipp_check_type_is(attr, 1, IPP_COLLECTION);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nmembers);
+
+    ipp_reset_attr_value(attr);
+
+    while (nmembers-- > 0 && ! result)
+    {
+        vattr = (ipp_attr_t *)va_arg(args, ipp_attr_t *);
+        if (! vattr)
+        {
+            va_end(args);
+            return -1;
+        }
+        while (vattr && ! result)
+        {
+            if (vattr->value)
+            {
+                result = ipp_add_attr_to_attr(attr, vattr);
+            }
+            vattr = vattr->next;
+        }
+    }
+    va_end(args);
+    return result;
+}
+
 int ipp_get_attr_by_name(const char *name, ipp_attr_t *attrlist, ipp_attr_t **pattr)
 {
     ipp_attr_t *attr;
@@ -1399,7 +1733,7 @@ int ipp_set_attr_attr_value(
     ipp_attr_t *attr;
     int result;
 
-    if (! name || ! attrlist)
+    if (! name || ! attr)
     {
         return -1;
     }
@@ -1408,36 +1742,12 @@ int ipp_set_attr_attr_value(
     {
         return result;
     }
-    if (attr->alloc_len < vattr->value_len || ! attr->value || ! vattr->value)
+    result = ipp_reset_attr_value(attr);
+    if (result)
     {
-        // no room for new value, or no new value at all
-        // so free any exising value and alloc for new
-        //
-        if (attr->value)
-        {
-            if (attr->alloc_len)
-            {
-                free(attr->value);
-            }
-            attr->value = NULL;
-            attr->alloc_len = 0;
-        }
-        // and if there is a new value, alloc for that
-        //
-        if (vattr->value)
-        {
-            attr->alloc_len = ipp_alloc_size(vattr->value_len);
-            attr->value = (uint8_t *)malloc(attr->alloc_len);
-            if (! attr->value)
-            {
-                BERROR("Alloc value");
-                return -1;
-            }
-            memcpy(attr->value, vattr->value, vattr->value_len);
-            attr->value_len = vattr->value_len;
-        }
+        return result;
     }
-    return 0;
+    return ipp_add_attr_to_attr(attr, vattr);
 }
 
 int ipp_set_attr_bool_value(

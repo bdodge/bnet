@@ -127,12 +127,13 @@ const char *ipp_name_of_attr    (ipp_attr_t *attr);
 int ipp_syntax_for_enc_type     (ipp_syntax_enc_t enctag[IPP_MAX_ALT_TYPES], ipp_tag_t *tag, bool *is_array);
 int ipp_base_enc_syntax_for_attr(ipp_attr_t *attr, ipp_syntax_enc_t *penc);
 
-int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
 int ipp_add_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
+int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
 
 int ipp_open_attr_value         (ipp_attr_t *attr, ipp_attr_iter_t **iter);
 int ipp_close_attr_value        (ipp_attr_iter_t *iter);
 int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
+
 int ipp_get_next_attr_bool_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int *value);
 int ipp_get_next_attr_int32_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *value);
 int ipp_get_next_attr_range_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *minvalue, int32_t *maxvalue);
@@ -149,6 +150,7 @@ int ipp_get_only_attr_string_value(ipp_attr_t *attr, char *value, size_t nvalue)
 int ipp_get_attr_for_grouping   (ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs);
 int ipp_dupe_attr_grouping      (ipp_attr_grouping_code_t grouping, ipp_attr_t **pattrs);
 int ipp_dupe_attr_list          (ipp_attr_t *attrlist, ipp_attr_t **pdupeattrs);
+int ipp_dupe_collection         (const char *name, ipp_attr_t **pdupeattrs);
 
 int ipp_get_group_attr_by_index (const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 int ipp_get_group_attr_by_name  (const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
@@ -194,6 +196,13 @@ int ipp_set_group_attr_string_value(
                                 int nstrings,
                                 ...
                                 /* parm list of type "const char *str, ..." */
+                                );
+int ipp_set_group_attr_collection_value(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                int ncollections,
+                                ...
+                                /* parm list of type ipp_attr_t *members, ..." */
                                 );
 
 int ipp_get_attr_by_name        (const char *name, ipp_attr_t *attrlist, ipp_attr_t **pattr);

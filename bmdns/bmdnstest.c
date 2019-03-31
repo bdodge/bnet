@@ -38,6 +38,15 @@ int main(int argc, char **argv)
     {
         return result;
     }
+    result = mdns_responder_run(&responder);
+    if (result)
+    {
+        butil_log(0, "Responder Failed\n");
+    }
+    else
+    {
+        butil_log(2, "Responder Exits\n");
+    }
     result = mdns_responder_deinit(&responder);
     return result;
 }

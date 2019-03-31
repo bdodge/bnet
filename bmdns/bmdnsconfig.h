@@ -20,9 +20,17 @@
 //
 #define MDNS_PORT			(5353)
 
+/// Multicast group IP4 Address
+//
+#define MDNS_MCAST_IP4ADDR 	"224.0.0.251"
+
 /// Packet max size (UDP packet payload)
 //
 #define MDNS_IO_SIZE		(1500)
+
+/// Packet pool size
+//
+#define MDNS_PACKET_POOL_SIZE	(8)
 
 #endif
 

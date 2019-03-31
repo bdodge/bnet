@@ -17,7 +17,9 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-SOURCES=$(SRCDIR)/bmdns.c
+SOURCES=$(SRCDIR)/bmdns.c		\
+		$(SRCDIR)/bmdnsutils.c
+
 HEADERS=$(SOURCES:%.c=%.h) bmdnsconfig.h $(SRCROOT)/common/bnetheaders.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
@@ -39,5 +41,6 @@ clean:
 
 $(OBJDIR)/bmdnstest.o: $(SRCDIR)/bmdnstest.c $(HEADERS)
 $(OBJDIR)/bmdns.o: $(SRCDIR)/bmdns.c $(HEADERS)
+$(OBJDIR)/bmdnsutils.o: $(SRCDIR)/bmdnsutils.c $(HEADERS)
 
 

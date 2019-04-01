@@ -134,7 +134,7 @@ static int smqtt_format_message(
 			varhdr_data  = va_arg(args, uint8_t*);
 			if (varhdr_data)
 			{
-				varhdr_len = 2 + strlen(varhdr_data);
+				varhdr_len = 2 + strlen((char*)varhdr_data);
 			}
 			else
 			{
@@ -192,7 +192,7 @@ static int smqtt_format_message(
 			varhdr_data = va_arg(args, uint8_t*);
 			if (varhdr_data)
 			{
-				varhdr_len = strlen(varhdr_data);
+				varhdr_len = strlen((char*)varhdr_data);
 		        mqx->out.data[head++] = (varhdr_len >> 8) & 0xFF;
 		        mqx->out.data[head++] = varhdr_len & 0xFF;
 			}
@@ -642,7 +642,7 @@ static int smqtt_input_phase(mqcontext_t *mqx, uint8_t *data, size_t *count)
 			return -1;
 		}
 		pdata += 2;
-		strncpy(topic, pdata, len);
+		strncpy(topic, (char*)pdata, len);
 		topic[sizeof(topic) - 1] = '\0';
 		pdata += len;
 		packet_id = (pdata[0] << 8) | pdata[1];
@@ -1522,7 +1522,9 @@ mqcontext_t *mqtt_client_create(
     if (mqx->transport == mqtWS || mqx->transport == mqtWSS)
     {
 #if MQTT_SUPPORT_WEBSOCKET
-        result = http_add_func_resource(&mqx->resources, "/mqtt", NULL, smqtt_resource, NULL);
+        result = http_add_func_resource(&mqx->resources,
+						(transport == mqtWSS) ? schemeWSS : schemeWS,
+						"/mqtt", NULL, smqtt_resource, NULL);
         if (result)
         {
             BERROR("Can't make resource");

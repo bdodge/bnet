@@ -94,6 +94,7 @@ static void tls_log(int level, const char *fmt, ...)
     }
     va_start(args, fmt);
     vprintf(fmt, args);
+    va_end(args);
 }
 
 static void iostream_tls_debug(

@@ -27,6 +27,8 @@ static int bsmtp_check_response(bsmtp_client_t *bsmtp, bsmtp_state_t next_state,
     {
         bsmtp->expected_codes[i] = (uint32_t)va_arg(args, unsigned);
     }
+    va_end(args);
+
     bsmtp->num_codes = i;
 
     if (bsmtp->line_count < 3)
@@ -194,6 +196,8 @@ static int bsmtp_append_header(bsmtp_client_t *bsmtp, const char *content, ...)
             content,
             args
             );
+    va_end(args);
+
     if (len >= (bsmtp->io.size - bsmtp->io.count - 2))
     {
         BERROR("Reply buffer overflow");

@@ -340,7 +340,7 @@ int main(int argc, char **argv)
             HTTP_ERROR("can't start server");
             return result;
         }
-        result = http_serve(&server);
+        result = http_serve(&server, NULL, NULL);
         if (result)
         {
             http_log(2, "server on port %u ends\n", server.port);

@@ -162,6 +162,7 @@ int bxml_format_element(
 			nbuf -= nfmt;
 			buf += nfmt;
 		}
+		va_end(args);
 	}
 	if (value && *value)
 	{

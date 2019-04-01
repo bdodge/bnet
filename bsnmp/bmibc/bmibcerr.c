@@ -116,6 +116,7 @@ void bmib_warning(struct tag_mib_context *parser, const char *msg, ...)
 	        parser->f_abort = true;
 	    }
 	}
+	va_end(args);
 }
 
 void bmib_error(struct tag_mib_context *parser, bmib_error_t code, const char *msg, ...)
@@ -144,5 +145,6 @@ void bmib_error(struct tag_mib_context *parser, bmib_error_t code, const char *m
 	        parser->f_abort = true;
 	    }
 	}
+	va_end(args);
 }
 

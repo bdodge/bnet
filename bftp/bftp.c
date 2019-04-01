@@ -30,6 +30,7 @@ static int bftp_check_response(bftpcontext_t *bftp, bftp_state_t next_state, siz
     {
         bftp->expected_codes[i] = (uint32_t)va_arg(args, unsigned);
     }
+    va_end(args);
     bftp->num_codes = i;
     return 0;
 }

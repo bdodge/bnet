@@ -425,7 +425,7 @@ int sip_phone(int argc, char **argv)
         BERROR("can't start server");
         return result;
     }
-    result = http_serve(&server);
+    result = http_serve(&server, NULL, NULL);
     if (result)
     {
         butil_log(2, "server on port %u ends\n", server.port);

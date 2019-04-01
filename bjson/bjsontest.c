@@ -494,7 +494,7 @@ static int runtest(json_test_entry_t *entry, size_t numentries, const char *blur
 
     for (i = 0; i < numentries; i++, entry++)
     {
-        printf("%s %d\n", blurb ? blurb : "", i);
+        printf("%s %zu\n", blurb ? blurb : "", i);
         result = bjson_find_and_copy_json_key_value(
                     entry->json, entry->key, pathdelim, entry->index, val, sizeof(val));
         if (result != entry->exp_ret)
@@ -513,7 +513,7 @@ static int runtest(json_test_entry_t *entry, size_t numentries, const char *blur
             {
                 if (entry->index)
                 {
-                    printf("  Key:%s[%d] Value:%s\n", entry->key, entry->index, val);
+                    printf("  Key:%s[%zu] Value:%s\n", entry->key, entry->index, val);
                 }
                 else
                 {

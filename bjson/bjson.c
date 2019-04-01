@@ -489,7 +489,7 @@ static int bjson_unescape_string(
 
     if (isquoted)
     {
-        bjson_syntax;
+        return bjson_syntax;
     }
     if (value)
     {

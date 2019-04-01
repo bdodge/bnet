@@ -27,6 +27,7 @@ void butil_log(uint32_t level, const char *fmt, ...)
     }
     va_start(args, fmt);
     vprintf(fmt, args);
+    va_end(args);
 }
 
 void butil_set_log_level(uint32_t newlevel)

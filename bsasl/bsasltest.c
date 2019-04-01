@@ -15,6 +15,7 @@
  */
 #include "bsasl.h"
 #include "bstreamio.h"
+#include "butil.h"
 
 /* Username:	*/
 static const char *s_username = "user";
@@ -79,7 +80,7 @@ static int compareRaw(const char *label, uint8_t *actual,  const uint8_t *expect
 	butil_log(level, "Compare %s:\n", label);
 	if (actual_len != expected_len)
 	{
-		fprintf(stderr, "Actual Len=%u  Expected=%u\n", actual_len, expected_len);
+		fprintf(stderr, "Actual Len=%zu  Expected=%zu\n", actual_len, expected_len);
 		return -1;
 	}
     for (i = 0; i < actual_len; i++)
@@ -117,7 +118,7 @@ static int compareRaw(const char *label, uint8_t *actual,  const uint8_t *expect
 	return 0;
 }
 
-static int compareHex(const char *label, uint8_t *actual,  const uint8_t *expected, size_t actual_len, size_t expected_len)
+static int compareHex(const char *label, uint8_t *actual, const uint8_t *expected, size_t actual_len, size_t expected_len)
 {
 	uint8_t rawval[256];
     uint8_t xv, vv;
@@ -126,7 +127,7 @@ static int compareHex(const char *label, uint8_t *actual,  const uint8_t *expect
 
 	if (expected_len != 2 * actual_len)
 	{
-		fprintf(stderr, "Actual Len=%u  Expected=%u, should be %u\n", actual_len, expected_len, 2 * actual_len);
+		fprintf(stderr, "Actual Len=%zu  Expected=%zu, should be %zu\n", actual_len, expected_len, 2 * actual_len);
 		return -1;
 	}
 	for (i = 0; i < actual_len; i++)
@@ -146,7 +147,7 @@ static int compareHex(const char *label, uint8_t *actual,  const uint8_t *expect
 int main(int argc, char **argv)
 {
 	bsasl_auth_t *sasl;
-	uint8_t abuf[2048];
+	char abuf[2048];
 	int result;
 
 	butil_set_log_level(5);
@@ -234,7 +235,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "decode cfm failed\n");
 		return -1;
 	}
-	result = compareRaw("clientFinalMessage", sasl->clientFinalMessage, abuf, sasl->clientFinalMessage_len, result - 1);
+	result = compareRaw("clientFinalMessage", sasl->clientFinalMessage, (uint8_t*)abuf, sasl->clientFinalMessage_len, result - 1);
 	if (result)
 	{
 		return -1;

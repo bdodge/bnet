@@ -459,6 +459,8 @@ int http_append_reply(http_client_t *client, const char *content, ...)
             content,
             args
             );
+    va_end(args);
+
     if (len >= (client->out.size - client->out.count - 2))
     {
         HTTP_ERROR("Reply buffer overflow");

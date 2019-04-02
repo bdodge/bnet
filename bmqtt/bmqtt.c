@@ -843,6 +843,9 @@ static int smqtt_resource(
 		}
         break;
 
+    case httpDownloadDone:
+        return 0;
+
     case httpComplete:
 
         butil_log(5, "MQTT: complete\n");

@@ -17,14 +17,16 @@
 #include "bippattr.h"
 #include "bipplib.h"
 
-static uint16_t s_ipp_port = 6310;
+static uint16_t s_ipp_open_port = 6310;
+static uint16_t s_ipp_secure_port = 6311;
 
 static int usage (const char *program)
 {
     fprintf(stderr, "Use: %s [-lpu]\n", program);
     fprintf(stderr, "     -u    Run unit tests\n");
     fprintf(stderr, "     -l    Set debug log level (default 1: errors/warnings only)\n");
-    fprintf(stderr, "     -p    Use port number (default %u)\n", s_ipp_port);
+    fprintf(stderr, "     -p    Use open port number (default %u), 0 to disable open port\n", s_ipp_open_port);
+    fprintf(stderr, "     -s    Use TLS port number (default %u), 0 to disable TLS port\n", s_ipp_secure_port);
     return 1;
 }
 
@@ -33,7 +35,8 @@ int main(int argc, char **argv)
     const char *program;
     int result;
     uint32_t uval;
-    uint16_t port;
+    uint16_t open_port;
+    uint16_t secure_port;
     int loglevel;
     bool s_unit_test;
     char *arg;
@@ -56,9 +59,9 @@ int main(int argc, char **argv)
     loglevel = 5;
     butil_set_log_level(loglevel);
 
-    port = s_ipp_port;
+    open_port = s_ipp_open_port;
+    secure_port = s_ipp_secure_port;
     s_unit_test = false;
-    port = 6310;
 
     while (argc > 0 && ! result)
     {
@@ -69,6 +72,7 @@ int main(int argc, char **argv)
             {
             case 'l':
             case 'p':
+            case 's':
             {
                 if (arg[2] == '\0')
                 {
@@ -93,7 +97,11 @@ int main(int argc, char **argv)
                 }
                 else if (arg[1] == 'p')
                 {
-                    port = uval;
+                    open_port = uval;
+                }
+                else if (arg[1] == 's')
+                {
+                    secure_port = uval;
                 }
                 else
                 {
@@ -182,7 +190,7 @@ int main(int argc, char **argv)
             return result;
         }
 #endif
-        result = ipp_server(program, port, false, "./printout");
+        result = ipp_server(program, open_port, secure_port, "./printout");
 
         #ifdef BMEM_H
         bmem_stats(5);

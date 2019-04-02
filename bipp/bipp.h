@@ -37,7 +37,7 @@ typedef struct tag_ipp_server
 {
     /// path and port we serve on
     char                path[IPP_MAX_TEXT];
-    uint16_t            port;
+    uint16_t            open_port;
     uint16_t            secure_port;
     uint16_t            web_port;
 
@@ -49,8 +49,10 @@ typedef struct tag_ipp_server
     /// ipp scheme handle
     butil_url_scheme_t   scheme;
 
-    /// http server context
-    http_server_t       server;
+    /// http server context list, open port server an secure server
+    http_server_t      *servers;
+    http_server_t      *open_server;
+    http_server_t      *secure_server;
 
     /// next job id
     uint32_t            job_id;

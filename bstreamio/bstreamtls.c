@@ -401,7 +401,6 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
 
     if (! instream)
     {
-        instream->close(instream);
         return NULL;
     }
     tls = (tlsctx_t *)malloc(sizeof(tlsctx_t));
@@ -522,13 +521,6 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
     return stream;
 }
 
-// Our certificate chain, created by
-//
-//
-
-
-// Our private key, created by
-//
 int iostream_tls_prolog(void)
 {
     mbedtls_entropy_context  entropy;

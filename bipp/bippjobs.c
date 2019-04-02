@@ -54,7 +54,8 @@ int ipp_sink_job_data(ipp_request_t *req)
             // ignore result, nothing can be done
 
             result = ipp_complete_job(req->ipp, job);
-            // again, not much can be done
+
+            return result;
         }
         result = job->print_stream->poll(
                     job->print_stream, writeable, 0, 100000);

@@ -861,12 +861,20 @@ int ipp_set_environment(ipp_server_t *ipp)
     }
     // for uri of printers ipp url
     //
-    result = butil_paste_url(ipp->print_uri, sizeof(ipp->print_uri), ipp->scheme, hostname, ipp->port, ipp->path);
+    result = butil_paste_url(ipp->print_uri, sizeof(ipp->print_uri),
+                                ipp->scheme, hostname, ipp->open_port, ipp->path);
     if (result)
     {
         return result;
     }
-    result = butil_paste_url(ipp->web_uri, sizeof(ipp->web_uri), schemeHTTP, hostname, ipp->web_port, "/");
+    result = butil_paste_url(ipp->secure_print_uri, sizeof(ipp->secure_print_uri),
+                                ipp->scheme, hostname, ipp->secure_port, ipp->path);
+    if (result)
+    {
+        return result;
+    }
+    result = butil_paste_url(ipp->web_uri, sizeof(ipp->web_uri),
+                                schemeHTTP, hostname, ipp->web_port, "/");
     if (result)
     {
         return result;
@@ -944,7 +952,7 @@ int ipp_on_idle(void *priv)
     return 0;
 }
 
-int ipp_server(const char *program, uint16_t port, bool isTLS, const char *print_path)
+int ipp_server(const char *program, uint16_t open_port, uint16_t secure_port, const char *print_path)
 {
     ipp_server_t *ipp;
     http_resource_t *resources = NULL;
@@ -999,8 +1007,8 @@ int ipp_server(const char *program, uint16_t port, bool isTLS, const char *print
     strncpy(ipp->stream_path, print_path, sizeof(ipp->stream_path) - 1);
     ipp->stream_path[sizeof(ipp->stream_path) - 1] = '\0';
 
-    ipp->port = port;
-    ipp->secure_port = 443;
+    ipp->open_port = open_port;
+    ipp->secure_port = secure_port;
     ipp->web_port = 8080;
 
     strncpy(ipp->path, "/ipp", sizeof(ipp->path) - 1);
@@ -1016,7 +1024,6 @@ int ipp_server(const char *program, uint16_t port, bool isTLS, const char *print
     {
         return result;
     }
-
     // handle all HTTP scheme urls in callback
     //
     result = http_add_func_resource(&resources, schemeHTTP,  ipp->path,
@@ -1026,23 +1033,80 @@ int ipp_server(const char *program, uint16_t port, bool isTLS, const char *print
         BERROR("can't make resource");
         return result;
     }
-    // set use-tls for certain ports
-    //
-    result = http_server_init(&ipp->server, resources, ipp->port, httpTCP, isTLS);
-    if (result)
-    {
-        BERROR("can't start server");
-        return result;
-    }
-    // set an idle-loop callback to do time-keeping jobs
-    //
+    ipp->servers = NULL;
 
-    result = http_serve(&ipp->server, ipp_on_idle, (void*)ipp);
-    if (result)
+    do // try
     {
-        butil_log(2, "server on port %u ends\n", ipp->server.port);
+        // init open port server if wanted
+        //
+        if (ipp->open_port != 0)
+        {
+            ipp->open_server = (http_server_t *)malloc(sizeof(http_server_t));
+            if (! ipp->open_server)
+            {
+                BERROR("can't alloc server");
+                result = -1;
+                break;
+            }
+            result = http_server_init(ipp->open_server, resources, ipp->open_port, httpTCP, false);
+            if (result)
+            {
+                BERROR("can't start server");
+                result = -1;
+                break;
+            }
+            ipp->servers = ipp->open_server;
+        }
+        // set use-tls for secure ports
+        //
+        if (ipp->secure_port != 0)
+        {
+            ipp->secure_server = (http_server_t *)malloc(sizeof(http_server_t));
+            if (! ipp->secure_server)
+            {
+                BERROR("can't alloc server");
+                result = 1;
+                break;
+            }
+            result = http_server_init(ipp->secure_server, resources, ipp->secure_port, httpTCP, true);
+            if (result)
+            {
+                BERROR("can't start server");
+                result = -1;
+                break;
+            }
+            if (ipp->servers)
+            {
+                ipp->servers->next = ipp->secure_server;
+            }
+            else
+            {
+                ipp->servers = ipp->secure_server;
+            }
+        }
     }
-    http_server_cleanup(&ipp->server);
+    while (0); // catch
+
+    if (! result)
+    {
+        // set an idle-loop callback to do time-keeping jobs and serve on all servers
+        //
+        result = http_serve(ipp->servers, ipp_on_idle, (void*)ipp);
+        if (result)
+        {
+            butil_log(2, "servers end\n");
+        }
+    }
+    if (ipp->open_server)
+    {
+        http_server_cleanup(ipp->open_server);
+        free(ipp->open_server);
+    }
+    if (ipp->secure_server)
+    {
+        http_server_cleanup(ipp->secure_server);
+        free(ipp->secure_server);
+    }
     return result;
 }
 

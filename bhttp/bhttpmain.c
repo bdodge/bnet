@@ -80,6 +80,9 @@ int echo_callback(
         *count = bytes;
         break;
 
+    case httpDownloadDone:
+        break;
+
     case httpComplete:
         break;
 

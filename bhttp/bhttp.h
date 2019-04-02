@@ -115,6 +115,7 @@ typedef enum
     httpSendRequest,
     httpHeaders,
     httpMultipartHeaders,
+    httpTLSsocketUpgrade,
     httpWebSocketUpgrade,
     httpHandleReadRequest,
     httpHandleSendRequest,
@@ -175,6 +176,9 @@ typedef struct http_client
     bool                dav_no_root;
     int                 dav_depth_in;
     int                 dav_depth_at;
+    #endif
+    #if HTTP_SUPPORT_TLS
+    bool                tls_upgrade;
     #endif
     #if HTTP_SUPPORT_WEBSOCKET
     bool                ws_upgrade;

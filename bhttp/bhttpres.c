@@ -390,6 +390,9 @@ int http_canned_callback(
         // pretend like we took it all
         return 0;
 
+    case httpDownloadDone:
+        return 0;
+
     case httpUploadData:
         moved = *count;
         have  = resource->resource.canned_data.count - offset;

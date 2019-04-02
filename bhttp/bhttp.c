@@ -71,6 +71,9 @@ http_client_t *http_client_create(http_resource_t *resources, bool isclient)
     client->use100    = false;
     client->expect100 = false;
     client->redirects = 0;
+    #if HTTP_SUPPORT_TLS
+    client->tls_upgrade = false;
+    #endif
     #if HTTP_SUPPORT_WEBSOCKET
     client->ws_upgrade = false;
     client->ws_key[0] = '\0';
@@ -795,9 +798,9 @@ static int http_process_header(http_client_t *client, char *header)
         #endif
     }
     #endif
-    #if HTTP_SUPPORT_WEBSOCKET
     else if (! http_ncasecmp(header, "upgrade:"))
     {
+        #if HTTP_SUPPORT_WEBSOCKET
         if (! http_ncasecmp(value, "websocket"))
         {
             if (! client->isclient)
@@ -806,7 +809,19 @@ static int http_process_header(http_client_t *client, char *header)
             }
             client->ws_upgrade = true;
         }
+        #endif
+        #if HTTP_SUPPORT_WEBSOCKET
+        if (! http_ncasecmp(value, "tls"))
+        {
+            if (! client->isclient)
+            {
+                http_log(5, "TLS upgrade requested\n");
+            }
+            client->tls_upgrade = true;
+        }
+        #endif
     }
+    #if HTTP_SUPPORT_WEBSOCKET
     else if (! http_ncasecmp(header, "sec-websocket-version:"))
     {
         client->ws_version = strtoul(value, NULL, 10);
@@ -992,6 +1007,7 @@ static const char *http_state_name(http_state_t state)
     case httpSendRequest:       return "Request (send)";
     case httpHeaders:           return "Headers";
     case httpMultipartHeaders:  return "Headers (multipart)";
+    case httpTLSsocketUpgrade:  return "TLS Upgrade";
     case httpWebSocketUpgrade:  return "WebSocket Upgrade";
     case httpHandleReadRequest: return "Handle Request (read)";
     case httpHandleSendRequest: return "Handle Request (send)";
@@ -1047,6 +1063,9 @@ int http_client_slice(http_client_t *client)
             // input is starting
             http_client_reinit(client, false);
 
+    #if HTTP_SUPPORT_TLS
+            client->tls_upgrade = false;
+    #endif
     #if HTTP_SUPPORT_WEBSOCKET
             // insist client re-ask for upgrade
             client->ws_upgrade = false;
@@ -1733,6 +1752,49 @@ int http_client_slice(http_client_t *client)
         }
         break;
 #endif
+#if HTTP_SUPPORT_TLS
+    case httpTLSsocketUpgrade:
+
+        if (client->tls_upgrade)
+        {
+            // stage one, reply on regular stream
+            //
+            client->tls_upgrade = false;
+
+            result = http_begin_reply(client, 101, "Switching Protocols");
+            result |= http_append_reply(client, "Upgrade: TLS/1.2,HTTP/1.1");
+            result |= http_append_reply(client, "Connection: Upgrade");
+            result |= http_append_reply(client, "Content-Length: 0");
+            result |= http_append_reply(client, "");
+            //result |= http_append_reply(client, "");
+
+            return http_send_out_data(client, httpSendReply, httpTLSsocketUpgrade);
+        }
+        else
+        {
+            iostream_t *stream;
+
+            client->in.count = 0;
+            client->in.head = 0;
+            client->in.tail = 0;
+
+            client->out.count = 0;
+            client->out.head = 0;
+            client->out.tail = 0;
+
+            // wrap io stream in TLS stream
+            //
+            stream = iostream_tls_create_from_iostream(client->stream, false);
+            if (! stream)
+            {
+                HTTP_ERROR("TLS upgrade failed");
+                client->stream = NULL;
+                return http_slice_fatal(client, -1);
+            }
+            client->stream = stream;
+        }
+        break;
+#endif
     case httpHandleSendRequest:
         // client is sending req to server
         if (client->resource && client->resource->callback)
@@ -1818,7 +1880,7 @@ int http_client_slice(http_client_t *client)
         {
             // If NO content-length specifying method was in the headers
             // then assume its "till connection is over" except in those
-            // cases where http required a length (put/post)
+            // cases where http requires a length (put/post)
             //
             #if HTTP_SUPPORT_WEBSOCKET
             if (client->ws_upgrade)
@@ -1827,6 +1889,16 @@ int http_client_slice(http_client_t *client)
                 // of the http request if any, reply to the upgrade and start a websocket
                 //
                 client->state = httpWebSocketUpgrade;
+                break;
+            }
+            #endif
+            #if HTTP_SUPPORT_TLS
+            if (client->tls_upgrade)
+            {
+                // client requested a websocket upgrade, so now that we read the body
+                // of the http request if any, reply to the upgrade and start a websocket
+                //
+                client->state = httpTLSsocketUpgrade;
                 break;
             }
             #endif
@@ -1885,6 +1957,16 @@ int http_client_slice(http_client_t *client)
                 // of the http request if any, reply to the upgrade and start a websocket
                 //
                 client->state = httpWebSocketUpgrade;
+                break;
+            }
+            #endif
+            #if HTTP_SUPPORT_TLS
+            if (client->tls_upgrade)
+            {
+                // client requested a websocket upgrade, so now that we read the body
+                // of the http request if any, reply to the upgrade and start a websocket
+                //
+                client->state = httpTLSsocketUpgrade;
                 break;
             }
             #endif

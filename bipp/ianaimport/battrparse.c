@@ -146,6 +146,7 @@ const char *group_code_to_name(ipp_attr_grouping_code_t code, bool plainname)
 		case IPP_GROUPING_PRINTER_STATUS: return "prtstat";
 		case IPP_GROUPING_SUBSCRIPTION_STATUS: return "substat";
 		case IPP_GROUPING_SUBSCRIPTION_TEMPLATE: return "subtemp";
+		default: break;
 		}
 	}
 	else
@@ -164,6 +165,7 @@ const char *group_code_to_name(ipp_attr_grouping_code_t code, bool plainname)
 		case IPP_GROUPING_PRINTER_STATUS: return "IPP_GROUPING_PRINTER_STATUS";
 		case IPP_GROUPING_SUBSCRIPTION_STATUS: return "IPP_GROUPING_SUBSCRIPTION_STATUS";
 		case IPP_GROUPING_SUBSCRIPTION_TEMPLATE: return "IPP_GROUPING_SUBSCRIPTION_TEMPLATE";
+		default: break;
 		}
 	}
 	return "??????";
@@ -187,7 +189,7 @@ int32_t range_value(char **vstr, bool isstr)
 				return 0x7fffffff;
 			}
 		}
-		else if (pv[1] = 'I')
+		else if (pv[1] == 'I')
 		{
 			if (pv[2] == 'N')
 			{

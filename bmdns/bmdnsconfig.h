@@ -32,5 +32,9 @@
 //
 #define MDNS_PACKET_POOL_SIZE	(8)
 
+/// Max number of labels in a name
+//
+#define MDNS_MAX_LABELS			(132)
+
 #endif
 

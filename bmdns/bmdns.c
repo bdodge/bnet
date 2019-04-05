@@ -133,101 +133,6 @@ int mdns_check_input(mdns_responder_t *res)
     return 0;
 }
 
-static bool mdns_question_relates(
-                                    mdns_responder_t *res,
-                                    dns_domain_name_t *dname,
-                                    uint16_t type,
-                                    uint16_t clas,
-                                    dns_domain_name_t **matched_name
-                                 )
-{
-    mdns_interface_t *iface;
-    mdns_service_t *service;
-    int cmp;
-
-    if (matched_name)
-    {
-        *matched_name = NULL;
-    }
-    // only care about classes/types we care about
-    //
-    if (clas != DNS_CLASS_IN && clas != DNS_CLASS_ANY)
-    {
-        return false;
-    }
-    switch (type)
-    {
-    case DNS_RRTYPE_A:
-    case DNS_RRTYPE_PTR:
-    case DNS_RRTYPE_SRV:
-    case DNS_RRTYPE_TXT:
-    case DNS_RRTYPE_AAAA:
-    case DNS_RRTYPE_ANY:
-        break;
-    default:
-        return false;
-        break;
-    }
-    // match against all the names we care about (host, ip, services)
-    //
-    for (
-            iface = res->interfaces;
-            iface && (type != DNS_RRTYPE_SRV) && (type != DNS_RRTYPE_TXT);
-            iface = iface->next
-    )
-    {
-        cmp = mdns_compare_names(&iface->hostname, dname);
-        if (! cmp)
-        {
-            butil_log(4, "**Matched iface %s\n", mdns_str_for_domain_name(dname));
-            if (matched_name)
-            {
-                *matched_name = &iface->hostname;
-            }
-            return true;
-        }
-    }
-    for (
-            service = res->services;
-            service && (type != DNS_RRTYPE_A) && (type != DNS_RRTYPE_AAAA);
-            service = service->next
-    )
-    {
-        butil_log(7, " cmp srv to %s\n", mdns_str_for_domain_name(dname));
-        cmp = mdns_compare_names(&service->usr_domain_name, dname);
-        if (! cmp)
-        {
-            butil_log(4, "**Matched usr service\n");
-            if (matched_name)
-            {
-                *matched_name = &service->usr_domain_name;
-            }
-            return true;
-        }
-        cmp = mdns_compare_names(&service->srv_domain_name, dname);
-        if (! cmp)
-        {
-            butil_log(4, "**Matched srv service\n");
-            if (matched_name)
-            {
-                *matched_name = &service->usr_domain_name;
-            }
-            return true;
-        }
-        cmp = mdns_compare_names(&service->sub_domain_name, dname);
-        if (! cmp)
-        {
-            butil_log(4, "**Matched sub service to\n");
-            if (matched_name)
-            {
-                *matched_name = &service->usr_domain_name;
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
 static int mdns_rewrite_header(ioring_t *io, mdns_packet_t *outpkt)
 {
     int cur_head;
@@ -236,8 +141,18 @@ static int mdns_rewrite_header(ioring_t *io, mdns_packet_t *outpkt)
 
     result = 0;
 
-    cur_head = io->head;
-    cur_count = io->count;
+    if (outpkt->io.count == 0)
+    {
+        // first time in, pretend we already have a header
+        //
+        cur_head = MDNS_OFF_QUESTION;
+        cur_count = MDNS_OFF_QUESTION;
+    }
+    else
+    {
+        cur_head = io->head;
+        cur_count = io->count;
+    }
     io->head = 0;
     io->count = 0;
 
@@ -254,26 +169,29 @@ static int mdns_rewrite_header(ioring_t *io, mdns_packet_t *outpkt)
     return result;
 }
 
-int mdns_query_respond(
+static int mdns_query_respond(
                             mdns_responder_t *res,
                             mdns_packet_t *outpkt,
                             dns_domain_name_t *fqdn,
                             uint16_t type,
                             uint16_t clas,
                             uint32_t ttl,
-                            uint16_t port,
+                            mdns_interface_t *iface,
+                            mdns_service_t *service,
                             dns_domain_name_t *dname
                          )
 {
     int reslen;
     int result;
 
-    if (outpkt->io.count == 0)
+    // caller should have incremented whichever count
+    // this response goes in before calling here
+    //
+    // (re) write packet header with updated info
+    result = mdns_rewrite_header(&outpkt->io, outpkt);
+    if (result)
     {
-        // first RR, offset by header which gets updated later
-        //
-        outpkt->io.count = MDNS_OFF_QUESTION;
-        outpkt->io.head = outpkt->io.count;
+        return result;
     }
     // write name
     result = mdns_write_name(&outpkt->io, fqdn);
@@ -297,7 +215,7 @@ int mdns_query_respond(
     switch (type)
     {
     case DNS_RRTYPE_PTR:
-        reslen = dname->tot_len + dname->num_labels + 1;
+        reslen = DNS_NAME_LENGTH(dname);
         result  = mdns_write_uint16(&outpkt->io, reslen);
         result |= mdns_write_name(&outpkt->io, dname);
         if (result)
@@ -306,20 +224,16 @@ int mdns_query_respond(
         }
         break;
     case DNS_RRTYPE_TXT:
-        reslen = 10;
+        reslen = DNS_TXT_LENGTH(dname);
         result  = mdns_write_uint16(&outpkt->io, reslen);
-        result |= mdns_write_uint8(&outpkt->io, 9);
-        strcpy(outpkt->io.data + outpkt->io.head, "txtvers=1");
-        // TODO - properly handle txt records
-        outpkt->io.count += 9;
-        outpkt->io.head += 9;
+        result |= mdns_write_name(&outpkt->io, dname);
         if (result)
         {
             return result;
         }
         break;
     case DNS_RRTYPE_SRV:
-        reslen = dname->tot_len + dname->num_labels + 1 + 6;
+        reslen = DNS_NAME_LENGTH(dname) + 6;
         result  = mdns_write_uint16(&outpkt->io, reslen);
         // write priority
         result |= mdns_write_uint16(&outpkt->io, 55);
@@ -334,7 +248,7 @@ int mdns_query_respond(
             return result;
         }
         // write port
-        result |= mdns_write_uint16(&outpkt->io, port);
+        result |= mdns_write_uint16(&outpkt->io, service->port);
         if (result)
         {
             return result;
@@ -347,19 +261,282 @@ int mdns_query_respond(
         }
         break;
     case DNS_RRTYPE_A:
+        result = mdns_write_uint16(&outpkt->io, 4);
+        result |= mdns_write_uint32(&outpkt->io, iface->ipv4addr);
+        if (result)
+        {
+            return result;
+        }
+        break;
     case DNS_RRTYPE_AAAA:
     case DNS_RRTYPE_ANY:
     default:
         butil_log(5, "  RR type %d is ignored in PTR\n", type);
         return -1;
     }
-    // increment answer count
-    outpkt->ancount++;
+    return 0;
+}
 
-    // (re) write packet header with updated info
-    result = mdns_rewrite_header(&outpkt->io, outpkt);
+static int mdns_answer_question(
+                                    mdns_responder_t  *res,
+                                    dns_domain_name_t *dname,
+                                    uint16_t type,
+                                    uint16_t clas,
+                                    mdns_packet_t *outpkt
+                                 )
+{
+    mdns_interface_t *iface;
+    mdns_service_t *service;
+    int cmp;
+    bool added_srv;
+    int result;
 
-    return result;
+    // only care about classes/types we care about
+    //
+    if (clas != DNS_CLASS_IN && clas != DNS_CLASS_ANY)
+    {
+        return false;
+    }
+    switch (type)
+    {
+    case DNS_RRTYPE_A:
+    case DNS_RRTYPE_PTR:
+    case DNS_RRTYPE_SRV:
+    case DNS_RRTYPE_TXT:
+    case DNS_RRTYPE_AAAA:
+    case DNS_RRTYPE_ANY:
+        break;
+    default:
+        return false;
+    }
+    result = 0;
+    added_srv = false;
+
+    // match against all the names we care about (host, ip, services)
+    //
+    if (
+            type == DNS_RRTYPE_PTR
+        ||  type == DNS_RRTYPE_A
+        ||  type == DNS_RRTYPE_AAAA
+        ||  type == DNS_RRTYPE_ANY
+    )
+    {
+        for (iface = res->interfaces; iface && ! result; iface = iface->next)
+        {
+            cmp = mdns_compare_names(&iface->hostname, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**==Matched iface %s\n", mdns_str_for_domain_name(dname));
+                result = mdns_query_respond(res, outpkt, dname, type, clas, iface->ttl, iface, NULL, dname);
+            }
+        }
+        for (service = res->services; service; service = service->next)
+        {
+            cmp = mdns_compare_names(&service->usr_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**==Matched usr service\n");
+                outpkt->ancount++;
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                     service->interface, service, &service->usr_domain_name);
+            }
+            cmp = mdns_compare_names(&service->srv_domain_name, dname);
+            if (! cmp)
+            {
+                outpkt->ancount++;
+                butil_log(4, "**==Matched srv service\n");
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                     service->interface, service, &service->usr_domain_name);
+            }
+            cmp = mdns_compare_names(&service->sub_domain_name, dname);
+            if (! cmp)
+            {
+                outpkt->ancount++;
+                butil_log(4, "**==Matched sub service\n");
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                     service->interface, service, &service->usr_domain_name);
+            }
+        }
+    }
+    if (type == DNS_RRTYPE_SRV)
+    {
+
+        for (service = res->services; service; service = service->next)
+        {
+            cmp = mdns_compare_names(&service->usr_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**==Matched usr service\n");
+                outpkt->ancount++;
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                service->interface, service, &service->interface->hostname);
+                added_srv = true;
+            }
+            cmp = mdns_compare_names(&service->srv_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**==Matched srv service\n");
+                outpkt->ancount++;
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                service->interface, service, &service->interface->hostname);
+                added_srv = true;
+            }
+            cmp = mdns_compare_names(&service->sub_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**==Matched sub service\n");
+                outpkt->ancount++;
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                service->interface, service, &service->interface->hostname);
+                added_srv = true;
+            }
+        }
+    }
+    if (type == DNS_RRTYPE_TXT || type == DNS_RRTYPE_ANY)
+    {
+        for (service = res->services; service; service = service->next)
+        {
+            cmp = mdns_compare_names(&service->usr_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**t=Matched usr service\n");
+                outpkt->ancount++;
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                service->interface, service, &service->txt_records);
+            }
+            cmp = mdns_compare_names(&service->srv_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**t=Matched srv service\n");
+                outpkt->ancount++;
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                               service->interface, service, &service->txt_records);
+            }
+            cmp = mdns_compare_names(&service->sub_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**t=Matched sub service\n");
+                outpkt->ancount++;
+                result = mdns_query_respond(res, outpkt, dname, type, clas, service->ttl,
+                                                service->interface, service, &service->txt_records);
+            }
+        }
+    }
+    if (added_srv)
+    {
+        // add address record if added a srv record to match service instance, but in additional section
+        //
+        for (service = res->services; service; service = service->next)
+        {
+            cmp = mdns_compare_names(&service->usr_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**S=Matched usr service\n");
+                outpkt->arcount++;
+                result = mdns_query_respond(res, outpkt, &service->interface->hostname,
+                                                DNS_RRTYPE_A, clas, service->ttl,
+                                                service->interface, service, &service->usr_domain_name);
+            }
+            cmp = mdns_compare_names(&service->srv_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**S=Matched srv service\n");
+                outpkt->arcount++;
+                result = mdns_query_respond(res, outpkt, &service->interface->hostname,
+                                DNS_RRTYPE_A, clas, service->ttl,
+                                                service->interface, service, &service->usr_domain_name);
+            }
+            cmp = mdns_compare_names(&service->sub_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**S=Matched sub service\n");
+                outpkt->arcount++;
+                result = mdns_query_respond(res, outpkt, &service->interface->hostname,
+                                DNS_RRTYPE_A, clas, service->ttl,
+                                                service->interface, service, &service->usr_domain_name);
+            }
+        }
+    }
+    return false;
+}
+
+static bool mdns_question_relates(
+                                    mdns_responder_t  *res,
+                                    dns_domain_name_t *dname,
+                                    uint16_t type,
+                                    uint16_t clas
+                                 )
+{
+    mdns_interface_t *iface;
+    mdns_service_t *service;
+    int cmp;
+
+    // only care about classes/types we care about
+    //
+    if (clas != DNS_CLASS_IN && clas != DNS_CLASS_ANY)
+    {
+        return false;
+    }
+    switch (type)
+    {
+    case DNS_RRTYPE_A:
+    case DNS_RRTYPE_PTR:
+    case DNS_RRTYPE_SRV:
+    case DNS_RRTYPE_TXT:
+    case DNS_RRTYPE_AAAA:
+    case DNS_RRTYPE_ANY:
+        break;
+    default:
+        return false;
+    }
+    // match against all the names we care about (host, ip, services)
+    //
+    if (
+            type == DNS_RRTYPE_PTR
+        ||  type == DNS_RRTYPE_A
+        ||  type == DNS_RRTYPE_AAAA
+        ||  type == DNS_RRTYPE_ANY
+    )
+    {
+        for (iface = res->interfaces; iface; iface = iface->next)
+        {
+            cmp = mdns_compare_names(&iface->hostname, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**Matched iface %s\n", mdns_str_for_domain_name(dname));
+                return true;
+            }
+        }
+    }
+    if (
+            type == DNS_RRTYPE_PTR
+        ||  type == DNS_RRTYPE_SRV
+        ||  type == DNS_RRTYPE_TXT
+    )
+    {
+        for (service = res->services; service; service = service->next)
+        {
+            cmp = mdns_compare_names(&service->usr_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**Matched usr service\n");
+                return true;
+            }
+            cmp = mdns_compare_names(&service->srv_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**Matched srv service\n");
+                return true;
+            }
+            cmp = mdns_compare_names(&service->sub_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(4, "**Matched sub service\n");
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 int mdns_handle_input(mdns_responder_t *res, mdns_packet_t *inpkt)
@@ -456,7 +633,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_packet_t *inpkt)
         isunicast |= (clas & (1 << 15)) ? true : false;
         clas &= ~(1 << 15);
 
-        we_care = mdns_question_relates(res, &domain_name, type, clas, &matched_name);
+        we_care = mdns_question_relates(res, &domain_name, type, clas);
         if (we_care)
         {
             num_matches++;
@@ -550,19 +727,10 @@ int mdns_handle_input(mdns_responder_t *res, mdns_packet_t *inpkt)
             switch (type)
             {
             case DNS_RRTYPE_A:
-                butil_log(5, "  RR type A: IPv4 Address\n");
-                break;
             case DNS_RRTYPE_PTR:
-                butil_log(5, "  RR type PTR: hostname\n");
-                break;
             case DNS_RRTYPE_AAAA:
-                butil_log(5, "  RR type A: IPv6 Address\n");
-                break;
             case DNS_RRTYPE_ANY:
-                butil_log(5, "  RR type ANY\n");
-                break;
             default:
-                butil_log(5, "  RR type %d is ignored\n", type);
                 break;
             }
         }
@@ -616,77 +784,32 @@ int mdns_handle_input(mdns_responder_t *res, mdns_packet_t *inpkt)
 
         // for questions we care about, either interface, or service, respond
         //
-        we_care = mdns_question_relates(res, &domain_name, type, clas, &matched_name);
-        if (we_care)
+        if (! MDNS_FLAG_QR(inpkt->flags))
         {
-            if (! MDNS_FLAG_QR(inpkt->flags))
+            if (! outpkt)
             {
+                // create an output packet to store reply in
+                //
+                outpkt = mdns_pkt_alloc(res);
                 if (! outpkt)
                 {
-                    // create an output packet to store reply in
-                    //
-                    outpkt = mdns_pkt_alloc(res);
-                    if (! outpkt)
-                    {
-                        butil_log(3, "Can't respond: no inpkts\n");
-                        return 0; // todo ?
-                    }
-                    outpkt->id = inpkt->id;
-                    outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
+                    butil_log(3, "Can't respond: no inpkts\n");
+                    return 0; // todo ?
                 }
-                // a query, handle the questions
-                //
-                switch (type)
-                {
-                case DNS_RRTYPE_A:
-                    butil_log(5, "  RR type A: IPv4 Address\n");
-                    break;
-                case DNS_RRTYPE_PTR:
-                    butil_log(5, "  RR type PTR: hostname\n");
-                    result = mdns_query_respond(
-                                            res, outpkt, &domain_name,
-                                            type, clas,
-                                            430,
-                                            0,
-                                            matched_name
-                                            );
-                    break;
-                case DNS_RRTYPE_SRV:
-                    butil_log(5, "  RR type PTR: Service Target\n");
-                    result = mdns_query_respond(
-                                            res, outpkt, &domain_name,
-                                            type, clas,
-                                            430,
-                                            res->services->port, // fix me
-                                            matched_name
-                                            );
-                    break;
-                case DNS_RRTYPE_TXT:
-                    butil_log(5, "  RR type TXT: TeXt Records\n");
-                    result = mdns_query_respond(
-                                            res, outpkt, &domain_name,
-                                            type, clas,
-                                            430,
-                                            res->services->port, // fix me
-                                            matched_name
-                                            );
-                    break;
-                case DNS_RRTYPE_AAAA:
-                    butil_log(5, "  RR type A: IPv6 Address\n");
-                    break;
-                case DNS_RRTYPE_ANY:
-                    butil_log(5, "  RR type ANY\n");
-                    break;
-                default:
-                    butil_log(5, "  RR type %d is ignored\n", type);
-                    break;
-                }
+                outpkt->id = inpkt->id;
+                outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
             }
-            else
+            if (type == DNS_RRTYPE_TXT)
             {
-                // a response
-                //
+                volatile int a;
+                a = type;
             }
+            result = mdns_answer_question(res, &domain_name, type, clas, outpkt);
+        }
+        else
+        {
+            // a response
+            //
         }
     }
     if (outpkt)
@@ -817,7 +940,7 @@ int mdns_responder_run(mdns_responder_t *res)
     while (! result);
 }
 
-int mdns_responder_add_interface(mdns_responder_t *res, const char *hostname, uint32_t ipv4addr)
+int mdns_responder_add_interface(mdns_responder_t *res, const char *hostname, uint32_t ipv4addr, uint32_t ttl)
 {
     mdns_interface_t *iface;
 
@@ -831,6 +954,7 @@ int mdns_responder_add_interface(mdns_responder_t *res, const char *hostname, ui
         butil_log(0, "Can't alloc interface for %s\n", hostname);
         return -1;
     }
+    iface->ttl = ttl;
     iface->next = res->interfaces;
     res->interfaces = iface;
     return 0;
@@ -838,10 +962,13 @@ int mdns_responder_add_interface(mdns_responder_t *res, const char *hostname, ui
 
 int mdns_responder_add_service(
                                 mdns_responder_t *res,
+                                mdns_interface_t *iface,
                                 const char *usrname,
                                 const char *srvname,
                                 mdns_service_protocol_t proto,
-                                uint16_t port
+                                uint16_t port,
+                                const char *txtrecs,
+                                uint32_t ttl
                               )
 {
     mdns_service_t *service;
@@ -858,8 +985,10 @@ int mdns_responder_add_service(
         butil_log(0, "Can't alloc service for %s\n", name);
         return -1;
     }
+    service->interface = iface;
     service->proto = proto;
     service->port = port;
+    service->ttl = ttl;
 
     // create a domain name like "_username._servicename._proto.local"
     //
@@ -931,6 +1060,14 @@ int mdns_responder_add_service(
     // convert to domain name struct
     //
     result = mdns_unflatten_name(name, &service->sub_domain_name);
+    if (result)
+    {
+        free(service);
+        return result;
+    }
+    // break comma separated txt recs into labels
+    //
+    result = mdns_unflatten_txt(txtrecs, &service->txt_records);
     if (result)
     {
         free(service);

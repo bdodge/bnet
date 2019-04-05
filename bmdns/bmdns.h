@@ -41,8 +41,13 @@ typedef struct tag_dns_domain_name
     int         num_labels;             ///< count of labels set
     int         tot_len;                ///< total length of labels
 }
-dns_domain_name_t;
+dns_domain_name_t, dns_txt_records_t;
 
+// the only difference between dns names and txtrec storage is
+// that dns names will have a 0 byte terminator
+//
+#define DNS_NAME_LENGTH(d) ((d)->tot_len + (d)->num_labels + 1)
+#define DNS_TXT_LENGTH(d) ((d)->tot_len + (d)->num_labels)
 
 typedef struct tag_dns_packet
 {
@@ -70,6 +75,7 @@ typedef struct tag_in_interface
 {
     dns_domain_name_t hostname;         ///< interface's hostname
     uint32_t          ipv4addr;         ///< IPv4 Address
+    uint32_t          ttl;              ///< time to live for iface answers
     struct tag_in_interface *next;      ///< link
 }
 mdns_interface_t;
@@ -84,11 +90,14 @@ mdns_service_protocol_t;
 
 typedef struct tag_mdns_service
 {
+    mdns_interface_t *interface;        ///< Interface service is providing its service on
     dns_domain_name_t usr_domain_name;  ///< FDQN with user name, in a dns struct (like "My Pages._http._tcp.local")
     dns_domain_name_t srv_domain_name;  ///< FDQN with srv name, in a dns struct (like "_http._tcp.local")
     dns_domain_name_t sub_domain_name;  ///< FDQN with sub srv, in a dns struct (like "_universal._sub._http._tcp.local")
     mdns_service_protocol_t proto;      ///< Protocol (tcp or udp)
     uint16_t                port;       ///< service port (like 80)
+    dns_txt_records_t txt_records;      ///< service's txt records (like "txtvers=1")
+    uint32_t          ttl;              ///< time to live for service answers
     struct tag_mdns_service *next;      ///< link
 }
 mdns_service_t;
@@ -153,14 +162,18 @@ int mdns_responder_run(mdns_responder_t *res);
 int mdns_responder_add_interface(
                                 mdns_responder_t *responder,
                                 const char *hostname,
-                                uint32_t ipv4addr
+                                uint32_t ipv4addr,
+                                uint32_t ttl
                                 );
 int mdns_responder_add_service(
                                 mdns_responder_t *responder,
+                                mdns_interface_t *iface,
                                 const char *srvname,
                                 const char *dnsname,
                                 mdns_service_protocol_t proto,
-                                uint16_t port
+                                uint16_t port,
+                                const char *txtrecs,
+                                uint32_t ttl
                                 );
 int mdns_responder_init(mdns_responder_t *responder);
 int mdns_responder_deinit(mdns_responder_t *responder);

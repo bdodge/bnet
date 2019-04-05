@@ -453,7 +453,7 @@ static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int coun
     return 0;
 }
 
-int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
+static int mdns_unflatten_delimited_str(const char *name, const char delim, dns_domain_name_t *dname)
 {
     int label_off;
     int off;
@@ -493,13 +493,13 @@ int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
         label_off = off++;
         dname->num_labels++;
 
-        while (name[off] && name[off] != '.')
+        while (name[off] && name[off] != delim)
         {
             off++;
         }
         result = mdns_insert_label(dname, name + label_off, off - label_off);
 
-        if (name[off] == '.')
+        if (name[off] == delim)
         {
             off++;
         }
@@ -507,6 +507,16 @@ int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
     while (! result && c != '\0');
 
     return result;
+}
+
+int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
+{
+    return mdns_unflatten_delimited_str(name, '.', dname);
+}
+
+int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
+{
+    return mdns_unflatten_delimited_str(name, ',', txtrec);
 }
 
 int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
@@ -554,7 +564,6 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
                 result = -1;
                 break;
             }
-            dname->num_labels++;
         }
         else
         {
@@ -615,6 +624,8 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
         }
         else
         {
+            dname->num_labels++;
+
             // normal text, validate count
             //
             count = (int)(unsigned)c;
@@ -725,11 +736,45 @@ int mdns_write_int32(ioring_t *out, int32_t val)
     return mdns_write_uint32(out, (uint32_t)val);
 }
 
-int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
+int mdns_write_text(ioring_t *out, const dns_txt_records_t *txtrec)
 {
     int totlen;
     int len;
     int label_dex;
+
+    if (! out || ! txtrec)
+    {
+        return -1;
+    }
+    totlen = txtrec->tot_len + txtrec->num_labels;
+
+    if (totlen > MDNS_MAX_TEXT)
+    {
+        return -1;
+    }
+    if ((out->count + totlen) > out->size)
+    {
+        return 1;
+    }
+    for (label_dex = 0; label_dex < txtrec->num_labels; label_dex++)
+    {
+        len = txtrec->labels[label_dex].length;
+
+        out->data[out->head++] = (uint8_t)len;
+        out->count++;
+
+        memcpy(out->data + out->head, txtrec->labels[label_dex].name, len);
+
+        out->head += len;
+        out->count += len;
+    }
+    return 0;
+}
+
+int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
+{
+    int totlen;
+    int result;
 
     if (! out || ! dname)
     {
@@ -745,21 +790,13 @@ int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
     {
         return 1;
     }
-    for (label_dex = 0; label_dex < dname->num_labels; label_dex++)
+    result = mdns_write_text(out, dname);
+    if (! result)
     {
-        len = dname->labels[label_dex].length;
-
-        out->data[out->head++] = (uint8_t)len;
+        out->data[out->head++] = (uint8_t)0;
         out->count++;
-
-        memcpy(out->data + out->head, dname->labels[label_dex].name, len);
-
-        out->head += len;
-        out->count += len;
     }
-    out->data[out->head++] = (uint8_t)0;
-    out->count++;
-    return 0;
+    return result;
 }
 
 int mdns_assemble_name(uint8_t *buffer, int nbuffer, int ncomponents, ...)

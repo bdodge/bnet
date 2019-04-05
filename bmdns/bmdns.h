@@ -102,8 +102,22 @@ typedef struct tag_mdns_service
 }
 mdns_service_t;
 
+typedef enum
+{
+    MDNS_PROBE_1,
+    MDNS_PROBE_2,
+    MDNS_PROBE_3,
+    MDNS_ANNOUNCE_1,
+    MDNS_ANNOUNCE_2,
+    MDNS_RUN,
+    MDNS_BYE
+}
+mdns_state_t;
+
 typedef struct tag_mdns_responder
 {
+    mdns_state_t state;                 ///< current state
+
     mdns_interface_t *interfaces;       ///< list of managed interfaces
     mdns_service_t   *services;         ///< list of managed services
 

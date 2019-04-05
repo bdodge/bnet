@@ -16,6 +16,13 @@
 #include "bmdns.h"
 #include "bmdnsutils.h"
 
+// TODO
+//    compress outgoing names
+//    unicast reply
+//    probe
+//    conflict resolution
+//    finish announce
+//
 int mdns_handle_output(mdns_responder_t *res, mdns_packet_t *pkt)
 {
     struct sockaddr_in dstaddr;
@@ -226,7 +233,7 @@ static int mdns_query_respond(
     case DNS_RRTYPE_TXT:
         reslen = DNS_TXT_LENGTH(dname);
         result  = mdns_write_uint16(&outpkt->io, reslen);
-        result |= mdns_write_name(&outpkt->io, dname);
+        result |= mdns_write_text(&outpkt->io, dname);
         if (result)
         {
             return result;
@@ -312,13 +319,23 @@ static int mdns_answer_question(
     result = 0;
     added_srv = false;
 
+    if (type == DNS_RRTYPE_ANY)
+    {
+        // just call the individual types by hand
+        //
+        result = mdns_answer_question(res, dname, DNS_RRTYPE_PTR, clas, outpkt);
+        result |= mdns_answer_question(res, dname, DNS_RRTYPE_TXT, clas, outpkt);
+        result |= mdns_answer_question(res, dname, DNS_RRTYPE_SRV, clas, outpkt);
+        result |= mdns_answer_question(res, dname, DNS_RRTYPE_A, clas, outpkt);
+        result |= mdns_answer_question(res, dname, DNS_RRTYPE_AAAA, clas, outpkt);
+        return result;
+    }
     // match against all the names we care about (host, ip, services)
     //
     if (
             type == DNS_RRTYPE_PTR
         ||  type == DNS_RRTYPE_A
         ||  type == DNS_RRTYPE_AAAA
-        ||  type == DNS_RRTYPE_ANY
     )
     {
         for (iface = res->interfaces; iface && ! result; iface = iface->next)
@@ -358,9 +375,8 @@ static int mdns_answer_question(
             }
         }
     }
-    if (type == DNS_RRTYPE_SRV)
+    if (type == DNS_RRTYPE_SRV || type == DNS_RRTYPE_ANY)
     {
-
         for (service = res->services; service; service = service->next)
         {
             cmp = mdns_compare_names(&service->usr_domain_name, dname);
@@ -397,7 +413,7 @@ static int mdns_answer_question(
         for (service = res->services; service; service = service->next)
         {
             cmp = mdns_compare_names(&service->usr_domain_name, dname);
-            if (! cmp)
+            if (! cmp || type == DNS_RRTYPE_ANY)
             {
                 butil_log(4, "**t=Matched usr service\n");
                 outpkt->ancount++;
@@ -429,7 +445,7 @@ static int mdns_answer_question(
         for (service = res->services; service; service = service->next)
         {
             cmp = mdns_compare_names(&service->usr_domain_name, dname);
-            if (! cmp)
+            if (! cmp || type == DNS_RRTYPE_ANY)
             {
                 butil_log(4, "**S=Matched usr service\n");
                 outpkt->arcount++;
@@ -443,7 +459,7 @@ static int mdns_answer_question(
                 butil_log(4, "**S=Matched srv service\n");
                 outpkt->arcount++;
                 result = mdns_query_respond(res, outpkt, &service->interface->hostname,
-                                DNS_RRTYPE_A, clas, service->ttl,
+                                                DNS_RRTYPE_A, clas, service->ttl,
                                                 service->interface, service, &service->usr_domain_name);
             }
             cmp = mdns_compare_names(&service->sub_domain_name, dname);
@@ -452,7 +468,7 @@ static int mdns_answer_question(
                 butil_log(4, "**S=Matched sub service\n");
                 outpkt->arcount++;
                 result = mdns_query_respond(res, outpkt, &service->interface->hostname,
-                                DNS_RRTYPE_A, clas, service->ttl,
+                                                DNS_RRTYPE_A, clas, service->ttl,
                                                 service->interface, service, &service->usr_domain_name);
             }
         }
@@ -585,15 +601,15 @@ int mdns_handle_input(mdns_responder_t *res, mdns_packet_t *inpkt)
     inpkt->io.tail = query_start_tail;
     inpkt->io.count = inpkt->io.head - inpkt->io.tail;
 
-#if 0
-    // ignore authoritative packets from random port
+    #if 1
+    // silently ignore authoritative packets from random port
     //
-    if (MDNS_FLAG_AA(inpkt->flags) && inpkt->srcaddr.sin_port != MDNS_PORT)
+    if (MDNS_FLAG_AA(inpkt->flags) && htons(inpkt->srcaddr.sin_port) != MDNS_PORT)
     {
-        butil_log(5, "Ingore AA on port %u\n", (uint32_t)htons(inpkt->srcaddr.sin_port));
+        butil_log(8, "Ingore AA on port %u\n", (uint32_t)htons(inpkt->srcaddr.sin_port));
         return 0;
     }
-#endif
+    #endif
     // First, parse all of the questions, ignoring them, just to get to the answers.
     // We process the answers first, which allows us to NOT build replies that aren't
     // needed, and that simplifies everything else by never having to undo / unwind
@@ -793,16 +809,11 @@ int mdns_handle_input(mdns_responder_t *res, mdns_packet_t *inpkt)
                 outpkt = mdns_pkt_alloc(res);
                 if (! outpkt)
                 {
-                    butil_log(3, "Can't respond: no inpkts\n");
+                    butil_log(3, "Can't respond: no outpkts\n");
                     return 0; // todo ?
                 }
                 outpkt->id = inpkt->id;
                 outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
-            }
-            if (type == DNS_RRTYPE_TXT)
-            {
-                volatile int a;
-                a = type;
             }
             result = mdns_answer_question(res, &domain_name, type, clas, outpkt);
         }
@@ -848,11 +859,84 @@ int mdns_handle_input(mdns_responder_t *res, mdns_packet_t *inpkt)
     return result;
 }
 
+int mdns_announce(mdns_responder_t *res)
+{
+    mdns_service_t *service;
+    mdns_packet_t *outpkt;
+    int result;
+
+    for (service = res->services; service; service = service->next)
+    {
+        // create an output packet to store reply in
+        //
+        outpkt = mdns_pkt_alloc(res);
+        if (! outpkt)
+        {
+            butil_log(3, "Can't announce: no outpkts\n");
+            return -1;
+        }
+        outpkt->id = 0;
+        outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
+
+        butil_log(5, "Announcing service %s\n", mdns_str_for_domain_name(&service->usr_domain_name));
+
+        result = mdns_answer_question(res, &service->usr_domain_name, DNS_RRTYPE_ANY, DNS_CLASS_IN, outpkt);
+        if (result)
+        {
+            break;
+        }
+        if (outpkt->io.count == 0)
+        {
+            // didn't use outpack
+            //
+            mdns_pkt_free(res, outpkt);
+        }
+        else
+        {
+            // queue output packet for sending
+            //
+            butil_log(5, "Made %d bytes for pkt %p\n", outpkt->io.count, outpkt);
+
+            if (! res->outpkts)
+            {
+                res->outpkts = outpkt;
+            }
+            else
+            {
+                mdns_packet_t *pend;
+
+                for (pend = res->outpkts; pend->next;)
+                {
+                    pend = pend->next;
+                }
+                pend->next = outpkt;
+            }
+            outpkt->next = NULL;
+        }
+    }
+    return result;
+}
+
 int mdns_responder_slice(mdns_responder_t *res)
 {
     mdns_packet_t *pkt;
     int result;
 
+    switch (res->state)
+    {
+    case MDNS_PROBE_1:
+    case MDNS_PROBE_2:
+    case MDNS_PROBE_3:
+        res->state = MDNS_ANNOUNCE_2;
+        break;
+    case MDNS_ANNOUNCE_1:
+    case MDNS_ANNOUNCE_2:
+        res->state = MDNS_RUN;
+        result = mdns_announce(res);
+        break;
+    default:
+        break;
+    }
     // check output queue
     //
     if (res->outpkts)
@@ -1168,6 +1252,11 @@ int mdns_responder_init(mdns_responder_t *res)
     // create probe records for any registered services
     // (todo)
     //
+
+    // start out in probe state
+    //
+    res->state = MDNS_PROBE_1;
+
     return result;
 }
 

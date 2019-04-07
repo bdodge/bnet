@@ -24,6 +24,10 @@
 //
 #define MDNS_MCAST_IP4ADDR 	"224.0.0.251"
 
+/// Multicast IP6 Address
+//
+#define MDNS_MCAST_IP6ADDR  "FF02::FB"
+
 /// Packet max size (UDP packet payload)
 //
 #define MDNS_IO_SIZE		(1500)
@@ -34,7 +38,7 @@
 
 /// Max number of labels in a name
 //
-#define MDNS_MAX_LABELS			(132)
+#define MDNS_MAX_LABELS			(64)
 
 #endif
 

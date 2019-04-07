@@ -25,7 +25,11 @@
 // RFC 1035 Limits
 //
 #define MDNS_MAX_LABEL  (64)
-#define MDNS_MAX_TEXT   (256)
+#define MDNS_MAX_DNTEXT (256)
+
+// Limit payload of RR
+//
+#define MDNS_MAX_TRTEXT (MDNS_IO_SIZE - 256)
 
 typedef struct tag_dns_label
 {
@@ -41,7 +45,22 @@ typedef struct tag_dns_domain_name
     int         num_labels;             ///< count of labels set
     int         tot_len;                ///< total length of labels
 }
-dns_domain_name_t, dns_txt_records_t;
+dns_domain_name_t;
+
+typedef struct tag_txt_rec
+{
+    char        name[MDNS_MAX_DNTEXT];  ///< one text record
+    int         length;                 ///< length of recrod
+}
+dns_txtr_t;
+
+typedef struct tag_dns_txt_record
+{
+    dns_txtr_t  labels[MDNS_MAX_LABELS];///< list of records
+    int         num_labels;             ///< count of labels
+    int         tot_len;                ///< total length of labels text
+}
+dns_txt_records_t;
 
 // the only difference between dns names and txtrec storage is
 // that dns names will have a 0 byte terminator
@@ -54,8 +73,13 @@ typedef struct tag_dns_packet
     ioring_t    io;                     ///< io ring for parsing data
     uint8_t     data[MDNS_IO_SIZE];     ///< the packet itself
 
-    struct sockaddr_in  srcaddr;        ///< source address of packet
-    uint32_t tts_msec;                  ///< when to send, milliseconds absolute
+    bool        isv6addr;               ///< what type of src addr
+    bipv4addr_t srcaddr4;               ///< source address of packet (if ipv4)
+    bipv6addr_t srcaddr6;               ///< source address of packet (if ipv6)
+    uint16_t    srcport;                ///< source port of packet
+
+    uint32_t    tts_msec;               ///< when to send, milliseconds absolute
+    bool        unicast;                ///< send unicast
 
     /// header
     uint16_t    id;
@@ -65,43 +89,14 @@ typedef struct tag_dns_packet
     uint16_t    nscount;
     uint16_t    arcount;
 
-    uint32_t    ttl;                    /// TTL in seconds in cache for answer
+    uint32_t    ttl;                    ///< TTL in seconds in cache for answer
 
     struct tag_dns_packet *next;        ///< link
 }
 mdns_packet_t;
 
-typedef struct tag_in_interface
-{
-    dns_domain_name_t hostname;         ///< interface's hostname
-    uint32_t          ipv4addr;         ///< IPv4 Address
-    uint32_t          ttl;              ///< time to live for iface answers
-    struct tag_in_interface *next;      ///< link
-}
-mdns_interface_t;
-
-typedef enum
-{
-    MDNS_SRVPROTO_NONE,
-    MDNS_SRVPROTO_UDP,
-    MDNS_SRVPROTO_TCP
-}
-mdns_service_protocol_t;
-
-typedef struct tag_mdns_service
-{
-    mdns_interface_t *interface;        ///< Interface service is providing its service on
-    dns_domain_name_t usr_domain_name;  ///< FDQN with user name, in a dns struct (like "My Pages._http._tcp.local")
-    dns_domain_name_t srv_domain_name;  ///< FDQN with srv name, in a dns struct (like "_http._tcp.local")
-    dns_domain_name_t sub_domain_name;  ///< FDQN with sub srv, in a dns struct (like "_universal._sub._http._tcp.local")
-    mdns_service_protocol_t proto;      ///< Protocol (tcp or udp)
-    uint16_t                port;       ///< service port (like 80)
-    dns_txt_records_t txt_records;      ///< service's txt records (like "txtvers=1")
-    uint32_t          ttl;              ///< time to live for service answers
-    struct tag_mdns_service *next;      ///< link
-}
-mdns_service_t;
-
+/// State of mdns on a particular interface
+//
 typedef enum
 {
     MDNS_PROBE_1,
@@ -114,18 +109,58 @@ typedef enum
 }
 mdns_state_t;
 
+struct tag_mdns_service;
+
+/// Interface descriptor
+//
+typedef struct tag_in_interface
+{
+    dns_domain_name_t   hostname;       ///< interface's hostname
+    mdns_state_t        state;          ///< current state
+    struct tag_mdns_service
+                       *services;       ///< list of managed services
+
+    bipv4addr_t         ipv4addr;       ///< IPv4 address
+    bipv6addr_t         ipv6addr;       ///< IPv6 address
+    uint32_t            ttl;            ///< time to live
+    socket_t            in_sock;        ///< udp listenter bound to MDNS port 5353
+    socket_t            out_sock;       ///< udp multicast sender bound to high port
+    mdns_packet_t      *inpkts;         ///< list of packets to look at from input
+    mdns_packet_t      *outpkts;        ///< list of packets to send, sorted by delay
+
+    struct tag_in_interface *next;      ///< link
+}
+mdns_interface_t;
+
+typedef enum
+{
+    MDNS_SRVPROTO_NONE,
+    MDNS_SRVPROTO_UDP,
+    MDNS_SRVPROTO_TCP
+}
+mdns_service_protocol_t;
+
+/// Service descriptor
+//
+typedef struct tag_mdns_service
+{
+    mdns_interface_t *interface;        ///< Interface service is providing its service on
+    dns_domain_name_t usr_domain_name;  ///< FDQN with user name, in a dns struct (like "My Pages._http._tcp.local")
+    dns_domain_name_t srv_domain_name;  ///< FDQN with srv name, in a dns struct (like "_http._tcp.local")
+    dns_domain_name_t sub_domain_name;  ///< FDQN with sub srv, in a dns struct (like "_universal._sub._http._tcp.local")
+    mdns_service_protocol_t proto;      ///< Protocol (tcp or udp)
+    uint16_t                port;       ///< service port (like 80)
+    dns_txt_records_t       txt_records;///< service's txt records (like "txtvers=1")
+    uint32_t                ttl;        ///< time to live for service answers
+    struct tag_mdns_service *next;      ///< link
+}
+mdns_service_t;
+
+/// The responder
+//
 typedef struct tag_mdns_responder
 {
-    mdns_state_t state;                 ///< current state
-
     mdns_interface_t *interfaces;       ///< list of managed interfaces
-    mdns_service_t   *services;         ///< list of managed services
-
-    socket_t in_sock;                   ///< udp listenter bound to MDNS port 5353
-    socket_t out_sock;                  ///< udp multicast sender bound to high port
-
-    mdns_packet_t *inpkts;              ///< list of packets to look at
-    mdns_packet_t *outpkts;             ///< list of packets to send, sorted by delay
 
     mdns_packet_t *pkt_free;            ///< alloc packet list
     mdns_packet_t *pkt_pool;            ///< alloc pool of packets
@@ -176,7 +211,8 @@ int mdns_responder_run(mdns_responder_t *res);
 int mdns_responder_add_interface(
                                 mdns_responder_t *responder,
                                 const char *hostname,
-                                uint32_t ipv4addr,
+                                bipv4addr_t ipv4addr,
+                                bipv6addr_t ipv6addr,
                                 uint32_t ttl
                                 );
 int mdns_responder_add_service(

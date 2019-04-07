@@ -62,8 +62,68 @@ const uint8_t bla_packet[] = {
     0x10, 0x00, 0x01, 0xC0, 0x25, 0x00, 0x21, 0x00, 0x01
 };
 
-int get_host_info(char* myhost, int nhost, uint32_t *myipv4addr)
+int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t *myipv6addr)
 {
+#ifdef Linux
+    struct ifaddrs *addrs;
+    struct ifaddrs *addr;
+    struct sockaddr_in *sain4;
+    struct sockaddr_in6 *sain6;
+    bool gotv4;
+    bool gotv6;
+
+    gotv4 = false;
+    gotv6 = false;
+
+    if (gethostname(myhost, nhost))
+    {
+        BERROR("gethostname fails");
+        return -1;
+    }
+    getifaddrs(&addrs);
+
+    for (addr = addrs; addr && ! (gotv4 && gotv6); addr = addr->ifa_next)
+    {
+        if (addr->ifa_addr)
+        {
+            int family = addr->ifa_addr->sa_family;
+            unsigned flags = addr->ifa_flags;
+
+            // look only at interfaces up and not loopback
+            //
+            if ((flags & IFF_UP) && ! (flags & IFF_LOOPBACK))
+            {
+                if (family == AF_INET && ! gotv4)
+                {
+                    gotv4 = true;
+                    sain4 = (struct sockaddr_in *)addr->ifa_addr;
+                    myipv4addr->addr = sain4->sin_addr.s_addr;
+                }
+                else if (family == AF_INET6 && ! gotv6)
+                {
+                    gotv6 = true;
+                    sain6 = (struct sockaddr_in6 *)addr->ifa_addr;
+                    memcpy(myipv6addr->addr, &sain6->sin6_addr, sizeof(bipv6addr_t));
+                }
+            }
+        }
+    }
+    freeifaddrs(addrs);
+
+    if (! gotv4)
+    {
+        myipv4addr->addr = 0;
+    }
+    if (! gotv6)
+    {
+        memset(&myipv6addr->addr, 0, sizeof(bipv6addr_t));
+    }
+    if (! gotv4 && ! gotv6)
+    {
+        BERROR("no IP addr");
+        return -1;
+    }
+#else
     struct hostent *phost;
 
     if (gethostname(myhost, nhost))
@@ -77,7 +137,8 @@ int get_host_info(char* myhost, int nhost, uint32_t *myipv4addr)
         BERROR("gethostbyname fails");
         return -1;
     }
-    memcpy(myipv4addr, phost->h_addr_list[0], 4);
+    memcpy(&myipv4addr->addr, phost->h_addr_list[0], 4);
+#endif
     return 0;
 }
 
@@ -93,8 +154,9 @@ static int usage (const char *program)
 int main(int argc, char **argv)
 {
     mdns_responder_t responder;
-    char hostname[MDNS_MAX_TEXT];
-    uint32_t myipv4addr;
+    char hostname[MDNS_MAX_DNTEXT];
+    bipv4addr_t myipv4addr;
+    bipv6addr_t myipv6addr;
     char *txtrecs;
     char *arg;
     char *program;
@@ -179,16 +241,37 @@ int main(int argc, char **argv)
     }
     butil_set_log_level(loglevel);
 
-    txtrecs = "txtvers=1,rp=ipp/print,product=BNET,Color=T";
+    // See "bonjour printing" https://developer.apple.com/bonjour/printing-specification/bonjourprinting-1.2.1.pdf
+    //
+    txtrecs =   "txtvers=1,"
+                "adminurl=http://www.google.com,"
+                "air=none,"
+                "Binary=T,"
+                "kind=document,"
+                "note=Quail Run,"
+                "pdl=application/postscript\\,image/jpeg\\,application/octet-stream,"
+                "priority=50,"
+                "qtotal=1,"
+                "rp=ipp/print,"
+                "TLS=1.2,"
+                "ty=BNET IPP,"
+                "product=BNET,"
+                "Color=T,"
+                "Copies=T,"
+                "Duplex=F,"
+                "PaperMax=legal-A4,"
+                "Scan=F,"
+                "Fax=F,"
+                "UUID=68ECDD18-8319-42DD-BC73-87D192E900DD";
 
     result = mdns_responder_init(&responder);
     if (result)
     {
         return result;
     }
-    get_host_info(hostname, sizeof(hostname), &myipv4addr);
+    get_host_info(hostname, sizeof(hostname), &myipv4addr, &myipv6addr);
 
-    result = mdns_responder_add_interface(&responder, hostname, myipv4addr, 30);
+    result = mdns_responder_add_interface(&responder, hostname, myipv4addr, myipv6addr, 30);
     if (result)
     {
         butil_log(0, "Can't add interface\n");
@@ -276,8 +359,6 @@ int main(int argc, char **argv)
         pkt->io.data = pkt->data;
 
         mdns_pkt_free(&responder, pkt);
-
-        responder.inpkts = NULL;
 
         if (only_unit_test)
         {

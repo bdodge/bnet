@@ -66,16 +66,59 @@ static const char *str_for_ipv4(uint32_t ipv4addr)
     return ipbuf;
 }
 
-const char *mdns_str_for_sockaddr(struct sockaddr_in *sockaddr)
+static const char *str_for_ipv6(bipv6addr_t *ipv6addr)
 {
-    uint32_t ip_addr;
+    static char ipbuf[64];
+    uint16_t addr[8];
+    uint16_t *sa;
+    int i;
 
+    sa = ipv6addr->addr;
+    for (i = 0; i < 8; i++)
+    {
+        addr[i] = htons(sa[i]);
+    }
+    snprintf(ipbuf, sizeof(ipbuf), "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x",
+                addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7]);
+    return ipbuf;
+}
+
+const char *mdns_str_for_sockaddr(struct sockaddr *sockaddr)
+{
     if (! sockaddr)
     {
         return "<nil>";
     }
-    ip_addr = (uint32_t)sockaddr->sin_addr.s_addr;
-    return str_for_ipv4(ip_addr);
+    if (sockaddr->sa_family == AF_INET)
+    {
+        uint32_t ip_addr;
+
+        ip_addr = (uint32_t)((struct sockaddr_in *)sockaddr)->sin_addr.s_addr;
+        return str_for_ipv4(ip_addr);
+    }
+    else
+    {
+        bipv6addr_t ipv6addr;
+
+        memcpy(&ipv6addr.addr, &((struct sockaddr_in6 *)sockaddr)->sin6_addr, sizeof(bipv6addr_t));
+        return str_for_ipv6(&ipv6addr);
+    }
+}
+
+const char *mdns_str_for_pktaddr(mdns_packet_t *pkt)
+{
+    if (! pkt)
+    {
+        return "<nil>";
+    }
+    if (pkt->isv6addr)
+    {
+        return str_for_ipv6(&pkt->srcaddr6);
+    }
+    else
+    {
+        return str_for_ipv4(pkt->srcaddr4.addr);
+    }
 }
 
 const char *mdns_srv_proto_name(mdns_service_protocol_t proto)
@@ -95,7 +138,7 @@ const char *mdns_srv_proto_name(mdns_service_protocol_t proto)
 
 const char *mdns_str_for_domain_name(const dns_domain_name_t *dname)
 {
-    static char dnbuf[MDNS_MAX_TEXT];
+    static char dnbuf[MDNS_MAX_DNTEXT];
     int result;
 
     result = mdns_flatten_name(dname, dnbuf, sizeof(dnbuf));
@@ -220,9 +263,9 @@ void mdns_dump_packet(const char *because, mdns_packet_t *pkt, int level)
     butil_log(level, "\n");
 }
 
-mdns_interface_t *mdns_interface_alloc(mdns_responder_t *res, const char *hostname, uint32_t ipv4addr)
+mdns_interface_t *mdns_interface_alloc(mdns_responder_t *res, const char *hostname)
 {
-    char name[MDNS_MAX_TEXT];
+    char name[MDNS_MAX_DNTEXT];
     mdns_interface_t *iface;
     int result;
 
@@ -246,7 +289,6 @@ mdns_interface_t *mdns_interface_alloc(mdns_responder_t *res, const char *hostna
         free(iface);
         return NULL;
     }
-    iface->ipv4addr = ipv4addr;
     return iface;
 }
 
@@ -265,7 +307,8 @@ void mdns_dump_interface(mdns_interface_t *iface, int level)
         return;
     }
     butil_log(level, "  iface host=%s\n", mdns_str_for_domain_name(&iface->hostname));
-    butil_log(level, "        IPv4=%s\n", str_for_ipv4(iface->ipv4addr));
+    butil_log(level, "        IPv4=%s\n", str_for_ipv4(iface->ipv4addr.addr));
+    butil_log(level, "        IPv6=%s\n", str_for_ipv6(&iface->ipv6addr));
 }
 
 mdns_service_t *mdns_service_alloc(mdns_responder_t *res)
@@ -433,7 +476,7 @@ static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int coun
         butil_log(1, "Label of %d is > max %d\n", count, MDNS_MAX_LABEL - 1);
         return -1;
     }
-    if ((count + dname->tot_len + dname->num_labels) >= (MDNS_MAX_TEXT - 1))
+    if ((count + dname->tot_len + dname->num_labels) >= (MDNS_MAX_DNTEXT - 1))
     {
         butil_log(1, "No room to add label of %d\n", count);
         return -1;
@@ -453,7 +496,7 @@ static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int coun
     return 0;
 }
 
-static int mdns_unflatten_delimited_str(const char *name, const char delim, dns_domain_name_t *dname)
+int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
 {
     int label_off;
     int off;
@@ -470,6 +513,7 @@ static int mdns_unflatten_delimited_str(const char *name, const char delim, dns_
     dname->num_labels = 0;
 
     off = 0;
+    result = 0;
 
     do
     {
@@ -478,7 +522,7 @@ static int mdns_unflatten_delimited_str(const char *name, const char delim, dns_
         {
             break;
         }
-        if (dname->tot_len >= (MDNS_MAX_TEXT - 1))
+        if (dname->tot_len >= (MDNS_MAX_DNTEXT - 1))
         {
             butil_log(1, "Name overflow\n");
             result = -1;
@@ -493,13 +537,13 @@ static int mdns_unflatten_delimited_str(const char *name, const char delim, dns_
         label_off = off++;
         dname->num_labels++;
 
-        while (name[off] && name[off] != delim)
+        while (name[off] && name[off] != '.')
         {
             off++;
         }
         result = mdns_insert_label(dname, name + label_off, off - label_off);
 
-        if (name[off] == delim)
+        if (name[off] == '.')
         {
             off++;
         }
@@ -509,14 +553,79 @@ static int mdns_unflatten_delimited_str(const char *name, const char delim, dns_
     return result;
 }
 
-int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
-{
-    return mdns_unflatten_delimited_str(name, '.', dname);
-}
-
 int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
 {
-    return mdns_unflatten_delimited_str(name, ',', txtrec);
+    int label_dex;
+    int off;
+    int insoff;
+    int added;
+    char c;
+    int result;
+
+    if (! name || ! txtrec)
+    {
+        return -1;
+    }
+    memset(txtrec, 0, sizeof(dns_txt_records_t));
+
+    txtrec->tot_len = 0;
+    txtrec->num_labels = 0;
+
+    off = 0;
+    result = 0;
+
+    do
+    {
+        c = name[off];
+        if (c == '\0')
+        {
+            break;
+        }
+        if (txtrec->tot_len >= (MDNS_MAX_TRTEXT - 1))
+        {
+            butil_log(1, "Name overflow\n");
+            result = -1;
+            break;
+        }
+        if (txtrec->num_labels >= (MDNS_MAX_LABELS - 1))
+        {
+            butil_log(1, "Label count overflow\n");
+            result = -1;
+            break;
+        }
+        label_dex = txtrec->num_labels++;
+        insoff = off;
+        added  = 0;
+
+        while (name[off] && name[off] != ',')
+        {
+            if (added >= (MDNS_MAX_TRTEXT - 2))
+            {
+                butil_log(1, "Label size overflow\n");
+                result = -1;
+                break;
+            }
+            txtrec->labels[label_dex].name[added++] = name[off];
+            off++;
+            if (name[off] == ',')
+            {
+                if (name[off - 1] == '\\')
+                {
+                    txtrec->labels[label_dex].name[added - 1] = name[off];
+                    off++;
+                }
+            }
+        }
+        txtrec->labels[label_dex].length = added;
+        txtrec->labels[label_dex].name[added] = '\0';
+        txtrec->tot_len += added;
+
+        if (name[off] == ',')
+        {
+            off++;
+        }
+    }
+    while (! result && c != '\0');
 }
 
 int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
@@ -552,7 +661,7 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
         {
             // Non-0 byte
             //
-            if (dname->tot_len >= (MDNS_MAX_TEXT - 1))
+            if (dname->tot_len >= (MDNS_MAX_DNTEXT - 1))
             {
                 butil_log(1, "Name overflow\n");
                 result = -1;
@@ -748,8 +857,9 @@ int mdns_write_text(ioring_t *out, const dns_txt_records_t *txtrec)
     }
     totlen = txtrec->tot_len + txtrec->num_labels;
 
-    if (totlen > MDNS_MAX_TEXT)
+    if (totlen > MDNS_MAX_TRTEXT)
     {
+        butil_log(1, "TXT too long\n");
         return -1;
     }
     if ((out->count + totlen) > out->size)
@@ -774,6 +884,8 @@ int mdns_write_text(ioring_t *out, const dns_txt_records_t *txtrec)
 int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
 {
     int totlen;
+    int label_dex;
+    int len;
     int result;
 
     if (! out || ! dname)
@@ -782,7 +894,7 @@ int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
     }
     totlen = dname->tot_len + dname->num_labels + 1;
 
-    if (totlen > MDNS_MAX_TEXT)
+    if (totlen > MDNS_MAX_DNTEXT)
     {
         return -1;
     }
@@ -790,13 +902,22 @@ int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
     {
         return 1;
     }
-    result = mdns_write_text(out, dname);
-    if (! result)
+    for (label_dex = 0; label_dex < dname->num_labels; label_dex++)
     {
-        out->data[out->head++] = (uint8_t)0;
+        len = dname->labels[label_dex].length;
+
+        out->data[out->head++] = (uint8_t)len;
         out->count++;
+
+        memcpy(out->data + out->head, dname->labels[label_dex].name, len);
+
+        out->head += len;
+        out->count += len;
     }
-    return result;
+    out->data[out->head++] = (uint8_t)0;
+    out->count++;
+
+    return 0;
 }
 
 int mdns_assemble_name(uint8_t *buffer, int nbuffer, int ncomponents, ...)
@@ -837,7 +958,7 @@ int mdns_assemble_name(uint8_t *buffer, int nbuffer, int ncomponents, ...)
                     labels[i],
                      (i < (ncomponents - 1)) ? "." : ""
                     );
-        if (len < 0 || (offset + len) >= MDNS_MAX_TEXT)
+        if (len < 0 || (offset + len) >= MDNS_MAX_DNTEXT)
         {
             butil_log(1, "Name building overflow\n");
             result = -1;

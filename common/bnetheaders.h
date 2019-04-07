@@ -34,6 +34,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <ifaddrs.h>
+#include <net/if.h>
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <signal.h>
@@ -51,6 +53,9 @@ typedef int socket_t;
 #define close_socket close
 #define ioctl_socket ioctl
 #endif
+
+typedef struct tag_ipv4addr { uint32_t addr;    } bipv4addr_t;
+typedef struct tag_ipv6addr { uint16_t addr[8]; } bipv6addr_t;
 
 // format strings for int64 types
 #if defined(__IA64__) || defined(_WIN64) || defined(_M_IA64) || \

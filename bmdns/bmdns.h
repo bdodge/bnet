@@ -35,7 +35,6 @@ typedef struct tag_dns_label
 {
     char        name[MDNS_MAX_LABEL];   ///< domain name component
     int         length;                 ///< length of name component
-    int         offset;                 ///< offset into reply where located
 }
 dns_label_t;
 
@@ -78,7 +77,8 @@ typedef struct tag_dns_packet
     bipv6addr_t srcaddr6;               ///< source address of packet (if ipv6)
     uint16_t    srcport;                ///< source port of packet
 
-    uint32_t    tts_msec;               ///< when to send, milliseconds absolute
+    uint32_t    tts_secs;               ///< when to send, econds absolute
+    uint32_t    tts_usecs;              ///< when to send, microseconds absolute
     bool        unicast;                ///< send unicast
 
     /// header
@@ -102,10 +102,12 @@ typedef enum
     MDNS_PROBE_1,
     MDNS_PROBE_2,
     MDNS_PROBE_3,
+    MDNS_PROBE_FLUSH,
     MDNS_ANNOUNCE_1,
     MDNS_ANNOUNCE_2,
     MDNS_RUN,
-    MDNS_BYE
+    MDNS_BYEBYE,
+    MDNS_DONE
 }
 mdns_state_t;
 
@@ -152,6 +154,7 @@ typedef struct tag_mdns_service
     uint16_t                port;       ///< service port (like 80)
     dns_txt_records_t       txt_records;///< service's txt records (like "txtvers=1")
     uint32_t                ttl;        ///< time to live for service answers
+    uint32_t                probes;     ///< number of times probed (conflicted)
     struct tag_mdns_service *next;      ///< link
 }
 mdns_service_t;

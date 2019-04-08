@@ -146,6 +146,7 @@ static int usage (const char *program)
 {
     fprintf(stderr, "Use: %s [-lu]\n", program);
     fprintf(stderr, "     -l    Set debug log level (default 1: errors/warnings only)\n");
+    fprintf(stderr, "     -t    Set TTL for iface/services\n");
     fprintf(stderr, "     -u    Run unit tests\n");
     fprintf(stderr, "     -U    Run unit tests and exit\n");
     return 1;
@@ -161,6 +162,7 @@ int main(int argc, char **argv)
     char *arg;
     char *program;
     uint32_t uval;
+    uint32_t ttl;
     int loglevel;
     bool unit_test;
     bool only_unit_test;
@@ -177,7 +179,8 @@ int main(int argc, char **argv)
 #else
     signal(SIGPIPE, SIG_IGN);
 #endif
-    loglevel = 6;
+    loglevel = 5;
+    ttl = 30;
     butil_set_log_level(loglevel);
     unit_test = false;
 
@@ -192,6 +195,7 @@ int main(int argc, char **argv)
             switch (arg[1])
             {
             case 'l':
+            case 't':
             {
                 if (arg[2] == '\0')
                 {
@@ -213,6 +217,10 @@ int main(int argc, char **argv)
                 if (arg[1] == 'l')
                 {
                     loglevel = uval;
+                }
+                else if (arg[1] == 't')
+                {
+                    ttl = uval;
                 }
                 else
                 {
@@ -271,7 +279,7 @@ int main(int argc, char **argv)
     }
     get_host_info(hostname, sizeof(hostname), &myipv4addr, &myipv6addr);
 
-    result = mdns_responder_add_interface(&responder, hostname, myipv4addr, myipv6addr, 30);
+    result = mdns_responder_add_interface(&responder, hostname, myipv4addr, myipv6addr, ttl);
     if (result)
     {
         butil_log(0, "Can't add interface\n");
@@ -284,7 +292,7 @@ int main(int argc, char **argv)
                                          MDNS_SRVPROTO_TCP,
                                          6310,
                                          txtrecs,
-                                         10
+                                         ttl
                                        );
     if (result)
     {
@@ -298,7 +306,7 @@ int main(int argc, char **argv)
                                          MDNS_SRVPROTO_TCP,
                                          6311,
                                          txtrecs,
-                                         10
+                                         ttl
                                        );
     if (result)
     {

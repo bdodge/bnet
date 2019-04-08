@@ -23,7 +23,9 @@
 #include "butil.h"
 
 int mdns_compare_names      (const dns_domain_name_t *ours, const dns_domain_name_t *theirs);
-
+int mdns_get_wall_time		(uint32_t *secs, uint32_t *usecs);
+uint32_t 	mdns_get_rnd_delay_ms	(uint32_t max_delay);
+uint32_t 	mdns_get_pkt_delay_ms	(mdns_packet_t *pkt);
 const char *mdns_str_for_domain_name(const dns_domain_name_t *dname);
 const char *mdns_srv_proto_name     (mdns_service_protocol_t proto);
 const char *mdns_str_for_sockaddr   (struct sockaddr *sockaddr);

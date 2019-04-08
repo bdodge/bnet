@@ -15,6 +15,7 @@
  */
 #include "bmdnsutils.h"
 #include "bmdns.h"
+#include <sys/time.h>
 
 int mdns_compare_names(const dns_domain_name_t *ours, const dns_domain_name_t *theirs)
 {
@@ -51,6 +52,64 @@ int mdns_compare_names(const dns_domain_name_t *ours, const dns_domain_name_t *t
         }
     }
     return 0;
+}
+
+int mdns_get_wall_time(uint32_t *secs, uint32_t *usecs)
+{
+    struct timeval tv;
+    int result;
+
+    result = gettimeofday(&tv, NULL);
+
+    if (secs)
+    {
+        *secs = tv.tv_sec;
+    }
+    if (usecs)
+    {
+        *usecs = tv.tv_usec;
+    }
+    if (result)
+    {
+        butil_log(2, "gtod failed %d\n", errno);
+    }
+    return result;
+}
+
+uint32_t mdns_get_rnd_delay_ms(uint32_t max_delay)
+{
+    return (uint32_t)rand() % max_delay;
+}
+
+uint32_t mdns_get_pkt_delay_ms(mdns_packet_t *pkt)
+{
+    uint32_t now_secs;
+    uint32_t now_usecs;
+    uint32_t delta;
+
+    mdns_get_wall_time(&now_secs, &now_usecs);
+
+    delta = 0;
+    if (pkt->tts_secs > now_secs)
+    {
+        delta += (pkt->tts_secs - now_secs) * 1000;
+        if (pkt->tts_usecs > now_usecs)
+        {
+           delta += (pkt->tts_usecs - now_usecs) / 1000;
+        }
+        else
+        {
+           delta -= (now_usecs - pkt->tts_usecs) / 1000;
+        }
+    }
+    else if (pkt->tts_secs == now_secs)
+    {
+        if (pkt->tts_usecs > now_usecs)
+        {
+            delta += (pkt->tts_usecs - now_usecs) / 1000;
+        }
+    }
+    return delta;
 }
 
 static const char *str_for_ipv4(uint32_t ipv4addr)
@@ -173,6 +232,11 @@ mdns_packet_t *mdns_pkt_alloc(mdns_responder_t *res)
     pkt->nscount = 0;
     pkt->arcount = 0;
 
+    pkt->tts_secs = 0;
+    pkt->tts_usecs = 0;
+    pkt->unicast = false;
+    pkt->isv6addr = false;
+
     pkt->next = NULL;
     return pkt;
 }
@@ -195,7 +259,9 @@ void mdns_dump_packet(const char *because, mdns_packet_t *pkt, int level)
     uint8_t data;
     int tail;
 
-    butil_log(level, "Pkt %4d bytes  %s\n", pkt ? pkt->io.count : 0, because);
+    butil_log(level, "Pkt %4d bytes (+%u msecs) %s\n",
+                        pkt ? pkt->io.count : 0,
+                        mdns_get_pkt_delay_ms(pkt), because);
 
     if (! pkt)
     {
@@ -489,7 +555,6 @@ static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int coun
         return -1;
     }
     dname->labels[label_dex].length = count;
-    dname->labels[label_dex].offset = 0;
     memcpy(dname->labels[label_dex].name, src, count);
     dname->labels[label_dex].name[count] = '\0';
     dname->tot_len += count;

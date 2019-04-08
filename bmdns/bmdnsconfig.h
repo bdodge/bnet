@@ -34,11 +34,16 @@
 
 /// Packet pool size
 //
-#define MDNS_PACKET_POOL_SIZE	(8)
+#define MDNS_PACKET_POOL_SIZE	(16)
 
 /// Max number of labels in a name
 //
 #define MDNS_MAX_LABELS			(64)
+
+/// Max number of answer known-answers we'll compare against
+/// (only answers matching local records will count towards this)
+//
+#define MDNS_MAX_ANSWERS		(4)
 
 #endif
 

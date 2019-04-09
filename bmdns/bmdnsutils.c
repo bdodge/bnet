@@ -237,6 +237,9 @@ mdns_packet_t *mdns_pkt_alloc(mdns_responder_t *res)
     pkt->unicast = false;
     pkt->isv6addr = false;
 
+    pkt->srcaddr4.addr = 0;
+    pkt->srcport = MDNS_PORT;
+
     pkt->next = NULL;
     return pkt;
 }

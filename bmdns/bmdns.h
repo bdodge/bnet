@@ -163,10 +163,12 @@ mdns_service_t;
 //
 typedef struct tag_mdns_responder
 {
-    mdns_interface_t *interfaces;       ///< list of managed interfaces
-
-    mdns_packet_t *pkt_free;            ///< alloc packet list
-    mdns_packet_t *pkt_pool;            ///< alloc pool of packets
+    mdns_interface_t   *interfaces;     ///< list of managed interfaces
+    int                 to_secs;        ///< input poll dwell, seconds
+    int                 to_usecs;       ///< input poll dwell, micro-seconds
+    bool                fatal;          ///< a fatal error occured, exit
+    mdns_packet_t      *pkt_free;       ///< alloc packet list
+    mdns_packet_t      *pkt_pool;       ///< alloc pool of packets
 }
 mdns_responder_t;
 
@@ -210,7 +212,7 @@ mdns_responder_t;
 #define DNS_CLASS_ANY           (0xFF)      // Any
 #define DNS_CLASS_FLUSH         (0x800)     // Flush
 
-int mdns_responder_run(mdns_responder_t *res);
+int mdns_responder_run(mdns_responder_t *res, int poll_secs, int poll_usecs);
 int mdns_responder_add_interface(
                                 mdns_responder_t *responder,
                                 const char *hostname,

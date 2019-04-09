@@ -312,6 +312,23 @@ int main(int argc, char **argv)
     {
         butil_log(0, "Can't add ipps service\n");
     }
+    // per bonjour printing. LPD is the "flagship" service for printing and it should be
+    // added/defended even if unimplemented, using a port of 0 for unimplemented
+    //
+    result = mdns_responder_add_service(
+                                        &responder,
+                                        responder.interfaces,
+                                        "BNET PRT",
+                                         "_printer",
+                                         MDNS_SRVPROTO_TCP,
+                                         0,
+                                         txtrecs,
+                                         ttl
+                                       );
+    if (result)
+    {
+        butil_log(0, "Can't add lpd service\n");
+    }
     if (unit_test)
     {
         mdns_packet_t *pkt;
@@ -373,7 +390,7 @@ int main(int argc, char **argv)
             return 0;
         }
     }
-    result = mdns_responder_run(&responder);
+    result = mdns_responder_run(&responder, 0, 50000);
     if (result)
     {
         butil_log(0, "Responder Failed\n");

@@ -18,8 +18,6 @@
 
 // TODO
 //    compress outgoing names
-//    conflict resolution
-//    known answer suppression
 //
 int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
 {
@@ -65,7 +63,7 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
     //
     iface->outpkts = pkt->next;
 
-    if (pkt->unicast /*|| (pkt->srcport != MDNS_PORT)*/)
+    if (pkt->unicast || (pkt->srcport != MDNS_PORT))
     {
         if (pkt->isv6addr)
         {
@@ -228,7 +226,7 @@ int mdns_check_input(mdns_responder_t *res, mdns_interface_t *iface)
         BERROR("bad context");
         return -1;
     }
-    result = iostream_posix_poll_filedesc(iface->in_sock, readable, 0, 100000);
+    result = iostream_posix_poll_filedesc(iface->in_sock, readable, res->to_secs, res->to_usecs);
     if (result < 0)
     {
         BERROR("socket closed?");
@@ -399,6 +397,41 @@ typedef struct tag_answer_list
 }
 dns_rr_rec_t;
 
+static int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t *dname)
+{
+    dns_domain_name_t res_name;
+    ioring_t res_in;
+    int reslen;
+    int result;
+
+    if (! answer || ! dname)
+    {
+        return -1;
+    }
+    reslen = DNS_NAME_LENGTH(dname);
+    if (reslen != anslen)
+    {
+        return -1;
+    }
+    res_in.tail = 0;
+    res_in.count = anslen;
+    res_in.head  = anslen;
+    res_in.size  = anslen;
+    res_in.data  = answer;
+
+    // read the resource name in to a dns name to uncompress it
+    // to make it a fair comparison
+    //
+    result = mdns_read_name(&res_in, &res_name);
+    if (result)
+    {
+        return -1;
+    }
+    // compare names label by label
+    //
+    return mdns_compare_names(dname, &res_name);
+}
+
 static int mdns_query_respond(
                             mdns_interface_t *iface,
                             dns_rr_rec_t *answers,
@@ -428,46 +461,52 @@ static int mdns_query_respond(
                 &&  answers[adex].clas == clas
             )
             {
-                // essentially the same as we'd answer, if the data matches, then
-                // don't bother answering the question
+                // check the response resource and see if that matches
                 //
                 switch (type)
                 {
                 case DNS_RRTYPE_PTR:
                     if (! service)
                     {
-                        reslen = DNS_NAME_LENGTH(&iface->hostname);
-                        if (reslen == answers[adex].reslen)
-                        {
-                            // compare iface hostname to resource answer[adex].res (TODO)
-                            matched = true;
-                        }
+                        matched = !mdns_compare_resource_to_name(answers[adex].res, answers[adex].reslen, &iface->hostname);
                     }
                     else
                     {
-                        reslen = DNS_NAME_LENGTH(&service->usr_domain_name);
-                        if (reslen == answers[adex].reslen)
-                        {
-                            // compare service->usr_domain_name to resource answer[adex].res (TODO)
-                            matched = true;
-                        }
+                        matched = !mdns_compare_resource_to_name(answers[adex].res, answers[adex].reslen, &service->usr_domain_name);
                     }
                     break;
                 case DNS_RRTYPE_TXT:
                     reslen = DNS_TXT_LENGTH(&service->txt_records);
                     if (reslen == answers[adex].reslen)
                     {
-                        // compare service->txt_records to resource answer[adex].res (TODO)
-                        matched = true;
+                        ioring_t res_out;
+                        uint8_t nametext[MDNS_MAX_TRTEXT];
+
+                        // write our txtrecs out and compare to resource bytes
+                        //
+                        res_out.head = 0;
+                        res_out.tail = 0;
+                        res_out.count = 0;
+                        res_out.size  = sizeof(nametext);
+                        res_out.data  = nametext;
+
+                        result = mdns_write_text(&res_out, &service->txt_records);
+                        if (result)
+                        {
+                            result = 0;
+                            break;
+                        }
+                        // compare service->txt_records to resource answer[adex].res
+                        if (! memcmp(answers[adex].res, nametext, reslen))
+                        {
+                            matched = true;
+                        }
                     }
                     break;
                 case DNS_RRTYPE_SRV:
-                    reslen = DNS_NAME_LENGTH(&service->interface->hostname) + 6;
-                    if (reslen == answers[adex].reslen)
-                    {
-                        // compare service, etc.  to resource answer[adex].res (TODO)
-                        matched = true;
-                    }
+                    // TODO compare weight/prority/port (but really, if name and service name match
+                    // we really want to match here anyway)
+                    matched = !mdns_compare_resource_to_name(answers[adex].res + 6, answers[adex].reslen - 6, &iface->hostname);
                     break;
                 case DNS_RRTYPE_A:
                     if (answers[adex].reslen == 4)
@@ -483,8 +522,24 @@ static int mdns_query_respond(
                 case DNS_RRTYPE_AAAA:
                     if (answers[adex].reslen == 16)
                     {
-                        // compare ipv6 address in res (TODO)
-                        matched = true;
+                        ioring_t res_in;
+                        uint16_t addr;
+
+                        res_in.tail = 0;
+                        res_in.count = 16;
+                        res_in.head = 16;
+                        res_in.size = 16;
+                        res_in.data = answers[adex].res;
+
+                        for (reslen = 0, matched = true; matched && reslen < 8; reslen++)
+                        {
+                            result = mdns_read_uint16(&res_in, &addr);
+
+                            if (result != htons(iface->ipv6addr.addr[reslen]))
+                            {
+                                matched = false;
+                            }
+                        }
                     }
                     break;
                 }
@@ -685,6 +740,8 @@ static int mdns_answer_question(
         }
         if (! cmp)
         {
+            int prevcount;
+
             if (iface->state < MDNS_ANNOUNCE_1)
             {
                 outpkt->nscount++;
@@ -693,21 +750,39 @@ static int mdns_answer_question(
             {
                 outpkt->ancount++;
             }
-            if (type == DNS_RRTYPE_SRV && iface->state >= MDNS_ANNOUNCE_1)
+            prevcount = outpkt->io.count;
+
+            result = mdns_query_respond(iface, answers, answer_count, outpkt, dname, type, clas, service);
+
+            if (! result && type == DNS_RRTYPE_SRV && iface->state >= MDNS_ANNOUNCE_1 && outpkt->io.count > prevcount)
             {
+                // for SRV records while running, add the address records for the hostname, but only if
+                // the records wasn't suppressed (by a known answer) which is indicated by outpkt growing or not
+                //
                 added_srv = service;
             }
-            result = mdns_query_respond(iface, answers, answer_count, outpkt, dname, type, clas, service);
         }
     }
     if (added_srv)
     {
-        // add address record if added a srv record to match service instance, but in additional section
-        // there could only technically be on matched service on a single interface
+        // add address record if added a srv record to match service instance, but in additional section.
+        // there could only technically be one matched service on a single interface
         //
-        outpkt->arcount++;
-        result = mdns_query_respond(iface, answers, answer_count, outpkt,
-                            &added_srv->interface->hostname, DNS_RRTYPE_A, clas, added_srv);
+        if (added_srv->interface->ipv4addr.addr != 0)
+        {
+            outpkt->arcount++;
+            result = mdns_query_respond(iface, answers, answer_count, outpkt,
+                                    &added_srv->interface->hostname, DNS_RRTYPE_A, clas, added_srv);
+        }
+        if (added_srv->interface->ipv6addr.addr[0] != 0)
+        {
+            outpkt->arcount++;
+            result = mdns_query_respond(iface, answers, answer_count, outpkt,
+                                    &added_srv->interface->hostname, DNS_RRTYPE_AAAA, clas, added_srv);
+        }
+        // and add NSEC records for the addresses we do NOT have to ensure we claim them as ours
+        //
+        // TODO!!
     }
     return result;
 }
@@ -914,7 +989,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
 
     if (tot_answers > 0)
     {
-        butil_log(5, "--Process %d Answers\n", tot_answers);
+        butil_log(5, "\n--Process %d Answers\n", tot_answers);
     }
     for (
             answer_num = 0;
@@ -1082,7 +1157,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     //
     if (inpkt->qdcount > 0)
     {
-        butil_log(5, "\n--Process %d Questions\n", inpkt->qdcount);
+        butil_log(5, "--Process %d Questions\n", inpkt->qdcount);
     }
     outpkt = NULL;
 
@@ -1147,8 +1222,34 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
         }
         else
         {
-            // a response
+            // a response, if it compares against our service or host name,
+            // defend it unless we're probing
             //
+            we_care = mdns_question_relates(iface, &domain_name, type, clas);
+
+            if (we_care)
+            {
+                mdns_service_t *service;
+                int cmp;
+
+                if (iface->state >= MDNS_ANNOUNCE_1)
+                {
+                    butil_log(5, "Matching Response QD Name=%s= type=%d clas=%04X\n", fqdn, type, clas);
+
+                    for (service = iface->services; service; service = service->next)
+                    {
+                        cmp = mdns_compare_names(&service->usr_domain_name, &domain_name);
+                        if (! cmp)
+                        {
+                            butil_log(5, "Response Matched service instance %s\n", fqdn);
+
+                            // defend ourselves
+                            //
+                            result = mdns_answer_question(iface, &domain_name, type, clas, NULL, 0, outpkt);
+                        }
+                    }
+                }
+            }
         }
     }
     if (outpkt)
@@ -1393,13 +1494,20 @@ int mdns_responder_slice(mdns_responder_t *res, mdns_interface_t *iface)
 
         if (result)
         {
-            return result;
+            if (res->fatal)
+            {
+                return result;
+            }
+            // ignore regular errors unless fatal indicated
+            // we have no idea what kind of bad packets well get
+            //
+            result = 0;
         }
     }
     return result;
 }
 
-int mdns_responder_run(mdns_responder_t *res)
+int mdns_responder_run(mdns_responder_t *res, int poll_secs, int poll_usecs)
 {
     mdns_interface_t *iface;
     int result;
@@ -1415,7 +1523,11 @@ int mdns_responder_run(mdns_responder_t *res)
     }
     else
     {
+        res->to_secs = poll_secs;
+        res->to_usecs = poll_usecs;
+
         butil_log(5, "Starting MDNS with interfaces:\n");
+
         for (iface = res->interfaces; iface; iface = iface->next)
         {
             mdns_dump_interface(iface, 5);
@@ -1672,6 +1784,11 @@ int mdns_responder_init(mdns_responder_t *res)
     // seed random generator
     //
     srand(time(NULL));
+
+    res->to_secs = 0;
+    res->to_usecs = 50000;
+
+    res->fatal = false;
 
     // create a packet pool
     //

@@ -61,6 +61,19 @@ typedef struct tag_dns_txt_record
 }
 dns_txt_records_t;
 
+/// DNS RR Record descriptor
+//
+typedef struct tag_rr_rec
+{
+    dns_domain_name_t dname;
+    uint16_t type;
+    uint16_t clas;
+    uint32_t ttl;
+    uint16_t reslen;
+    uint8_t  res[MDNS_MAX_TRTEXT];
+}
+dns_rr_rec_t;
+
 // the only difference between dns names and txtrec storage is
 // that dns names will have a 0 byte terminator
 //
@@ -125,8 +138,7 @@ typedef struct tag_in_interface
     bipv4addr_t         ipv4addr;       ///< IPv4 address
     bipv6addr_t         ipv6addr;       ///< IPv6 address
     uint32_t            ttl;            ///< time to live
-    socket_t            in_sock;        ///< udp listenter bound to MDNS port 5353
-    socket_t            out_sock;       ///< udp multicast sender bound to high port
+    socket_t            udp_sock;       ///< udp listenter bound to MDNS port 5353
     mdns_packet_t      *inpkts;         ///< list of packets to look at from input
     mdns_packet_t      *outpkts;        ///< list of packets to send, sorted by delay
 
@@ -168,6 +180,7 @@ typedef struct tag_mdns_responder
     int                 to_usecs;       ///< input poll dwell, micro-seconds
     bool                stopped;        ///< request to stop run loop
     bool                fatal;          ///< a fatal error occured, exit
+    bool                unit_testing;   ///< dont make sockets, etc.
     mdns_packet_t      *pkt_free;       ///< alloc packet list
     mdns_packet_t      *pkt_pool;       ///< alloc pool of packets
 }
@@ -213,7 +226,9 @@ mdns_responder_t;
 #define DNS_CLASS_ANY           (0xFF)      // Any
 #define DNS_CLASS_FLUSH         (0x800)     // Flush
 
-int mdns_responder_run(mdns_responder_t *res, int poll_secs, int poll_usecs);
+int mdns_responder_slice        (mdns_responder_t *res);
+int mdns_responder_run          (mdns_responder_t *res, int poll_secs, int poll_usecs);
+int mdns_responder_stop         (mdns_responder_t *res);
 int mdns_responder_add_interface(
                                 mdns_responder_t *responder,
                                 const char *hostname,

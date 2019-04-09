@@ -18,7 +18,8 @@ SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
 SOURCES=$(SRCDIR)/bmdns.c		\
-		$(SRCDIR)/bmdnsutils.c
+		$(SRCDIR)/bmdnsutils.c	\
+		$(SRCDIR)/bmdnsunits.c
 
 HEADERS=$(SOURCES:%.c=%.h) bmdnsconfig.h $(SRCROOT)/common/bnetheaders.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)

@@ -36,7 +36,7 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
     {
         return -1;
     }
-    if (! res || iface->in_sock == INVALID_SOCKET)
+    if (! res || iface->udp_sock == INVALID_SOCKET)
     {
         BERROR("bad context");
         return -1;
@@ -48,7 +48,7 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
     {
         return 0;
     }
-    result = iostream_posix_poll_filedesc(iface->in_sock, writeable, 0, 100000);
+    result = iostream_posix_poll_filedesc(iface->udp_sock, writeable, 0, 100000);
     if (result < 0)
     {
         BERROR("network error");
@@ -102,7 +102,7 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
             dstsize = sizeof(dst4addr);
         }
     }
-    count = sendto(iface->in_sock, pkt->io.data, pkt->io.count,
+    count = sendto(iface->udp_sock, pkt->io.data, pkt->io.count,
                              0, (struct sockaddr *)dstaddr,  dstsize);
 
     mdns_pkt_free(res, pkt);
@@ -222,12 +222,12 @@ int mdns_check_input(mdns_responder_t *res, mdns_interface_t *iface)
     int count;
     int result;
 
-    if (! res || ! iface || iface->in_sock == INVALID_SOCKET)
+    if (! res || ! iface || iface->udp_sock == INVALID_SOCKET)
     {
         BERROR("bad context");
         return -1;
     }
-    result = iostream_posix_poll_filedesc(iface->in_sock, readable, res->to_secs, res->to_usecs);
+    result = iostream_posix_poll_filedesc(iface->udp_sock, readable, res->to_secs, res->to_usecs);
     if (result < 0)
     {
         BERROR("socket closed?");
@@ -247,7 +247,7 @@ int mdns_check_input(mdns_responder_t *res, mdns_interface_t *iface)
         return 0;
     }
     srclen = sizeof(srcaddr);
-    count = recvfrom(iface->in_sock, pkt->io.data, pkt->io.size,
+    count = recvfrom(iface->udp_sock, pkt->io.data, pkt->io.size,
                          0, &srcaddr, &srclen);
 
     if (count)
@@ -335,13 +335,13 @@ static int mdns_rewrite_header(ioring_t *io, mdns_packet_t *outpkt)
     return result;
 }
 
-static int mdns_ask_question(
-                                    mdns_interface_t  *iface,
-                                    dns_domain_name_t *fqdn,
-                                    uint16_t type,
-                                    uint16_t clas,
-                                    mdns_packet_t *outpkt
-                                 )
+int mdns_ask_question(
+                    mdns_interface_t  *iface,
+                    dns_domain_name_t *fqdn,
+                    uint16_t type,
+                    uint16_t clas,
+                    mdns_packet_t *outpkt
+                   )
 {
     mdns_service_t *service;
     int cmp;
@@ -388,18 +388,7 @@ static int mdns_ask_question(
     return result;
 }
 
-typedef struct tag_answer_list
-{
-    dns_domain_name_t dname;
-    uint16_t type;
-    uint16_t clas;
-    uint32_t ttl;
-    uint16_t reslen;
-    uint8_t  res[MDNS_MAX_TRTEXT];
-}
-dns_rr_rec_t;
-
-static int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t *dname)
+int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t *dname)
 {
     dns_domain_name_t res_name;
     ioring_t res_in;
@@ -421,8 +410,9 @@ static int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain
     res_in.size  = anslen;
     res_in.data  = answer;
 
-    // read the resource name in to a dns name to uncompress it
-    // to make it a fair comparison
+    // read the resource name in to a dns name. the
+    // name can NOT have any compression or this doesn't
+    // work, so make sure any answer text is flattened
     //
     result = mdns_read_name(&res_in, &res_name);
     if (result)
@@ -434,7 +424,7 @@ static int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain
     return mdns_compare_names(dname, &res_name);
 }
 
-static int mdns_query_respond(
+int mdns_query_respond(
                             mdns_interface_t *iface,
                             dns_rr_rec_t *answers,
                             int answer_count,
@@ -446,9 +436,11 @@ static int mdns_query_respond(
                          )
 {
     int reslen;
+    int newlen;
     int result;
     int adex;
     int cmp;
+    int prevhead;
     bool matched;
 
     // check that there is no known answer for this question
@@ -592,14 +584,27 @@ static int mdns_query_respond(
         if (! service)
         {
             reslen = DNS_NAME_LENGTH(&iface->hostname);
+            prevhead = outpkt->io.head;
             result  = mdns_write_uint16(&outpkt->io, reslen);
             result |= mdns_write_name(&outpkt->io, &iface->hostname);
         }
         else
         {
             reslen = DNS_NAME_LENGTH(&service->usr_domain_name);
+            prevhead = outpkt->io.head;
             result  = mdns_write_uint16(&outpkt->io, reslen);
             result |= mdns_write_name(&outpkt->io, &service->usr_domain_name);
+        }
+        // back annotate len in case of name compression
+        newlen = outpkt->io.head - prevhead - 2;
+        if (newlen != reslen)
+        {
+            int lasthead = outpkt->io.head;
+
+            outpkt->io.head = prevhead;
+            result |= mdns_write_uint16(&outpkt->io, newlen);
+            outpkt->io.head = lasthead;
+            outpkt->io.count = outpkt->io.head - outpkt->io.tail;
         }
         break;
     case DNS_RRTYPE_TXT:
@@ -609,6 +614,7 @@ static int mdns_query_respond(
         break;
     case DNS_RRTYPE_SRV:
         reslen = DNS_NAME_LENGTH(&service->interface->hostname) + 6;
+        prevhead = outpkt->io.head;
         result  = mdns_write_uint16(&outpkt->io, reslen);
         // write priority
         result |= mdns_write_uint16(&outpkt->io, 55);
@@ -630,6 +636,16 @@ static int mdns_query_respond(
         }
         // write target
         result |= mdns_write_name(&outpkt->io, &service->interface->hostname);
+        // back annotate len in case of name compression
+        newlen = outpkt->io.head - prevhead - 2;
+        if (newlen != reslen)
+        {
+            int lasthead = outpkt->io.head;
+
+            outpkt->io.head = prevhead;
+            result |= mdns_write_uint16(&outpkt->io, newlen);
+            outpkt->io.head = lasthead;
+        }
         break;
     case DNS_RRTYPE_A:
         result = mdns_write_uint16(&outpkt->io, 4);
@@ -650,15 +666,15 @@ static int mdns_query_respond(
     return result;
 }
 
-static int mdns_answer_question(
-                                    mdns_interface_t  *iface,
-                                    dns_domain_name_t *dname,
-                                    uint16_t type,
-                                    uint16_t clas,
-                                    dns_rr_rec_t *answers,
-                                    int answer_count,
-                                    mdns_packet_t *outpkt
-                                 )
+int mdns_answer_question(
+                        mdns_interface_t  *iface,
+                        dns_domain_name_t *dname,
+                        uint16_t type,
+                        uint16_t clas,
+                        dns_rr_rec_t *answers,
+                        int answer_count,
+                        mdns_packet_t *outpkt
+                     )
 {
     mdns_service_t *service;
     mdns_service_t *added_srv;
@@ -789,12 +805,12 @@ static int mdns_answer_question(
     return result;
 }
 
-static bool mdns_question_relates(
-                                    mdns_interface_t *iface,
-                                    dns_domain_name_t *dname,
-                                    uint16_t type,
-                                    uint16_t clas
-                                 )
+bool mdns_question_relates(
+                            mdns_interface_t *iface,
+                            dns_domain_name_t *dname,
+                            uint16_t type,
+                            uint16_t clas
+                         )
 {
     mdns_service_t *service;
     int cmp;
@@ -1144,7 +1160,45 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                             butil_log(3, "Truncating resource of %s\n", fqdn);
                             reslen = sizeof(rr->res);
                         }
-                        memcpy(rr->res, inpkt->io.data + inpkt->io.tail, reslen);
+                        // for resoure record types that contain domain names, read them
+                        // and flatten them to place in answer uncompressed since we aren't
+                        // storing the whole packet
+                        //
+                        if (type == DNS_RRTYPE_PTR || type == DNS_RRTYPE_SRV)
+                        {
+                            ioring_t resio;
+                            dns_domain_name_t res_name;
+
+                            resio.tail = 0;
+                            resio.head = 0;
+                            resio.count = 0;
+                            resio.size = sizeof(rr->res);
+                            resio.data = rr->res;
+
+                            if (type == DNS_RRTYPE_SRV)
+                            {
+                                memcpy(resio.data, inpkt->io.data + inpkt->io.tail, 6);
+                                resio.head += 6;
+                                resio.count += 6;
+                                inpkt->io.tail += 6;
+                                inpkt->io.count -= 6;
+                            }
+                            // read the name, uncompressing it
+                            result = mdns_read_name(&inpkt->io, &res_name);
+                            // and write it into the resource which will remain
+                            // flat since there are no other strings to compress with
+                            result |= mdns_write_name(&resio, &res_name);
+
+                            // back annotate resource lenght
+                            rr->reslen = resio.count;
+                            result = 0; // ignore failure here, not a bit loss
+                        }
+                        else
+                        {
+                            // just save binary blob resource
+                            //
+                            memcpy(rr->res, inpkt->io.data + inpkt->io.tail, reslen);
+                        }
                     }
                 }
             }
@@ -1630,6 +1684,7 @@ int mdns_responder_add_interface(
     mdns_interface_t *iface;
     struct ip_mreq mreq;
     int iparm;
+    uint16_t port;
     int result;
 
     if (! res || ! hostname)
@@ -1651,16 +1706,19 @@ int mdns_responder_add_interface(
 
     // create a udp socket on port 5353 to listen
     //
-    iface->in_sock = iostream_create_udp_socket();
-    if (iface->in_sock == INVALID_SOCKET)
+    iface->udp_sock = iostream_create_udp_socket();
+    if (iface->udp_sock == INVALID_SOCKET)
     {
-        butil_log(0, "Can't make in socket\n");
+        butil_log(0, "Can't make udp socket\n");
         return -1;
     }
-    result = iostream_bind_socket(iface->in_sock, MDNS_PORT);
+    port = res->unit_testing ? 25353 : MDNS_PORT;
+
+    result = iostream_bind_socket(iface->udp_sock, port);
     if (result)
     {
-        butil_log(0, "Can't bind in socket\n");
+        butil_log(0, "Can't bind udp socket on port %u: %d\n",
+               (uint32_t)port, errno);
         return -1;
     }
     // join the multicast group for mdns
@@ -1669,7 +1727,7 @@ int mdns_responder_add_interface(
     mreq.imr_multiaddr.s_addr = inet_addr(MDNS_MCAST_IP4ADDR);
     mreq.imr_interface.s_addr = INADDR_ANY;
 
-    result = setsockopt(iface->in_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
+    result = setsockopt(iface->udp_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
     if (result < 0)
     {
         butil_log(0, "Can't join mcast group: %d\n", errno);
@@ -1678,14 +1736,14 @@ int mdns_responder_add_interface(
     // disable loopback for the socket, to avoid read loops
     //
     iparm = 0;
-    result = setsockopt(iface->in_sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&iparm, sizeof(iparm));
+    result = setsockopt(iface->udp_sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&iparm, sizeof(iparm));
     if (result < 0)
     {
         butil_log(0, "Can't disable loopback: %d\n", errno);
         return result;
     }
     iparm = 1;
-    result = setsockopt(iface->in_sock, SOL_SOCKET, SO_BROADCAST, (char*)&iparm, sizeof(iparm));
+    result = setsockopt(iface->udp_sock, SOL_SOCKET, SO_BROADCAST, (char*)&iparm, sizeof(iparm));
     if (result < 0)
     {
         butil_log(0, "Can't enable bcast: %d\n", errno);
@@ -1723,7 +1781,7 @@ int mdns_responder_add_service(
     char name[MDNS_MAX_DNTEXT];
     int result;
 
-    if (! res || ! name)
+    if (! res || ! iface || ! usrname || ! srvname)
     {
         return -1;
     }
@@ -1814,13 +1872,16 @@ int mdns_responder_add_service(
         free(service);
         return result;
     }
-    // break comma separated txt recs into labels
-    //
-    result = mdns_unflatten_txt(txtrecs, &service->txt_records);
-    if (result)
+    if (txtrecs)
     {
-        free(service);
-        return result;
+        // break comma separated txt recs into labels
+        //
+        result = mdns_unflatten_txt(txtrecs, &service->txt_records);
+        if (result)
+        {
+            free(service);
+            return result;
+        }
     }
     // add service to interface list
     //
@@ -1893,9 +1954,9 @@ int mdns_responder_deinit(mdns_responder_t *res)
     }
     for (iface = res->interfaces; iface; iface = iface->next)
     {
-        if (iface->in_sock != INVALID_SOCKET)
+        if (iface->udp_sock != INVALID_SOCKET)
         {
-            close_socket(iface->in_sock);
+            close_socket(iface->udp_sock);
         }
         for (service = iface->services; service; service = service->next)
         {

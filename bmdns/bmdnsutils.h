@@ -22,6 +22,7 @@
 #include "bstreamio.h"
 #include "butil.h"
 
+int mdns_compare_nametext	(const char *ours, const char *theirs, int len);
 int mdns_compare_names      (const dns_domain_name_t *ours, const dns_domain_name_t *theirs);
 int mdns_get_wall_time		(uint32_t *secs, uint32_t *usecs);
 uint32_t 	mdns_get_rnd_delay_ms	(uint32_t max_delay);
@@ -63,7 +64,7 @@ int mdns_write_int32        (ioring_t *in, int32_t val);
 int mdns_flatten_name       (const dns_domain_name_t *dname, char *name, int nname);
 int mdns_unflatten_name		(const char *name, dns_domain_name_t *dname);
 int mdns_unflatten_txt		(const char *name, dns_txt_records_t *txtrec);
-int mdns_assemble_name      (uint8_t *buffer, int nbuffer, int ncomponents, ...);
+int mdns_assemble_name      (char *buffer, int nbuffer, int ncomponents, ...);
 int mdns_write_text         (ioring_t *out, const dns_txt_records_t *txtrec);
 int mdns_write_name         (ioring_t *in, const dns_domain_name_t *dname);
 

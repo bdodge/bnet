@@ -17,6 +17,37 @@
 #include "bmdns.h"
 #include <sys/time.h>
 
+int mdns_compare_nametext(const uint8_t *ours, const uint8_t *theirs, int len)
+{
+    int i;
+    uint8_t a;
+    uint8_t b;
+
+    for (i = 0; i < len; i++)
+    {
+        a = theirs[i];
+        b = theirs[i];
+
+        if (a >= 'a' && a <= 'z')
+        {
+            a = a - 'a' + 'A';
+        }
+        if (b >= 'a' && b <= 'z')
+        {
+            b = b - 'a' + 'A';
+        }
+        if (a < b)
+        {
+            return -1;
+        }
+        if (a > b)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int mdns_compare_names(const dns_domain_name_t *ours, const dns_domain_name_t *theirs)
 {
     int label_dex;
@@ -44,7 +75,16 @@ int mdns_compare_names(const dns_domain_name_t *ours, const dns_domain_name_t *t
     }
     for (label_dex = 0; label_dex < ours->num_labels; label_dex++)
     {
-        cmp = strcmp(ours->labels[label_dex].name, theirs->labels[label_dex].name);
+        if (ours->labels[label_dex].length < theirs->labels[label_dex].length)
+        {
+            return -1;
+        }
+        if (ours->labels[label_dex].length > theirs->labels[label_dex].length)
+        {
+            return 1;
+        }
+        cmp = mdns_compare_nametext(ours->labels[label_dex].name,
+                    theirs->labels[label_dex].name, ours->labels[label_dex].length);
         if (cmp)
         {
             butil_log(ll, "Label %d different\n", label_dex);
@@ -949,11 +989,104 @@ int mdns_write_text(ioring_t *out, const dns_txt_records_t *txtrec)
     return 0;
 }
 
+static bool mdns_compress(const dns_domain_name_t *dname, int *pldex, ioring_t *out, uint16_t *offset)
+{
+    int ldex;
+    int noff;
+    int i;
+
+    ldex = *pldex;
+    *offset = 0;
+
+    // find an occurance of label in the packet already
+    // by first looking for "len,firstchar"
+    //
+    for (i = MDNS_OFF_QUESTION; i < out->count; i++)
+    {
+        if (out->data[i] == dname->labels[ldex].length)
+        {
+            if (i < (out->count - dname->labels[ldex].length))
+            {
+                // the lengths match
+                //
+                if (! mdns_compare_nametext(dname->labels[ldex].name,
+                                    out->data + i + 1, dname->labels[ldex].length))
+                {
+                    // the lengths and strings match, this label can be compressed.
+                    //
+                    noff = i;
+                    *offset = noff;
+                    *pldex = ldex + 1;
+                    noff += dname->labels[ldex].length + 1;
+
+                    // now see how many *next* labels can be compressed in sequence
+                    // and just skip over them
+                    //
+                    while (ldex < dname->num_labels && noff < out->count)
+                    {
+                        if (out->data[noff] == 0)
+                        {
+                            // the end of the string in output, the labels all
+                            // parse so far compress to the first found string
+                            //
+                            *pldex = ldex + 1;
+                            return true;
+                        }
+                        // look at next label
+                        //
+                        ldex++;
+
+                        if (ldex >= dname->num_labels)
+                        {
+                            // end of labels but still more text in found name so no match
+                            //
+                            return false;
+                        }
+                        if (out->data[noff] != dname->labels[ldex].length)
+                        {
+                            // can't compress last label since next length doesn't match
+                            //
+                            return false;
+                        }
+                        if (out->count < noff + dname->labels[ldex].length)
+                        {
+                            // not enough data to compare
+                            //
+                            return false;
+                        }
+                        if (mdns_compare_nametext(dname->labels[ldex].name,
+                                    out->data + noff + 1, dname->labels[ldex].length))
+                        {
+                            // can't conpress last label since next text doesn't match
+                            //
+                            return false;
+                        }
+                        // this next label matches the name found first still so continue
+                        //
+                        noff += dname->labels[ldex].length + 1;
+                    }
+                }
+            }
+            else
+            {
+                // not enough data to find a match, so leave
+                //
+                return false;
+            }
+        }
+    }
+    // got to end, no matches
+    //
+    return false;
+}
+
 int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
 {
     int totlen;
     int label_dex;
+    int next_label_dex;
     int len;
+    uint16_t offset;
     int result;
 
     if (! out || ! dname)
@@ -970,15 +1103,33 @@ int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
     {
         return 1;
     }
-    for (label_dex = 0; label_dex < dname->num_labels; label_dex++)
+    for (label_dex = 0; label_dex < dname->num_labels;)
     {
         len = dname->labels[label_dex].length;
 
         out->data[out->head++] = (uint8_t)len;
         out->count++;
 
-        memcpy(out->data + out->head, dname->labels[label_dex].name, len);
+        next_label_dex = label_dex;
 
+        if (mdns_compress(dname, &next_label_dex, out, &offset))
+        {
+            // some number of labels existed already in
+            // the output buffer, so reference them
+            //
+            butil_log(5, "Labels %s +%d labels compressed to %d\n",
+                        dname->labels[label_dex].name, next_label_dex - label_dex, offset);
+            offset |= 0xC000;
+            offset = htons(offset);
+            memcpy(out->data + out->head, &offset, 2);
+            label_dex = next_label_dex;
+            len = 2;
+        }
+        else
+        {
+            memcpy(out->data + out->head, dname->labels[label_dex].name, len);
+            label_dex++;
+        }
         out->head += len;
         out->count += len;
     }

@@ -144,9 +144,10 @@ int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t 
 
 static int usage (const char *program)
 {
-    fprintf(stderr, "Use: %s [-lu]\n", program);
-    fprintf(stderr, "     -l    Set debug log level (default 1: errors/warnings only)\n");
-    fprintf(stderr, "     -t    Set TTL for iface/services\n");
+    fprintf(stderr, "Use: %s [-lst<N> -uU]\n", program);
+    fprintf(stderr, "     -l    Set debug log level to N (default 1: errors/warnings only)\n");
+    fprintf(stderr, "     -s    Stop after N seconds to test BYE\n");
+    fprintf(stderr, "     -t    Set TTL to N for iface/services\n");
     fprintf(stderr, "     -u    Run unit tests\n");
     fprintf(stderr, "     -U    Run unit tests and exit\n");
     return 1;
@@ -163,6 +164,8 @@ int main(int argc, char **argv)
     char *program;
     uint32_t uval;
     uint32_t ttl;
+    uint32_t runtime;
+    time_t endtime;
     int loglevel;
     bool unit_test;
     bool only_unit_test;
@@ -181,6 +184,7 @@ int main(int argc, char **argv)
 #endif
     loglevel = 5;
     ttl = 30;
+    runtime = 0;
     butil_set_log_level(loglevel);
     unit_test = false;
 
@@ -195,6 +199,7 @@ int main(int argc, char **argv)
             switch (arg[1])
             {
             case 'l':
+            case 's':
             case 't':
             {
                 if (arg[2] == '\0')
@@ -217,6 +222,10 @@ int main(int argc, char **argv)
                 if (arg[1] == 'l')
                 {
                     loglevel = uval;
+                }
+                else if (arg[1] == 's')
+                {
+                    runtime = uval;
                 }
                 else if (arg[1] == 't')
                 {
@@ -390,7 +399,33 @@ int main(int argc, char **argv)
             return 0;
         }
     }
-    result = mdns_responder_run(&responder, 0, 50000);
+    if (runtime > 0)
+    {
+        time_t now;
+
+        time(&endtime);
+        endtime += runtime;
+
+        do
+        {
+            result = mdns_responder_slice(&responder);
+            if (! result)
+            {
+                time(&now);
+                if (now > endtime)
+                {
+                    butil_log(2, "ending loop\n");
+                    result = mdns_responder_stop(&responder);
+                    break;
+                }
+            }
+        }
+        while (! result && ! responder.fatal);
+    }
+    else
+    {
+        result = mdns_responder_run(&responder, 0, 50000);
+    }
     if (result)
     {
         butil_log(0, "Responder Failed\n");

@@ -52,6 +52,7 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
     if (result < 0)
     {
         BERROR("network error");
+        res->fatal = true;
         return result;
     }
     if (result == 0)
@@ -230,6 +231,7 @@ int mdns_check_input(mdns_responder_t *res, mdns_interface_t *iface)
     if (result < 0)
     {
         BERROR("socket closed?");
+        res->fatal = true;
         return result;
     }
     if (result == 0)
@@ -1259,7 +1261,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     return result;
 }
 
-int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface)
+int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_delay)
 {
     mdns_service_t *service;
     mdns_packet_t *outpkt;
@@ -1301,7 +1303,7 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface)
         {
             break;
         }
-        result = mdns_enqueue_out(res, iface, outpkt, 150);
+        result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 210 : 0);
         if (result)
         {
             break;
@@ -1323,9 +1325,23 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface)
         {
             break;
         }
-        result = mdns_enqueue_out(res, iface, outpkt, 150);
+        result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 220 : 0);
     }
     return result;
+}
+
+int mdns_saybyebye(mdns_responder_t *res, mdns_interface_t *iface)
+{
+    mdns_service_t *service;
+
+    // a byebye is just an announce, but with 0 TTL
+    //
+    for (service = iface->services; service; service = service->next)
+    {
+        service->ttl = 0;
+    }
+    iface->ttl = 0;
+    return mdns_announce(res, iface, false);
 }
 
 int mdns_probe(mdns_responder_t *res, mdns_interface_t *iface)
@@ -1410,98 +1426,110 @@ int mdns_probe(mdns_responder_t *res, mdns_interface_t *iface)
     return result;
 }
 
-int mdns_responder_slice(mdns_responder_t *res, mdns_interface_t *iface)
+int mdns_responder_slice(mdns_responder_t *res)
 {
+    mdns_interface_t *iface;
     mdns_packet_t *pkt;
     int result;
 
-    switch (iface->state)
+    for (
+            iface = res->interfaces, result = 0;
+            iface && ! result && ! res->stopped;
+            iface = iface->next
+    )
     {
-    case MDNS_PROBE_1:
-        result = mdns_probe(res, iface);
-        iface->state = MDNS_PROBE_2;
-        break;
-    case MDNS_PROBE_2:
-        if (iface->outpkts)
+        switch (iface->state)
         {
+        case MDNS_PROBE_1:
+            result = mdns_probe(res, iface);
+            iface->state = MDNS_PROBE_2;
+            break;
+        case MDNS_PROBE_2:
+            if (iface->outpkts)
+            {
+                break;
+            }
+            result = mdns_probe(res, iface);
+            iface->state = MDNS_PROBE_3;
+            break;
+        case MDNS_PROBE_3:
+            if (iface->outpkts)
+            {
+                break;
+            }
+            result = mdns_probe(res, iface);
+            iface->state = MDNS_PROBE_FLUSH;
+            break;
+        case MDNS_PROBE_FLUSH:
+            if (iface->outpkts)
+            {
+                break;
+            }
+            iface->state = MDNS_ANNOUNCE_1;
+            break;
+        case MDNS_ANNOUNCE_1:
+            result = mdns_announce(res, iface, true);
+            iface->state = MDNS_ANNOUNCE_2;
+            break;
+        case MDNS_ANNOUNCE_2:
+            result = mdns_announce(res, iface, true);
+            iface->state = MDNS_RUN;
+            break;
+        case MDNS_BYEBYE:
+            result = mdns_saybyebye(res, iface);
+            iface->state = MDNS_DONE;
+            break;
+        case MDNS_DONE:
+            if (iface->outpkts)
+            {
+                break;
+            }
+            return 0;
+        default:
             break;
         }
-        result = mdns_probe(res, iface);
-        iface->state = MDNS_PROBE_3;
-        break;
-    case MDNS_PROBE_3:
-        if (iface->outpkts)
-        {
-            break;
-        }
-        result = mdns_probe(res, iface);
-        iface->state = MDNS_PROBE_FLUSH;
-        break;
-    case MDNS_PROBE_FLUSH:
-        if (iface->outpkts)
-        {
-            break;
-        }
-        iface->state = MDNS_ANNOUNCE_1;
-        break;
-    case MDNS_ANNOUNCE_1:
-        result = mdns_announce(res, iface);
-        iface->state = MDNS_ANNOUNCE_2;
-        break;
-    case MDNS_ANNOUNCE_2:
-        result = mdns_announce(res, iface);
-        iface->state = MDNS_RUN;
-        break;
-    case MDNS_BYEBYE:
-       // result = mdns_saybye(res, iface);
-        iface->state = MDNS_DONE;
-        break;
-    case MDNS_DONE:
-        return 0;
-    default:
-        break;
-    }
-    // check output queue
-    //
-    if (iface->outpkts)
-    {
-        result = mdns_handle_output(res, iface);
-        if (result)
-        {
-            return result;
-        }
-    }
-    if (iface->state > MDNS_PROBE_1 && iface->state < MDNS_BYEBYE)
-    {
-        // check input socket but (RFC6762 8.1 ignore conflicts before probe)
+        // check output queue
         //
-        result = mdns_check_input(res, iface);
-        if (result)
+        if (iface->outpkts)
         {
-            return result;
-        }
-    }
-    // check input queue
-    //
-    if (iface->inpkts)
-    {
-        pkt = iface->inpkts;
-        iface->inpkts = pkt->next;
-
-        result = mdns_handle_input(res, iface, pkt);
-
-        mdns_pkt_free(res, pkt);
-
-        if (result)
-        {
-            if (res->fatal)
+            result = mdns_handle_output(res, iface);
+            if (result)
             {
                 return result;
             }
-            // ignore regular errors unless fatal indicated
-            // we have no idea what kind of bad packets well get
+        }
+        if (iface->state > MDNS_PROBE_1 && iface->state < MDNS_BYEBYE)
+        {
+            // check input socket but (RFC6762 8.1 ignore conflicts before probe)
             //
-            result = 0;
+            result = mdns_check_input(res, iface);
+            if (result)
+            {
+                return result;
+            }
+        }
+        // check input queue
+        //
+        if (iface->inpkts)
+        {
+            pkt = iface->inpkts;
+            iface->inpkts = pkt->next;
+
+            result = mdns_handle_input(res, iface, pkt);
+
+            mdns_pkt_free(res, pkt);
+
+            if (result)
+            {
+                if (res->fatal)
+                {
+                    return result;
+                }
+                // ignore regular errors unless fatal indicated
+                // we have no idea what kind of bad packets well get
+                //
+                result = 0;
+            }
         }
     }
     return result;
@@ -1549,14 +1577,46 @@ int mdns_responder_run(mdns_responder_t *res, int poll_secs, int poll_usecs)
     }
     result = 0;
 
-    while (! result)
+    res->stopped = false;
+
+    while (! result && ! res->stopped && ! res->fatal)
     {
-        for (iface = res->interfaces; iface && ! result; iface = iface->next)
-        {
-            result = mdns_responder_slice(res, iface);
-        }
+        result = mdns_responder_slice(res);
     }
     return result;
+}
+
+int mdns_responder_stop(mdns_responder_t *res)
+{
+    mdns_interface_t *iface;
+    int slice;
+    int result;
+
+    if (! res)
+    {
+        return -1;
+    }
+    // setup each interface to say bye, or not run
+    //
+    for (iface = res->interfaces; iface; iface = iface->next)
+    {
+        if (iface->state > MDNS_ANNOUNCE_1)
+        {
+            iface->state = MDNS_BYEBYE;
+        }
+        else
+        {
+            iface->state = MDNS_DONE;
+        }
+    }
+    // slice a number of times to complete bye
+    //
+    for (slice = 0; slice < 100; slice++)
+    {
+        result = mdns_responder_slice(res);
+    }
+    res->stopped = true;
+    return 0;
 }
 
 int mdns_responder_add_interface(
@@ -1788,6 +1848,7 @@ int mdns_responder_init(mdns_responder_t *res)
     res->to_secs = 0;
     res->to_usecs = 50000;
 
+    res->stopped = false;
     res->fatal = false;
 
     // create a packet pool

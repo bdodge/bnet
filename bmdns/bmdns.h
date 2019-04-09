@@ -166,6 +166,7 @@ typedef struct tag_mdns_responder
     mdns_interface_t   *interfaces;     ///< list of managed interfaces
     int                 to_secs;        ///< input poll dwell, seconds
     int                 to_usecs;       ///< input poll dwell, micro-seconds
+    bool                stopped;        ///< request to stop run loop
     bool                fatal;          ///< a fatal error occured, exit
     mdns_packet_t      *pkt_free;       ///< alloc packet list
     mdns_packet_t      *pkt_pool;       ///< alloc pool of packets

@@ -17,8 +17,9 @@
 #include "bmdnsutils.h"
 
 // TODO
-//    compress outgoing names
-//
+//    multi-packet known-answer-suppression (maybe)
+//    add remove service/iface functions
+
 int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
 {
     struct sockaddr *dstaddr;

@@ -45,5 +45,18 @@
 //
 #define MDNS_MAX_ANSWERS		(4)
 
+/// whether to use memory trace or not, modifies small
+/// allocs to use local tracking allocator
+//
+#ifndef MDNS_TRACE_ALLOCS
+#define MDNS_TRACE_ALLOCS		(0)
+#endif
+
+/// If tracing memory, pool size for label and text sized allocs
+/// labels are 64 bytes and texts are 256
+//
+#define MDNS_LABEL_POOL			(1024)
+#define MDNS_TXTREC_POOL		(512)
+
 #endif
 

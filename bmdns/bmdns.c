@@ -15,6 +15,8 @@
  */
 #include "bmdns.h"
 #include "bmdnsutils.h"
+// include this "private" api header to keep it up to date
+#include "bmdnsunits.h"
 
 // TODO
 //    multi-packet known-answer-suppression (maybe)
@@ -31,100 +33,104 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
     int count;
     int result;
 
-    pkt = iface->outpkts;
-
-    if (! res || ! iface || ! pkt)
+    if (! res || ! iface)
     {
         return -1;
     }
-    if (! res || iface->udp_sock == INVALID_SOCKET)
+    while (iface->outpkts)
     {
-        BERROR("bad context");
-        return -1;
-    }
-    delay = mdns_get_pkt_delay_ms(pkt);
+        pkt = iface->outpkts;
 
-    butil_log(8, "delay +%ums\n", delay);
-    if (delay > 0)
-    {
-        return 0;
-    }
-    result = iostream_posix_poll_filedesc(iface->udp_sock, writeable, 0, 100000);
-    if (result < 0)
-    {
-        BERROR("network error");
-        res->fatal = true;
-        return result;
-    }
-    if (result == 0)
-    {
-        // not writeable keep packet
-        return 0;
-    }
-    // dequeue packet
-    //
-    iface->outpkts = pkt->next;
-
-    if (pkt->unicast || (pkt->srcport != MDNS_PORT))
-    {
-        if (pkt->isv6addr)
+        if (! res || iface->udp_sock == INVALID_SOCKET)
         {
-            dst6addr.sin6_family = AF_INET6;
-            dst6addr.sin6_port = htons(pkt->srcport);
-            memcpy(&dst6addr.sin6_addr, pkt->srcaddr6.addr, sizeof(bipv6addr_t));
-            dstaddr = (struct sockaddr *)&dst6addr;
-            dstsize = sizeof(dst6addr);
+            BERROR("bad context");
+            return -1;
+        }
+        delay = mdns_get_pkt_delay_ms(pkt);
+
+        butil_log(8, "delay +%ums\n", delay);
+        if (delay > 0)
+        {
+            // no reason to loop, nothing to send
+            return 0;
+        }
+        result = iostream_posix_poll_filedesc(iface->udp_sock, writeable, 0, 100000);
+        if (result < 0)
+        {
+            BERROR("network error");
+            res->fatal = true;
+            return result;
+        }
+        if (result == 0)
+        {
+            // not writeable keep packet
+            return 0;
+        }
+        // dequeue packet
+        //
+        iface->outpkts = pkt->next;
+
+        if (pkt->unicast || (pkt->srcport != MDNS_PORT))
+        {
+            if (pkt->isv6addr)
+            {
+                dst6addr.sin6_family = AF_INET6;
+                dst6addr.sin6_port = htons(pkt->srcport);
+                memcpy(&dst6addr.sin6_addr, pkt->srcaddr6.addr, sizeof(bipv6addr_t));
+                dstaddr = (struct sockaddr *)&dst6addr;
+                dstsize = sizeof(dst6addr);
+            }
+            else
+            {
+                dst4addr.sin_family = AF_INET;
+                dst4addr.sin_port = htons(pkt->srcport);
+                dst4addr.sin_addr.s_addr = pkt->srcaddr4.addr;
+                dstaddr = (struct sockaddr *)&dst4addr;
+                dstsize = sizeof(dst4addr);
+            }
         }
         else
         {
-            dst4addr.sin_family = AF_INET;
-            dst4addr.sin_port = htons(pkt->srcport);
-            dst4addr.sin_addr.s_addr = pkt->srcaddr4.addr;
-            dstaddr = (struct sockaddr *)&dst4addr;
-            dstsize = sizeof(dst4addr);
+            if (pkt->isv6addr)
+            {
+                dst6addr.sin6_family = AF_INET6;
+                dst6addr.sin6_port = htons(MDNS_PORT);
+                inet_pton(AF_INET6, MDNS_MCAST_IP4ADDR, &dst6addr.sin6_addr);
+                dstaddr = (struct sockaddr *)&dst6addr;
+                dstsize = sizeof(dst6addr);
+            }
+            else
+            {
+                dst4addr.sin_family = AF_INET;
+                dst4addr.sin_port = htons(MDNS_PORT);
+                dst4addr.sin_addr.s_addr = inet_addr(MDNS_MCAST_IP4ADDR);
+                dstaddr = (struct sockaddr *)&dst4addr;
+                dstsize = sizeof(dst4addr);
+            }
         }
-    }
-    else
-    {
-        if (pkt->isv6addr)
+        count = sendto(iface->udp_sock, pkt->io.data, pkt->io.count,
+                                 0, (struct sockaddr *)dstaddr,  dstsize);
+
+        mdns_pkt_free(res, pkt);
+        if (pkt->unicast)
         {
-            dst6addr.sin6_family = AF_INET6;
-            dst6addr.sin6_port = htons(MDNS_PORT);
-            inet_pton(AF_INET6, MDNS_MCAST_IP4ADDR, &dst6addr.sin6_addr);
-            dstaddr = (struct sockaddr *)&dst6addr;
-            dstsize = sizeof(dst6addr);
+            butil_log(6, "TX %d to %s %u  res %d (%d)\n", pkt->io.count,
+                            mdns_str_for_pktaddr(pkt), (uint32_t)pkt->srcport, count, errno);
         }
         else
         {
-            dst4addr.sin_family = AF_INET;
-            dst4addr.sin_port = htons(MDNS_PORT);
-            dst4addr.sin_addr.s_addr = inet_addr(MDNS_MCAST_IP4ADDR);
-            dstaddr = (struct sockaddr *)&dst4addr;
-            dstsize = sizeof(dst4addr);
+            butil_log(6, "TX %d multicast res %d (%d)\n", pkt->io.count, count, errno);
         }
-    }
-    count = sendto(iface->udp_sock, pkt->io.data, pkt->io.count,
-                             0, (struct sockaddr *)dstaddr,  dstsize);
-
-    mdns_pkt_free(res, pkt);
-    if (pkt->unicast)
-    {
-        butil_log(6, "TX %d to %s %u  res %d (%d)\n", pkt->io.count,
-                        mdns_str_for_pktaddr(pkt), (uint32_t)pkt->srcport, count, errno);
-    }
-    else
-    {
-        butil_log(6, "TX %d multicast res %d (%d)\n", pkt->io.count, count, errno);
-    }
-    if (count < 0)
-    {
-        BERROR("cant send\n");
-        return count;
-    }
-    if (count != pkt->io.count)
-    {
-        butil_log(1, "Partial write of pkt\n");
-        return -1;
+        if (count < 0)
+        {
+            BERROR("cant send\n");
+            return count;
+        }
+        if (count != pkt->io.count)
+        {
+            butil_log(1, "Partial write of pkt\n");
+            return -1;
+        }
     }
     return 0;
 }
@@ -409,7 +415,7 @@ int mdns_ask_question(
     return result;
 }
 
-int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t *dname)
+int mdns_compare_resource_to_name(mdns_responder_t *res, uint8_t *answer, int anslen, dns_domain_name_t *dname)
 {
     dns_domain_name_t res_name;
     ioring_t res_in;
@@ -435,17 +441,21 @@ int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t
     // name can NOT have any compression or this doesn't
     // work, so make sure any answer text is flattened
     //
-    result = mdns_read_name(&res_in, &res_name);
+    result = mdns_read_name(res, &res_in, &res_name);
     if (result)
     {
         return -1;
     }
     // compare names label by label
     //
-    return mdns_compare_names(dname, &res_name);
+    result = mdns_compare_names(dname, &res_name);
+
+    mdns_clear_name(res, &res_name);
+    return result;
 }
 
 int mdns_query_respond(
+                            mdns_responder_t  *res,
                             mdns_interface_t  *iface,
                             dns_domain_name_t *record_domain,
                             dns_rr_rec_t      *answers,
@@ -515,7 +525,8 @@ int mdns_query_respond(
         switch (type)
         {
         case DNS_RRTYPE_PTR:
-            matched = !mdns_compare_resource_to_name(answers[adex].res, answers[adex].reslen, resource_domain);
+            matched = !mdns_compare_resource_to_name(res,
+                            answers[adex].res, answers[adex].reslen, resource_domain);
             break;
         case DNS_RRTYPE_TXT:
             reslen = DNS_TXT_LENGTH(resource_txt);
@@ -548,7 +559,7 @@ int mdns_query_respond(
         case DNS_RRTYPE_SRV:
             // TODO compare weight/prority/port (but really, if name and service name match
             // we really want to match here anyway)
-            matched = !mdns_compare_resource_to_name(answers[adex].res + 6, answers[adex].reslen - 6, resource_domain);
+            matched = !mdns_compare_resource_to_name(res, answers[adex].res + 6, answers[adex].reslen - 6, resource_domain);
             break;
         case DNS_RRTYPE_A:
             if (answers[adex].reslen == 4)
@@ -727,6 +738,7 @@ int mdns_query_respond(
 }
 
 int mdns_answer_question(
+                        mdns_responder_t *res,
                         mdns_interface_t  *iface,
                         dns_domain_name_t *dname,
                         uint16_t type,
@@ -770,11 +782,11 @@ int mdns_answer_question(
     {
         // just call the individual types by hand
         //
-        result  = mdns_answer_question(iface, dname, DNS_RRTYPE_PTR, clas, answers, answer_count, outpkt);
-        result |= mdns_answer_question(iface, dname, DNS_RRTYPE_TXT, clas, answers, answer_count, outpkt);
-        result |= mdns_answer_question(iface, dname, DNS_RRTYPE_SRV, clas, answers, answer_count, outpkt);
-        result |= mdns_answer_question(iface, dname, DNS_RRTYPE_A, clas, answers, answer_count, outpkt);
-        result |= mdns_answer_question(iface, dname, DNS_RRTYPE_AAAA, clas, answers, answer_count, outpkt);
+        result  = mdns_answer_question(res, iface, dname, DNS_RRTYPE_PTR, clas, answers, answer_count, outpkt);
+        result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_TXT, clas, answers, answer_count, outpkt);
+        result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_SRV, clas, answers, answer_count, outpkt);
+        result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_A, clas, answers, answer_count, outpkt);
+        result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_AAAA, clas, answers, answer_count, outpkt);
         return result;
     }
     // match against all the names we care about (host, ip, services)
@@ -792,7 +804,7 @@ int mdns_answer_question(
             outpkt->ancount++;
         }
         // TODO what is the proper resource domain answer for a hostname qr?
-        result = mdns_query_respond(iface, &iface->hostname,
+        result = mdns_query_respond(res, iface, &iface->hostname,
                                         answers, answer_count, outpkt, type, clas, iface->ttl, dname);
     }
     cmp = mdns_compare_names(&iface->rev_ipv4, dname);
@@ -807,7 +819,7 @@ int mdns_answer_question(
         {
             outpkt->ancount++;
         }
-        result = mdns_query_respond(iface, &iface->rev_ipv4,
+        result = mdns_query_respond(res, iface, &iface->rev_ipv4,
                                         answers, answer_count, outpkt, type, clas, iface->ttl, &iface->hostname);
     }
 
@@ -823,7 +835,7 @@ int mdns_answer_question(
         {
             outpkt->ancount++;
         }
-        result = mdns_query_respond(iface, &iface->rev_ipv6,
+        result = mdns_query_respond(res, iface, &iface->rev_ipv6,
                                         answers, answer_count, outpkt, type, clas, iface->ttl, &iface->hostname);
     }
 
@@ -884,7 +896,7 @@ int mdns_answer_question(
             }
             prevcount = outpkt->io.count;
 
-            result = mdns_query_respond(iface, record_domain,
+            result = mdns_query_respond(res, iface, record_domain,
                                 answers, answer_count, outpkt, type, clas, service->ttl, resource_domain);
 
             if (! result && type == DNS_RRTYPE_SRV && iface->state >= MDNS_ANNOUNCE_1 && outpkt->io.count > prevcount)
@@ -904,13 +916,13 @@ int mdns_answer_question(
         if (added_srv->interface->ipv4addr.addr != 0)
         {
             outpkt->arcount++;
-            result = mdns_query_respond(iface, &added_srv->interface->hostname,
+            result = mdns_query_respond(res, iface, &added_srv->interface->hostname,
                                 answers, answer_count, outpkt, DNS_RRTYPE_A, clas, iface->ttl, &iface->hostname);
         }
         if (added_srv->interface->ipv6addr.addr[0] != 0)
         {
             outpkt->arcount++;
-            result = mdns_query_respond(iface, &added_srv->interface->hostname,
+            result = mdns_query_respond(res, iface, &added_srv->interface->hostname,
                                 answers, answer_count, outpkt, DNS_RRTYPE_AAAA, clas, iface->ttl, &iface->hostname);
         }
         // and add NSEC records for the addresses we do NOT have to ensure we claim them as ours
@@ -1075,7 +1087,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
 
     // reset domain name and known answers
     //
-    mdns_clear_name(&res->domain_name);
+    mdns_clear_name(res, &res->domain_name);
 
     for (
             answer_num = 0;
@@ -1083,7 +1095,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
             answer_num++
     )
     {
-        mdns_clear_name(&res->known_answers[answer_num].dname);
+        mdns_clear_name(res, &res->known_answers[answer_num].dname);
     }
     res->answer_count = 0;
 
@@ -1091,7 +1103,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     {
         // read the name
         //
-        result = mdns_read_name(&inpkt->io, &res->domain_name);
+        result = mdns_read_name(res, &inpkt->io, &res->domain_name);
         if (result)
         {
             break;
@@ -1154,7 +1166,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     {
         // read the name
         //
-        result = mdns_read_name(&inpkt->io, &res->domain_name);
+        result = mdns_read_name(res, &inpkt->io, &res->domain_name);
         if (result)
         {
             break;
@@ -1287,8 +1299,8 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
 
                         // copy answer to rr struct
                         //
-                        mdns_clear_name(&rr->dname);
-                        mdns_copy_name(&rr->dname, &res->domain_name);
+                        mdns_clear_name(res, &rr->dname);
+                        mdns_copy_name(res, &rr->dname, &res->domain_name);
 
                         rr->type = type;
                         rr->clas = clas;
@@ -1322,7 +1334,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                             //
                             mdns_init_name(&res_name);
 
-                            result = mdns_read_name(&inpkt->io, &res_name);
+                            result = mdns_read_name(res, &inpkt->io, &res_name);
 
                             // and write it into the resource which will remain
                             // flat since there are no other strings to compress with
@@ -1333,7 +1345,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                             //
                             rr->reslen = resio.count;
 
-                            mdns_clear_name(&res_name);
+                            mdns_clear_name(res, &res_name);
 
                             result = 0; // ignore failure here, not a bit loss
                         }
@@ -1376,7 +1388,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     {
         // read the name
         //
-        result = mdns_read_name(&inpkt->io, &res->domain_name);
+        result = mdns_read_name(res, &inpkt->io, &res->domain_name);
         if (result)
         {
             break;
@@ -1429,7 +1441,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                 outpkt->srcaddr4.addr = inpkt->srcaddr4.addr;
                 memcpy(&outpkt->srcaddr6.addr, &inpkt->srcaddr6.addr, sizeof(bipv6addr_t));
             }
-            result = mdns_answer_question(iface, &res->domain_name, type, clas, res->known_answers, res->answer_count, outpkt);
+            result = mdns_answer_question(res, iface, &res->domain_name, type, clas, res->known_answers, res->answer_count, outpkt);
         }
         else
         {
@@ -1456,7 +1468,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
 
                             // defend ourselves
                             //
-                            result = mdns_answer_question(iface, &res->domain_name, type, clas, NULL, 0, outpkt);
+                            result = mdns_answer_question(res, iface, &res->domain_name, type, clas, NULL, 0, outpkt);
                         }
                     }
                 }
@@ -1497,17 +1509,17 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
 
         butil_log(5, "Announcing service %s\n", mdns_str_for_domain_name(&service->usr_domain_name));
 
-        result = mdns_answer_question(iface, &service->usr_domain_name, DNS_RRTYPE_TXT, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_TXT, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
         }
-        result = mdns_answer_question(iface, &service->sub_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->sub_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
         }
-        result = mdns_answer_question(iface, &service->srv_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->srv_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
@@ -1529,7 +1541,7 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
         outpkt->id = 0;
         outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
 
-        result = mdns_answer_question(iface, &service->usr_domain_name, DNS_RRTYPE_SRV, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_SRV, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
@@ -1549,7 +1561,7 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
     //
     if (iface->ipv4addr.addr != 0)
     {
-        result = mdns_answer_question(iface, &iface->rev_ipv4, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &iface->rev_ipv4, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             return result;
@@ -1557,7 +1569,7 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
     }
     if (iface->ipv6addr.addr != 0)
     {
-        result = mdns_answer_question(iface, &iface->rev_ipv6, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &iface->rev_ipv6, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             return result;
@@ -1639,17 +1651,17 @@ int mdns_probe(mdns_responder_t *res, mdns_interface_t *iface)
         {
             break;
         }
-        result = mdns_answer_question(iface, &service->interface->hostname, DNS_RRTYPE_A, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->interface->hostname, DNS_RRTYPE_A, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
         }
-        result = mdns_answer_question(iface, &service->interface->hostname, DNS_RRTYPE_AAAA, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->interface->hostname, DNS_RRTYPE_AAAA, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
         }
-        result = mdns_answer_question(iface, &service->usr_domain_name, DNS_RRTYPE_SRV, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_SRV, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
@@ -1887,11 +1899,14 @@ int mdns_responder_add_interface(
     memcpy(&iface->ipv4addr, ipv4addr, sizeof(bipv4addr_t));
     memcpy(&iface->ipv6addr, ipv6addr, sizeof(bipv6addr_t));
 
+    mdns_init_name(&iface->rev_ipv4);
+    mdns_init_name(&iface->rev_ipv6);
+
     // build reverse mappings of ip addresses
     //
     result = mdns_assemble_name(buffer, sizeof(buffer), 3,
                             mdns_reverse_ipv4addr(ipv4addr), "in-addr", "arpa");
-    result |= mdns_unflatten_name(buffer, &iface->rev_ipv4);
+    result |= mdns_unflatten_name(res, buffer, &iface->rev_ipv4);
     if (result)
     {
         butil_log(0, "Can't build rev ipv4\n");
@@ -1899,7 +1914,7 @@ int mdns_responder_add_interface(
     }
     result = mdns_assemble_name(buffer, sizeof(buffer), 3,
                             mdns_reverse_ipv6addr(ipv6addr), "ip6", "arpa");
-    result |= mdns_unflatten_name(buffer, &iface->rev_ipv6);
+    result |= mdns_unflatten_name(res, buffer, &iface->rev_ipv6);
     if (result)
     {
         butil_log(0, "Can't build rev ipv4\n");
@@ -1997,6 +2012,11 @@ int mdns_responder_add_service(
     service->ttl = ttl;
     service->probes = 0;
 
+    mdns_init_name(&service->usr_domain_name);
+    mdns_init_name(&service->srv_domain_name);
+    mdns_init_name(&service->sub_domain_name);
+    mdns_init_name(&service->txt_records);
+
     // create a domain name like "_username._servicename._proto.local"
     //
     result = mdns_assemble_name(
@@ -2016,7 +2036,7 @@ int mdns_responder_add_service(
     }
     // convert to domain name struct
     //
-    result = mdns_unflatten_name(name, &service->usr_domain_name);
+    result = mdns_unflatten_name(res, name, &service->usr_domain_name);
     if (result)
     {
         free(service);
@@ -2042,7 +2062,7 @@ int mdns_responder_add_service(
     }
     // convert to domain name struct
     //
-    result = mdns_unflatten_name(name, &service->srv_domain_name);
+    result = mdns_unflatten_name(res, name, &service->srv_domain_name);
     if (result)
     {
         free(service);
@@ -2070,7 +2090,7 @@ int mdns_responder_add_service(
     }
     // convert to domain name struct
     //
-    result = mdns_unflatten_name(name, &service->sub_domain_name);
+    result = mdns_unflatten_name(res, name, &service->sub_domain_name);
     if (result)
     {
         free(service);
@@ -2082,7 +2102,7 @@ int mdns_responder_add_service(
     {
         // break comma separated txt recs into labels
         //
-        result = mdns_unflatten_txt(txtrecs, &service->txt_records);
+        result = mdns_unflatten_txt(res, txtrecs, &service->txt_records);
         if (result)
         {
             free(service);
@@ -2125,7 +2145,7 @@ int mdns_responder_init(mdns_responder_t *res)
 
     // create a packet pool
     //
-    res->pkt_pool = (mdns_packet_t *)malloc(MDNS_PACKET_POOL_SIZE * sizeof(mdns_packet_t));
+    res->pkt_pool = (mdns_packet_t *)mdns_large_alloc(res, MDNS_PACKET_POOL_SIZE * sizeof(mdns_packet_t));
     if (! res->pkt_pool)
     {
         BERROR("Alloc pool");
@@ -2151,6 +2171,48 @@ int mdns_responder_init(mdns_responder_t *res)
     }
     res->pkt_free = res->pkt_pool;
 
+#if MDNS_TRACE_ALLOCS
+    // create alloc pools for label and text strings
+    //
+    void *pool;
+    size_t pool_size, pool_chunk;
+    size_t size;
+
+    result = bmem_init();
+    if (result)
+    {
+        BERROR("Can't init pool\n");
+        return -1;
+    }
+    pool_size = ((MDNS_LABEL_POOL + 2) * MDNS_MAX_LABEL) + 2 * bmem_pool_overhead();
+    pool_chunk = MDNS_MAX_LABEL;
+    res->label_pool = malloc(pool_size);
+    if (! res->label_pool)
+    {
+        BERROR("Can't alloc label pool\n");
+        return -1;
+    }
+    result = bmem_add_pool(res->label_pool, pool_size, pool_chunk);
+    if (result)
+    {
+        BERROR("Can't add label pool\n");
+        return -1;
+    }
+    pool_size = ((MDNS_TXTREC_POOL + 2) * MDNS_MAX_LABEL) + 2 * bmem_pool_overhead();
+    pool_chunk = MDNS_MAX_DNTEXT;
+    res->txt_pool = malloc(pool_size);
+    if (! res->label_pool)
+    {
+        BERROR("Can't alloc txt pool\n");
+        return -1;
+    }
+    result = bmem_add_pool(res->txt_pool, pool_size, pool_chunk);
+    if (result)
+    {
+        BERROR("Can't add txt pool\n");
+        return -1;
+    }
+#endif
     return 0;
 }
 
@@ -2158,6 +2220,7 @@ int mdns_responder_deinit(mdns_responder_t *res)
 {
     mdns_interface_t *iface;
     mdns_service_t *service;
+    int answer_num;
 
     if (! res)
     {
@@ -2171,8 +2234,15 @@ int mdns_responder_deinit(mdns_responder_t *res)
         }
         for (service = iface->services; service; service = service->next)
         {
+            mdns_clear_name(res, &service->usr_domain_name);
+            mdns_clear_name(res, &service->srv_domain_name);
+            mdns_clear_name(res, &service->sub_domain_name);
+            mdns_clear_name(res, &service->txt_records);
             mdns_service_free(res, service);
         }
+        mdns_clear_name(res, &iface->hostname);
+        mdns_clear_name(res, &iface->rev_ipv4);
+        mdns_clear_name(res, &iface->rev_ipv6);
     }
     while (res->interfaces)
     {
@@ -2182,10 +2252,25 @@ int mdns_responder_deinit(mdns_responder_t *res)
     }
     res->interfaces = NULL;
 
+    for (
+            answer_num = 0;
+            answer_num < res->answer_count;
+            answer_num++
+    )
+    {
+        mdns_clear_name(res, &res->known_answers[answer_num].dname);
+    }
+    mdns_clear_name(res, &res->domain_name);
+
     if (res->pkt_pool)
     {
-        free(res->pkt_pool);
+        mdns_large_free(res, res->pkt_pool);
     }
+#if MDNS_TRACE_ALLOCS
+    bmem_stats(5);
+    free(res->label_pool);
+    free(res->txt_pool);
+#endif
     return 0;
 }
 

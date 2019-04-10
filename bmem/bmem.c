@@ -551,8 +551,13 @@ void bmem_free_x(void *ptr)
     }
     while (hash != init_hash);
     MEM_UNLOCK();
-    butil_log(0, "Freeing ptr %p is not in any pool", ptr);
+    butil_log(0, "Freeing ptr %p is not in any pool\n", ptr);
     return;
+}
+
+int bmem_pool_overhead()
+{
+    return sizeof(bmempool_t);
 }
 
 int bmem_deinit()

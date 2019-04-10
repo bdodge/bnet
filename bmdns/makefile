@@ -41,7 +41,8 @@ clean:
 	rm $(PROGOBJECTS) $(MDNSLIB) $(OBJECTS)
 
 $(OBJDIR)/bmdnstest.o: $(SRCDIR)/bmdnstest.c $(HEADERS)
-$(OBJDIR)/bmdns.o: $(SRCDIR)/bmdns.c $(HEADERS)
 $(OBJDIR)/bmdnsutils.o: $(SRCDIR)/bmdnsutils.c $(HEADERS)
+$(OBJDIR)/bmdnsunits.o: $(SRCDIR)/bmdnsunits.c $(HEADERS)
+$(OBJDIR)/bmdns.o: $(SRCDIR)/bmdns.c $(HEADERS)
 
 

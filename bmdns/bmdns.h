@@ -199,6 +199,10 @@ typedef struct tag_mdns_responder
     bool                unit_testing;   ///< dont make sockets, etc.
     mdns_packet_t      *pkt_free;       ///< alloc packet list
     mdns_packet_t      *pkt_pool;       ///< alloc pool of packets
+#if MDNS_TRACE_ALLOCS
+    uint8_t            *label_pool;     ///< pool for label alloc if tracing
+    uint8_t            *txt_pool;       ///< pool for txtrec alloc if tracing
+#endif
 }
 mdns_responder_t;
 

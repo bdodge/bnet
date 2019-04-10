@@ -144,7 +144,7 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     name1 = "ABCD.EFGH.IJKL.MNOP.qrst.uvwx.yz";
     name2 = "abcd.EFGH.IjkL.MNOP.qrst.uvwx.yz";
 
-    result = mdns_unflatten_name(name1, &dname1);
+    result = mdns_unflatten_name(res, name1, &dname1);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name1);
@@ -175,13 +175,13 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     name1 = "AAAA.BBBB.CCCC.DDDD";
     name2 = "BBBB.CCCC.DDDD";
 
-    result = mdns_unflatten_name(name1, &dname1);
+    result = mdns_unflatten_name(res, name1, &dname1);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name1);
         return result;
     }
-    result = mdns_unflatten_name(name2, &dname2);
+    result = mdns_unflatten_name(res, name2, &dname2);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name2);
@@ -221,13 +221,13 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     }
     // read the name back and ensure it matches
     //
-    result = mdns_read_name(&io, &dname1);
+    result = mdns_read_name(res, &io, &dname1);
     if (result)
     {
         butil_log(0, "Coudn't re-read name1\n");
         return result;
     }
-    result = mdns_read_name(&io, &dname2);
+    result = mdns_read_name(res, &io, &dname2);
     if (result)
     {
         butil_log(0, "Coudn't re-read name2 (compressed)\n");
@@ -250,13 +250,13 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     name1 = "ABCD.EFGH.IJKL.MNOP.qrst.uvwx.yz";
     name2 = "abcd.EFGH.IjkL.MNOP.qrst.uvwx.yz";
 
-    result = mdns_unflatten_name(name1, &dname1);
+    result = mdns_unflatten_name(res, name1, &dname1);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name1);
         return result;
     }
-    result = mdns_unflatten_name(name2, &dname2);
+    result = mdns_unflatten_name(res, name2, &dname2);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name2);
@@ -299,13 +299,13 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     name1 = "ABCD.EFGH.IJKL.MNOP.qrst.uvwx.yz";
     name2 = "abcd.EFGH.IjkL.MNOP.qrst.uvwx.yz.THIS.IS.A.TEST";
 
-    result = mdns_unflatten_name(name1, &dname1);
+    result = mdns_unflatten_name(res, name1, &dname1);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name1);
         return result;
     }
-    result = mdns_unflatten_name(name2, &dname2);
+    result = mdns_unflatten_name(res, name2, &dname2);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name2);
@@ -358,13 +358,13 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     name1 = "ABCD.EFGH.IJKL.MNOP.qrst.uvwx.yz";
     name2 = "AAAA.BBBB.qrst.uvwx.yz.THIS.IS.A.TEST";
 
-    result = mdns_unflatten_name(name1, &dname1);
+    result = mdns_unflatten_name(res, name1, &dname1);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name1);
         return result;
     }
-    result = mdns_unflatten_name(name2, &dname2);
+    result = mdns_unflatten_name(res, name2, &dname2);
     if (result)
     {
         butil_log(0, "Failed to unflatten %s\n", name2);
@@ -514,7 +514,7 @@ int mdns_test_iface_rr_type(mdns_responder_t *res, uint16_t rectype)
         //
         outpkt->io.tail = MDNS_OFF_QUESTION;
 
-        result = mdns_read_name(&outpkt->io, &domain_name);
+        result = mdns_read_name(res, &outpkt->io, &domain_name);
         if (result)
         {
             break;
@@ -566,7 +566,7 @@ int mdns_test_iface_rr_type(mdns_responder_t *res, uint16_t rectype)
         {
         case DNS_RRTYPE_PTR:
             // ptr for host name is just host name
-            result = mdns_read_name(&outpkt->io, &domain_name);
+            result = mdns_read_name(res, &outpkt->io, &domain_name);
             if (result)
             {
                 butil_log(0, "Can't read name from ptr\n");
@@ -742,7 +742,7 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
             //
             outpkt->io.tail = MDNS_OFF_QUESTION;
 
-            result = mdns_read_name(&outpkt->io, &domain_name);
+            result = mdns_read_name(res, &outpkt->io, &domain_name);
             if (result)
             {
                 break;
@@ -794,7 +794,7 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
             {
             case DNS_RRTYPE_PTR:
                 // ptr for host name is just host name
-                result = mdns_read_name(&outpkt->io, &domain_name);
+                result = mdns_read_name(res, &outpkt->io, &domain_name);
                 if (result)
                 {
                     butil_log(0, "Can't read name from ptr\n");
@@ -847,7 +847,7 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
             case DNS_RRTYPE_SRV:
                 outpkt->io.tail += 6;
                 outpkt->io.count -= 6;
-                result = mdns_read_name(&outpkt->io, &domain_name);
+                result = mdns_read_name(res, &outpkt->io, &domain_name);
 
                 if (mdns_compare_names(
                                         &iface->hostname,
@@ -959,7 +959,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             rr_ttl = service->ttl;  // swap in ttl parameter as if that's what the querier thinks is left to timeout
             service->ttl = ttl;
 
-            result = mdns_answer_question(iface, &service->usr_domain_name, rectype, DNS_CLASS_IN, NULL, 0, pkt);
+            result = mdns_answer_question(res, iface, &service->usr_domain_name, rectype, DNS_CLASS_IN, NULL, 0, pkt);
 
             // put real ttl back in
             service->ttl = rr_ttl;
@@ -1034,7 +1034,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             //
             outpkt->io.tail = MDNS_OFF_QUESTION;
 
-            result = mdns_read_name(&outpkt->io, &domain_name);
+            result = mdns_read_name(res, &outpkt->io, &domain_name);
             if (result)
             {
                 break;
@@ -1086,7 +1086,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             {
             case DNS_RRTYPE_PTR:
                 // ptr for host name is just host name
-                result = mdns_read_name(&outpkt->io, &domain_name);
+                result = mdns_read_name(res, &outpkt->io, &domain_name);
                 if (result)
                 {
                     butil_log(0, "Can't read name from ptr\n");
@@ -1139,7 +1139,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             case DNS_RRTYPE_SRV:
                 outpkt->io.tail += 6;
                 outpkt->io.count -= 6;
-                result = mdns_read_name(&outpkt->io, &domain_name);
+                result = mdns_read_name(res, &outpkt->io, &domain_name);
 
                 if (mdns_compare_names(
                                         &iface->hostname,
@@ -1178,6 +1178,7 @@ int mdns_unit_test(mdns_responder_t *res)
     int result;
 
 #if 1
+    butil_log(2, "TEST: Read Packet ----------------------\n");
     result = mdns_test_read_packet(res);
     if (result)
     {
@@ -1185,21 +1186,25 @@ int mdns_unit_test(mdns_responder_t *res)
     }
     // Test Query for interface hostname
     //
+    butil_log(2, "TEST: QR Iface A ----------------------\n");
     result = mdns_test_iface_rr_type(res, DNS_RRTYPE_A);
     if (result)
     {
         return result;
     }
+    butil_log(2, "TEST: QR Iface AAAA -------------------\n");
     result = mdns_test_iface_rr_type(res, DNS_RRTYPE_AAAA);
     if (result)
     {
         return result;
     }
+    butil_log(2, "TEST: QR Iface PTR --------------------\n");
     result = mdns_test_iface_rr_type(res, DNS_RRTYPE_PTR);
     if (result)
     {
         return result;
     }
+    butil_log(2, "TEST: QR Iface SRV --------------------\n");
     result = mdns_test_iface_rr_type(res, DNS_RRTYPE_SRV);
     if (result)
     {
@@ -1207,21 +1212,25 @@ int mdns_unit_test(mdns_responder_t *res)
     }
     // Test Query for SRV Instance
     //
+    butil_log(2, "TEST: QR Instance A ------------------\n");
     result = mdns_test_service_rr_type(res, DNS_RRTYPE_A);
     if (result)
     {
         return result;
     }
+    butil_log(2, "TEST: QR Instance AAAA ---------------\n");
     result = mdns_test_service_rr_type(res, DNS_RRTYPE_AAAA);
     if (result)
     {
         return result;
     }
+    butil_log(2, "TEST: QR Instance PTR ----------------\n");
     result = mdns_test_service_rr_type(res, DNS_RRTYPE_PTR);
     if (result)
     {
         return result;
     }
+    butil_log(2, "TEST: QR Instance SRV ----------------\n");
     result = mdns_test_service_rr_type(res, DNS_RRTYPE_SRV);
     if (result)
     {
@@ -1230,6 +1239,7 @@ int mdns_unit_test(mdns_responder_t *res)
     // Test Query with known answers
     //
     // expect known answer surpressed with large ttl
+    butil_log(2, "TEST: QR Instance Known AN, long TTL --\n");
     result = mdns_test_service_known_answer(res, 5000);
     if (result)
     {
@@ -1237,6 +1247,7 @@ int mdns_unit_test(mdns_responder_t *res)
     }
 #endif
     // expect known answer not surpressed with short ttl
+    butil_log(2, "TEST: QR Instance Known AN, short TTL --\n");
     result = mdns_test_service_known_answer(res, 5);
     if (result)
     {

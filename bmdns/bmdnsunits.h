@@ -22,37 +22,49 @@
 #include "butil.h"
 
 // not part of public api
-int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t *dname);
-int mdns_rr_index(uint16_t type);
-int mdns_ask_question(
+int mdns_compare_resource_to_name(
+                            mdns_responder_t  *res,
+                            uint8_t           *answer,
+                            int                anslen,
+                            dns_domain_name_t *dname
+                            );
+int mdns_rr_index           (uint16_t type);
+int mdns_ask_question       (
                             mdns_interface_t  *iface,
                             dns_domain_name_t *fqdn,
-                            uint16_t type,
-                            uint16_t clas,
-                            mdns_packet_t *outpkt
-                           );
-int mdns_query_respond(
-                            mdns_interface_t *iface,
-                            dns_rr_rec_t *answers,
-                            int answer_count,
-                            mdns_packet_t *outpkt,
-                            dns_domain_name_t *fqdn,
-                            uint16_t type,
-                            uint16_t clas,
-                            mdns_service_t *service
-                         );
-int mdns_answer_question(
+                            uint16_t           type,
+                            uint16_t           clas,
+                            mdns_packet_t     *outpkt
+                            );
+int mdns_query_respond      (
+                            mdns_responder_t  *res,
+                            mdns_interface_t  *iface,
+                            dns_domain_name_t *record_domain,
+                            dns_rr_rec_t      *answers,
+                            int                answer_count,
+                            mdns_packet_t     *outpkt,
+                            uint16_t           type,
+                            uint16_t           clas,
+                            uint32_t           ttl,
+                            void              *resource
+                            );
+int mdns_answer_question    (
+                            mdns_responder_t  *res,
                             mdns_interface_t  *iface,
                             dns_domain_name_t *dname,
-                            uint16_t type,
-                            uint16_t clas,
-                            dns_rr_rec_t *answers,
-                            int answer_count,
-                            mdns_packet_t *outpkt
-                         );
-int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packet_t *inpkt);
+                            uint16_t           type,
+                            uint16_t           clas,
+                            dns_rr_rec_t      *answers,
+                            int                answer_count,
+                            mdns_packet_t     *outpkt
+                            );
+int mdns_handle_input       (
+                            mdns_responder_t  *res,
+                            mdns_interface_t  *iface,
+                            mdns_packet_t     *inpkt
+                            );
 
-int mdns_basic_unit_test(mdns_responder_t *responder);
-int mdns_unit_test(mdns_responder_t *responder);
+int mdns_basic_unit_test    (mdns_responder_t *responder);
+int mdns_unit_test          (mdns_responder_t *responder);
 
 #endif

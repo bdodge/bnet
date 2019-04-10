@@ -33,10 +33,11 @@
     #define BMEM_PTR_SIZE    (4)
 #endif
 
-int     bmem_add_pool   (void *base, size_t bytes, size_t blocksize);
-void    bmem_stats      (int log_level);
-int     bmem_init       (void);
-int     bmem_deinit     (void);
+int     bmem_add_pool       (void *base, size_t bytes, size_t blocksize);
+void    bmem_stats          (int log_level);
+int     bmem_pool_overhead  (void);
+int     bmem_init           (void);
+int     bmem_deinit         (void);
 
 #ifndef BMEM_TRACE_ALLOCS
     #define BMEM_TRACE_ALLOCS (1)

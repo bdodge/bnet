@@ -94,11 +94,28 @@ int mdns_compare_names(const dns_domain_name_t *ours, const dns_domain_name_t *t
     return 0;
 }
 
-char *mdns_label_alloc(int size)
+void *mdns_large_alloc(mdns_responder_t *res, int size)
+{
+    void *ptr;
+
+    ptr = malloc(size);
+    if (! ptr)
+    {
+        butil_log(0, "alloc %d failed\n", size);
+    }
+    return ptr;
+}
+
+void mdns_large_free(mdns_responder_t *res, void *ptr)
+{
+    free(ptr);
+}
+
+char *mdns_label_alloc(mdns_responder_t *res, int size)
 {
     char *name;
 
-    name = (char *)malloc(size);
+    name = (char *)mdns_alloc(res, size);
     if (! name)
     {
         BERROR("Name alloc\n");
@@ -106,15 +123,15 @@ char *mdns_label_alloc(int size)
     return name;
 }
 
-void mdns_label_free(char *labelname)
+void mdns_label_free(mdns_responder_t *res, char *labelname)
 {
     if (labelname)
     {
-        free(labelname);
+        mdns_free(res, labelname);
     }
 }
 
-int mdns_copy_name(dns_domain_name_t *dstname, dns_domain_name_t *srcname)
+int mdns_copy_name(mdns_responder_t *res, dns_domain_name_t *dstname, dns_domain_name_t *srcname)
 {
     int label_dex;
 
@@ -124,7 +141,7 @@ int mdns_copy_name(dns_domain_name_t *dstname, dns_domain_name_t *srcname)
     }
     for (label_dex = 0; label_dex < srcname->num_labels; label_dex++)
     {
-        dstname->labels[label_dex].name = mdns_label_alloc(srcname->labels[label_dex].alloc_len);
+        dstname->labels[label_dex].name = mdns_label_alloc(res, srcname->labels[label_dex].alloc_len);
         if (! dstname->labels[label_dex].name)
         {
             return -1;
@@ -139,7 +156,7 @@ int mdns_copy_name(dns_domain_name_t *dstname, dns_domain_name_t *srcname)
     return 0;
 }
 
-int mdns_clear_name(dns_domain_name_t *dname)
+int mdns_clear_name(mdns_responder_t *res, dns_domain_name_t *dname)
 {
     int label_dex;
 
@@ -151,7 +168,7 @@ int mdns_clear_name(dns_domain_name_t *dname)
     {
         if (dname->labels[label_dex].name)
         {
-            mdns_label_free(dname->labels[label_dex].name);
+            mdns_label_free(res, dname->labels[label_dex].name);
             dname->labels[label_dex].name = NULL;
         }
     }
@@ -500,7 +517,7 @@ mdns_interface_t *mdns_interface_alloc(mdns_responder_t *res, const char *hostna
     mdns_interface_t *iface;
     int result;
 
-    iface = (mdns_interface_t *)malloc(sizeof(mdns_interface_t));
+    iface = (mdns_interface_t *)mdns_large_alloc(res, sizeof(mdns_interface_t));
     if (! iface)
     {
         BERROR("Alloc iface");
@@ -513,7 +530,9 @@ mdns_interface_t *mdns_interface_alloc(mdns_responder_t *res, const char *hostna
         free(iface);
         return NULL;
     }
-    result = mdns_unflatten_name(name, &iface->hostname);
+    mdns_init_name(&iface->hostname);
+
+    result = mdns_unflatten_name(res, name, &iface->hostname);
     if (result)
     {
         butil_log(0, "Interface: hostname conversion failed\n");
@@ -527,7 +546,7 @@ void mdns_interface_free(mdns_responder_t *res, mdns_interface_t *iface)
 {
     if (iface)
     {
-        free(iface);
+        mdns_large_free(res, iface);
     }
 }
 
@@ -546,7 +565,7 @@ mdns_service_t *mdns_service_alloc(mdns_responder_t *res)
 {
     mdns_service_t *service;
 
-    service = (mdns_service_t *)malloc(sizeof(mdns_service_t));
+    service = (mdns_service_t *)mdns_large_alloc(res, sizeof(mdns_service_t));
     if (! service)
     {
         BERROR("Alloc service");
@@ -559,7 +578,7 @@ void mdns_service_free(mdns_responder_t *res, mdns_service_t *service)
 {
     if (service)
     {
-        free(service);
+        mdns_large_free(res, service);
     }
 }
 
@@ -694,7 +713,7 @@ int mdns_flatten_name(const dns_domain_name_t *dname, char *name, int nname)
     return 0;
 }
 
-static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int count)
+static int mdns_insert_label(mdns_responder_t *res, dns_domain_name_t *dname, const char *src, int count)
 {
     int label_dex;
 
@@ -724,7 +743,7 @@ static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int coun
     {
         butil_log(1, "Label not NULL!\n");
     }
-    dname->labels[label_dex].name = mdns_label_alloc(MDNS_MAX_LABEL);
+    dname->labels[label_dex].name = mdns_label_alloc(res, MDNS_MAX_LABEL);
     if (! dname->labels[label_dex].name)
     {
         return -1;
@@ -736,7 +755,7 @@ static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int coun
     return 0;
 }
 
-int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
+int mdns_unflatten_name(mdns_responder_t *res, const char *name, dns_domain_name_t *dname)
 {
     int label_off;
     int off;
@@ -747,10 +766,7 @@ int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
     {
         return -1;
     }
-    memset(dname, 0, sizeof(dns_domain_name_t));
-
-    dname->tot_len = 0;
-    dname->num_labels = 0;
+    mdns_clear_name(res, dname);
 
     off = 0;
     result = 0;
@@ -781,7 +797,7 @@ int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
         {
             off++;
         }
-        result = mdns_insert_label(dname, name + label_off, off - label_off);
+        result = mdns_insert_label(res, dname, name + label_off, off - label_off);
 
         if (name[off] == '.')
         {
@@ -793,7 +809,7 @@ int mdns_unflatten_name(const char *name, dns_domain_name_t *dname)
     return result;
 }
 
-int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
+int mdns_unflatten_txt(mdns_responder_t *res, const char *name, dns_txt_records_t *txtrec)
 {
     int label_dex;
     int off;
@@ -806,7 +822,7 @@ int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
     {
         return -1;
     }
-    mdns_clear_name(txtrec);
+    mdns_clear_name(res, txtrec);
 
     off = 0;
     result = 0;
@@ -835,11 +851,11 @@ int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
         added  = 0;
 
         txtrec->labels[label_dex].alloc_len = MDNS_MAX_DNTEXT;
-        txtrec->labels[label_dex].name = mdns_label_alloc(MDNS_MAX_DNTEXT);
+        txtrec->labels[label_dex].name = mdns_label_alloc(res, MDNS_MAX_DNTEXT);
         if (! txtrec->labels[label_dex].name)
         {
-            BERROR("Alloc lable");
-            mdns_clear_name(txtrec);
+            BERROR("Alloc label");
+            mdns_clear_name(res, txtrec);
             return -1;
         }
 
@@ -876,7 +892,7 @@ int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
     return 0;
 }
 
-int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
+int mdns_read_name(mdns_responder_t *res, ioring_t *in, dns_domain_name_t *dname)
 {
     uint16_t label_tail[MDNS_MAX_LABELS];
     uint16_t label_offset;
@@ -889,11 +905,9 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
     {
         return -1;
     }
-    memset(dname, 0, sizeof(dns_domain_name_t));
-
     label_top = 0;
 
-    mdns_clear_name(dname);
+    mdns_clear_name(res, dname);
 
     do
     {
@@ -999,7 +1013,7 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
             }
             // copy label text into name
             //
-            result = mdns_insert_label(dname, (char*)in->data + in->tail, count);
+            result = mdns_insert_label(res, dname, (char*)in->data + in->tail, count);
 
             in->tail += count;
             if (in->tail > in->size)

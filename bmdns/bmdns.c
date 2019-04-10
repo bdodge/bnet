@@ -770,7 +770,7 @@ int mdns_answer_question(
     {
         // just call the individual types by hand
         //
-        result = mdns_answer_question(iface, dname, DNS_RRTYPE_PTR, clas, answers, answer_count, outpkt);
+        result  = mdns_answer_question(iface, dname, DNS_RRTYPE_PTR, clas, answers, answer_count, outpkt);
         result |= mdns_answer_question(iface, dname, DNS_RRTYPE_TXT, clas, answers, answer_count, outpkt);
         result |= mdns_answer_question(iface, dname, DNS_RRTYPE_SRV, clas, answers, answer_count, outpkt);
         result |= mdns_answer_question(iface, dname, DNS_RRTYPE_A, clas, answers, answer_count, outpkt);
@@ -1149,7 +1149,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
         {
             break;
         }
-        // and flatten it into a compareable string (todo, do a real lable by label cmp)
+        // and flatten it into a string for debug
         //
         result = mdns_flatten_name(&domain_name, fqdn, sizeof(fqdn));
         if (result)
@@ -1360,7 +1360,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
         {
             break;
         }
-        // and flatten it into a compareable string (todo, do a real lable by label cmp)
+        // and flatten it into a string for debug
         //
         result = mdns_flatten_name(&domain_name, fqdn, sizeof(fqdn));
         if (result)

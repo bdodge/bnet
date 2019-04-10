@@ -575,7 +575,7 @@ int mdns_test_iface_rr_type(mdns_responder_t *res, uint16_t rectype)
             }
             if (mdns_compare_names(&iface->hostname, &domain_name))
             {
-                butil_log(0, "Expected PTR to have our hostname\n");
+                butil_log(0, "Expected PTR to have our hostname, not %s\n", mdns_str_for_domain_name(&domain_name));
                 result = -1;
                 break;
             }
@@ -728,12 +728,12 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
             //
             if (
                     outpkt->qdcount != 0
-                ||  outpkt->arcount != (rectype == DNS_RRTYPE_SRV) ? 1 : 0
+                ||  (outpkt->arcount > ((rectype == DNS_RRTYPE_SRV) ? 2 : 0))
                 ||  outpkt->nscount != 0
                 ||  outpkt->ancount != 1
             )
             {
-                butil_log(0, "Expected one answer and no query\n");
+                butil_log(0, "Expected one answer and no query type %d\n", rectype);
                 mdns_dump_packet("Failed packet", outpkt, 1);
                 result = -1;
                 break;
@@ -801,9 +801,9 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
                     result = -1;
                     break;
                 }
-                if (mdns_compare_names(&service->usr_domain_name, &domain_name))
+                if (mdns_compare_names(&iface->hostname, &domain_name))
                 {
-                    butil_log(0, "Expected PTR to have our hostname\n");
+                    butil_log(0, "Expected srv PTR to have our hostname, not %s\n", mdns_str_for_domain_name(&domain_name));
                     result = -1;
                     break;
                 }
@@ -1177,7 +1177,7 @@ int mdns_unit_test(mdns_responder_t *res)
 {
     int result;
 
-#if 0
+#if 1
     result = mdns_test_read_packet(res);
     if (result)
     {

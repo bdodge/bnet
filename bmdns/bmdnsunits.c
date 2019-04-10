@@ -1227,7 +1227,6 @@ int mdns_unit_test(mdns_responder_t *res)
     {
         return result;
     }
-#endif
     // Test Query with known answers
     //
     // expect known answer surpressed with large ttl
@@ -1236,6 +1235,7 @@ int mdns_unit_test(mdns_responder_t *res)
     {
         return result;
     }
+#endif
     // expect known answer not surpressed with short ttl
     result = mdns_test_service_known_answer(res, 5);
     if (result)

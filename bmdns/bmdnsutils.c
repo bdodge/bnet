@@ -94,6 +94,90 @@ int mdns_compare_names(const dns_domain_name_t *ours, const dns_domain_name_t *t
     return 0;
 }
 
+char *mdns_label_alloc(int size)
+{
+    char *name;
+
+    name = (char *)malloc(size);
+    if (! name)
+    {
+        BERROR("Name alloc\n");
+    }
+    return name;
+}
+
+void mdns_label_free(char *labelname)
+{
+    if (labelname)
+    {
+        free(labelname);
+    }
+}
+
+int mdns_copy_name(dns_domain_name_t *dstname, dns_domain_name_t *srcname)
+{
+    int label_dex;
+
+    if (! srcname || ! dstname)
+    {
+        return -1;
+    }
+    for (label_dex = 0; label_dex < srcname->num_labels; label_dex++)
+    {
+        dstname->labels[label_dex].name = mdns_label_alloc(srcname->labels[label_dex].alloc_len);
+        if (! dstname->labels[label_dex].name)
+        {
+            return -1;
+        }
+        dstname->labels[label_dex].alloc_len = srcname->labels[label_dex].alloc_len;
+        memcpy(dstname->labels[label_dex].name,
+                    srcname->labels[label_dex].name, srcname->labels[label_dex].length + 1);
+        dstname->labels[label_dex].length = srcname->labels[label_dex].length;
+    }
+    dstname->num_labels = srcname->num_labels;
+    dstname->tot_len = srcname->tot_len;
+    return 0;
+}
+
+int mdns_clear_name(dns_domain_name_t *dname)
+{
+    int label_dex;
+
+    if (! dname)
+    {
+        return -1;
+    }
+    for (label_dex = 0; label_dex < dname->num_labels; label_dex++)
+    {
+        if (dname->labels[label_dex].name)
+        {
+            mdns_label_free(dname->labels[label_dex].name);
+            dname->labels[label_dex].name = NULL;
+        }
+    }
+    dname->tot_len = 0;
+    dname->num_labels = 0;
+    return 0;
+}
+
+int mdns_init_name(dns_domain_name_t *dname)
+{
+    int label_dex;
+
+    if (! dname)
+    {
+        return -1;
+    }
+    for (label_dex = 0; label_dex < MDNS_MAX_LABELS; label_dex++)
+    {
+        dname->labels[label_dex].name = NULL;
+        dname->labels[label_dex].length = 0;
+    }
+    dname->tot_len = 0;
+    dname->num_labels = 0;
+    return 0;
+}
+
 int mdns_get_wall_time(uint32_t *secs, uint32_t *usecs)
 {
     struct timeval tv;
@@ -636,6 +720,16 @@ static int mdns_insert_label(dns_domain_name_t *dname, const char *src, int coun
         return -1;
     }
     dname->labels[label_dex].length = count;
+    if (dname->labels[label_dex].name)
+    {
+        butil_log(1, "Label not NULL!\n");
+    }
+    dname->labels[label_dex].name = mdns_label_alloc(MDNS_MAX_LABEL);
+    if (! dname->labels[label_dex].name)
+    {
+        return -1;
+    }
+    dname->labels[label_dex].alloc_len = MDNS_MAX_LABEL;
     memcpy(dname->labels[label_dex].name, src, count);
     dname->labels[label_dex].name[count] = '\0';
     dname->tot_len += count;
@@ -712,10 +806,7 @@ int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
     {
         return -1;
     }
-    memset(txtrec, 0, sizeof(dns_txt_records_t));
-
-    txtrec->tot_len = 0;
-    txtrec->num_labels = 0;
+    mdns_clear_name(txtrec);
 
     off = 0;
     result = 0;
@@ -742,6 +833,15 @@ int mdns_unflatten_txt(const char *name, dns_txt_records_t *txtrec)
         label_dex = txtrec->num_labels++;
         insoff = off;
         added  = 0;
+
+        txtrec->labels[label_dex].alloc_len = MDNS_MAX_DNTEXT;
+        txtrec->labels[label_dex].name = mdns_label_alloc(MDNS_MAX_DNTEXT);
+        if (! txtrec->labels[label_dex].name)
+        {
+            BERROR("Alloc lable");
+            mdns_clear_name(txtrec);
+            return -1;
+        }
 
         while (name[off] && name[off] != ',')
         {
@@ -793,8 +893,7 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
 
     label_top = 0;
 
-    dname->tot_len = 0;
-    dname->num_labels = 0;
+    mdns_clear_name(dname);
 
     do
     {
@@ -1079,7 +1178,7 @@ static bool mdns_compress_name(const dns_domain_name_t *dname, int *pldex, iorin
                         {
                             // the end of the string in output, the labels all
                             // compared, so compress to the first found string
-                            // if there are no more lables to compare
+                            // if there are no more labels to compare
                             // (we only allow compressing "to end of string")
                             //
                             if (ldex == (dname->num_labels - 1))

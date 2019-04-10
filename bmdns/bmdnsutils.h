@@ -24,9 +24,17 @@
 
 int mdns_compare_nametext	(const char *ours, const char *theirs, int len);
 int mdns_compare_names      (const dns_domain_name_t *ours, const dns_domain_name_t *theirs);
+char *mdns_label_alloc		(int size);
+void mdns_label_free		(char *labelname);
+int mdns_copy_name			(dns_domain_name_t *dstname, dns_domain_name_t *srcname);
+int mdns_clear_name			(dns_domain_name_t *dname);
+int mdns_init_name			(dns_domain_name_t *dname);
+
 int mdns_get_wall_time		(uint32_t *secs, uint32_t *usecs);
+
 const char *mdns_reverse_ipv4addr	(bipv4addr_t *ipv4addr);
 const char *mdns_reverse_ipv6addr	(bipv6addr_t *ipv6addr);
+
 uint32_t 	mdns_get_rnd_delay_ms	(uint32_t max_delay);
 uint32_t 	mdns_get_pkt_delay_ms	(mdns_packet_t *pkt);
 const char *mdns_str_for_domain_name(const dns_domain_name_t *dname);

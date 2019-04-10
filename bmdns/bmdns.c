@@ -1014,9 +1014,6 @@ bool mdns_question_relates(
 int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packet_t *inpkt)
 {
     mdns_packet_t *outpkt;
-    dns_rr_rec_t answers[MDNS_MAX_ANSWERS];
-    int known_answers;
-    dns_domain_name_t domain_name;
     dns_domain_name_t *matched_name;
     char fqdn[MDNS_MAX_DNTEXT];
     int inpkt_start_tail;
@@ -1075,20 +1072,33 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     //
     result = 0;
     num_matches = 0;
-    known_answers = 0;
+
+    // reset domain name and known answers
+    //
+    mdns_clear_name(&res->domain_name);
+
+    for (
+            answer_num = 0;
+            answer_num < res->answer_count;
+            answer_num++
+    )
+    {
+        mdns_clear_name(&res->known_answers[answer_num].dname);
+    }
+    res->answer_count = 0;
 
     for (question_num = 0; question_num < inpkt->qdcount && ! result; question_num++)
     {
         // read the name
         //
-        result = mdns_read_name(&inpkt->io, &domain_name);
+        result = mdns_read_name(&inpkt->io, &res->domain_name);
         if (result)
         {
             break;
         }
         // and flatten it into a compareable string (todo, do a real lable by label cmp)
         //
-        result = mdns_flatten_name(&domain_name, fqdn, sizeof(fqdn));
+        result = mdns_flatten_name(&res->domain_name, fqdn, sizeof(fqdn));
         if (result)
         {
             break;
@@ -1108,7 +1118,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
         isunicast |= (clas & (1 << 15)) ? true : false;
         clas &= ~(1 << 15);
 
-        we_care = mdns_question_relates(iface, &domain_name, type, clas);
+        we_care = mdns_question_relates(iface, &res->domain_name, type, clas);
         if (we_care)
         {
             butil_log(5, "Query for %s matches\n", fqdn);
@@ -1144,14 +1154,14 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     {
         // read the name
         //
-        result = mdns_read_name(&inpkt->io, &domain_name);
+        result = mdns_read_name(&inpkt->io, &res->domain_name);
         if (result)
         {
             break;
         }
         // and flatten it into a string for debug
         //
-        result = mdns_flatten_name(&domain_name, fqdn, sizeof(fqdn));
+        result = mdns_flatten_name(&res->domain_name, fqdn, sizeof(fqdn));
         if (result)
         {
             break;
@@ -1197,7 +1207,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
         //
         if (clas == DNS_CLASS_IN || clas == DNS_CLASS_ANY)
         {
-            we_care = mdns_question_relates(iface, &domain_name, type, clas);
+            we_care = mdns_question_relates(iface, &res->domain_name, type, clas);
 
             if (we_care)
             {
@@ -1217,14 +1227,14 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                     //
                     for (service = iface->services; service; service = service->next)
                     {
-                        cmp = mdns_compare_names(&service->usr_domain_name, &domain_name);
+                        cmp = mdns_compare_names(&service->usr_domain_name, &res->domain_name);
                         if (! cmp)
                         {
                             butil_log(5, "Probe Matched service instance %s\n", fqdn);
 
                             // rename the service instance (+1) and retry probe from scratch
                             //
-                            strcpy(old_name, domain_name.labels[0].name);
+                            strcpy(old_name, res->domain_name.labels[0].name);
 
                             // look for existing (N)
                             //
@@ -1265,7 +1275,7 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                     //
                     butil_log(5, "Known AN: %d of %d Name=%s= type=%d clas=%04X uni=%d ttl=%d rlen=%u\n",
                               answer_num + 1, tot_answers, fqdn, type, clas, isunicast, inpkt->ttl, reslen);
-                    if (known_answers >= MDNS_MAX_ANSWERS)
+                    if (res->answer_count >= MDNS_MAX_ANSWERS)
                     {
                         butil_log(1, "No storage for known answer\n");
                     }
@@ -1273,11 +1283,13 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                     {
                         dns_rr_rec_t *rr;
 
-                        rr = &answers[known_answers++];
+                        rr = &res->known_answers[res->answer_count++];
 
                         // copy answer to rr struct
                         //
-                        memcpy(&rr->dname, &domain_name, sizeof(dns_domain_name_t));
+                        mdns_clear_name(&rr->dname);
+                        mdns_copy_name(&rr->dname, &res->domain_name);
+
                         rr->type = type;
                         rr->clas = clas;
                         rr->ttl  = inpkt->ttl;
@@ -1307,13 +1319,22 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                                 inpkt->io.count -= 6;
                             }
                             // read the name, uncompressing it
+                            //
+                            mdns_init_name(&res_name);
+
                             result = mdns_read_name(&inpkt->io, &res_name);
+
                             // and write it into the resource which will remain
                             // flat since there are no other strings to compress with
+                            //
                             result |= mdns_write_name(&resio, &res_name, -1);
 
-                            // back annotate resource lenght
+                            // back annotate resource length
+                            //
                             rr->reslen = resio.count;
+
+                            mdns_clear_name(&res_name);
+
                             result = 0; // ignore failure here, not a bit loss
                         }
                         else
@@ -1355,14 +1376,14 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
     {
         // read the name
         //
-        result = mdns_read_name(&inpkt->io, &domain_name);
+        result = mdns_read_name(&inpkt->io, &res->domain_name);
         if (result)
         {
             break;
         }
         // and flatten it into a string for debug
         //
-        result = mdns_flatten_name(&domain_name, fqdn, sizeof(fqdn));
+        result = mdns_flatten_name(&res->domain_name, fqdn, sizeof(fqdn));
         if (result)
         {
             break;
@@ -1408,14 +1429,14 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                 outpkt->srcaddr4.addr = inpkt->srcaddr4.addr;
                 memcpy(&outpkt->srcaddr6.addr, &inpkt->srcaddr6.addr, sizeof(bipv6addr_t));
             }
-            result = mdns_answer_question(iface, &domain_name, type, clas, answers, known_answers, outpkt);
+            result = mdns_answer_question(iface, &res->domain_name, type, clas, res->known_answers, res->answer_count, outpkt);
         }
         else
         {
             // a response, if it compares against our service or host name,
             // defend it unless we're probing
             //
-            we_care = mdns_question_relates(iface, &domain_name, type, clas);
+            we_care = mdns_question_relates(iface, &res->domain_name, type, clas);
 
             if (we_care)
             {
@@ -1428,14 +1449,14 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
 
                     for (service = iface->services; service; service = service->next)
                     {
-                        cmp = mdns_compare_names(&service->usr_domain_name, &domain_name);
+                        cmp = mdns_compare_names(&service->usr_domain_name, &res->domain_name);
                         if (! cmp)
                         {
                             butil_log(5, "Response Matched service instance %s\n", fqdn);
 
                             // defend ourselves
                             //
-                            result = mdns_answer_question(iface, &domain_name, type, clas, NULL, 0, outpkt);
+                            result = mdns_answer_question(iface, &res->domain_name, type, clas, NULL, 0, outpkt);
                         }
                     }
                 }
@@ -2092,6 +2113,9 @@ int mdns_responder_init(mdns_responder_t *res)
     // seed random generator
     //
     srand(time(NULL));
+
+    res->answer_count = 0;
+    mdns_init_name(&res->domain_name);
 
     res->to_secs = 0;
     res->to_usecs = 50000;

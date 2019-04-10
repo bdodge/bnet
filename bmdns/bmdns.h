@@ -37,8 +37,9 @@
 
 typedef struct tag_dns_label
 {
-    char        name[MDNS_MAX_LABEL];   ///< domain name component
+    char        *name;                  ///< domain name component
     int         length;                 ///< length of name component
+    int         alloc_len;              ///< allocated length of name component
 }
 dns_label_t;
 
@@ -49,12 +50,13 @@ typedef struct tag_dns_domain_name
     int         tot_len;                ///< total length of labels
     time_t      last_sent[MDNS_MAX_RRTYPEDEX]; ///< time, in seconds, this domain name output
 }
-dns_domain_name_t;
+dns_domain_name_t, dns_txt_records_t;
 
+#if 0
 typedef struct tag_txt_rec
 {
-    char        name[MDNS_MAX_DNTEXT];  ///< one text record
-    int         length;                 ///< length of recrod
+    char        *name;                  ///< one text record
+    int         length;                 ///< length of record
 }
 dns_txtr_t;
 
@@ -66,6 +68,7 @@ typedef struct tag_dns_txt_record
     time_t      last_sent[MDNS_MAX_RRTYPEDEX]; ///< time, in seconds, this domain name output
 }
 dns_txt_records_t;
+#endif
 
 /// DNS RR Record descriptor
 //
@@ -186,6 +189,9 @@ mdns_service_t;
 typedef struct tag_mdns_responder
 {
     mdns_interface_t   *interfaces;     ///< list of managed interfaces
+    dns_domain_name_t   domain_name;    ///< general use domain name for processing requests
+    dns_rr_rec_t        known_answers[MDNS_MAX_ANSWERS]; ///< List of answers in query the match_
+    int                 answer_count;   ///< count of known answers
     int                 to_secs;        ///< input poll dwell, seconds
     int                 to_usecs;       ///< input poll dwell, micro-seconds
     bool                stopped;        ///< request to stop run loop

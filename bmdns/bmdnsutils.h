@@ -66,7 +66,7 @@ int mdns_unflatten_name		(const char *name, dns_domain_name_t *dname);
 int mdns_unflatten_txt		(const char *name, dns_txt_records_t *txtrec);
 int mdns_assemble_name      (char *buffer, int nbuffer, int ncomponents, ...);
 int mdns_write_text         (ioring_t *out, const dns_txt_records_t *txtrec);
-int mdns_write_name         (ioring_t *in, const dns_domain_name_t *dname);
+int mdns_write_name         (ioring_t *in, const dns_domain_name_t *dname, int compress_start);
 
 #endif
 

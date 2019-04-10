@@ -796,13 +796,18 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
                 label_top--;
                 in->tail = label_tail[label_top];
                 in->count = in->head - in->tail;
-                continue;
+                if (label_top == 0)
+                {
+                    // end of compression reference chain
+                    //
+                    return 0;
+                }
             }
             else
             {
                 // all done, end parsing
                 //
-                break;
+                return 0;
             }
         }
         if ((c & 0xC0) == 0xC0)
@@ -867,7 +872,7 @@ int mdns_read_name(ioring_t *in, dns_domain_name_t *dname)
             in->count -= count;
         }
     }
-    while (c != 0 && result == 0);
+    while (result == 0);
 
     return result;
 }
@@ -991,19 +996,25 @@ int mdns_write_text(ioring_t *out, const dns_txt_records_t *txtrec)
     return 0;
 }
 
-static bool mdns_compress_name(const dns_domain_name_t *dname, int *pldex, ioring_t *out, uint16_t *offset)
+static bool mdns_compress_name(const dns_domain_name_t *dname, int *pldex, ioring_t *out, int compress_start, uint16_t *offset)
 {
     int ldex;
     int noff;
     int i;
 
+    if (compress_start < 0 || compress_start > out->count)
+    {
+        return false;
+    }
+    //return false;
+
     ldex = *pldex;
     *offset = 0;
 
-    // find an occurance of label in the packet already
-    // by first looking for "len,firstchar"
+    // find an occurance of label in the packet already by first looking for "len,firstchar"
+    // starting at offset compress_start in the output ring
     //
-    for (i = MDNS_OFF_QUESTION; i < out->count; i++)
+    for (i = compress_start; i < out->count; i++)
     {
         if (out->data[i] == dname->labels[ldex].length)
         {
@@ -1030,10 +1041,17 @@ static bool mdns_compress_name(const dns_domain_name_t *dname, int *pldex, iorin
                         {
                             // the end of the string in output, the labels all
                             // compared, so compress to the first found string
-                            // and return last label index the matched
+                            // if there are no more lables to compare
+                            // (we only allow compressing "to end of string")
                             //
-                            *pldex = ldex;
-                            return true;
+                            if (ldex == (dname->num_labels - 1))
+                            {
+                                *pldex = ldex;
+                                return true;
+                            }
+                            // our string is longer than the one in io
+                            //
+                            break;
                         }
                         // look at next label
                         //
@@ -1043,26 +1061,26 @@ static bool mdns_compress_name(const dns_domain_name_t *dname, int *pldex, iorin
                         {
                             // end of labels but still more text in found name so no match
                             //
-                            return false;
+                            break;
                         }
                         if (out->data[noff] != dname->labels[ldex].length)
                         {
-                            // can't compress last label since next length doesn't match
+                            // can't compress next label since next length doesn't match
                             //
-                            return false;
+                            break;
                         }
                         if (out->count < noff + dname->labels[ldex].length)
                         {
                             // not enough data to compare
                             //
-                            return false;
+                            break;
                         }
                         if (mdns_compare_nametext(dname->labels[ldex].name,
                                     (char*)out->data + noff + 1, dname->labels[ldex].length))
                         {
                             // can't conpress last label since next text doesn't match
                             //
-                            return false;
+                            break;
                         }
                         // this next label matches the name found first still so continue
                         //
@@ -1072,7 +1090,7 @@ static bool mdns_compress_name(const dns_domain_name_t *dname, int *pldex, iorin
             }
             else
             {
-                // not enough data to find a match, so leave
+                // not enough data to find a match ever, so leave
                 //
                 return false;
             }
@@ -1083,7 +1101,7 @@ static bool mdns_compress_name(const dns_domain_name_t *dname, int *pldex, iorin
     return false;
 }
 
-int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
+int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname, int compress_start)
 {
     int totlen;
     int label_dex;
@@ -1110,18 +1128,28 @@ int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
     {
         next_label_dex = label_dex;
 
-        if (mdns_compress_name(dname, &next_label_dex, out, &offset))
+        if (mdns_compress_name(dname, &next_label_dex, out, compress_start, &offset))
         {
             // some number of labels existed already in
             // the output buffer, so reference them
             //
             butil_log(7, "Label at %s +%d more labels compressed to offset %d\n",
                         dname->labels[label_dex].name, next_label_dex - label_dex, offset);
+            if (next_label_dex < (dname->num_labels - 1))
+            {
+                butil_log(2, "Compressed not whole name?\n");
+            }
             offset |= 0xC000;
             offset = htons(offset);
             memcpy(out->data + out->head, &offset, 2);
             label_dex = next_label_dex;
             len = 2;
+            out->head += len;
+            out->count += len;
+
+            // if compressed ALL the labels, there's no more, so no
+            // need for a 0 length
+            return 0;
         }
         else
         {
@@ -1129,9 +1157,9 @@ int mdns_write_name(ioring_t *out, const dns_domain_name_t *dname)
             out->data[out->head++] = (uint8_t)len;
             out->count++;
             memcpy(out->data + out->head, dname->labels[label_dex].name, len);
+            out->head += len;
+            out->count += len;
         }
-        out->head += len;
-        out->count += len;
     }
     out->data[out->head++] = (uint8_t)0;
     out->count++;

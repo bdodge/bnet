@@ -23,7 +23,7 @@
 
 // not part of public api
 int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t *dname);
-
+int mdns_rr_index(uint16_t type);
 int mdns_ask_question(
                             mdns_interface_t  *iface,
                             dns_domain_name_t *fqdn,

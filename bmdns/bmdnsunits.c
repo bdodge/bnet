@@ -125,6 +125,7 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     mdns_packet_t  packet;
     mdns_packet_t *pkt;
     ioring_t io;
+    ioring_t io2;
     const char *name1;
     const char *name2;
     const char *expected;
@@ -132,6 +133,7 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     int name2_off;
     int i;
     char buffer[MDNS_MAX_DNTEXT];
+    char buffer2[MDNS_MAX_DNTEXT];
     int result;
 
     pkt = &packet;
@@ -192,25 +194,25 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     io.data = (uint8_t *)buffer;
 
     name1_off = io.head;
-    result = mdns_write_name(&io, &dname1);
+    result = mdns_write_name(&io, &dname1, 0);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name1);
         return result;
     }
     name2_off = io.head;
-    result = mdns_write_name(&io, &dname2);
+    result = mdns_write_name(&io, &dname2, 0);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name2);
         return result;
     }
-    expected = "\4AAAA\4BBBB\4CCCC\4DDDD\0\300\21\0";
+    expected = "\4AAAA\4BBBB\4CCCC\4DDDD\0\300\21";
 
-    if (memcmp(io.data + name1_off, expected, 24))
+    if (memcmp(io.data + name1_off, expected, 23))
     {
         butil_log(0, "Failed to compress name %s\n", name2);
-        for (i = 0; i < 24; i++)
+        for (i = 0; i < 23; i++)
         {
             butil_log(1, "%02X-%02X ",
                     io.data[i + name1_off], (uint8_t)expected[i]);
@@ -267,32 +269,32 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     io.data = (uint8_t *)buffer;
 
     name1_off = io.head;
-    result = mdns_write_name(&io, &dname1);
+    result = mdns_write_name(&io, &dname1, MDNS_OFF_QUESTION);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name1);
         return result;
     }
     name2_off = io.head;
-    result = mdns_write_name(&io, &dname2);
+    result = mdns_write_name(&io, &dname2, MDNS_OFF_QUESTION);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name2);
         return result;
     }
-    expected = "\300\14\0";
+    expected = "\300\14";
 
-    if (memcmp(io.data + name2_off, expected, 3))
+    if (memcmp(io.data + name2_off, expected, 2))
     {
         butil_log(0, "Failed to compress name %s\n", name2);
-        for (i = 0; i < 3; i++)
+        for (i = 0; i < 2; i++)
         {
             butil_log(1, "%02X-%02X ",
                     io.data[i + name2_off], (uint8_t)expected[i]);
         }
         return -1;
     }
-    // test compressing begining of name
+    // test compressing begining of name, should fail
     //
     name1 = "ABCD.EFGH.IJKL.MNOP.qrst.uvwx.yz";
     name2 = "abcd.EFGH.IjkL.MNOP.qrst.uvwx.yz.THIS.IS.A.TEST";
@@ -316,32 +318,42 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     io.data = (uint8_t *)buffer;
 
     name1_off = io.head;
-    result = mdns_write_name(&io, &dname1);
+    result = mdns_write_name(&io, &dname1, MDNS_OFF_QUESTION);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name1);
         return result;
     }
     name2_off = io.head;
-    result = mdns_write_name(&io, &dname2);
+    result = mdns_write_name(&io, &dname2, MDNS_OFF_QUESTION);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name2);
         return result;
     }
-    expected = "\300\14\4THIS\2IS\1A\4TEST\0";
+    io2.head = 0;
+    io2.count = io.head;
+    io2.tail = io.head;
+    io2.size = sizeof(buffer2);
+    io2.data = (uint8_t *)buffer2;
 
-    if (memcmp(io.data + name2_off, expected, 18))
+    result = mdns_write_name(&io2, &dname2, -1);
+    if (result)
     {
-        butil_log(0, "Failed to compress name %s\n", name2);
-        for (i = 0; i < 18; i++)
+        butil_log(0, "Failed to write name %s\n", name2);
+        return result;
+    }
+    if (memcmp(io.data + name2_off, io2.data, strlen(name2)))
+    {
+        butil_log(0, "Failed to NOT compress name %s\n", name2);
+        for (i = 0; i < strlen(name2); i++)
         {
             butil_log(1, "%02X-%02X ",
-                    io.data[i + name2_off], (uint8_t)expected[i]);
+                    io.data[i + name2_off], (uint8_t)io2.data[i]);
         }
         return -1;
     }
-    // test compressing Middle of name
+    // test compressing Middle of name, should fail
     //
     name1 = "ABCD.EFGH.IJKL.MNOP.qrst.uvwx.yz";
     name2 = "AAAA.BBBB.qrst.uvwx.yz.THIS.IS.A.TEST";
@@ -365,100 +377,35 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     io.data = (uint8_t *)buffer;
 
     name1_off = io.head;
-    result = mdns_write_name(&io, &dname1);
+    result = mdns_write_name(&io, &dname1, MDNS_OFF_QUESTION);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name1);
         return result;
     }
     name2_off = io.head;
-    result = mdns_write_name(&io, &dname2);
+    result = mdns_write_name(&io, &dname2, MDNS_OFF_QUESTION);
     if (result)
     {
         butil_log(0, "Failed to write name %s\n", name2);
         return result;
     }
-    expected = "\4AAAA\4BBBB\300\40\4THIS\2IS\1A\4TEST\0";
+    io2.head = 0;
+    io2.count = io.head;
+    io2.tail = io.head;
+    io2.size = sizeof(buffer2);
+    io2.data = (uint8_t *)buffer2;
 
-    if (memcmp(io.data + name2_off, expected, 18))
+    result = mdns_write_name(&io2, &dname2, -1);
+    if (result)
     {
-        butil_log(0, "Failed to compress name %s\n", name2);
+        butil_log(0, "Failed to write name %s\n", name2);
+        return result;
+    }
+    if (memcmp(io.data + name2_off, io2.data, strlen(name2)))
+    {
+        butil_log(0, "Failed to NOT compress name %s\n", name2);
         for (i = 0; i < 18; i++)
-        {
-            butil_log(1, "%02X-%02X ",
-                    io.data[i + name2_off], (uint8_t)expected[i]);
-        }
-        return -1;
-    }
-    // test compressing from multiple different names
-    //
-    name2 = "AAAA.BBBB.CCCC.DDDD.EEEE.FFFF";
-    result = mdns_unflatten_name(name2, &dname2);
-    if (result)
-    {
-        butil_log(0, "Failed to unflatten %s\n", name2);
-        return result;
-    }
-    io.head = MDNS_OFF_QUESTION;
-    io.count = io.head;
-    io.tail = io.head;
-    io.size = sizeof(buffer);
-    io.data = (uint8_t *)buffer;
-
-    name1_off = io.head;
-
-    name1 = "AAAA.BBBB";
-    result = mdns_unflatten_name(name1, &dname1);
-    if (result)
-    {
-        butil_log(0, "Failed to unflatten %s\n", name1);
-        return result;
-    }
-    result = mdns_write_name(&io, &dname1);
-    if (result)
-    {
-        butil_log(0, "Failed to write name %s\n", name1);
-        return result;
-    }
-    name1 = "CCCC.DDDD";
-    result = mdns_unflatten_name(name1, &dname1);
-    if (result)
-    {
-        butil_log(0, "Failed to unflatten %s\n", name1);
-        return result;
-    }
-    result = mdns_write_name(&io, &dname1);
-    if (result)
-    {
-        butil_log(0, "Failed to write name %s\n", name1);
-        return result;
-    }
-    name1 = "EEEE.FFFF";
-    result = mdns_unflatten_name(name1, &dname1);
-    if (result)
-    {
-        butil_log(0, "Failed to unflatten %s\n", name1);
-        return result;
-    }
-    result = mdns_write_name(&io, &dname1);
-    if (result)
-    {
-        butil_log(0, "Failed to write name %s\n", name1);
-        return result;
-    }
-    name2_off = io.head;
-    result = mdns_write_name(&io, &dname2);
-    if (result)
-    {
-        butil_log(0, "Failed to write name %s\n", name2);
-        return result;
-    }
-    expected = "\300\14\300\27\300\42\0";
-
-    if (memcmp(io.data + name2_off, expected, 7))
-    {
-        butil_log(0, "Failed to compress name %s\n", name2);
-        for (i = 0; i < 7; i++)
         {
             butil_log(1, "%02X-%02X ",
                     io.data[i + name2_off], (uint8_t)expected[i]);
@@ -982,8 +929,11 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             uint16_t reslen;
             uint16_t addr16;
             uint32_t addr;
+            uint32_t rr_ttl;
+            time_t now;
+            bool expect_reply;
 
-            // build a query for type of record of service instance name
+            // build a query for type of record of service instance name.
             //
             result = mdns_ask_question(iface, &service->usr_domain_name, rectype, DNS_CLASS_IN, pkt);
             if (result)
@@ -991,9 +941,29 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
                 butil_log(0, "Can't build QR\n");
                 break;
             }
-            // answer the question ourselves
+            if (ttl > service->ttl / 2)
+            {
+                expect_reply = true;
+            }
+            else
+            {
+                expect_reply = false;
+            }
+            // set last-sent time of this record to now to make this test deterministic
             //
+            time(&service->usr_domain_name.last_sent[mdns_rr_index(DNS_RRTYPE_SRV)]);
+
+            // answer the question ourselves. it should suppress a reply if the actual TTL in the
+            // known answer (now + known anser RR TTL) is at least 1/2 the actual TTL (now + service->TTL)
+            //
+            rr_ttl = service->ttl;  // swap in ttl parameter as if that's what the querier thinks is left to timeout
+            service->ttl = ttl;
+
             result = mdns_answer_question(iface, &service->usr_domain_name, rectype, DNS_CLASS_IN, NULL, 0, pkt);
+
+            // put real ttl back in
+            service->ttl = rr_ttl;
+
             if (result)
             {
                 butil_log(0, "Can't add answer\n");
@@ -1021,13 +991,27 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
                 result = 0;
                 break;
             }
-            // expect an output packet
+            // expect an output packet if known answer TTL isn't suppressed
             //
             if (! iface->outpkts)
             {
-                butil_log(0, "Expected an output packet\n");
-                result = -1;
+                if (expect_reply)
+                {
+                    butil_log(0, "Expected an output packet\n");
+                    result = -1;
+                    break;
+                }
+                result = 0;
                 break;
+            }
+            else
+            {
+                if (! expect_reply)
+                {
+                    butil_log(0, "Did not expected an output packet\n");
+                    result = -1;
+                    break;
+                }
             }
             outpkt = iface->outpkts;
             iface->outpkts = NULL;
@@ -1093,7 +1077,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
                 ||  clas != DNS_CLASS_IN
             )
             {
-                butil_log(0, "Expected an type %u record class IN packet, got type %u class %u\n",
+                butil_log(0, "Expected a type %u record class IN packet, got type %u class %u\n",
                                         (uint32_t)rectype, (uint32_t)type, (uint32_t)clas);
                 result = -1;
                 break;
@@ -1246,7 +1230,14 @@ int mdns_unit_test(mdns_responder_t *res)
 #endif
     // Test Query with known answers
     //
+    // expect known answer surpressed with large ttl
     result = mdns_test_service_known_answer(res, 5000);
+    if (result)
+    {
+        return result;
+    }
+    // expect known answer not surpressed with short ttl
+    result = mdns_test_service_known_answer(res, 5);
     if (result)
     {
         return result;

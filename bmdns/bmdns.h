@@ -31,6 +31,10 @@
 //
 #define MDNS_MAX_TRTEXT (MDNS_IO_SIZE - 256)
 
+// Number of distinct RR types we respond to: A,AAAA,PTR,SRV,TXT
+//
+#define MDNS_MAX_RRTYPEDEX  5
+
 typedef struct tag_dns_label
 {
     char        name[MDNS_MAX_LABEL];   ///< domain name component
@@ -43,6 +47,7 @@ typedef struct tag_dns_domain_name
     dns_label_t labels[MDNS_MAX_LABELS];///< list of components
     int         num_labels;             ///< count of labels set
     int         tot_len;                ///< total length of labels
+    time_t      last_sent[MDNS_MAX_RRTYPEDEX]; ///< time, in seconds, this domain name output
 }
 dns_domain_name_t;
 
@@ -58,6 +63,7 @@ typedef struct tag_dns_txt_record
     dns_txtr_t  labels[MDNS_MAX_LABELS];///< list of records
     int         num_labels;             ///< count of labels
     int         tot_len;                ///< total length of labels text
+    time_t      last_sent[MDNS_MAX_RRTYPEDEX]; ///< time, in seconds, this domain name output
 }
 dns_txt_records_t;
 

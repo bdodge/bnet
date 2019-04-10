@@ -446,16 +446,19 @@ int mdns_compare_resource_to_name(uint8_t *answer, int anslen, dns_domain_name_t
 }
 
 int mdns_query_respond(
-                            mdns_interface_t *iface,
-                            dns_rr_rec_t *answers,
-                            int answer_count,
-                            mdns_packet_t *outpkt,
-                            dns_domain_name_t *fqdn,
-                            uint16_t type,
-                            uint16_t clas,
-                            mdns_service_t *service
+                            mdns_interface_t  *iface,
+                            dns_domain_name_t *record_domain,
+                            dns_rr_rec_t      *answers,
+                            int                answer_count,
+                            mdns_packet_t     *outpkt,
+                            uint16_t           type,
+                            uint16_t           clas,
+                            uint32_t           ttl,
+                            void              *resource
                          )
 {
+    dns_domain_name_t *resource_domain;
+    dns_txt_records_t *resource_txt;
     int reslen;
     int newlen;
     int result;
@@ -468,17 +471,26 @@ int mdns_query_respond(
     time_t answer_expires;
     time_t record_expires;
     int kas;
-        int prevcount;
 
     kas = 5; // log level for known answer suppression debug
 
     time(&now);
 
+    if (type == DNS_RRTYPE_TXT)
+    {
+        resource_txt = (dns_txt_records_t *)resource;
+        resource_domain = NULL;
+    }
+    else
+    {
+        resource_domain = (dns_domain_name_t *)resource;
+        resource_txt = NULL;
+    }
     // check that there is no known answer for this question
     //
     for (adex = 0, matched = false; adex < answer_count && ! matched; adex++)
     {
-        cmp = mdns_compare_names(&answers[adex].dname, fqdn);
+        cmp = mdns_compare_names(&answers[adex].dname, record_domain);
         if (cmp)
         {
             continue;
@@ -491,44 +503,22 @@ int mdns_query_respond(
             continue;
         }
         answer_expires = answers[adex].ttl;
-
+        record_expires = ttl + (now - record_domain->last_sent[mdns_rr_index(type)]);
+        if (answer_expires > record_expires / 2)
+        {
+            butil_log(kas, "Not surpressing known %d because rec exp %d before ans %d\n",
+                                                adex, record_expires, answer_expires);
+            break;
+        }
         // check the response resource and see if that matches
         //
         switch (type)
         {
         case DNS_RRTYPE_PTR:
-            if (! service)
-            {
-                record_expires = service->ttl + (now - iface->hostname.last_sent[mdns_rr_index(type)]);
-                if (answer_expires > record_expires / 2)
-                {
-                    butil_log(kas, "Not surpressing known %d because rec exp %d before ans %d\n",
-                                                        adex, record_expires, answer_expires);
-                    break;
-                }
-                matched = !mdns_compare_resource_to_name(answers[adex].res, answers[adex].reslen, &iface->hostname);
-            }
-            else
-            {
-                record_expires = service->ttl + (now - service->usr_domain_name.last_sent[mdns_rr_index(type)]);
-                if (answer_expires > record_expires / 2)
-                {
-                    butil_log(kas, "Not surpressing known %d because rec exp %d before ans %d\n",
-                                                        adex, record_expires, answer_expires);
-                    break;
-                }
-                matched = !mdns_compare_resource_to_name(answers[adex].res, answers[adex].reslen, &service->usr_domain_name);
-            }
+            matched = !mdns_compare_resource_to_name(answers[adex].res, answers[adex].reslen, resource_domain);
             break;
         case DNS_RRTYPE_TXT:
-            record_expires = service->ttl + (now - service->txt_records.last_sent[mdns_rr_index(type)]);
-            if (answer_expires > record_expires / 2)
-            {
-                butil_log(kas, "Not surpressing known %d because rec exp %d before ans %d\n",
-                                                    adex, record_expires, answer_expires);
-                break;
-            }
-            reslen = DNS_TXT_LENGTH(&service->txt_records);
+            reslen = DNS_TXT_LENGTH(resource_txt);
             if (reslen == answers[adex].reslen)
             {
                 ioring_t res_out;
@@ -542,7 +532,7 @@ int mdns_query_respond(
                 res_out.size  = sizeof(nametext);
                 res_out.data  = nametext;
 
-                result = mdns_write_text(&res_out, &service->txt_records);
+                result = mdns_write_text(&res_out, resource_txt);
                 if (result)
                 {
                     result = 0;
@@ -556,32 +546,11 @@ int mdns_query_respond(
             }
             break;
         case DNS_RRTYPE_SRV:
-            // look at ttl and see if known answer is good for at least 1/2 our ttl
-            //
-            if (service)
-            {
-                time(&now);
-                answer_expires = answers[adex].ttl;
-                record_expires = service->ttl + (now - service->usr_domain_name.last_sent[mdns_rr_index(type)]);
-                if (answer_expires > record_expires / 2)
-                {
-                    butil_log(kas, "Not surpressing known %d because rec exp %d before ans %d\n",
-                                                        adex, record_expires, answer_expires);
-                    break;
-                }
-            }
             // TODO compare weight/prority/port (but really, if name and service name match
             // we really want to match here anyway)
-            matched = !mdns_compare_resource_to_name(answers[adex].res + 6, answers[adex].reslen - 6, &iface->hostname);
+            matched = !mdns_compare_resource_to_name(answers[adex].res + 6, answers[adex].reslen - 6, resource_domain);
             break;
         case DNS_RRTYPE_A:
-            record_expires = service->ttl + (now - iface->hostname.last_sent[mdns_rr_index(type)]);
-            if (answer_expires > record_expires / 2)
-            {
-                butil_log(kas, "Not surpressing known %d because rec exp %d before ans %d\n",
-                                                    adex, record_expires, answer_expires);
-                break;
-            }
             if (answers[adex].reslen == 4)
             {
                 uint32_t addr = htonl(iface->ipv4addr.addr);
@@ -593,13 +562,6 @@ int mdns_query_respond(
             }
             break;
         case DNS_RRTYPE_AAAA:
-            record_expires = service->ttl + (now - iface->hostname.last_sent[mdns_rr_index(type)]);
-            if (answer_expires > record_expires / 2)
-            {
-                butil_log(kas, "Not surpressing known %d because rec exp %d before ans %d\n",
-                                                    adex, record_expires, answer_expires);
-                break;
-            }
             if (answers[adex].reslen == 16)
             {
                 ioring_t res_in;
@@ -626,13 +588,14 @@ int mdns_query_respond(
     }
     if (matched)
     {
-        butil_log(5, "Suppressed known answer to %s type %d\n", fqdn, type);
+        butil_log(5, "Suppressed known answer to %s type %d\n",
+                            mdns_str_for_domain_name(record_domain), type);
         return 0;
     }
     // time stamp the RR with now so TTL calculations can happen. There is one
     // stamp per RR type we handle so they are logically unique
     //
-    time(&fqdn->last_sent[mdns_rr_index(type)]);
+    time(&record_domain->last_sent[mdns_rr_index(type)]);
 
     // caller should have incremented whichever count
     // this response goes in before calling here
@@ -648,7 +611,7 @@ int mdns_query_respond(
     pkt_start = MDNS_OFF_QUESTION; //outpkt->io.head;
 
     // write name
-    result = mdns_write_name(&outpkt->io, fqdn, pkt_start);
+    result = mdns_write_name(&outpkt->io, record_domain, pkt_start);
     if (result)
     {
         return result;
@@ -666,7 +629,7 @@ int mdns_query_respond(
         return result;
     }
     // ttl
-    result = mdns_write_uint32(&outpkt->io, service ? service->ttl : iface->ttl);
+    result = mdns_write_uint32(&outpkt->io, ttl);
     if (result)
     {
         return result;
@@ -674,21 +637,10 @@ int mdns_query_respond(
     switch (type)
     {
     case DNS_RRTYPE_PTR:
-        if (! service)
-        {
-            reslen = DNS_NAME_LENGTH(&iface->hostname);
-            prevhead = outpkt->io.head;
-            result  = mdns_write_uint16(&outpkt->io, reslen);
-            result |= mdns_write_name(&outpkt->io, &iface->hostname, pkt_start);
-        }
-        else
-        {
-            reslen = DNS_NAME_LENGTH(&service->usr_domain_name);
-            prevhead = outpkt->io.head;
-            prevcount = outpkt->io.count;
-            result  = mdns_write_uint16(&outpkt->io, reslen);
-            result |= mdns_write_name(&outpkt->io, &service->usr_domain_name, pkt_start);
-        }
+        reslen = DNS_NAME_LENGTH(resource_domain);
+        prevhead = outpkt->io.head;
+        result  = mdns_write_uint16(&outpkt->io, reslen);
+        result |= mdns_write_name(&outpkt->io, resource_domain, pkt_start);
         // back annotate len in case of name compression
         newlen = outpkt->io.head - prevhead - 2;
         if (newlen != reslen)
@@ -702,12 +654,12 @@ int mdns_query_respond(
         }
         break;
     case DNS_RRTYPE_TXT:
-        reslen = DNS_TXT_LENGTH(&service->txt_records);
+        reslen = DNS_TXT_LENGTH(resource_txt);
         result  = mdns_write_uint16(&outpkt->io, reslen);
-        result |= mdns_write_text(&outpkt->io, &service->txt_records);
+        result |= mdns_write_text(&outpkt->io, resource_txt);
         break;
     case DNS_RRTYPE_SRV:
-        reslen = DNS_NAME_LENGTH(&service->interface->hostname) + 6;
+        reslen = DNS_NAME_LENGTH(resource_domain) + 6;
         prevhead = outpkt->io.head;
         result  = mdns_write_uint16(&outpkt->io, reslen);
         // write priority
@@ -722,14 +674,28 @@ int mdns_query_respond(
         {
             return result;
         }
+        {
+        mdns_service_t *service;
+        uint16_t port = 0;
+
+        // TODO - maybe pass service or port in as a param?
+        for (service = iface->services; service; service = service->next)
+        {
+            if (! mdns_compare_names(&service->usr_domain_name, record_domain))
+            {
+                port = service->port;
+                break;
+            }
+        }
         // write port
-        result |= mdns_write_uint16(&outpkt->io, service->port);
+        result |= mdns_write_uint16(&outpkt->io, port);
         if (result)
         {
             return result;
         }
+        }
         // write target
-        result |= mdns_write_name(&outpkt->io, &service->interface->hostname, pkt_start);
+        result |= mdns_write_name(&outpkt->io, resource_domain, pkt_start);
         // back annotate len in case of name compression
         newlen = outpkt->io.head - prevhead - 2;
         if (newlen != reslen)
@@ -772,6 +738,8 @@ int mdns_answer_question(
 {
     mdns_service_t *service;
     mdns_service_t *added_srv;
+    dns_domain_name_t *record_domain;
+    void *resource_domain;
     int cmp;
     int lma;
     int result;
@@ -823,8 +791,42 @@ int mdns_answer_question(
         {
             outpkt->ancount++;
         }
-        result = mdns_query_respond(iface, answers, answer_count, outpkt, dname, type, clas, NULL);
+        // TODO what is the proper resource domain answer for a hostname qr?
+        result = mdns_query_respond(iface, &iface->hostname,
+                                        answers, answer_count, outpkt, type, clas, iface->ttl, dname);
     }
+    cmp = mdns_compare_names(&iface->rev_ipv4, dname);
+    if (! cmp)
+    {
+        butil_log(lma, "**==Matched revipv4 %s\n", mdns_str_for_domain_name(dname));
+        if (iface->state < MDNS_ANNOUNCE_1)
+        {
+            outpkt->nscount++;
+        }
+        else
+        {
+            outpkt->ancount++;
+        }
+        result = mdns_query_respond(iface, &iface->rev_ipv4,
+                                        answers, answer_count, outpkt, type, clas, iface->ttl, &iface->hostname);
+    }
+
+    cmp = mdns_compare_names(&iface->rev_ipv6, dname);
+    if (! cmp)
+    {
+        butil_log(lma, "**==Matched revipv6 %s\n", mdns_str_for_domain_name(dname));
+        if (iface->state < MDNS_ANNOUNCE_1)
+        {
+            outpkt->nscount++;
+        }
+        else
+        {
+            outpkt->ancount++;
+        }
+        result = mdns_query_respond(iface, &iface->rev_ipv6,
+                                        answers, answer_count, outpkt, type, clas, iface->ttl, &iface->hostname);
+    }
+
     added_srv = NULL;
 
     for (service = iface->services; service; service = service->next)
@@ -833,6 +835,20 @@ int mdns_answer_question(
         if (! cmp)
         {
             butil_log(lma, "**I==Matched usr service\n");
+            record_domain = &service->usr_domain_name;
+            switch (type)
+            {
+            case DNS_RRTYPE_A:
+            case DNS_RRTYPE_AAAA:
+            case DNS_RRTYPE_SRV:
+            case DNS_RRTYPE_PTR:
+            default:
+                resource_domain = &iface->hostname;
+                break;
+            case DNS_RRTYPE_TXT:
+                resource_domain = &service->txt_records;
+                break;
+            }
         }
         else
         {
@@ -840,6 +856,8 @@ int mdns_answer_question(
             if (! cmp)
             {
                 butil_log(lma, "**V==Matched srv service\n");
+                record_domain = &service->srv_domain_name;
+                resource_domain = &service->usr_domain_name;
             }
             else
             {
@@ -847,6 +865,8 @@ int mdns_answer_question(
                 if (! cmp)
                 {
                     butil_log(lma, "**S==Matched sub service\n");
+                    record_domain = &service->sub_domain_name;
+                    resource_domain = &service->usr_domain_name;
                 }
             }
         }
@@ -864,7 +884,8 @@ int mdns_answer_question(
             }
             prevcount = outpkt->io.count;
 
-            result = mdns_query_respond(iface, answers, answer_count, outpkt, dname, type, clas, service);
+            result = mdns_query_respond(iface, record_domain,
+                                answers, answer_count, outpkt, type, clas, service->ttl, resource_domain);
 
             if (! result && type == DNS_RRTYPE_SRV && iface->state >= MDNS_ANNOUNCE_1 && outpkt->io.count > prevcount)
             {
@@ -883,14 +904,14 @@ int mdns_answer_question(
         if (added_srv->interface->ipv4addr.addr != 0)
         {
             outpkt->arcount++;
-            result = mdns_query_respond(iface, answers, answer_count, outpkt,
-                                    &added_srv->interface->hostname, DNS_RRTYPE_A, clas, added_srv);
+            result = mdns_query_respond(iface, &added_srv->interface->hostname,
+                                answers, answer_count, outpkt, DNS_RRTYPE_A, clas, iface->ttl, &iface->hostname);
         }
         if (added_srv->interface->ipv6addr.addr[0] != 0)
         {
             outpkt->arcount++;
-            result = mdns_query_respond(iface, answers, answer_count, outpkt,
-                                    &added_srv->interface->hostname, DNS_RRTYPE_AAAA, clas, added_srv);
+            result = mdns_query_respond(iface, &added_srv->interface->hostname,
+                                answers, answer_count, outpkt, DNS_RRTYPE_AAAA, clas, iface->ttl, &iface->hostname);
         }
         // and add NSEC records for the addresses we do NOT have to ensure we claim them as ours
         //
@@ -943,6 +964,18 @@ bool mdns_question_relates(
         if (! cmp)
         {
             butil_log(4, "**Matched iface %s\n", mdns_str_for_domain_name(dname));
+            return true;
+        }
+        cmp = mdns_compare_names(&iface->rev_ipv4, dname);
+        if (! cmp)
+        {
+            butil_log(lma, "**==Matched revipv4 %s\n", mdns_str_for_domain_name(dname));
+            return true;
+        }
+        cmp = mdns_compare_names(&iface->rev_ipv6, dname);
+        if (! cmp)
+        {
+            butil_log(lma, "**==Matched revipv6 %s\n", mdns_str_for_domain_name(dname));
             return true;
         }
     }
@@ -1482,6 +1515,34 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
         }
         result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 220 : 0);
     }
+    outpkt = mdns_pkt_alloc(res);
+    if (! outpkt)
+    {
+        butil_log(3, "Can't announce revip: no outpkts\n");
+        return -1;
+    }
+    outpkt->id = 0;
+    outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
+
+    // add iface's reverse address mappings
+    //
+    if (iface->ipv4addr.addr != 0)
+    {
+        result = mdns_answer_question(iface, &iface->rev_ipv4, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        if (result)
+        {
+            return result;
+        }
+    }
+    if (iface->ipv6addr.addr != 0)
+    {
+        result = mdns_answer_question(iface, &iface->rev_ipv6, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        if (result)
+        {
+            return result;
+        }
+    }
+    result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 220 : 0);
     return result;
 }
 
@@ -1777,13 +1838,14 @@ int mdns_responder_stop(mdns_responder_t *res)
 int mdns_responder_add_interface(
                                 mdns_responder_t *res,
                                 const char *hostname,
-                                bipv4addr_t ipv4addr,
-                                bipv6addr_t ipv6addr,
+                                bipv4addr_t *ipv4addr,
+                                bipv6addr_t *ipv6addr,
                                 uint32_t ttl
                                 )
 {
     mdns_interface_t *iface;
     struct ip_mreq mreq;
+    char buffer[MDNS_MAX_DNTEXT];
     int iparm;
     uint16_t port;
     int result;
@@ -1801,8 +1863,27 @@ int mdns_responder_add_interface(
     memset(&iface->hostname.last_sent, 0, sizeof(iface->hostname.last_sent));
     iface->services = NULL;
 
-    memcpy(&iface->ipv4addr, &ipv4addr, sizeof(bipv4addr_t));
-    memcpy(&iface->ipv6addr, &ipv6addr, sizeof(bipv6addr_t));
+    memcpy(&iface->ipv4addr, ipv4addr, sizeof(bipv4addr_t));
+    memcpy(&iface->ipv6addr, ipv6addr, sizeof(bipv6addr_t));
+
+    // build reverse mappings of ip addresses
+    //
+    result = mdns_assemble_name(buffer, sizeof(buffer), 3,
+                            mdns_reverse_ipv4addr(ipv4addr), "in-addr", "arpa");
+    result |= mdns_unflatten_name(buffer, &iface->rev_ipv4);
+    if (result)
+    {
+        butil_log(0, "Can't build rev ipv4\n");
+        return -1;
+    }
+    result = mdns_assemble_name(buffer, sizeof(buffer), 3,
+                            mdns_reverse_ipv6addr(ipv6addr), "ip6", "arpa");
+    result |= mdns_unflatten_name(buffer, &iface->rev_ipv6);
+    if (result)
+    {
+        butil_log(0, "Can't build rev ipv4\n");
+        return -1;
+    }
 
     iface->ttl = ttl;
 

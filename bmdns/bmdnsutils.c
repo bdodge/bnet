@@ -167,7 +167,7 @@ static const char *str_for_ipv4(uint32_t ipv4addr)
 
 static const char *str_for_ipv6(bipv6addr_t *ipv6addr)
 {
-    static char ipbuf[64];
+    static char ipbuf[128];
     uint16_t addr[8];
     uint16_t *sa;
     int i;
@@ -179,6 +179,44 @@ static const char *str_for_ipv6(bipv6addr_t *ipv6addr)
     }
     snprintf(ipbuf, sizeof(ipbuf), "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x",
                 addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7]);
+    return ipbuf;
+}
+
+const char *mdns_reverse_ipv4addr(bipv4addr_t *ipv4addr)
+{
+    static char ipbuf[32];
+
+    snprintf(ipbuf, sizeof(ipbuf), "%d.%d.%d.%d",
+                ((ipv4addr->addr >> 24) & 0xFF),
+                ((ipv4addr->addr >> 16) & 0xFF),
+                ((ipv4addr->addr >> 8) & 0xFF),
+                (ipv4addr->addr & 0xFF)
+            );
+    return ipbuf;
+}
+
+const char *mdns_reverse_ipv6addr(bipv6addr_t *ipv6addr)
+{
+    static char ipbuf[64];
+    uint16_t addr[8];
+    uint16_t *sa;
+    int len;
+    int totlen;
+    int i;
+
+    sa = ipv6addr->addr;
+    for (i = 0; i < 8; i++)
+    {
+        addr[i] = htons(sa[i]);
+    }
+    for (i = 7, totlen = 0; i >= 0; i--)
+    {
+        len = snprintf(ipbuf + totlen, sizeof(ipbuf) - totlen, "%X.%X.%X.%X%s",
+                            (addr[i] & 0xF), ((addr[i] >> 4) & 0xF),
+                            ((addr[i] >> 8) & 0xF), ((addr[i] >> 12) & 0xF),
+                            (i < 0) ? "." : " ");
+        totlen += len;
+    }
     return ipbuf;
 }
 

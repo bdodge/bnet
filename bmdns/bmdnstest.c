@@ -255,7 +255,7 @@ int main(int argc, char **argv)
     }
     get_host_info(hostname, sizeof(hostname), &myipv4addr, &myipv6addr);
 
-    result = mdns_responder_add_interface(&responder, hostname, myipv4addr, myipv6addr, ttl);
+    result = mdns_responder_add_interface(&responder, hostname, &myipv4addr, &myipv6addr, ttl);
     if (result)
     {
         butil_log(0, "Can't add interface\n");

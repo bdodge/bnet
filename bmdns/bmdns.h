@@ -143,6 +143,10 @@ typedef struct tag_in_interface
 
     bipv4addr_t         ipv4addr;       ///< IPv4 address
     bipv6addr_t         ipv6addr;       ///< IPv6 address
+
+    dns_domain_name_t   rev_ipv4;       ///< Rerverse domain mapping of ipv4 address
+    dns_domain_name_t   rev_ipv6;       ///< Rerverse domain mapping of ipv6 address
+
     uint32_t            ttl;            ///< time to live
     socket_t            udp_sock;       ///< udp listenter bound to MDNS port 5353
     mdns_packet_t      *inpkts;         ///< list of packets to look at from input
@@ -238,8 +242,8 @@ int mdns_responder_stop         (mdns_responder_t *res);
 int mdns_responder_add_interface(
                                 mdns_responder_t *responder,
                                 const char *hostname,
-                                bipv4addr_t ipv4addr,
-                                bipv6addr_t ipv6addr,
+                                bipv4addr_t *ipv4addr,
+                                bipv6addr_t *ipv6addr,
                                 uint32_t ttl
                                 );
 int mdns_responder_add_service(

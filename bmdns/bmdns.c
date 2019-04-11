@@ -20,7 +20,7 @@
 
 // TODO
 //    multi-packet known-answer-suppression (maybe)
-//    add remove service/iface functions
+//    add remove service/iface functions (maybe, easier to just bring it all down)
 
 int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
 {

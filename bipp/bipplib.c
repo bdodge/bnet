@@ -362,8 +362,18 @@ int ipp_set_static_environment(ipp_server_t *ipp)
 #if IPP_SUPPORT_JPEG
         pdlstr = "image/jpeg";
         result |= ipp_add_attr_value(attr, (uint8_t*)pdlstr, strlen(pdlstr));
+        result |= ipp_set_group_attr_range_value(
+                                                "jpeg-k-octets-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1,
+                                                0,0x4000
+                                                );
 #endif
+#if IPP_SUPPORT_OCTET_STREAM
+        pdlstr = "application/octet-stream";
+        result |= ipp_add_attr_value(attr, (uint8_t*)pdlstr, strlen(pdlstr));
     }
+#endif
 #else
     result |= ipp_set_group_attr_string_value(
                                                 "document-format-supported",
@@ -574,43 +584,80 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                             );
     if (! result)
     {
-        ipp_attr_t *colattr;
+        ipp_attr_t *medcolattr;
+        ipp_attr_t *src1colattr;
+        ipp_attr_t *src2colattr;
 
-        result = ipp_dupe_collection("media-col-default", &colattr);
+        result = ipp_dupe_collection("media-col-default", &medcolattr);
         if (! result)
         {
-     //       result |= ipp_set_attr_string_value("media-back-coating", colattr, 1, "crap");
-            result |= ipp_set_attr_int32_value("media-bottom-margin", colattr, 1, 100);
-     //       result |= ipp_set_attr_string_value("media-color", colattr, 1, "white");
-     //       result |= ipp_set_attr_string_value("media-front-coating", colattr, 1, "ola");
-     //       result |= ipp_set_attr_string_value("media-grain", colattr, 1, "long");
-     //       result |= ipp_set_attr_int32_value("media-hole-count", colattr, 1, 333);
-     //       result |= ipp_set_attr_string_value("media-info", colattr, 1, "junk");
-     //       result |= ipp_set_attr_string_value("media-key", colattr, 1, "brass");
-            result |= ipp_set_attr_int32_value("media-left-margin", colattr, 1, 100);
-     //       result |= ipp_set_attr_int32_value("media-order-count", colattr, 1, 222);
-     //       result |= ipp_set_attr_string_value("media-pre-printed", colattr, 1, "yo");
-     //       result |= ipp_set_attr_string_value("media-recycled", colattr, 1, "yoyo");
-            result |= ipp_set_attr_int32_value("media-right-margin", colattr, 1, 100);
-     //       result |= ipp_set_attr_string_value("media-size-name", colattr, 1, "bigger");
-            result |= ipp_set_attr_string_value("media-source", colattr, 1, "tray-1");
-     //       result |= ipp_set_attr_int32_value("media-thickness", colattr, 1, 10);
-     //       result |= ipp_set_attr_string_value("media-tooth", colattr, 1, "blue");
-            result |= ipp_set_attr_int32_value("media-top-margin", colattr, 1, 100);
-            result |= ipp_set_attr_string_value("media-type", colattr, 1, "old");
-     //       result |= ipp_set_attr_int32_value("media-weight-metric", colattr, 1, 100);
+            result |= ipp_set_attr_int32_value("media-bottom-margin", medcolattr, 1, 100);
+            result |= ipp_set_attr_int32_value("media-left-margin", medcolattr, 1, 100);
+            result |= ipp_set_attr_int32_value("media-right-margin", medcolattr, 1, 100);
+            result |= ipp_set_attr_string_value("media-source", medcolattr, 1, "tray-1");
+            result |= ipp_set_attr_int32_value("media-top-margin", medcolattr, 1, 100);
+            result |= ipp_set_attr_string_value("media-type", medcolattr, 1, "old");
+
+     //       result |= ipp_set_attr_string_value("media-back-coating", medcolattr, 1, "crap");
+     //       result |= ipp_set_attr_string_value("media-color", medcolattr, 1, "white");
+     //       result |= ipp_set_attr_string_value("media-front-coating", medcolattr, 1, "ola");
+     //       result |= ipp_set_attr_string_value("media-grain", medcolattr, 1, "long");
+     //       result |= ipp_set_attr_int32_value("media-hole-count", medcolattr, 1, 333);
+     //       result |= ipp_set_attr_string_value("media-info", medcolattr, 1, "junk");
+     //       result |= ipp_set_attr_string_value("media-key", medcolattr, 1, "brass");
+     //       result |= ipp_set_attr_int32_value("media-order-count", medcolattr, 1, 222);
+     //       result |= ipp_set_attr_string_value("media-pre-printed", medcolattr, 1, "yo");
+     //       result |= ipp_set_attr_string_value("media-recycled", medcolattr, 1, "yoyo");
+     //       result |= ipp_set_attr_string_value("media-size-name", medcolattr, 1, "bigger");
+     //       result |= ipp_set_attr_int32_value("media-thickness", medcolattr, 1, 10);
+     //       result |= ipp_set_attr_string_value("media-tooth", medcolattr, 1, "blue");
+     //       result |= ipp_set_attr_int32_value("media-weight-metric", medcolattr, 1, 100);
 
             result |= ipp_set_group_attr_collection_value(
                                                 "media-col-default",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, colattr
+                                                1, medcolattr
                                             );
-        }
-        result |= ipp_set_group_attr_collection_value(
+
+            result |= ipp_set_group_attr_collection_value(
                                                 "media-col-ready",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, colattr
+                                                1, medcolattr
                                             );
+
+            // build media collection database, which is a collection of two arrays
+            // of collections
+            //
+            result  = ipp_dupe_collection("media-source-properties.media-col-database", &src1colattr);
+            result != ipp_dupe_collection("media-source-properties.media-col-database", &src2colattr);
+            if (! result)
+            {
+                ipp_attr_t *mcdbattr1;
+                ipp_attr_t *mcdbattr2;
+
+                result |= ipp_set_attr_string_value("media-source-feed-direction", src1colattr, 1, "short-edge-first");
+                result |= ipp_set_attr_int32_value("media-source-feed-orientation", src1colattr, 1, 3);
+                result |= ipp_set_attr_string_value("media-source-feed-direction", src2colattr, 1, "long-edge-first");
+                result |= ipp_set_attr_int32_value("media-source-feed-orientation", src2colattr, 1, 4);
+
+                result  = ipp_dupe_collection("media-col-database", &mcdbattr1);
+                result |= ipp_dupe_collection("media-col-database", &mcdbattr2);
+                if (! result)
+                {
+                    result |= ipp_set_attr_collection_value("media-col", mcdbattr1, 1, medcolattr);
+                    result |= ipp_set_attr_collection_value("media-source-properties", mcdbattr1, 1, src1colattr);
+
+                    result |= ipp_set_attr_collection_value("media-col", mcdbattr2, 1, medcolattr);
+                    result |= ipp_set_attr_collection_value("media-source-properties", mcdbattr2, 1, src2colattr);
+
+                    result |= ipp_set_group_attr_collection_value(
+                                                "media-col-database",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                3, mcdbattr1, mcdbattr2, mcdbattr1
+                                                );
+                }
+            }
+        }
     }
 
     result |= ipp_set_group_attr_string_value(
@@ -659,6 +706,16 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                             2, letattr, a4attr
                                         );
     }
+    result |= ipp_set_group_attr_string_value(
+                                                "media-source-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                3,  "tray1", "tray2", "auto"
+                                            );
+    result |= ipp_set_group_attr_string_value(
+                                                "media-type-supported",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                3,  "paper", "metal", "auto"
+                                            );
     result |= ipp_set_group_attr_string_value(
                                                 "media-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,

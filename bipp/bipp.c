@@ -145,35 +145,50 @@ static int ipp_parse_value(ipp_request_t *req)
     }
     // got all value bytes, create and add the attribute to the group
     //
-    // make sure it's actually an attr
+    // first, if this is a secondary value (cur_attr not null)
     //
-    result = ipp_find_attr_rec(req->attr_name, &recdex, NULL);
-    if (result)
+    if (req->cur_attr)
     {
-        butil_log(1, "No such attribute: %s\n", req->attr_name);
-        ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
-        return result;
-    }
-    attr = ipp_create_attr(recdex, req->attr_value, req->attr_value_len);
-    if (! attr)
-    {
-        butil_log(0, "Can't alloc attr\n");
-        ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-        return -1;
-    }
-    // add it to the right in group
-    //
-    if (req->in_attrs[req->cur_in_group] == NULL)
-    {
-        req->in_attrs[req->cur_in_group] = attr;
+        result = ipp_add_attr_value(req->cur_attr, req->attr_value, req->attr_value_len);
+        if (result)
+        {
+            butil_log(1, "Bad secondary value for %s\n", req->attr_name);
+            ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+            return result;
+        }
     }
     else
     {
-        req->cur_in_attr->next = attr;
+        // make sure it's actually an attr
+        //
+        result = ipp_find_attr_rec(req->attr_name, &recdex, NULL);
+        if (result)
+        {
+            butil_log(1, "No such attribute: %s\n", req->attr_name);
+            ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+            return result;
+        }
+        attr = ipp_create_attr(recdex, req->attr_value, req->attr_value_len);
+        if (! attr)
+        {
+            butil_log(0, "Can't alloc attr\n");
+            ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+            return -1;
+        }
+        // add it to the right in group
+        //
+        if (req->in_attrs[req->cur_in_group] == NULL)
+        {
+            req->in_attrs[req->cur_in_group] = attr;
+        }
+        else
+        {
+            req->cur_in_attr->next = attr;
+        }
+        req->cur_in_attr = attr;
+        req->cur_attr = attr;
+        attr->next = NULL;
     }
-    req->cur_in_attr = attr;
-    attr->next = NULL;
-
     // and then go back to wherever we got here from
     //
     return ipp_pop_state(req);
@@ -259,6 +274,14 @@ static int ipp_parse_name_length(ipp_request_t *req)
         ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
         return -1;
     }
+    if (req->attr_name_len == 0)
+    {
+        // there is more value for the last attribute, so got to valuelen state
+        //
+        return ipp_move_state(req, reqAttributeValueLength);
+    }
+    req->cur_attr = NULL;
+
     return ipp_move_state(req, reqAttributeNameText);
 }
 
@@ -781,6 +804,7 @@ int ipp_process(ipp_request_t *req)
         // even though all the IPP test suites insist that a request
         // has a charset and natural language operation attributes
         //
+        req->cur_attr = NULL;
         result = ipp_read_int8(&req->in, &tag);
         if (result < 0)
         {

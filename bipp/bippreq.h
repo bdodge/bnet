@@ -112,6 +112,7 @@ typedef struct tag_ipp_request
     uint8_t         attr_value[IPP_MAX_LENGTH];
     uint16_t        attr_value_len;
     uint16_t        attr_bytes_read;
+    ipp_attr_t     *cur_attr;
 
     // for incrementally sending attr value
     uint8_t        *attr_out_value;

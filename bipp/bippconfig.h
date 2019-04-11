@@ -32,6 +32,10 @@
 //
 #define IPP_SUPPORT_PLAINTEXT (1)
 
+/// Is generic byte stream supported
+//
+#define IPP_SUPPORT_OCTET_STREAM (1)
+
 
 /// Bytes in io buffersm should hold a whole TCP/IP packet
 //

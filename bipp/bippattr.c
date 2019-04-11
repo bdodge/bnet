@@ -61,7 +61,7 @@ int ipp_find_attr_rec(const char *name, size_t *index, ipp_attr_rec_t **pattrec)
         prevtop = top;
         prevbot = bot;
         cmp = strcmp(name, s_ipp_attributes[cur].name);
-        butil_log(6, "%zu %zu %zu  %s vs %s -> %d\n",
+        butil_log(8, "%zu %zu %zu  %s vs %s -> %d\n",
                 top, cur, bot, name, s_ipp_attributes[cur].name, cmp);
         if (cmp == 0)
         {
@@ -141,7 +141,7 @@ int ipp_find_collection(const char *name, size_t *num_members, ipp_attr_rec_t **
         prevtop = top;
         prevbot = bot;
         cmp = strcmp(name, s_ipp_collection_xref[cur].name);
-        butil_log(6, "%zu %zu %zu  %s vs %s -> %d\n",
+        butil_log(8, "%zu %zu %zu  %s vs %s -> %d\n",
                 top, cur, bot, name, s_ipp_collection_xref[cur].name, cmp);
         if (cmp == 0)
         {
@@ -816,6 +816,12 @@ int ipp_add_member_attrs_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
                 dstattr->value[dstattr->value_len++] = *srcname++;
             }
 #endif
+            // for sub collection tag attributes, add 0 length
+            if (srcattr->value[0] == IPP_TAG_BEGIN_COLLECTION)
+            {
+                dstattr->value[dstattr->value_len++] = 0;
+                dstattr->value[dstattr->value_len++] = 0;
+            }
             // member value (including its len, the total len isn't ever encoded)
             memcpy(dstattr->value + dstattr->value_len, srcattr->value + 1, srcattr->value_len - 1);
 
@@ -858,29 +864,31 @@ int ipp_get_next_attr_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **v
     // check if any values can remain
     //
     bytesleft = attr->value_len - (iter->val_ptr - attr->value);
-    if (bytesleft < 3)
+    if (bytesleft < (iter->val_count ? 5 : 3))
     {
         return 1;
     }
-    // length of each value encoded as first 2 bytes in value bytes
+    // for array types, skip 0 namelength for subsequent values
     //
-    iter->val_ptr++;    // skip tag
+    if (iter->val_count > 0)
+    {
+        iter->val_ptr += 3;
+        bytesleft -= 3;
+    }
+    else
+    {
+        iter->val_ptr += 1;
+        bytesleft--;
+    }
     vallen = *iter->val_ptr++;
     vallen <<= 8;
     vallen |= *iter->val_ptr++;
-
-    bytesleft -= 3;
+    bytesleft -= 2;
 
     if (bytesleft < vallen)
     {
         BERROR("value length issue");
         return 2;
-    }
-    // for array types, skip tag and namelength for subsequent values
-    //
-    if (iter->val_count > 0)
-    {
-        iter->val_ptr += 3;
     }
     if (value)
     {
@@ -1195,12 +1203,15 @@ int ipp_dupe_collection(const char *name, ipp_attr_t **pattrs)
     size_t num_members;
     size_t member;
     size_t recdex;
+    const char *aname;
+    int indirects;
     int result;
 
     if (! name || ! pattrs)
     {
         return -1;
     }
+    indirects = 0;
     do
     {
         // look up collection members description in xref table
@@ -1210,11 +1221,13 @@ int ipp_dupe_collection(const char *name, ipp_attr_t **pattrs)
         {
             return result;
         }
-        butil_log(6, "Looked for %s, got %s, first of %zu\n", name, colattrec->name, num_members);
+        butil_log(6, "%sLooked for %s, got %s, first of %zu\n",
+                indirects ? " sub-" : "", name, colattrec->name, num_members);
 
-        // if its not an indirection, all set
+        // if its not an indirection, or this is a collection of stuff that has this in it
+        // then expand the member list as specified in the collection descriptor
         //
-        if (colattrec->syntax[0] != IPP_NOTYPE)
+        if (colattrec->syntax[0] != IPP_NOTYPE || num_members > 1)
         {
             colattrslist = NULL;
 
@@ -1222,7 +1235,13 @@ int ipp_dupe_collection(const char *name, ipp_attr_t **pattrs)
             {
                 // find the referenced attr in the main attribute list
                 //
-                result = ipp_find_attr_rec(colattrec[member].name, &recdex, NULL);
+                aname = colattrec[member].name;
+                if (colattrec[member].syntax[0] == IPP_NOTYPE)
+                {
+                    // its an indirect reference to another collection
+                    aname++;
+                }
+                result = ipp_find_attr_rec(aname, &recdex, NULL);
                 if (! result)
                 {
                     // and make a copy of it and append to return list
@@ -1259,6 +1278,7 @@ int ipp_dupe_collection(const char *name, ipp_attr_t **pattrs)
         {
             BERROR("Expected indirection");
         }
+        indirects++;
     }
     while (! result);
 }
@@ -1317,7 +1337,7 @@ int ipp_get_group_attr_by_index(const size_t recdex, ipp_attr_grouping_code_t gr
     }
     do
     {
-        butil_log(7, " %zu %zu %zu\n", top, cur, bot);
+        butil_log(8, " %zu %zu %zu\n", top, cur, bot);
         prevtop = top;
         prevbot = bot;
         prevcur = cur;
@@ -1975,6 +1995,11 @@ int ipp_get_attr_by_name(const char *name, ipp_attr_t *attrlist, ipp_attr_t **pa
             *pattr = attr;
             return 0;
         }
+    }
+    butil_log(5, "No attribute %s in given list\n", name);
+    for (attr = attrlist; attr; attr = attr->next)
+    {
+        butil_log(6, "  have %s\n", ipp_name_of_attr(attr));
     }
     return -1;
 }

@@ -1,4 +1,8 @@
-/*
+/*    result |= ipp_set_group_attr_string_value(
+                                                "media-default",
+                                                IPP_GROUPING_PRINTER_DESCRIPTION,
+                                                1, "na_letter_8.5x11in"
+
  * Generated File -- Consider not editing
  */
 #include "biana_attribs.h"

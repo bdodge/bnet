@@ -1,55 +1,51 @@
-/*    result |= ipp_set_group_attr_string_value(
-                                                "media-default",
-                                                IPP_GROUPING_PRINTER_DESCRIPTION,
-                                                1, "na_letter_8.5x11in"
-
+/*
  * Generated File -- Consider not editing
  */
 #include "biana_attribs.h"
 
-// Members of collection baling.finishings-col
+// Members of collection baling
 //
-ipp_attr_rec_t s_ipp_col_baling__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_baling[] =
 {
     {   // index 0
-        "baling-type",   
+        "baling-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "baling-when",   
+        "baling-when",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
 };
 
-// Members of collection binding.finishings-col
+// Members of collection binding
 //
-ipp_attr_rec_t s_ipp_col_binding__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_binding[] =
 {
     {   // index 0
-        "binding-reference-edge",   
+        "binding-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "binding-type",   
+        "binding-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
 };
 
-// Members of collection coating.finishings-col
+// Members of collection coating
 //
-ipp_attr_rec_t s_ipp_col_coating__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_coating[] =
 {
     {   // index 0
-        "coating-sides",   
+        "coating-sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "coating-type",   
+        "coating-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -57,15 +53,15 @@ ipp_attr_rec_t s_ipp_col_coating__finishings_col[] =
 
 // Members of collection cover-back
 //
-ipp_attr_rec_t s_ipp_col_cover_back[] = 
+ipp_attr_rec_t s_ipp_col_cover_back[] =
 {
     {   // index 0
-        "cover-type",   
+        "cover-type",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -78,7 +74,7 @@ ipp_attr_rec_t s_ipp_col_cover_back[] =
 
 // Members of collection cover-back-actual
 //
-ipp_attr_rec_t s_ipp_col_cover_back_actual[] = 
+ipp_attr_rec_t s_ipp_col_cover_back_actual[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -89,7 +85,7 @@ ipp_attr_rec_t s_ipp_col_cover_back_actual[] =
 
 // Members of collection cover-back-default
 //
-ipp_attr_rec_t s_ipp_col_cover_back_default[] = 
+ipp_attr_rec_t s_ipp_col_cover_back_default[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -100,15 +96,15 @@ ipp_attr_rec_t s_ipp_col_cover_back_default[] =
 
 // Members of collection cover-front
 //
-ipp_attr_rec_t s_ipp_col_cover_front[] = 
+ipp_attr_rec_t s_ipp_col_cover_front[] =
 {
     {   // index 0
-        "cover-type",   
+        "cover-type",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -121,7 +117,7 @@ ipp_attr_rec_t s_ipp_col_cover_front[] =
 
 // Members of collection cover-front-actual
 //
-ipp_attr_rec_t s_ipp_col_cover_front_actual[] = 
+ipp_attr_rec_t s_ipp_col_cover_front_actual[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -132,7 +128,7 @@ ipp_attr_rec_t s_ipp_col_cover_front_actual[] =
 
 // Members of collection cover-front-default
 //
-ipp_attr_rec_t s_ipp_col_cover_front_default[] = 
+ipp_attr_rec_t s_ipp_col_cover_front_default[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -143,35 +139,35 @@ ipp_attr_rec_t s_ipp_col_cover_front_default[] =
 
 // Members of collection cover-sheet-info
 //
-ipp_attr_rec_t s_ipp_col_cover_sheet_info[] = 
+ipp_attr_rec_t s_ipp_col_cover_sheet_info[] =
 {
     {   // index 0
-        "from-name",   
+        "from-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "logo",   
+        "logo",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "message",   
+        "message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 3
-        "organization-name",   
+        "organization-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 4
-        "subject",   
+        "subject",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 5
-        "to-name",   
+        "to-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -179,7 +175,7 @@ ipp_attr_rec_t s_ipp_col_cover_sheet_info[] =
 
 // Members of collection cover-sheet-info-default
 //
-ipp_attr_rec_t s_ipp_col_cover_sheet_info_default[] = 
+ipp_attr_rec_t s_ipp_col_cover_sheet_info_default[] =
 {
     {   // index 0
         "*cover-sheet-info",   // indirect reference to
@@ -188,12 +184,12 @@ ipp_attr_rec_t s_ipp_col_cover_sheet_info_default[] =
     },
 };
 
-// Members of collection covering.finishings-col
+// Members of collection covering
 //
-ipp_attr_rec_t s_ipp_col_covering__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_covering[] =
 {
     {   // index 0
-        "covering-name",   
+        "covering-name",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -201,40 +197,40 @@ ipp_attr_rec_t s_ipp_col_covering__finishings_col[] =
 
 // Members of collection destination-accesses
 //
-ipp_attr_rec_t s_ipp_col_destination_accesses[] = 
+ipp_attr_rec_t s_ipp_col_destination_accesses[] =
 {
     {   // index 0
-        "access-oauth-token",   
+        "access-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "access-oauth-uri",   
+        "access-oauth-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "access-password",   
+        "access-password",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 3
-        "access-pin",   
+        "access-pin",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 4
-        "access-user-name",   
+        "access-user-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 5
-        "access-x509-certificate",   
+        "access-x509-certificate",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 6
-        "access-x509-certificate(obsolete)",   
+        "access-x509-certificate(obsolete)",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -242,20 +238,20 @@ ipp_attr_rec_t s_ipp_col_destination_accesses[] =
 
 // Members of collection destination-statuses
 //
-ipp_attr_rec_t s_ipp_col_destination_statuses[] = 
+ipp_attr_rec_t s_ipp_col_destination_statuses[] =
 {
     {   // index 0
-        "destination-uri",   
+        "destination-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "images-completed",   
+        "images-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "transmission-status",   
+        "transmission-status",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -263,55 +259,55 @@ ipp_attr_rec_t s_ipp_col_destination_statuses[] =
 
 // Members of collection destination-uri-ready
 //
-ipp_attr_rec_t s_ipp_col_destination_uri_ready[] = 
+ipp_attr_rec_t s_ipp_col_destination_uri_ready[] =
 {
     {   // index 0
-        "destination-attributes",   
+        "destination-attributes",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "destination-attributes-supported",   
+        "destination-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "destination-info",   
+        "destination-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 3
-        "destination-is-directory",   
+        "destination-is-directory",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 4
-        "destination-mandatory-access-attributes",   
+        "destination-mandatory-access-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 5
-        "destination-name",   
+        "destination-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 6
-        "destination-oauth-scope",   
+        "destination-oauth-scope",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 7
-        "destination-oauth-token",   
+        "destination-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 8
-        "destination-oauth-uri",   
+        "destination-oauth-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 9
-        "destination-uri",   
+        "destination-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -319,30 +315,30 @@ ipp_attr_rec_t s_ipp_col_destination_uri_ready[] =
 
 // Members of collection destination-uris
 //
-ipp_attr_rec_t s_ipp_col_destination_uris[] = 
+ipp_attr_rec_t s_ipp_col_destination_uris[] =
 {
     {   // index 0
-        "destination-attributes",   
+        "destination-attributes",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "destination-uri",   
+        "destination-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "post-dial-string",   
+        "post-dial-string",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 3
-        "pre-dial-string",   
+        "pre-dial-string",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 4
-        "t33-subaddress",   
+        "t33-subaddress",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -350,40 +346,40 @@ ipp_attr_rec_t s_ipp_col_destination_uris[] =
 
 // Members of collection document-access
 //
-ipp_attr_rec_t s_ipp_col_document_access[] = 
+ipp_attr_rec_t s_ipp_col_document_access[] =
 {
     {   // index 0
-        "access-oauth-token",   
+        "access-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "access-oauth-uri",   
+        "access-oauth-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "access-password",   
+        "access-password",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 3
-        "access-pin",   
+        "access-pin",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 4
-        "access-user-name",   
+        "access-user-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 5
-        "access-x509-certificate",   
+        "access-x509-certificate",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 6
-        "access-x509-certificate(obsolete)",   
+        "access-x509-certificate(obsolete)",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -391,45 +387,45 @@ ipp_attr_rec_t s_ipp_col_document_access[] =
 
 // Members of collection document-format-details
 //
-ipp_attr_rec_t s_ipp_col_document_format_details[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details[] =
 {
     {   // index 0
-        "document-format",   
+        "document-format",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "document-format-device-id",   
+        "document-format-device-id",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 2
-        "document-format-version",   
+        "document-format-version",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 3
-        "document-natural-language",   
+        "document-natural-language",
         { IPP_LANGUAGE | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 4
-        "document-source-application-name",   
+        "document-source-application-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 5
-        "document-source-application-version",   
+        "document-source-application-version",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 6
-        "document-source-os-name",   
+        "document-source-os-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 40
     },
     {   // index 7
-        "document-source-os-version",   
+        "document-source-os-version",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 40
     },
@@ -437,7 +433,7 @@ ipp_attr_rec_t s_ipp_col_document_format_details[] =
 
 // Members of collection document-format-details-default
 //
-ipp_attr_rec_t s_ipp_col_document_format_details_default[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details_default[] =
 {
     {   // index 0
         "*document-format-details",   // indirect reference to
@@ -448,7 +444,7 @@ ipp_attr_rec_t s_ipp_col_document_format_details_default[] =
 
 // Members of collection document-format-details-detected
 //
-ipp_attr_rec_t s_ipp_col_document_format_details_detected[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details_detected[] =
 {
     {   // index 0
         "*document-format-details",   // indirect reference to
@@ -459,7 +455,7 @@ ipp_attr_rec_t s_ipp_col_document_format_details_detected[] =
 
 // Members of collection document-format-details-supplied
 //
-ipp_attr_rec_t s_ipp_col_document_format_details_supplied[] = 
+ipp_attr_rec_t s_ipp_col_document_format_details_supplied[] =
 {
     {   // index 0
         "*document-format-details",   // indirect reference to
@@ -470,80 +466,80 @@ ipp_attr_rec_t s_ipp_col_document_format_details_supplied[] =
 
 // Members of collection finishings-col
 //
-ipp_attr_rec_t s_ipp_col_finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col[] =
 {
     {   // index 0
-        "baling",   
+        "baling",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "binding",   
+        "binding",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "coating",   
+        "coating",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 3
-        "covering",   
+        "covering",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 4
-        "finishing-template",   
+        "finishing-template",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 5
-        "finishing-template(extension)",   
+        "finishing-template(extension)",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 6
-        "folding",   
+        "folding",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 7
-        "imposition-template",   
+        "imposition-template",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 8
-        "laminating",   
+        "laminating",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 9
-        "media-sheets-supported",   
+        "media-sheets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 10
-        "media-size",   
+        "media-size",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 11
-        "media-size-name",   
+        "media-size-name",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 12
-        "punching",   
+        "punching",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 13
-        "stitching",   
+        "stitching",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 14
-        "trimming",   
+        "trimming",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -551,7 +547,7 @@ ipp_attr_rec_t s_ipp_col_finishings_col[] =
 
 // Members of collection finishings-col-actual
 //
-ipp_attr_rec_t s_ipp_col_finishings_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col_actual[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -562,7 +558,7 @@ ipp_attr_rec_t s_ipp_col_finishings_col_actual[] =
 
 // Members of collection finishings-col-default
 //
-ipp_attr_rec_t s_ipp_col_finishings_col_default[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col_default[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -573,7 +569,7 @@ ipp_attr_rec_t s_ipp_col_finishings_col_default[] =
 
 // Members of collection finishings-col-ready
 //
-ipp_attr_rec_t s_ipp_col_finishings_col_ready[] = 
+ipp_attr_rec_t s_ipp_col_finishings_col_ready[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -582,22 +578,22 @@ ipp_attr_rec_t s_ipp_col_finishings_col_ready[] =
     },
 };
 
-// Members of collection folding.finishings-col
+// Members of collection folding
 //
-ipp_attr_rec_t s_ipp_col_folding__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_folding[] =
 {
     {   // index 0
-        "folding-direction",   
+        "folding-direction",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "folding-offset",   
+        "folding-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "folding-reference-edge",   
+        "folding-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -605,45 +601,45 @@ ipp_attr_rec_t s_ipp_col_folding__finishings_col[] =
 
 // Members of collection impressions-col
 //
-ipp_attr_rec_t s_ipp_col_impressions_col[] = 
+ipp_attr_rec_t s_ipp_col_impressions_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "blank-two-sided",   
+        "blank-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "full-color",   
+        "full-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 3
-        "full-color-two-sided",   
+        "full-color-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 4
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 5
-        "highlight-color-two-sided",   
+        "highlight-color-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 6
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 7
-        "monochrome-two-sided",   
+        "monochrome-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -651,7 +647,7 @@ ipp_attr_rec_t s_ipp_col_impressions_col[] =
 
 // Members of collection impressions-completed-col
 //
-ipp_attr_rec_t s_ipp_col_impressions_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_impressions_completed_col[] =
 {
     {   // index 0
         "*impressions-col",   // indirect reference to
@@ -662,121 +658,121 @@ ipp_attr_rec_t s_ipp_col_impressions_completed_col[] =
 
 // Members of collection input-attributes
 //
-ipp_attr_rec_t s_ipp_col_input_attributes[] = 
+ipp_attr_rec_t s_ipp_col_input_attributes[] =
 {
     {   // index 0
-        "input-auto-scaling",   
+        "input-auto-scaling",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "input-auto-skew-correction",   
+        "input-auto-skew-correction",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "input-brightness",   
+        "input-brightness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 3
-        "input-color-mode",   
+        "input-color-mode",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 4
-        "input-content-type",   
+        "input-content-type",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 5
-        "input-contrast",   
+        "input-contrast",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 6
-        "input-film-scan-mode",   
+        "input-film-scan-mode",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 7
-        "input-images-to-transfer",   
+        "input-images-to-transfer",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 8
-        "input-media",   
+        "input-media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 9
-        "input-orientation-requested",   
+        "input-orientation-requested",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 10
-        "input-quality",   
+        "input-quality",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 11
-        "input-resolution",   
+        "input-resolution",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 12
-        "input-scaling-height",   
+        "input-scaling-height",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 1000
     },
     {   // index 13
-        "input-scaling-width",   
+        "input-scaling-width",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 1000
     },
     {   // index 14
-        "input-scan-regions",   
+        "input-scan-regions",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 15
-        "input-sharpness",   
+        "input-sharpness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 16
-        "input-sides",   
+        "input-sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 17
-        "input-source",   
+        "input-source",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
 };
 
-// Members of collection input-scan-regions.input-attributes
+// Members of collection input-scan-regions
 //
-ipp_attr_rec_t s_ipp_col_input_scan_regions__input_attributes[] = 
+ipp_attr_rec_t s_ipp_col_input_scan_regions[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "x-origin",   
+        "x-origin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 3
-        "y-origin",   
+        "y-origin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -784,25 +780,25 @@ ipp_attr_rec_t s_ipp_col_input_scan_regions__input_attributes[] =
 
 // Members of collection input-scan-regions-supported
 //
-ipp_attr_rec_t s_ipp_col_input_scan_regions_supported[] = 
+ipp_attr_rec_t s_ipp_col_input_scan_regions_supported[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "x-origin",   
+        "x-origin",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "y-dimension",   
+        "y-dimension",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 3
-        "y-origin",   
+        "y-origin",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -810,20 +806,20 @@ ipp_attr_rec_t s_ipp_col_input_scan_regions_supported[] =
 
 // Members of collection insert-sheet
 //
-ipp_attr_rec_t s_ipp_col_insert_sheet[] = 
+ipp_attr_rec_t s_ipp_col_insert_sheet[] =
 {
     {   // index 0
-        "insert-after-page-number",   
+        "insert-after-page-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "insert-count",   
+        "insert-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -836,7 +832,7 @@ ipp_attr_rec_t s_ipp_col_insert_sheet[] =
 
 // Members of collection insert-sheet-actual
 //
-ipp_attr_rec_t s_ipp_col_insert_sheet_actual[] = 
+ipp_attr_rec_t s_ipp_col_insert_sheet_actual[] =
 {
     {   // index 0
         "*insert-sheet",   // indirect reference to
@@ -847,7 +843,7 @@ ipp_attr_rec_t s_ipp_col_insert_sheet_actual[] =
 
 // Members of collection insert-sheet-default
 //
-ipp_attr_rec_t s_ipp_col_insert_sheet_default[] = 
+ipp_attr_rec_t s_ipp_col_insert_sheet_default[] =
 {
     {   // index 0
         "*insert-sheet",   // indirect reference to
@@ -858,20 +854,20 @@ ipp_attr_rec_t s_ipp_col_insert_sheet_default[] =
 
 // Members of collection job-accounting-sheets
 //
-ipp_attr_rec_t s_ipp_col_job_accounting_sheets[] = 
+ipp_attr_rec_t s_ipp_col_job_accounting_sheets[] =
 {
     {   // index 0
-        "job-accounting-output-bin",   
+        "job-accounting-output-bin",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "job-accounting-sheets-type",   
+        "job-accounting-sheets-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 2
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -884,7 +880,7 @@ ipp_attr_rec_t s_ipp_col_job_accounting_sheets[] =
 
 // Members of collection job-accounting-sheets-actual
 //
-ipp_attr_rec_t s_ipp_col_job_accounting_sheets_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_accounting_sheets_actual[] =
 {
     {   // index 0
         "*job-accounting-sheets",   // indirect reference to
@@ -895,7 +891,7 @@ ipp_attr_rec_t s_ipp_col_job_accounting_sheets_actual[] =
 
 // Members of collection job-accounting-sheets-default
 //
-ipp_attr_rec_t s_ipp_col_job_accounting_sheets_default[] = 
+ipp_attr_rec_t s_ipp_col_job_accounting_sheets_default[] =
 {
     {   // index 0
         "*job-accounting-sheets",   // indirect reference to
@@ -906,10 +902,10 @@ ipp_attr_rec_t s_ipp_col_job_accounting_sheets_default[] =
 
 // Members of collection job-constraints-supported
 //
-ipp_attr_rec_t s_ipp_col_job_constraints_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_constraints_supported[] =
 {
     {   // index 0
-        "resolver-name",   
+        "resolver-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -917,7 +913,7 @@ ipp_attr_rec_t s_ipp_col_job_constraints_supported[] =
 
 // Members of collection job-cover-back
 //
-ipp_attr_rec_t s_ipp_col_job_cover_back[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_back[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -928,7 +924,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_back[] =
 
 // Members of collection job-cover-back-actual
 //
-ipp_attr_rec_t s_ipp_col_job_cover_back_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_back_actual[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -939,7 +935,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_back_actual[] =
 
 // Members of collection job-cover-back-default
 //
-ipp_attr_rec_t s_ipp_col_job_cover_back_default[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_back_default[] =
 {
     {   // index 0
         "*cover-back",   // indirect reference to
@@ -950,7 +946,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_back_default[] =
 
 // Members of collection job-cover-front
 //
-ipp_attr_rec_t s_ipp_col_job_cover_front[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_front[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -961,7 +957,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_front[] =
 
 // Members of collection job-cover-front-actual
 //
-ipp_attr_rec_t s_ipp_col_job_cover_front_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_front_actual[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -972,7 +968,7 @@ ipp_attr_rec_t s_ipp_col_job_cover_front_actual[] =
 
 // Members of collection job-cover-front-default
 //
-ipp_attr_rec_t s_ipp_col_job_cover_front_default[] = 
+ipp_attr_rec_t s_ipp_col_job_cover_front_default[] =
 {
     {   // index 0
         "*cover-front",   // indirect reference to
@@ -983,20 +979,20 @@ ipp_attr_rec_t s_ipp_col_job_cover_front_default[] =
 
 // Members of collection job-error-sheet
 //
-ipp_attr_rec_t s_ipp_col_job_error_sheet[] = 
+ipp_attr_rec_t s_ipp_col_job_error_sheet[] =
 {
     {   // index 0
-        "job-error-sheet-type",   
+        "job-error-sheet-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "job-error-sheet-when",   
+        "job-error-sheet-when",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1009,7 +1005,7 @@ ipp_attr_rec_t s_ipp_col_job_error_sheet[] =
 
 // Members of collection job-error-sheet-actual
 //
-ipp_attr_rec_t s_ipp_col_job_error_sheet_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_error_sheet_actual[] =
 {
     {   // index 0
         "*job-error-sheet",   // indirect reference to
@@ -1020,7 +1016,7 @@ ipp_attr_rec_t s_ipp_col_job_error_sheet_actual[] =
 
 // Members of collection job-error-sheet-default
 //
-ipp_attr_rec_t s_ipp_col_job_error_sheet_default[] = 
+ipp_attr_rec_t s_ipp_col_job_error_sheet_default[] =
 {
     {   // index 0
         "*job-error-sheet",   // indirect reference to
@@ -1031,7 +1027,7 @@ ipp_attr_rec_t s_ipp_col_job_error_sheet_default[] =
 
 // Members of collection job-finishings-col
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -1042,7 +1038,7 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col[] =
 
 // Members of collection job-finishings-col-actual
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col_actual[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1053,7 +1049,7 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col_actual[] =
 
 // Members of collection job-finishings-col-default
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col_default[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col_default[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -1064,7 +1060,7 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col_default[] =
 
 // Members of collection job-finishings-col-ready
 //
-ipp_attr_rec_t s_ipp_col_job_finishings_col_ready[] = 
+ipp_attr_rec_t s_ipp_col_job_finishings_col_ready[] =
 {
     {   // index 0
         "*finishings-col",   // indirect reference to
@@ -1075,45 +1071,45 @@ ipp_attr_rec_t s_ipp_col_job_finishings_col_ready[] =
 
 // Members of collection job-impressions-col
 //
-ipp_attr_rec_t s_ipp_col_job_impressions_col[] = 
+ipp_attr_rec_t s_ipp_col_job_impressions_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "blank-two-sided",   
+        "blank-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "full-color",   
+        "full-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 3
-        "full-color-two-sided",   
+        "full-color-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 4
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 5
-        "highlight-color-two-sided",   
+        "highlight-color-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 6
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 7
-        "monochrome-two-sided",   
+        "monochrome-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1121,7 +1117,7 @@ ipp_attr_rec_t s_ipp_col_job_impressions_col[] =
 
 // Members of collection job-impressions-completed-col
 //
-ipp_attr_rec_t s_ipp_col_job_impressions_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_job_impressions_completed_col[] =
 {
     {   // index 0
         "*job-impressions-col",   // indirect reference to
@@ -1132,25 +1128,25 @@ ipp_attr_rec_t s_ipp_col_job_impressions_completed_col[] =
 
 // Members of collection job-media-sheets-col
 //
-ipp_attr_rec_t s_ipp_col_job_media_sheets_col[] = 
+ipp_attr_rec_t s_ipp_col_job_media_sheets_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "full-color",   
+        "full-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 3
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1158,7 +1154,7 @@ ipp_attr_rec_t s_ipp_col_job_media_sheets_col[] =
 
 // Members of collection job-media-sheets-completed-col
 //
-ipp_attr_rec_t s_ipp_col_job_media_sheets_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_job_media_sheets_completed_col[] =
 {
     {   // index 0
         "*job-media-sheets-col",   // indirect reference to
@@ -1169,15 +1165,15 @@ ipp_attr_rec_t s_ipp_col_job_media_sheets_completed_col[] =
 
 // Members of collection job-pages-col
 //
-ipp_attr_rec_t s_ipp_col_job_pages_col[] = 
+ipp_attr_rec_t s_ipp_col_job_pages_col[] =
 {
     {   // index 0
-        "full-color",   
+        "full-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1185,7 +1181,7 @@ ipp_attr_rec_t s_ipp_col_job_pages_col[] =
 
 // Members of collection job-pages-completed-col
 //
-ipp_attr_rec_t s_ipp_col_job_pages_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_job_pages_completed_col[] =
 {
     {   // index 0
         "*job-pages-col",   // indirect reference to
@@ -1196,10 +1192,10 @@ ipp_attr_rec_t s_ipp_col_job_pages_completed_col[] =
 
 // Members of collection job-presets-supported
 //
-ipp_attr_rec_t s_ipp_col_job_presets_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_presets_supported[] =
 {
     {   // index 0
-        "preset-name",   
+        "preset-name",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1207,10 +1203,10 @@ ipp_attr_rec_t s_ipp_col_job_presets_supported[] =
 
 // Members of collection job-resolvers-supported
 //
-ipp_attr_rec_t s_ipp_col_job_resolvers_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_resolvers_supported[] =
 {
     {   // index 0
-        "resolver-name",   
+        "resolver-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1218,15 +1214,15 @@ ipp_attr_rec_t s_ipp_col_job_resolvers_supported[] =
 
 // Members of collection job-save-disposition
 //
-ipp_attr_rec_t s_ipp_col_job_save_disposition[] = 
+ipp_attr_rec_t s_ipp_col_job_save_disposition[] =
 {
     {   // index 0
-        "save-disposition",   
+        "save-disposition",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "save-info",   
+        "save-info",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -1234,15 +1230,15 @@ ipp_attr_rec_t s_ipp_col_job_save_disposition[] =
 
 // Members of collection job-sheets-col
 //
-ipp_attr_rec_t s_ipp_col_job_sheets_col[] = 
+ipp_attr_rec_t s_ipp_col_job_sheets_col[] =
 {
     {   // index 0
-        "job-sheets",   
+        "job-sheets",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1255,7 +1251,7 @@ ipp_attr_rec_t s_ipp_col_job_sheets_col[] =
 
 // Members of collection job-sheets-col-actual
 //
-ipp_attr_rec_t s_ipp_col_job_sheets_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_job_sheets_col_actual[] =
 {
     {   // index 0
         "*job-sheets-col",   // indirect reference to
@@ -1266,7 +1262,7 @@ ipp_attr_rec_t s_ipp_col_job_sheets_col_actual[] =
 
 // Members of collection job-sheets-col-default
 //
-ipp_attr_rec_t s_ipp_col_job_sheets_col_default[] = 
+ipp_attr_rec_t s_ipp_col_job_sheets_col_default[] =
 {
     {   // index 0
         "*job-sheets-col",   // indirect reference to
@@ -1277,26 +1273,26 @@ ipp_attr_rec_t s_ipp_col_job_sheets_col_default[] =
 
 // Members of collection job-triggers-supported
 //
-ipp_attr_rec_t s_ipp_col_job_triggers_supported[] = 
+ipp_attr_rec_t s_ipp_col_job_triggers_supported[] =
 {
     {   // index 0
-        "preset-name",   
+        "preset-name",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
 };
 
-// Members of collection laminating.finishings-col
+// Members of collection laminating
 //
-ipp_attr_rec_t s_ipp_col_laminating__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_laminating[] =
 {
     {   // index 0
-        "laminating-sides",   
+        "laminating-sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "laminating-type",   
+        "laminating-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1304,75 +1300,75 @@ ipp_attr_rec_t s_ipp_col_laminating__finishings_col[] =
 
 // Members of collection materials-col
 //
-ipp_attr_rec_t s_ipp_col_materials_col[] = 
+ipp_attr_rec_t s_ipp_col_materials_col[] =
 {
     {   // index 0
-        "material-amount",   
+        "material-amount",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "material-amount-units",   
+        "material-amount-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "material-color",   
+        "material-color",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 3
-        "material-diameter",   
+        "material-diameter",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 4
-        "material-diameter-tolerance",   
+        "material-diameter-tolerance",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 5
-        "material-fill-density",   
+        "material-fill-density",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 6
-        "material-key",   
+        "material-key",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 7
-        "material-name",   
+        "material-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 8
-        "material-purpose",   
+        "material-purpose",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 9
-        "material-rate",   
+        "material-rate",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 10
-        "material-rate-units",   
+        "material-rate-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 11
-        "material-shell-thickness",   
+        "material-shell-thickness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 12
-        "material-temperature",   
+        "material-temperature",
         { IPP_INTEGER, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 13
-        "material-type",   
+        "material-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1380,110 +1376,110 @@ ipp_attr_rec_t s_ipp_col_materials_col[] =
 
 // Members of collection media-col
 //
-ipp_attr_rec_t s_ipp_col_media_col[] = 
+ipp_attr_rec_t s_ipp_col_media_col[] =
 {
     {   // index 0
-        "media-back-coating",   
+        "media-back-coating",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "media-bottom-margin",   
+        "media-bottom-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "media-color",   
+        "media-color",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 3
-        "media-front-coating",   
+        "media-front-coating",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 4
-        "media-grain",   
+        "media-grain",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 5
-        "media-hole-count",   
+        "media-hole-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 6
-        "media-info",   
+        "media-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
     {   // index 7
-        "media-key",   
+        "media-key",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 8
-        "media-left-margin",   
+        "media-left-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 9
-        "media-order-count",   
+        "media-order-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 10
-        "media-pre-printed",   
+        "media-pre-printed",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 11
-        "media-recycled",   
+        "media-recycled",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 12
-        "media-right-margin",   
+        "media-right-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 13
-        "media-size",   
+        "media-size",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 14
-        "media-size-name",   
+        "media-size-name",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 15
-        "media-source",   
+        "media-source",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 16
-        "media-thickness",   
+        "media-thickness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 17
-        "media-tooth",   
+        "media-tooth",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 18
-        "media-top-margin",   
+        "media-top-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 19
-        "media-type",   
+        "media-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 20
-        "media-weight-metric",   
+        "media-weight-metric",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1491,7 +1487,7 @@ ipp_attr_rec_t s_ipp_col_media_col[] =
 
 // Members of collection media-col-actual
 //
-ipp_attr_rec_t s_ipp_col_media_col_actual[] = 
+ipp_attr_rec_t s_ipp_col_media_col_actual[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1502,23 +1498,18 @@ ipp_attr_rec_t s_ipp_col_media_col_actual[] =
 
 // Members of collection media-col-database
 //
-ipp_attr_rec_t s_ipp_col_media_col_database[] = 
+ipp_attr_rec_t s_ipp_col_media_col_database[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
         { IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 1
-        "media-source-properties",   
-        { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
-        0, 0
-    },
 };
 
 // Members of collection media-col-default
 //
-ipp_attr_rec_t s_ipp_col_media_col_default[] = 
+ipp_attr_rec_t s_ipp_col_media_col_default[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1529,7 +1520,7 @@ ipp_attr_rec_t s_ipp_col_media_col_default[] =
 
 // Members of collection media-col-ready
 //
-ipp_attr_rec_t s_ipp_col_media_col_ready[] = 
+ipp_attr_rec_t s_ipp_col_media_col_ready[] =
 {
     {   // index 0
         "*media-col",   // indirect reference to
@@ -1537,7 +1528,7 @@ ipp_attr_rec_t s_ipp_col_media_col_ready[] =
         0, 0
     },
     {   // index 1
-        "media-source-properties",   
+        "media-source-properties",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -1545,25 +1536,25 @@ ipp_attr_rec_t s_ipp_col_media_col_ready[] =
 
 // Members of collection media-sheets-col
 //
-ipp_attr_rec_t s_ipp_col_media_sheets_col[] = 
+ipp_attr_rec_t s_ipp_col_media_sheets_col[] =
 {
     {   // index 0
-        "blank",   
+        "blank",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "full-color",   
+        "full-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 3
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1571,7 +1562,7 @@ ipp_attr_rec_t s_ipp_col_media_sheets_col[] =
 
 // Members of collection media-sheets-completed-col
 //
-ipp_attr_rec_t s_ipp_col_media_sheets_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_media_sheets_completed_col[] =
 {
     {   // index 0
         "*media-sheets-col",   // indirect reference to
@@ -1580,17 +1571,17 @@ ipp_attr_rec_t s_ipp_col_media_sheets_completed_col[] =
     },
 };
 
-// Members of collection media-size.media-col
+// Members of collection media-size
 //
-ipp_attr_rec_t s_ipp_col_media_size__media_col[] = 
+ipp_attr_rec_t s_ipp_col_media_size[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1598,73 +1589,73 @@ ipp_attr_rec_t s_ipp_col_media_size__media_col[] =
 
 // Members of collection media-size-supported
 //
-ipp_attr_rec_t s_ipp_col_media_size_supported[] = 
+ipp_attr_rec_t s_ipp_col_media_size_supported[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
 };
 
-// Members of collection media-source-properties.media-col-database
+// Members of collection media-source-properties
 //
-ipp_attr_rec_t s_ipp_col_media_source_properties__media_col_database[] = 
+ipp_attr_rec_t s_ipp_col_media_source_properties[] =
 {
     {   // index 0
-        "media-source-feed-direction",   
+        "media-source-feed-direction",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "media-source-feed-orientation",   
+        "media-source-feed-orientation",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
 };
 
-// Members of collection object-offset.print-objects
+// Members of collection object-offset
 //
-ipp_attr_rec_t s_ipp_col_object_offset__print_objects[] = 
+ipp_attr_rec_t s_ipp_col_object_offset[] =
 {
     {   // index 0
-        "x-offset",   
+        "x-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "y-offset",   
+        "y-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "z-offset",   
+        "z-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
 };
 
-// Members of collection object-size.print-objects
+// Members of collection object-size
 //
-ipp_attr_rec_t s_ipp_col_object_size__print_objects[] = 
+ipp_attr_rec_t s_ipp_col_object_size[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 2
-        "z-dimension",   
+        "z-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
@@ -1672,15 +1663,15 @@ ipp_attr_rec_t s_ipp_col_object_size__print_objects[] =
 
 // Members of collection output-attributes
 //
-ipp_attr_rec_t s_ipp_col_output_attributes[] = 
+ipp_attr_rec_t s_ipp_col_output_attributes[] =
 {
     {   // index 0
-        "noise-removal",   
+        "noise-removal",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 1
-        "output-compression-quality-factor",   
+        "output-compression-quality-factor",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
@@ -1688,25 +1679,25 @@ ipp_attr_rec_t s_ipp_col_output_attributes[] =
 
 // Members of collection overrides
 //
-ipp_attr_rec_t s_ipp_col_overrides[] = 
+ipp_attr_rec_t s_ipp_col_overrides[] =
 {
     {   // index 0
-        "<Any Job Template attribute>",   
+        "<Any Job Template attribute>",
         { IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "document-copies",   
+        "document-copies",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "document-numbers",   
+        "document-numbers",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 3
-        "pages",   
+        "pages",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1714,7 +1705,7 @@ ipp_attr_rec_t s_ipp_col_overrides[] =
 
 // Members of collection overrides-actual
 //
-ipp_attr_rec_t s_ipp_col_overrides_actual[] = 
+ipp_attr_rec_t s_ipp_col_overrides_actual[] =
 {
     {   // index 0
         "*overrides",   // indirect reference to
@@ -1725,15 +1716,15 @@ ipp_attr_rec_t s_ipp_col_overrides_actual[] =
 
 // Members of collection pages-col
 //
-ipp_attr_rec_t s_ipp_col_pages_col[] = 
+ipp_attr_rec_t s_ipp_col_pages_col[] =
 {
     {   // index 0
-        "full-color",   
+        "full-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1741,7 +1732,7 @@ ipp_attr_rec_t s_ipp_col_pages_col[] =
 
 // Members of collection pages-completed-col
 //
-ipp_attr_rec_t s_ipp_col_pages_completed_col[] = 
+ipp_attr_rec_t s_ipp_col_pages_completed_col[] =
 {
     {   // index 0
         "*pages-col",   // indirect reference to
@@ -1752,20 +1743,20 @@ ipp_attr_rec_t s_ipp_col_pages_completed_col[] =
 
 // Members of collection pdl-init-file
 //
-ipp_attr_rec_t s_ipp_col_pdl_init_file[] = 
+ipp_attr_rec_t s_ipp_col_pdl_init_file[] =
 {
     {   // index 0
-        "pdl-init-file-entry",   
+        "pdl-init-file-entry",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "pdl-init-file-location",   
+        "pdl-init-file-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "pdl-init-file-name",   
+        "pdl-init-file-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1773,7 +1764,7 @@ ipp_attr_rec_t s_ipp_col_pdl_init_file[] =
 
 // Members of collection pdl-init-file-default
 //
-ipp_attr_rec_t s_ipp_col_pdl_init_file_default[] = 
+ipp_attr_rec_t s_ipp_col_pdl_init_file_default[] =
 {
     {   // index 0
         "*pdl-init-file",   // indirect reference to
@@ -1784,25 +1775,25 @@ ipp_attr_rec_t s_ipp_col_pdl_init_file_default[] =
 
 // Members of collection print-accuracy
 //
-ipp_attr_rec_t s_ipp_col_print_accuracy[] = 
+ipp_attr_rec_t s_ipp_col_print_accuracy[] =
 {
     {   // index 0
-        "accuracy-units",   
+        "accuracy-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "x-accuracy",   
+        "x-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "y-accuracy",   
+        "y-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 3
-        "z-accuracy",   
+        "z-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1810,25 +1801,25 @@ ipp_attr_rec_t s_ipp_col_print_accuracy[] =
 
 // Members of collection print-accuracy-supported
 //
-ipp_attr_rec_t s_ipp_col_print_accuracy_supported[] = 
+ipp_attr_rec_t s_ipp_col_print_accuracy_supported[] =
 {
     {   // index 0
-        "accuracy-units",   
+        "accuracy-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "x-accuracy",   
+        "x-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "y-accuracy",   
+        "y-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 3
-        "z-accuracy",   
+        "z-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1836,25 +1827,25 @@ ipp_attr_rec_t s_ipp_col_print_accuracy_supported[] =
 
 // Members of collection print-objects
 //
-ipp_attr_rec_t s_ipp_col_print_objects[] = 
+ipp_attr_rec_t s_ipp_col_print_objects[] =
 {
     {   // index 0
-        "document-number",   
+        "document-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 1
-        "object-offset",   
+        "object-offset",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "object-size",   
+        "object-size",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 3
-        "object-uuid",   
+        "object-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -1862,15 +1853,15 @@ ipp_attr_rec_t s_ipp_col_print_objects[] =
 
 // Members of collection printer-icc-profiles
 //
-ipp_attr_rec_t s_ipp_col_printer_icc_profiles[] = 
+ipp_attr_rec_t s_ipp_col_printer_icc_profiles[] =
 {
     {   // index 0
-        "profile-name",   
+        "profile-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 1
-        "profile-url",   
+        "profile-url",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -1878,20 +1869,20 @@ ipp_attr_rec_t s_ipp_col_printer_icc_profiles[] =
 
 // Members of collection printer-volume-supported
 //
-ipp_attr_rec_t s_ipp_col_printer_volume_supported[] = 
+ipp_attr_rec_t s_ipp_col_printer_volume_supported[] =
 {
     {   // index 0
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 1
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 2
-        "z-dimension",   
+        "z-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
@@ -1899,20 +1890,20 @@ ipp_attr_rec_t s_ipp_col_printer_volume_supported[] =
 
 // Members of collection printer-xri-supported
 //
-ipp_attr_rec_t s_ipp_col_printer_xri_supported[] = 
+ipp_attr_rec_t s_ipp_col_printer_xri_supported[] =
 {
     {   // index 0
-        "xri-authentication",   
+        "xri-authentication",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "xri-security",   
+        "xri-security",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "xri-uri",   
+        "xri-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -1920,10 +1911,10 @@ ipp_attr_rec_t s_ipp_col_printer_xri_supported[] =
 
 // Members of collection proof-print
 //
-ipp_attr_rec_t s_ipp_col_proof_print[] = 
+ipp_attr_rec_t s_ipp_col_proof_print[] =
 {
     {   // index 0
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1933,7 +1924,7 @@ ipp_attr_rec_t s_ipp_col_proof_print[] =
         0, 0
     },
     {   // index 2
-        "proof-print-copies",   
+        "proof-print-copies",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -1941,7 +1932,7 @@ ipp_attr_rec_t s_ipp_col_proof_print[] =
 
 // Members of collection proof-print-default
 //
-ipp_attr_rec_t s_ipp_col_proof_print_default[] = 
+ipp_attr_rec_t s_ipp_col_proof_print_default[] =
 {
     {   // index 0
         "*proof-print",   // indirect reference to
@@ -1950,43 +1941,43 @@ ipp_attr_rec_t s_ipp_col_proof_print_default[] =
     },
 };
 
-// Members of collection punching.finishings-col
+// Members of collection punching
 //
-ipp_attr_rec_t s_ipp_col_punching__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_punching[] =
 {
     {   // index 0
-        "punching-locations",   
+        "punching-locations",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "punching-offset",   
+        "punching-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "punching-reference-edge",   
+        "punching-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
 };
 
-// Members of collection save-info.job-save-disposition
+// Members of collection save-info
 //
-ipp_attr_rec_t s_ipp_col_save_info__job_save_disposition[] = 
+ipp_attr_rec_t s_ipp_col_save_info[] =
 {
     {   // index 0
-        "save-document-format",   
+        "save-document-format",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 1
-        "save-location",   
+        "save-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "save-name",   
+        "save-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -1994,10 +1985,10 @@ ipp_attr_rec_t s_ipp_col_save_info__job_save_disposition[] =
 
 // Members of collection separator-sheets
 //
-ipp_attr_rec_t s_ipp_col_separator_sheets[] = 
+ipp_attr_rec_t s_ipp_col_separator_sheets[] =
 {
     {   // index 0
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
@@ -2007,7 +1998,7 @@ ipp_attr_rec_t s_ipp_col_separator_sheets[] =
         0, 0
     },
     {   // index 2
-        "separator-sheets-type",   
+        "separator-sheets-type",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -2015,7 +2006,7 @@ ipp_attr_rec_t s_ipp_col_separator_sheets[] =
 
 // Members of collection separator-sheets-actual
 //
-ipp_attr_rec_t s_ipp_col_separator_sheets_actual[] = 
+ipp_attr_rec_t s_ipp_col_separator_sheets_actual[] =
 {
     {   // index 0
         "*separator-sheets",   // indirect reference to
@@ -2026,7 +2017,7 @@ ipp_attr_rec_t s_ipp_col_separator_sheets_actual[] =
 
 // Members of collection separator-sheets-default
 //
-ipp_attr_rec_t s_ipp_col_separator_sheets_default[] = 
+ipp_attr_rec_t s_ipp_col_separator_sheets_default[] =
 {
     {   // index 0
         "*separator-sheets",   // indirect reference to
@@ -2035,58 +2026,58 @@ ipp_attr_rec_t s_ipp_col_separator_sheets_default[] =
     },
 };
 
-// Members of collection stitching.finishings-col
+// Members of collection stitching
 //
-ipp_attr_rec_t s_ipp_col_stitching__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_stitching[] =
 {
     {   // index 0
-        "stitching-angle",   
+        "stitching-angle",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 359
     },
     {   // index 1
-        "stitching-locations",   
+        "stitching-locations",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 2
-        "stitching-method",   
+        "stitching-method",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 3
-        "stitching-offset",   
+        "stitching-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 4
-        "stitching-reference-edge",   
+        "stitching-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
 };
 
-// Members of collection trimming.finishings-col
+// Members of collection trimming
 //
-ipp_attr_rec_t s_ipp_col_trimming__finishings_col[] = 
+ipp_attr_rec_t s_ipp_col_trimming[] =
 {
     {   // index 0
-        "trimming-offset",   
+        "trimming-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 1
-        "trimming-reference-edge",   
+        "trimming-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 2
-        "trimming-type",   
+        "trimming-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 3
-        "trimming-when",   
+        "trimming-when",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
@@ -2094,9 +2085,9 @@ ipp_attr_rec_t s_ipp_col_trimming__finishings_col[] =
 
 struct tag_col_xref s_ipp_collection_xref[] =
 {
-    { "baling.finishings-col", s_ipp_col_baling__finishings_col, (sizeof(s_ipp_col_baling__finishings_col)/sizeof(ipp_attr_rec_t)) },
-    { "binding.finishings-col", s_ipp_col_binding__finishings_col, (sizeof(s_ipp_col_binding__finishings_col)/sizeof(ipp_attr_rec_t)) },
-    { "coating.finishings-col", s_ipp_col_coating__finishings_col, (sizeof(s_ipp_col_coating__finishings_col)/sizeof(ipp_attr_rec_t)) },
+    { "baling", s_ipp_col_baling, (sizeof(s_ipp_col_baling)/sizeof(ipp_attr_rec_t)) },
+    { "binding", s_ipp_col_binding, (sizeof(s_ipp_col_binding)/sizeof(ipp_attr_rec_t)) },
+    { "coating", s_ipp_col_coating, (sizeof(s_ipp_col_coating)/sizeof(ipp_attr_rec_t)) },
     { "cover-back", s_ipp_col_cover_back, (sizeof(s_ipp_col_cover_back)/sizeof(ipp_attr_rec_t)) },
     { "cover-back-actual", s_ipp_col_cover_back_actual, (sizeof(s_ipp_col_cover_back_actual)/sizeof(ipp_attr_rec_t)) },
     { "cover-back-default", s_ipp_col_cover_back_default, (sizeof(s_ipp_col_cover_back_default)/sizeof(ipp_attr_rec_t)) },
@@ -2105,7 +2096,7 @@ struct tag_col_xref s_ipp_collection_xref[] =
     { "cover-front-default", s_ipp_col_cover_front_default, (sizeof(s_ipp_col_cover_front_default)/sizeof(ipp_attr_rec_t)) },
     { "cover-sheet-info", s_ipp_col_cover_sheet_info, (sizeof(s_ipp_col_cover_sheet_info)/sizeof(ipp_attr_rec_t)) },
     { "cover-sheet-info-default", s_ipp_col_cover_sheet_info_default, (sizeof(s_ipp_col_cover_sheet_info_default)/sizeof(ipp_attr_rec_t)) },
-    { "covering.finishings-col", s_ipp_col_covering__finishings_col, (sizeof(s_ipp_col_covering__finishings_col)/sizeof(ipp_attr_rec_t)) },
+    { "covering", s_ipp_col_covering, (sizeof(s_ipp_col_covering)/sizeof(ipp_attr_rec_t)) },
     { "destination-accesses", s_ipp_col_destination_accesses, (sizeof(s_ipp_col_destination_accesses)/sizeof(ipp_attr_rec_t)) },
     { "destination-statuses", s_ipp_col_destination_statuses, (sizeof(s_ipp_col_destination_statuses)/sizeof(ipp_attr_rec_t)) },
     { "destination-uri-ready", s_ipp_col_destination_uri_ready, (sizeof(s_ipp_col_destination_uri_ready)/sizeof(ipp_attr_rec_t)) },
@@ -2119,11 +2110,11 @@ struct tag_col_xref s_ipp_collection_xref[] =
     { "finishings-col-actual", s_ipp_col_finishings_col_actual, (sizeof(s_ipp_col_finishings_col_actual)/sizeof(ipp_attr_rec_t)) },
     { "finishings-col-default", s_ipp_col_finishings_col_default, (sizeof(s_ipp_col_finishings_col_default)/sizeof(ipp_attr_rec_t)) },
     { "finishings-col-ready", s_ipp_col_finishings_col_ready, (sizeof(s_ipp_col_finishings_col_ready)/sizeof(ipp_attr_rec_t)) },
-    { "folding.finishings-col", s_ipp_col_folding__finishings_col, (sizeof(s_ipp_col_folding__finishings_col)/sizeof(ipp_attr_rec_t)) },
+    { "folding", s_ipp_col_folding, (sizeof(s_ipp_col_folding)/sizeof(ipp_attr_rec_t)) },
     { "impressions-col", s_ipp_col_impressions_col, (sizeof(s_ipp_col_impressions_col)/sizeof(ipp_attr_rec_t)) },
     { "impressions-completed-col", s_ipp_col_impressions_completed_col, (sizeof(s_ipp_col_impressions_completed_col)/sizeof(ipp_attr_rec_t)) },
     { "input-attributes", s_ipp_col_input_attributes, (sizeof(s_ipp_col_input_attributes)/sizeof(ipp_attr_rec_t)) },
-    { "input-scan-regions.input-attributes", s_ipp_col_input_scan_regions__input_attributes, (sizeof(s_ipp_col_input_scan_regions__input_attributes)/sizeof(ipp_attr_rec_t)) },
+    { "input-scan-regions", s_ipp_col_input_scan_regions, (sizeof(s_ipp_col_input_scan_regions)/sizeof(ipp_attr_rec_t)) },
     { "input-scan-regions-supported", s_ipp_col_input_scan_regions_supported, (sizeof(s_ipp_col_input_scan_regions_supported)/sizeof(ipp_attr_rec_t)) },
     { "insert-sheet", s_ipp_col_insert_sheet, (sizeof(s_ipp_col_insert_sheet)/sizeof(ipp_attr_rec_t)) },
     { "insert-sheet-actual", s_ipp_col_insert_sheet_actual, (sizeof(s_ipp_col_insert_sheet_actual)/sizeof(ipp_attr_rec_t)) },
@@ -2158,7 +2149,7 @@ struct tag_col_xref s_ipp_collection_xref[] =
     { "job-sheets-col-actual", s_ipp_col_job_sheets_col_actual, (sizeof(s_ipp_col_job_sheets_col_actual)/sizeof(ipp_attr_rec_t)) },
     { "job-sheets-col-default", s_ipp_col_job_sheets_col_default, (sizeof(s_ipp_col_job_sheets_col_default)/sizeof(ipp_attr_rec_t)) },
     { "job-triggers-supported", s_ipp_col_job_triggers_supported, (sizeof(s_ipp_col_job_triggers_supported)/sizeof(ipp_attr_rec_t)) },
-    { "laminating.finishings-col", s_ipp_col_laminating__finishings_col, (sizeof(s_ipp_col_laminating__finishings_col)/sizeof(ipp_attr_rec_t)) },
+    { "laminating", s_ipp_col_laminating, (sizeof(s_ipp_col_laminating)/sizeof(ipp_attr_rec_t)) },
     { "materials-col", s_ipp_col_materials_col, (sizeof(s_ipp_col_materials_col)/sizeof(ipp_attr_rec_t)) },
     { "media-col", s_ipp_col_media_col, (sizeof(s_ipp_col_media_col)/sizeof(ipp_attr_rec_t)) },
     { "media-col-actual", s_ipp_col_media_col_actual, (sizeof(s_ipp_col_media_col_actual)/sizeof(ipp_attr_rec_t)) },
@@ -2167,11 +2158,11 @@ struct tag_col_xref s_ipp_collection_xref[] =
     { "media-col-ready", s_ipp_col_media_col_ready, (sizeof(s_ipp_col_media_col_ready)/sizeof(ipp_attr_rec_t)) },
     { "media-sheets-col", s_ipp_col_media_sheets_col, (sizeof(s_ipp_col_media_sheets_col)/sizeof(ipp_attr_rec_t)) },
     { "media-sheets-completed-col", s_ipp_col_media_sheets_completed_col, (sizeof(s_ipp_col_media_sheets_completed_col)/sizeof(ipp_attr_rec_t)) },
-    { "media-size.media-col", s_ipp_col_media_size__media_col, (sizeof(s_ipp_col_media_size__media_col)/sizeof(ipp_attr_rec_t)) },
+    { "media-size", s_ipp_col_media_size, (sizeof(s_ipp_col_media_size)/sizeof(ipp_attr_rec_t)) },
     { "media-size-supported", s_ipp_col_media_size_supported, (sizeof(s_ipp_col_media_size_supported)/sizeof(ipp_attr_rec_t)) },
-    { "media-source-properties.media-col-database", s_ipp_col_media_source_properties__media_col_database, (sizeof(s_ipp_col_media_source_properties__media_col_database)/sizeof(ipp_attr_rec_t)) },
-    { "object-offset.print-objects", s_ipp_col_object_offset__print_objects, (sizeof(s_ipp_col_object_offset__print_objects)/sizeof(ipp_attr_rec_t)) },
-    { "object-size.print-objects", s_ipp_col_object_size__print_objects, (sizeof(s_ipp_col_object_size__print_objects)/sizeof(ipp_attr_rec_t)) },
+    { "media-source-properties", s_ipp_col_media_source_properties, (sizeof(s_ipp_col_media_source_properties)/sizeof(ipp_attr_rec_t)) },
+    { "object-offset", s_ipp_col_object_offset, (sizeof(s_ipp_col_object_offset)/sizeof(ipp_attr_rec_t)) },
+    { "object-size", s_ipp_col_object_size, (sizeof(s_ipp_col_object_size)/sizeof(ipp_attr_rec_t)) },
     { "output-attributes", s_ipp_col_output_attributes, (sizeof(s_ipp_col_output_attributes)/sizeof(ipp_attr_rec_t)) },
     { "overrides", s_ipp_col_overrides, (sizeof(s_ipp_col_overrides)/sizeof(ipp_attr_rec_t)) },
     { "overrides-actual", s_ipp_col_overrides_actual, (sizeof(s_ipp_col_overrides_actual)/sizeof(ipp_attr_rec_t)) },
@@ -2187,13 +2178,13 @@ struct tag_col_xref s_ipp_collection_xref[] =
     { "printer-xri-supported", s_ipp_col_printer_xri_supported, (sizeof(s_ipp_col_printer_xri_supported)/sizeof(ipp_attr_rec_t)) },
     { "proof-print", s_ipp_col_proof_print, (sizeof(s_ipp_col_proof_print)/sizeof(ipp_attr_rec_t)) },
     { "proof-print-default", s_ipp_col_proof_print_default, (sizeof(s_ipp_col_proof_print_default)/sizeof(ipp_attr_rec_t)) },
-    { "punching.finishings-col", s_ipp_col_punching__finishings_col, (sizeof(s_ipp_col_punching__finishings_col)/sizeof(ipp_attr_rec_t)) },
-    { "save-info.job-save-disposition", s_ipp_col_save_info__job_save_disposition, (sizeof(s_ipp_col_save_info__job_save_disposition)/sizeof(ipp_attr_rec_t)) },
+    { "punching", s_ipp_col_punching, (sizeof(s_ipp_col_punching)/sizeof(ipp_attr_rec_t)) },
+    { "save-info", s_ipp_col_save_info, (sizeof(s_ipp_col_save_info)/sizeof(ipp_attr_rec_t)) },
     { "separator-sheets", s_ipp_col_separator_sheets, (sizeof(s_ipp_col_separator_sheets)/sizeof(ipp_attr_rec_t)) },
     { "separator-sheets-actual", s_ipp_col_separator_sheets_actual, (sizeof(s_ipp_col_separator_sheets_actual)/sizeof(ipp_attr_rec_t)) },
     { "separator-sheets-default", s_ipp_col_separator_sheets_default, (sizeof(s_ipp_col_separator_sheets_default)/sizeof(ipp_attr_rec_t)) },
-    { "stitching.finishings-col", s_ipp_col_stitching__finishings_col, (sizeof(s_ipp_col_stitching__finishings_col)/sizeof(ipp_attr_rec_t)) },
-    { "trimming.finishings-col", s_ipp_col_trimming__finishings_col, (sizeof(s_ipp_col_trimming__finishings_col)/sizeof(ipp_attr_rec_t)) },
+    { "stitching", s_ipp_col_stitching, (sizeof(s_ipp_col_stitching)/sizeof(ipp_attr_rec_t)) },
+    { "trimming", s_ipp_col_trimming, (sizeof(s_ipp_col_trimming)/sizeof(ipp_attr_rec_t)) },
 };
 
 ipp_attr_rec_t s_ipp_attributes[] =
@@ -2299,4542 +2290,4542 @@ ipp_attr_rec_t s_ipp_attributes[] =
         0, 0
     },
     {   // index 20
-        "<Any Job Template attribute>",   
+        "<Any Job Template attribute>",
         { IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 21
-        "access-oauth-token",   
+        "access-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 22
-        "access-oauth-uri",   
+        "access-oauth-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 23
-        "access-password",   
+        "access-password",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 24
-        "access-pin",   
+        "access-pin",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 25
-        "access-user-name",   
+        "access-user-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 26
-        "access-x509-certificate",   
+        "access-x509-certificate",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 27
-        "access-x509-certificate(obsolete)",   
+        "access-x509-certificate(obsolete)",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 28
-        "accuracy-units",   
+        "accuracy-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 29
-        "accuracy-units-supported",   
+        "accuracy-units-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 30
-        "attributes-charset",   
+        "attributes-charset",
         { IPP_CHARSET, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 31
-        "attributes-natural-language",   
+        "attributes-natural-language",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 32
-        "baling",   
+        "baling",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 33
-        "baling-type",   
+        "baling-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 34
-        "baling-type-supported",   
+        "baling-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 35
-        "baling-when",   
+        "baling-when",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 36
-        "baling-when-supported",   
+        "baling-when-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 37
-        "binding",   
+        "binding",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 38
-        "binding-reference-edge",   
+        "binding-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 39
-        "binding-reference-edge-supported",   
+        "binding-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 40
-        "binding-type",   
+        "binding-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 41
-        "binding-type-supported",   
+        "binding-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 42
-        "blank",   
+        "blank",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 43
-        "blank-two-sided",   
+        "blank-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 44
-        "charge-info-message",   
+        "charge-info-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 45
-        "charset-configured",   
+        "charset-configured",
         { IPP_CHARSET, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 46
-        "charset-supported",   
+        "charset-supported",
         { IPP_CHARSET | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 47
-        "coating",   
+        "coating",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 48
-        "coating-sides",   
+        "coating-sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 49
-        "coating-sides-supported",   
+        "coating-sides-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 50
-        "coating-type",   
+        "coating-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 51
-        "coating-type-supported",   
+        "coating-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 52
-        "color-supported",   
+        "color-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 53
-        "compression",   
+        "compression",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 54
-        "compression-accepted",   
+        "compression-accepted",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 55
-        "compression-supplied",   
+        "compression-supplied",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 56
-        "compression-supported",   
+        "compression-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 57
-        "confirmation-sheet-print",   
+        "confirmation-sheet-print",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 58
-        "confirmation-sheet-print-default",   
+        "confirmation-sheet-print-default",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 59
-        "copies",   
+        "copies",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 60
-        "copies-actual",   
+        "copies-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 61
-        "copies-default",   
+        "copies-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 62
-        "copies-supported",   
+        "copies-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 63
-        "cover-back",   
+        "cover-back",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 64
-        "cover-back-actual",   
+        "cover-back-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 65
-        "cover-back-default",   
+        "cover-back-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 66
-        "cover-back-supported",   
+        "cover-back-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 67
-        "cover-front",   
+        "cover-front",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 68
-        "cover-front-actual",   
+        "cover-front-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 69
-        "cover-front-default",   
+        "cover-front-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 70
-        "cover-front-supported",   
+        "cover-front-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 71
-        "cover-sheet-info",   
+        "cover-sheet-info",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 72
-        "cover-sheet-info-default",   
+        "cover-sheet-info-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 73
-        "cover-sheet-info-supported",   
+        "cover-sheet-info-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 74
-        "cover-type",   
+        "cover-type",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 75
-        "covering",   
+        "covering",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 76
-        "covering-name",   
+        "covering-name",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 77
-        "covering-name-supported",   
+        "covering-name-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 78
-        "current-page-order",   
+        "current-page-order",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 79
-        "date-time-at-completed",   
+        "date-time-at-completed",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 80
-        "date-time-at-creation",   
+        "date-time-at-creation",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 81
-        "date-time-at-processing",   
+        "date-time-at-processing",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 82
-        "destination-accesses",   
+        "destination-accesses",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 83
-        "destination-accesses-supported",   
+        "destination-accesses-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 84
-        "destination-attributes",   
+        "destination-attributes",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 85
-        "destination-attributes-supported",   
+        "destination-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 86
-        "destination-info",   
+        "destination-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 87
-        "destination-is-directory",   
+        "destination-is-directory",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 88
-        "destination-mandatory-access-attributes",   
+        "destination-mandatory-access-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 89
-        "destination-name",   
+        "destination-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 90
-        "destination-oauth-scope",   
+        "destination-oauth-scope",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 91
-        "destination-oauth-token",   
+        "destination-oauth-token",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 92
-        "destination-oauth-uri",   
+        "destination-oauth-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 93
-        "destination-statuses",   
+        "destination-statuses",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 94
-        "destination-uri",   
+        "destination-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 95
-        "destination-uri-ready",   
+        "destination-uri-ready",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 96
-        "destination-uri-schemes-supported",   
+        "destination-uri-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 97
-        "destination-uris",   
+        "destination-uris",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 98
-        "destination-uris-supported",   
+        "destination-uris-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 99
-        "detailed-status-message",   
+        "detailed-status-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 100
-        "detailed-status-messages",   
+        "detailed-status-messages",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 101
-        "device-service-count",   
+        "device-service-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 102
-        "device-uuid",   
+        "device-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 45
     },
     {   // index 103
-        "document-access",   
+        "document-access",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 104
-        "document-access-error",   
+        "document-access-error",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 105
-        "document-access-errors",   
+        "document-access-errors",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 106
-        "document-access-supported",   
+        "document-access-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 107
-        "document-charset",   
+        "document-charset",
         { IPP_CHARSET, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 108
-        "document-charset-default",   
+        "document-charset-default",
         { IPP_CHARSET, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 109
-        "document-charset-supplied",   
+        "document-charset-supplied",
         { IPP_CHARSET, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 110
-        "document-charset-supported",   
+        "document-charset-supported",
         { IPP_CHARSET | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 111
-        "document-copies",   
+        "document-copies",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 112
-        "document-creation-attributes-supported",   
+        "document-creation-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 113
-        "document-data-get-interval",   
+        "document-data-get-interval",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 114
-        "document-data-wait",   
+        "document-data-wait",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 115
-        "document-digital-signature",   
+        "document-digital-signature",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 116
-        "document-digital-signature-default",   
+        "document-digital-signature-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 117
-        "document-digital-signature-supplied",   
+        "document-digital-signature-supplied",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 118
-        "document-digital-signature-supported",   
+        "document-digital-signature-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 119
-        "document-format",   
+        "document-format",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 120
-        "document-format-accepted",   
+        "document-format-accepted",
         { IPP_MIME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 121
-        "document-format-default",   
+        "document-format-default",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 122
-        "document-format-details",   
+        "document-format-details",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 123
-        "document-format-details-default",   
+        "document-format-details-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 124
-        "document-format-details-detected",   
+        "document-format-details-detected",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 125
-        "document-format-details-supplied",   
+        "document-format-details-supplied",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 126
-        "document-format-details-supported",   
+        "document-format-details-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 127
-        "document-format-detected",   
+        "document-format-detected",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 128
-        "document-format-device-id",   
+        "document-format-device-id",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 129
-        "document-format-ready",   
+        "document-format-ready",
         { IPP_MIME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 130
-        "document-format-supplied",   
+        "document-format-supplied",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 131
-        "document-format-supported",   
+        "document-format-supported",
         { IPP_MIME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 132
-        "document-format-varying-attributes",   
+        "document-format-varying-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 133
-        "document-format-version",   
+        "document-format-version",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 134
-        "document-format-version-default",   
+        "document-format-version-default",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 135
-        "document-format-version-detected",   
+        "document-format-version-detected",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 136
-        "document-format-version-supplied",   
+        "document-format-version-supplied",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 137
-        "document-format-version-supported",   
+        "document-format-version-supported",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 138
-        "document-job-id",   
+        "document-job-id",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 139
-        "document-job-uri",   
+        "document-job-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 140
-        "document-message",   
+        "document-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 141
-        "document-message-supplied",   
+        "document-message-supplied",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 142
-        "document-metadata",   
+        "document-metadata",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 143
-        "document-name",   
+        "document-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 144
-        "document-name-supplied",   
+        "document-name-supplied",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 145
-        "document-natural-language",   
+        "document-natural-language",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 146
-        "document-natural-language-default",   
+        "document-natural-language-default",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 147
-        "document-natural-language-supplied",   
+        "document-natural-language-supplied",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 148
-        "document-natural-language-supported",   
+        "document-natural-language-supported",
         { IPP_LANGUAGE | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 149
-        "document-number",   
+        "document-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 150
-        "document-numbers",   
+        "document-numbers",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 151
-        "document-password",   
+        "document-password",
         { IPP_OCTETSTRING, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 152
-        "document-password-supported",   
+        "document-password-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 153
-        "document-preprocessed",   
+        "document-preprocessed",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 154
-        "document-printer-uri",   
+        "document-printer-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 155
-        "document-privacy-attributes",   
+        "document-privacy-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 156
-        "document-privacy-scope",   
+        "document-privacy-scope",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 157
-        "document-source-application-name",   
+        "document-source-application-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 158
-        "document-source-application-version",   
+        "document-source-application-version",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 159
-        "document-source-os-name",   
+        "document-source-os-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 40
     },
     {   // index 160
-        "document-source-os-version",   
+        "document-source-os-version",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 40
     },
     {   // index 161
-        "document-state",   
+        "document-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 162
-        "document-state-message",   
+        "document-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 163
-        "document-state-reasons",   
+        "document-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 164
-        "document-uri",   
+        "document-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 165
-        "document-uuid",   
+        "document-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 45
     },
     {   // index 166
-        "errors-count",   
+        "errors-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 167
-        "feed-orientation",   
+        "feed-orientation",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 168
-        "feed-orientation-default",   
+        "feed-orientation-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 169
-        "feed-orientation-supported",   
+        "feed-orientation-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 170
-        "fetch-document-attributes-supported",   
+        "fetch-document-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 171
-        "fetch-status-code",   
+        "fetch-status-code",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 172
-        "fetch-status-message",   
+        "fetch-status-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 173
-        "finishing-template",   
+        "finishing-template",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 174
-        "finishing-template(extension)",   
+        "finishing-template(extension)",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 175
-        "finishing-template-supported",   
+        "finishing-template-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 176
-        "finishings",   
+        "finishings",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 177
-        "finishings-actual",   
+        "finishings-actual",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 178
-        "finishings-col",   
+        "finishings-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 179
-        "finishings-col-actual",   
+        "finishings-col-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 180
-        "finishings-col-database",   
+        "finishings-col-database",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 181
-        "finishings-col-default",   
+        "finishings-col-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 182
-        "finishings-col-ready",   
+        "finishings-col-ready",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 183
-        "finishings-col-supported",   
+        "finishings-col-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 184
-        "finishings-default",   
+        "finishings-default",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 185
-        "finishings-ready",   
+        "finishings-ready",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 186
-        "finishings-supported",   
+        "finishings-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 187
-        "first-index",   
+        "first-index",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 188
-        "folding",   
+        "folding",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 189
-        "folding-direction",   
+        "folding-direction",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 190
-        "folding-direction-supported",   
+        "folding-direction-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 191
-        "folding-offset",   
+        "folding-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 192
-        "folding-offset-supported",   
+        "folding-offset-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 193
-        "folding-reference-edge",   
+        "folding-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 194
-        "folding-reference-edge-supported",   
+        "folding-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 195
-        "font-name-requested",   
+        "font-name-requested",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 196
-        "font-name-requested-default",   
+        "font-name-requested-default",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 197
-        "font-name-requested-supported",   
+        "font-name-requested-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 198
-        "font-size-requested",   
+        "font-size-requested",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 199
-        "font-size-requested-default",   
+        "font-size-requested-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 200
-        "font-size-requested-supported",   
+        "font-size-requested-supported",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 201
-        "force-front-side",   
+        "force-front-side",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 202
-        "force-front-side-actual",   
+        "force-front-side-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 203
-        "force-front-side-default (under review)",   
+        "force-front-side-default (under review)",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 204
-        "force-front-side-supported (under review)",   
+        "force-front-side-supported (under review)",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 205
-        "from-name",   
+        "from-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 206
-        "from-name-supported",   
+        "from-name-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 207
-        "full-color",   
+        "full-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 208
-        "full-color-two-sided",   
+        "full-color-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 209
-        "generated-natural-language-supported",   
+        "generated-natural-language-supported",
         { IPP_LANGUAGE | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 210
-        "highlight-color",   
+        "highlight-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 211
-        "highlight-color-two-sided",   
+        "highlight-color-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 212
-        "identify-actions",   
+        "identify-actions",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 213
-        "identify-actions-default",   
+        "identify-actions-default",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 214
-        "identify-actions-supported",   
+        "identify-actions-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 215
-        "images-completed",   
+        "images-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 216
-        "imposition-template",   
+        "imposition-template",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 217
-        "imposition-template-actual",   
+        "imposition-template-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 218
-        "imposition-template-default",   
+        "imposition-template-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 219
-        "imposition-template-supported",   
+        "imposition-template-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 220
-        "impressions",   
+        "impressions",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 221
-        "impressions-col",   
+        "impressions-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 222
-        "impressions-completed",   
+        "impressions-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 223
-        "impressions-completed-col",   
+        "impressions-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 224
-        "impressions-completed-current-copy",   
+        "impressions-completed-current-copy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 225
-        "input-attributes",   
+        "input-attributes",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 226
-        "input-attributes-actual",   
+        "input-attributes-actual",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 227
-        "input-attributes-default",   
+        "input-attributes-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 228
-        "input-attributes-supported",   
+        "input-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 229
-        "input-auto-scaling",   
+        "input-auto-scaling",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 230
-        "input-auto-skew-correction",   
+        "input-auto-skew-correction",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 231
-        "input-brightness",   
+        "input-brightness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 232
-        "input-color-mode",   
+        "input-color-mode",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 233
-        "input-color-mode-supported",   
+        "input-color-mode-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 234
-        "input-content-type",   
+        "input-content-type",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 235
-        "input-content-type-supported",   
+        "input-content-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 236
-        "input-contrast",   
+        "input-contrast",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 237
-        "input-film-scan-mode",   
+        "input-film-scan-mode",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 238
-        "input-film-scan-mode-supported",   
+        "input-film-scan-mode-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 239
-        "input-images-to-transfer",   
+        "input-images-to-transfer",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 240
-        "input-media",   
+        "input-media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 241
-        "input-media-supported",   
+        "input-media-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 242
-        "input-orientation-requested",   
+        "input-orientation-requested",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 243
-        "input-orientation-requested-supported",   
+        "input-orientation-requested-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 244
-        "input-quality",   
+        "input-quality",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 245
-        "input-quality-supported",   
+        "input-quality-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 246
-        "input-resolution",   
+        "input-resolution",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 247
-        "input-resolution-supported",   
+        "input-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 248
-        "input-scaling-height",   
+        "input-scaling-height",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 1000
     },
     {   // index 249
-        "input-scaling-width",   
+        "input-scaling-width",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 1000
     },
     {   // index 250
-        "input-scan-regions",   
+        "input-scan-regions",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 251
-        "input-scan-regions-supported",   
+        "input-scan-regions-supported",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 252
-        "input-sharpness",   
+        "input-sharpness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 253
-        "input-sides",   
+        "input-sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 254
-        "input-sides-supported",   
+        "input-sides-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 255
-        "input-source",   
+        "input-source",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 256
-        "input-source-supported",   
+        "input-source-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 257
-        "insert-after-page-number",   
+        "insert-after-page-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 258
-        "insert-after-page-number-supported",   
+        "insert-after-page-number-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 259
-        "insert-count",   
+        "insert-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 260
-        "insert-count-supported",   
+        "insert-count-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 261
-        "insert-sheet",   
+        "insert-sheet",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 262
-        "insert-sheet-actual",   
+        "insert-sheet-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 263
-        "insert-sheet-default",   
+        "insert-sheet-default",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 264
-        "insert-sheet-supported",   
+        "insert-sheet-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 265
-        "ipp-attribute-fidelity",   
+        "ipp-attribute-fidelity",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 266
-        "ipp-features-supported",   
+        "ipp-features-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 267
-        "ipp-versions-supported",   
+        "ipp-versions-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 268
-        "ippget-event-life",   
+        "ippget-event-life",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         15, 2147483647
     },
     {   // index 269
-        "job-account-id",   
+        "job-account-id",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 270
-        "job-account-id-actual",   
+        "job-account-id-actual",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 271
-        "job-account-id-default",   
+        "job-account-id-default",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 272
-        "job-account-id-supported",   
+        "job-account-id-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 273
-        "job-account-type",   
+        "job-account-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 274
-        "job-account-type-actual",   
+        "job-account-type-actual",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 275
-        "job-account-type-default",   
+        "job-account-type-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 276
-        "job-account-type-supported",   
+        "job-account-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 277
-        "job-accounting-output-bin",   
+        "job-accounting-output-bin",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 278
-        "job-accounting-sheets",   
+        "job-accounting-sheets",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 279
-        "job-accounting-sheets-actual",   
+        "job-accounting-sheets-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 280
-        "job-accounting-sheets-default",   
+        "job-accounting-sheets-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 281
-        "job-accounting-sheets-supported",   
+        "job-accounting-sheets-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 282
-        "job-accounting-sheets-type",   
+        "job-accounting-sheets-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 283
-        "job-accounting-user-id",   
+        "job-accounting-user-id",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 284
-        "job-accounting-user-id-actual",   
+        "job-accounting-user-id-actual",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 285
-        "job-accounting-user-id-default",   
+        "job-accounting-user-id-default",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 286
-        "job-accounting-user-id-supported",   
+        "job-accounting-user-id-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 287
-        "job-attribute-fidelity",   
+        "job-attribute-fidelity",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 288
-        "job-authorization-uri",   
+        "job-authorization-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 289
-        "job-authorization-uri-supported",   
+        "job-authorization-uri-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 290
-        "job-charge-info",   
+        "job-charge-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 291
-        "job-collation-type",   
+        "job-collation-type",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 292
-        "job-collation-type-actual",   
+        "job-collation-type-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 293
-        "job-constraints-supported",   
+        "job-constraints-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 294
-        "job-copies",   
+        "job-copies",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 295
-        "job-copies-actual",   
+        "job-copies-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 296
-        "job-copies-default",   
+        "job-copies-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 297
-        "job-copies-supported",   
+        "job-copies-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 298
-        "job-cover-back",   
+        "job-cover-back",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 299
-        "job-cover-back-actual",   
+        "job-cover-back-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 300
-        "job-cover-back-default",   
+        "job-cover-back-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 301
-        "job-cover-back-supported",   
+        "job-cover-back-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 302
-        "job-cover-front",   
+        "job-cover-front",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 303
-        "job-cover-front-actual",   
+        "job-cover-front-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 304
-        "job-cover-front-default",   
+        "job-cover-front-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 305
-        "job-cover-front-supported",   
+        "job-cover-front-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 306
-        "job-creation-attributes-supported",   
+        "job-creation-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 307
-        "job-delay-output-until",   
+        "job-delay-output-until",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 308
-        "job-delay-output-until-default",   
+        "job-delay-output-until-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 309
-        "job-delay-output-until-supported",   
+        "job-delay-output-until-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 310
-        "job-delay-output-until-time",   
+        "job-delay-output-until-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 311
-        "job-delay-output-until-time-supported",   
+        "job-delay-output-until-time-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 312
-        "job-destination-spooling-supported",   
+        "job-destination-spooling-supported",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 313
-        "job-detailed-status-messages",   
+        "job-detailed-status-messages",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 314
-        "job-document-access-errors",   
+        "job-document-access-errors",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 315
-        "job-error-action",   
+        "job-error-action",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 316
-        "job-error-action-default",   
+        "job-error-action-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 317
-        "job-error-action-supported",   
+        "job-error-action-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 318
-        "job-error-sheet",   
+        "job-error-sheet",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 319
-        "job-error-sheet-actual",   
+        "job-error-sheet-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 320
-        "job-error-sheet-default",   
+        "job-error-sheet-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 321
-        "job-error-sheet-supported",   
+        "job-error-sheet-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 322
-        "job-error-sheet-type",   
+        "job-error-sheet-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 323
-        "job-error-sheet-when",   
+        "job-error-sheet-when",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 324
-        "job-finishings",   
+        "job-finishings",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 325
-        "job-finishings-actual",   
+        "job-finishings-actual",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 326
-        "job-finishings-col",   
+        "job-finishings-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 327
-        "job-finishings-col-actual",   
+        "job-finishings-col-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 328
-        "job-finishings-col-default",   
+        "job-finishings-col-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 329
-        "job-finishings-col-ready",   
+        "job-finishings-col-ready",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 330
-        "job-finishings-col-supported",   
+        "job-finishings-col-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 331
-        "job-finishings-default",   
+        "job-finishings-default",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 332
-        "job-finishings-ready",   
+        "job-finishings-ready",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 333
-        "job-finishings-supported",   
+        "job-finishings-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 334
-        "job-hold-until",   
+        "job-hold-until",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 335
-        "job-hold-until-actual",   
+        "job-hold-until-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 336
-        "job-hold-until-default",   
+        "job-hold-until-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 337
-        "job-hold-until-supported",   
+        "job-hold-until-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 338
-        "job-hold-until-time",   
+        "job-hold-until-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 339
-        "job-hold-until-time-supported",   
+        "job-hold-until-time-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 340
-        "job-id",   
+        "job-id",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 341
-        "job-ids",   
+        "job-ids",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 342
-        "job-ids-supported",   
+        "job-ids-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 343
-        "job-impressions",   
+        "job-impressions",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 344
-        "job-impressions-col",   
+        "job-impressions-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 345
-        "job-impressions-completed",   
+        "job-impressions-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 346
-        "job-impressions-completed-col",   
+        "job-impressions-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 347
-        "job-impressions-estimated",   
+        "job-impressions-estimated",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 348
-        "job-impressions-supported",   
+        "job-impressions-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 349
-        "job-k-octets",   
+        "job-k-octets",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 350
-        "job-k-octets-processed",   
+        "job-k-octets-processed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 351
-        "job-k-octets-supported",   
+        "job-k-octets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 352
-        "job-mandatory-attributes",   
+        "job-mandatory-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 353
-        "job-media-sheets",   
+        "job-media-sheets",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 354
-        "job-media-sheets-col",   
+        "job-media-sheets-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 355
-        "job-media-sheets-completed",   
+        "job-media-sheets-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 356
-        "job-media-sheets-completed-col",   
+        "job-media-sheets-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 357
-        "job-media-sheets-supported",   
+        "job-media-sheets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 358
-        "job-message-from-operator",   
+        "job-message-from-operator",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 359
-        "job-message-to-operator",   
+        "job-message-to-operator",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 360
-        "job-message-to-operator-actual",   
+        "job-message-to-operator-actual",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 361
-        "job-message-to-operator-default",   
+        "job-message-to-operator-default",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 362
-        "job-message-to-operator-supported",   
+        "job-message-to-operator-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 363
-        "job-more-info",   
+        "job-more-info",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 364
-        "job-name",   
+        "job-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 365
-        "job-originating-user-name",   
+        "job-originating-user-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 366
-        "job-originating-user-uri",   
+        "job-originating-user-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 367
-        "job-pages",   
+        "job-pages",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 368
-        "job-pages-col",   
+        "job-pages-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 369
-        "job-pages-completed",   
+        "job-pages-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 370
-        "job-pages-completed-col",   
+        "job-pages-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 371
-        "job-pages-completed-current-copy",   
+        "job-pages-completed-current-copy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 372
-        "job-pages-per-set",   
+        "job-pages-per-set",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 373
-        "job-pages-per-set-supported",   
+        "job-pages-per-set-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 374
-        "job-password",   
+        "job-password",
         { IPP_OCTETSTRING, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
     {   // index 375
-        "job-password-encryption",   
+        "job-password-encryption",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 376
-        "job-password-encryption-supported",   
+        "job-password-encryption-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 377
-        "job-password-length-supported",   
+        "job-password-length-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
     {   // index 378
-        "job-password-repertoire-configured",   
+        "job-password-repertoire-configured",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 379
-        "job-password-repertoire-supported",   
+        "job-password-repertoire-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 380
-        "job-password-supported",   
+        "job-password-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
     {   // index 381
-        "job-phone-number",   
+        "job-phone-number",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 382
-        "job-phone-number-default",   
+        "job-phone-number-default",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 383
-        "job-phone-number-supported",   
+        "job-phone-number-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 384
-        "job-presets-supported",   
+        "job-presets-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 385
-        "job-printer-up-time",   
+        "job-printer-up-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 386
-        "job-printer-uri",   
+        "job-printer-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 387
-        "job-priority",   
+        "job-priority",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 100
     },
     {   // index 388
-        "job-priority-actual",   
+        "job-priority-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 100
     },
     {   // index 389
-        "job-priority-default",   
+        "job-priority-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 100
     },
     {   // index 390
-        "job-priority-supported",   
+        "job-priority-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 100
     },
     {   // index 391
-        "job-privacy-attributes",   
+        "job-privacy-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 392
-        "job-privacy-scope",   
+        "job-privacy-scope",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 393
-        "job-recipient-name",   
+        "job-recipient-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 394
-        "job-recipient-name-default",   
+        "job-recipient-name-default",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 395
-        "job-recipient-name-supported",   
+        "job-recipient-name-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 396
-        "job-resolvers-supported",   
+        "job-resolvers-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 397
-        "job-save-disposition",   
+        "job-save-disposition",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 398
-        "job-save-printer-make-and-model",   
+        "job-save-printer-make-and-model",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 399
-        "job-settable-attributes-supported",   
+        "job-settable-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 400
-        "job-sheet-message",   
+        "job-sheet-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 401
-        "job-sheet-message-actual",   
+        "job-sheet-message-actual",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 402
-        "job-sheet-message-default",   
+        "job-sheet-message-default",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 403
-        "job-sheet-message-supported",   
+        "job-sheet-message-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 404
-        "job-sheets",   
+        "job-sheets",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 405
-        "job-sheets-actual",   
+        "job-sheets-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 406
-        "job-sheets-col",   
+        "job-sheets-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 407
-        "job-sheets-col-actual",   
+        "job-sheets-col-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 408
-        "job-sheets-col-default",   
+        "job-sheets-col-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 409
-        "job-sheets-col-supported",   
+        "job-sheets-col-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 410
-        "job-sheets-default",   
+        "job-sheets-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 411
-        "job-sheets-supported",   
+        "job-sheets-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 412
-        "job-spooling-supported",   
+        "job-spooling-supported",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 413
-        "job-state",   
+        "job-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 414
-        "job-state-message",   
+        "job-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 415
-        "job-state-reasons",   
+        "job-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 416
-        "job-triggers-supported",   
+        "job-triggers-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 417
-        "job-uri",   
+        "job-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 418
-        "job-uuid",   
+        "job-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 419
-        "jpeg-features-supported",   
+        "jpeg-features-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 420
-        "jpeg-k-octets-supported",   
+        "jpeg-k-octets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 421
-        "jpeg-x-dimension-supported",   
+        "jpeg-x-dimension-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 65535
     },
     {   // index 422
-        "jpeg-y-dimension-supported",   
+        "jpeg-y-dimension-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 65535
     },
     {   // index 423
-        "k-octets",   
+        "k-octets",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 424
-        "k-octets-processed",   
+        "k-octets-processed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 425
-        "laminating",   
+        "laminating",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 426
-        "laminating-sides",   
+        "laminating-sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 427
-        "laminating-sides-supported",   
+        "laminating-sides-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 428
-        "laminating-type",   
+        "laminating-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 429
-        "laminating-type-supported",   
+        "laminating-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 430
-        "last-document",   
+        "last-document",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 431
-        "limit",   
+        "limit",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 432
-        "logo",   
+        "logo",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 433
-        "logo-uri-formats-supported",   
+        "logo-uri-formats-supported",
         { IPP_MIME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 434
-        "logo-uri-schemes-supported",   
+        "logo-uri-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 435
-        "material-amount",   
+        "material-amount",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 436
-        "material-amount-units",   
+        "material-amount-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 437
-        "material-amount-units-supported",   
+        "material-amount-units-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 438
-        "material-color",   
+        "material-color",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 439
-        "material-diameter",   
+        "material-diameter",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 440
-        "material-diameter-supported",   
+        "material-diameter-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 441
-        "material-diameter-tolerance",   
+        "material-diameter-tolerance",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 442
-        "material-fill-density",   
+        "material-fill-density",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 443
-        "material-key",   
+        "material-key",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 444
-        "material-name",   
+        "material-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 445
-        "material-purpose",   
+        "material-purpose",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 446
-        "material-purpose-supported",   
+        "material-purpose-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 447
-        "material-rate",   
+        "material-rate",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 448
-        "material-rate-supported",   
+        "material-rate-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 449
-        "material-rate-units",   
+        "material-rate-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 450
-        "material-rate-units-supported",   
+        "material-rate-units-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 451
-        "material-shell-thickness",   
+        "material-shell-thickness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 452
-        "material-shell-thickness-supported",   
+        "material-shell-thickness-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 453
-        "material-temperature",   
+        "material-temperature",
         { IPP_INTEGER, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 454
-        "material-temperature-supported",   
+        "material-temperature-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 455
-        "material-type",   
+        "material-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 456
-        "material-type-supported",   
+        "material-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 457
-        "materials-col",   
+        "materials-col",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 458
-        "materials-col-actual",   
+        "materials-col-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 459
-        "materials-col-database",   
+        "materials-col-database",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 460
-        "materials-col-default",   
+        "materials-col-default",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 461
-        "materials-col-ready",   
+        "materials-col-ready",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 462
-        "materials-col-supported",   
+        "materials-col-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 463
-        "max-materials-col-supported",   
+        "max-materials-col-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 464
-        "max-save-info-supported",   
+        "max-save-info-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 465
-        "max-stitching-locations-supported",   
+        "max-stitching-locations-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 466
-        "media",   
+        "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 467
-        "media-actual",   
+        "media-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 468
-        "media-back-coating",   
+        "media-back-coating",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 469
-        "media-back-coating-supported",   
+        "media-back-coating-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 470
-        "media-bottom-margin",   
+        "media-bottom-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 471
-        "media-bottom-margin-supported",   
+        "media-bottom-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 472
-        "media-col",   
+        "media-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 473
-        "media-col-actual",   
+        "media-col-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 474
-        "media-col-database",   
+        "media-col-database",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 475
-        "media-col-default",   
+        "media-col-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 476
-        "media-col-ready",   
+        "media-col-ready",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 477
-        "media-col-supported",   
+        "media-col-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 478
-        "media-color",   
+        "media-color",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 479
-        "media-color-supported",   
+        "media-color-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 480
-        "media-default",   
+        "media-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 481
-        "media-front-coating",   
+        "media-front-coating",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 482
-        "media-front-coating-supported",   
+        "media-front-coating-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 483
-        "media-grain",   
+        "media-grain",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 484
-        "media-grain-supported",   
+        "media-grain-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 485
-        "media-hole-count",   
+        "media-hole-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 486
-        "media-hole-count-supported",   
+        "media-hole-count-supported",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 487
-        "media-info",   
+        "media-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
     {   // index 488
-        "media-info-supported",   
+        "media-info-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 489
-        "media-input-tray-check",   
+        "media-input-tray-check",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 490
-        "media-input-tray-check-actual",   
+        "media-input-tray-check-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 491
-        "media-key",   
+        "media-key",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 492
-        "media-key-supported",   
+        "media-key-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 493
-        "media-left-margin",   
+        "media-left-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 494
-        "media-left-margin-supported",   
+        "media-left-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 495
-        "media-order-count",   
+        "media-order-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 496
-        "media-order-count-supported",   
+        "media-order-count-supported",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 497
-        "media-pre-printed",   
+        "media-pre-printed",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 498
-        "media-pre-printed-supported",   
+        "media-pre-printed-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 499
-        "media-ready",   
+        "media-ready",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 500
-        "media-recycled",   
+        "media-recycled",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 501
-        "media-recycled-supported",   
+        "media-recycled-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 502
-        "media-right-margin",   
+        "media-right-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 503
-        "media-right-margin-supported",   
+        "media-right-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 504
-        "media-sheets",   
+        "media-sheets",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 505
-        "media-sheets-col",   
+        "media-sheets-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 506
-        "media-sheets-completed",   
+        "media-sheets-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 507
-        "media-sheets-completed-col",   
+        "media-sheets-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 508
-        "media-sheets-supported",   
+        "media-sheets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 509
-        "media-size",   
+        "media-size",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 510
-        "media-size-name",   
+        "media-size-name",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 511
-        "media-size-supported",   
+        "media-size-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 512
-        "media-source",   
+        "media-source",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 513
-        "media-source-feed-direction",   
+        "media-source-feed-direction",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 514
-        "media-source-feed-orientation",   
+        "media-source-feed-orientation",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 515
-        "media-source-properties",   
+        "media-source-properties",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 516
-        "media-source-supported",   
+        "media-source-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 517
-        "media-supported",   
+        "media-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 518
-        "media-thickness",   
+        "media-thickness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 519
-        "media-thickness-supported",   
+        "media-thickness-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 520
-        "media-tooth",   
+        "media-tooth",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 521
-        "media-tooth-supported",   
+        "media-tooth-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 522
-        "media-top-margin",   
+        "media-top-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 523
-        "media-top-margin-supported",   
+        "media-top-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 524
-        "media-type",   
+        "media-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 525
-        "media-type-supported",   
+        "media-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 526
-        "media-weight-metric",   
+        "media-weight-metric",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 527
-        "media-weight-metric-supported",   
+        "media-weight-metric-supported",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 528
-        "message",   
+        "message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 529
-        "message-supported",   
+        "message-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 530
-        "monochrome",   
+        "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 531
-        "monochrome-two-sided",   
+        "monochrome-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 532
-        "more-info",   
+        "more-info",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 533
-        "multiple-destination-uris-supported",   
+        "multiple-destination-uris-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 534
-        "multiple-document-handling",   
+        "multiple-document-handling",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 535
-        "multiple-document-handling-actual",   
+        "multiple-document-handling-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 536
-        "multiple-document-handling-default",   
+        "multiple-document-handling-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 537
-        "multiple-document-handling-supported",   
+        "multiple-document-handling-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 538
-        "multiple-document-jobs-supported",   
+        "multiple-document-jobs-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 539
-        "multiple-object-handling",   
+        "multiple-object-handling",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 540
-        "multiple-object-handling-actual",   
+        "multiple-object-handling-actual",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 541
-        "multiple-object-handling-default",   
+        "multiple-object-handling-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 542
-        "multiple-object-handling-supported",   
+        "multiple-object-handling-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 543
-        "multiple-operation-time-out",   
+        "multiple-operation-time-out",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 544
-        "multiple-operation-time-out-action",   
+        "multiple-operation-time-out-action",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 545
-        "my-jobs",   
+        "my-jobs",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 546
-        "natural-language-configured",   
+        "natural-language-configured",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 547
-        "noise-removal",   
+        "noise-removal",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 548
-        "notify-attributes",   
+        "notify-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 549
-        "notify-attributes-supported",   
+        "notify-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 550
-        "notify-charset",   
+        "notify-charset",
         { IPP_CHARSET, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 551
-        "notify-events",   
+        "notify-events",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 552
-        "notify-events-default",   
+        "notify-events-default",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 553
-        "notify-events-supported",   
+        "notify-events-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 554
-        "notify-get-interval",   
+        "notify-get-interval",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 555
-        "notify-job-id",   
+        "notify-job-id",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 556
-        "notify-lease-duration",   
+        "notify-lease-duration",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 67108863
     },
     {   // index 557
-        "notify-lease-duration-default",   
+        "notify-lease-duration-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 67108863
     },
     {   // index 558
-        "notify-lease-duration-supported",   
+        "notify-lease-duration-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 67108863
     },
     {   // index 559
-        "notify-lease-expiration-time",   
+        "notify-lease-expiration-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 560
-        "notify-max-events-supported",   
+        "notify-max-events-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         2, 2147483647
     },
     {   // index 561
-        "notify-natural-language",   
+        "notify-natural-language",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 562
-        "notify-printer-up-time",   
+        "notify-printer-up-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 563
-        "notify-printer-uri",   
+        "notify-printer-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 564
-        "notify-pull-method",   
+        "notify-pull-method",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 565
-        "notify-pull-method-supported",   
+        "notify-pull-method-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 566
-        "notify-recipient-uri",   
+        "notify-recipient-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 567
-        "notify-schemes-supported",   
+        "notify-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 568
-        "notify-sequence-number",   
+        "notify-sequence-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 569
-        "notify-sequence-numbers",   
+        "notify-sequence-numbers",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 570
-        "notify-status-code",   
+        "notify-status-code",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 571
-        "notify-subscribed-event",   
+        "notify-subscribed-event",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 572
-        "notify-subscriber-user-name",   
+        "notify-subscriber-user-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 573
-        "notify-subscriber-user-uri",   
+        "notify-subscriber-user-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 574
-        "notify-subscription-id",   
+        "notify-subscription-id",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 575
-        "notify-subscription-ids",   
+        "notify-subscription-ids",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 576
-        "notify-subscription-uuid",   
+        "notify-subscription-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 577
-        "notify-text",   
+        "notify-text",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 578
-        "notify-time-interval",   
+        "notify-time-interval",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 579
-        "notify-user-data",   
+        "notify-user-data",
         { IPP_OCTETSTRING, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 63
     },
     {   // index 580
-        "notify-wait",   
+        "notify-wait",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 581
-        "number-of-documents",   
+        "number-of-documents",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 582
-        "number-of-intervening-jobs",   
+        "number-of-intervening-jobs",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 583
-        "number-of-retries",   
+        "number-of-retries",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 584
-        "number-of-retries-default",   
+        "number-of-retries-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 585
-        "number-of-retries-supported",   
+        "number-of-retries-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 586
-        "number-up",   
+        "number-up",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 587
-        "number-up-actual",   
+        "number-up-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 588
-        "number-up-default",   
+        "number-up-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 589
-        "number-up-supported",   
+        "number-up-supported",
         { IPP_INTEGER, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 590
-        "oauth-authorization-server-uri",   
+        "oauth-authorization-server-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 591
-        "object-offset",   
+        "object-offset",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 592
-        "object-size",   
+        "object-size",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 593
-        "object-uuid",   
+        "object-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 594
-        "operations-supported",   
+        "operations-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 595
-        "organization-name",   
+        "organization-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 596
-        "organization-name-supported",   
+        "organization-name-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 597
-        "orientation-requested",   
+        "orientation-requested",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 598
-        "orientation-requested-actual",   
+        "orientation-requested-actual",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 599
-        "orientation-requested-default",   
+        "orientation-requested-default",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 600
-        "orientation-requested-supported",   
+        "orientation-requested-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 601
-        "original-requesting-user-name",   
+        "original-requesting-user-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 602
-        "output-attributes",   
+        "output-attributes",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 603
-        "output-attributes-actual",   
+        "output-attributes-actual",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 604
-        "output-attributes-default",   
+        "output-attributes-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 605
-        "output-attributes-supported",   
+        "output-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 606
-        "output-bin",   
+        "output-bin",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 607
-        "output-bin-actual",   
+        "output-bin-actual",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 608
-        "output-bin-default",   
+        "output-bin-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 609
-        "output-bin-supported",   
+        "output-bin-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 610
-        "output-compression-quality-factor",   
+        "output-compression-quality-factor",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
     {   // index 611
-        "output-device",   
+        "output-device",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 612
-        "output-device-actual",   
+        "output-device-actual",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 613
-        "output-device-assigned",   
+        "output-device-assigned",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 614
-        "output-device-document-state",   
+        "output-device-document-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 615
-        "output-device-document-state-message",   
+        "output-device-document-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 616
-        "output-device-document-state-reasons",   
+        "output-device-document-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 617
-        "output-device-job-state",   
+        "output-device-job-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 618
-        "output-device-job-state-message",   
+        "output-device-job-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 619
-        "output-device-job-state-reasons",   
+        "output-device-job-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 620
-        "output-device-job-states",   
+        "output-device-job-states",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 621
-        "output-device-supported",   
+        "output-device-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 622
-        "output-device-uuid",   
+        "output-device-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 623
-        "output-device-uuid-assigned",   
+        "output-device-uuid-assigned",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 624
-        "output-device-uuid-supported",   
+        "output-device-uuid-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 625
-        "overrides",   
+        "overrides",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 626
-        "overrides-actual",   
+        "overrides-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 627
-        "overrides-supported",   
+        "overrides-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 628
-        "page-delivery",   
+        "page-delivery",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 629
-        "page-delivery-actual",   
+        "page-delivery-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 630
-        "page-delivery-default",   
+        "page-delivery-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 631
-        "page-delivery-supported",   
+        "page-delivery-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 632
-        "page-order-received",   
+        "page-order-received",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 633
-        "page-order-received-actual",   
+        "page-order-received-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 634
-        "page-order-received-default",   
+        "page-order-received-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 635
-        "page-order-received-supported",   
+        "page-order-received-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 636
-        "page-ranges",   
+        "page-ranges",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 637
-        "page-ranges-actual",   
+        "page-ranges-actual",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 638
-        "page-ranges-supported",   
+        "page-ranges-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 639
-        "pages",   
+        "pages",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 640
-        "pages-col",   
+        "pages-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 641
-        "pages-completed",   
+        "pages-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 642
-        "pages-completed-col",   
+        "pages-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 643
-        "pages-completed-current-copy",   
+        "pages-completed-current-copy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 644
-        "pages-per-minute",   
+        "pages-per-minute",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 645
-        "pages-per-minute-color",   
+        "pages-per-minute-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 646
-        "pages-per-subset",   
+        "pages-per-subset",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 647
-        "pages-per-subset-supported",   
+        "pages-per-subset-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 648
-        "parent-printers-supported",   
+        "parent-printers-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 649
-        "pclm-raster-back-side",   
+        "pclm-raster-back-side",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 650
-        "pclm-source-resolution",   
+        "pclm-source-resolution",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 651
-        "pclm-source-resolution-supported",   
+        "pclm-source-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 652
-        "pclm-strip-height-preferred",   
+        "pclm-strip-height-preferred",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 653
-        "pclm-strip-height-supported",   
+        "pclm-strip-height-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 654
-        "pdf-features-supported",   
+        "pdf-features-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 655
-        "pdf-k-octets-supported",   
+        "pdf-k-octets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 656
-        "pdf-versions-supported",   
+        "pdf-versions-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 657
-        "pdl-init-file",   
+        "pdl-init-file",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 658
-        "pdl-init-file-default",   
+        "pdl-init-file-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 659
-        "pdl-init-file-entry",   
+        "pdl-init-file-entry",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 660
-        "pdl-init-file-entry-supported",   
+        "pdl-init-file-entry-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 661
-        "pdl-init-file-location",   
+        "pdl-init-file-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 662
-        "pdl-init-file-location-supported",   
+        "pdl-init-file-location-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 663
-        "pdl-init-file-name",   
+        "pdl-init-file-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 664
-        "pdl-init-file-name-subdirectory-supported",   
+        "pdl-init-file-name-subdirectory-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 665
-        "pdl-init-file-name-supported",   
+        "pdl-init-file-name-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 666
-        "pdl-init-file-supported",   
+        "pdl-init-file-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 667
-        "pdl-override-guaranteed-supported",   
+        "pdl-override-guaranteed-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 668
-        "pdl-override-supported",   
+        "pdl-override-supported",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 669
-        "platform-shape",   
+        "platform-shape",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 670
-        "platform-temperature",   
+        "platform-temperature",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 671
-        "platform-temperature-actual",   
+        "platform-temperature-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 672
-        "platform-temperature-default",   
+        "platform-temperature-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 673
-        "platform-temperature-supported",   
+        "platform-temperature-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 674
-        "post-dial-string",   
+        "post-dial-string",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 675
-        "pre-dial-string",   
+        "pre-dial-string",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 676
-        "preferred-attributes",   
+        "preferred-attributes",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 677
-        "preferred-attributes-supported",   
+        "preferred-attributes-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 678
-        "presentation-direction-number-up",   
+        "presentation-direction-number-up",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 679
-        "presentation-direction-number-up-actual",   
+        "presentation-direction-number-up-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 680
-        "presentation-direction-number-up-default",   
+        "presentation-direction-number-up-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 681
-        "presentation-direction-number-up-supported",   
+        "presentation-direction-number-up-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 682
-        "preset-name",   
+        "preset-name",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 683
-        "print-accuracy",   
+        "print-accuracy",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 684
-        "print-accuracy-actual",   
+        "print-accuracy-actual",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 685
-        "print-accuracy-supported",   
+        "print-accuracy-supported",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 686
-        "print-base",   
+        "print-base",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 687
-        "print-base-actual",   
+        "print-base-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 688
-        "print-base-default",   
+        "print-base-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 689
-        "print-base-supported",   
+        "print-base-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 690
-        "print-color-mode",   
+        "print-color-mode",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 691
-        "print-color-mode-actual",   
+        "print-color-mode-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 692
-        "print-color-mode-default",   
+        "print-color-mode-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 693
-        "print-color-mode-supported",   
+        "print-color-mode-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 694
-        "print-content-optimize",   
+        "print-content-optimize",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 695
-        "print-content-optimize-actual",   
+        "print-content-optimize-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 696
-        "print-content-optimize-default",   
+        "print-content-optimize-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 697
-        "print-content-optimize-supported",   
+        "print-content-optimize-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 698
-        "print-objects",   
+        "print-objects",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 699
-        "print-objects-actual",   
+        "print-objects-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 700
-        "print-objects-supported",   
+        "print-objects-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 701
-        "print-quality",   
+        "print-quality",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 702
-        "print-quality-actual",   
+        "print-quality-actual",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 703
-        "print-quality-default",   
+        "print-quality-default",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 704
-        "print-quality-supported",   
+        "print-quality-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 705
-        "print-rendering-intent",   
+        "print-rendering-intent",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 706
-        "print-rendering-intent-actual",   
+        "print-rendering-intent-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 707
-        "print-rendering-intent-default",   
+        "print-rendering-intent-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 708
-        "print-rendering-intent-supported",   
+        "print-rendering-intent-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 709
-        "print-scaling",   
+        "print-scaling",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 710
-        "print-scaling-default",   
+        "print-scaling-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 711
-        "print-scaling-supported",   
+        "print-scaling-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 712
-        "print-supports",   
+        "print-supports",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 713
-        "print-supports-actual",   
+        "print-supports-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 714
-        "print-supports-default",   
+        "print-supports-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 715
-        "print-supports-supported",   
+        "print-supports-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 716
-        "printer-alert",   
+        "printer-alert",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 717
-        "printer-alert-description",   
+        "printer-alert-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 718
-        "printer-camera-image-uri",   
+        "printer-camera-image-uri",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 719
-        "printer-charge-info",   
+        "printer-charge-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 720
-        "printer-charge-info-uri",   
+        "printer-charge-info-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 721
-        "printer-config-change-date-time",   
+        "printer-config-change-date-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 722
-        "printer-config-change-time",   
+        "printer-config-change-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 723
-        "printer-current-time",   
+        "printer-current-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 724
-        "printer-detailed-status-messages",   
+        "printer-detailed-status-messages",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 725
-        "printer-device-id",   
+        "printer-device-id",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 726
-        "printer-dns-sd-name",   
+        "printer-dns-sd-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 63
     },
     {   // index 727
-        "printer-driver-installer",   
+        "printer-driver-installer",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 728
-        "printer-fax-log-uri",   
+        "printer-fax-log-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 729
-        "printer-fax-modem-info",   
+        "printer-fax-modem-info",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 730
-        "printer-fax-modem-name",   
+        "printer-fax-modem-name",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 731
-        "printer-fax-modem-number",   
+        "printer-fax-modem-number",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 732
-        "printer-finisher",   
+        "printer-finisher",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 733
-        "printer-finisher-description",   
+        "printer-finisher-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 734
-        "printer-finisher-supplies",   
+        "printer-finisher-supplies",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 735
-        "printer-finisher-supplies-description",   
+        "printer-finisher-supplies-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 736
-        "printer-geo-location",   
+        "printer-geo-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 737
-        "printer-get-attributes-supported",   
+        "printer-get-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 738
-        "printer-icc-profiles",   
+        "printer-icc-profiles",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 739
-        "printer-icons",   
+        "printer-icons",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 740
-        "printer-info",   
+        "printer-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 741
-        "printer-input-tray",   
+        "printer-input-tray",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 742
-        "printer-is-accepting-jobs",   
+        "printer-is-accepting-jobs",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 743
-        "printer-kind",   
+        "printer-kind",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 744
-        "printer-location",   
+        "printer-location",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 745
-        "printer-make-and-model",   
+        "printer-make-and-model",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 746
-        "printer-mandatory-job-attributes",   
+        "printer-mandatory-job-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 747
-        "printer-message-date-time",   
+        "printer-message-date-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 748
-        "printer-message-from-operator",   
+        "printer-message-from-operator",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 749
-        "printer-message-time",   
+        "printer-message-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 750
-        "printer-more-info",   
+        "printer-more-info",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 751
-        "printer-more-info-manufacturer",   
+        "printer-more-info-manufacturer",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 752
-        "printer-name",   
+        "printer-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
     {   // index 753
-        "printer-organization",   
+        "printer-organization",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 754
-        "printer-organizational-unit",   
+        "printer-organizational-unit",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 755
-        "printer-output-tray",   
+        "printer-output-tray",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 756
-        "printer-privacy-policy-uri",   
+        "printer-privacy-policy-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 757
-        "printer-resolution",   
+        "printer-resolution",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 758
-        "printer-resolution-actual",   
+        "printer-resolution-actual",
         { IPP_RESOLUTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 759
-        "printer-resolution-default",   
+        "printer-resolution-default",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 760
-        "printer-resolution-supported",   
+        "printer-resolution-supported",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 761
-        "printer-settable-attributes-supported",   
+        "printer-settable-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 762
-        "printer-state",   
+        "printer-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 763
-        "printer-state-change-date-time",   
+        "printer-state-change-date-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 764
-        "printer-state-change-time",   
+        "printer-state-change-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 765
-        "printer-state-message",   
+        "printer-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 766
-        "printer-state-reasons",   
+        "printer-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 767
-        "printer-static-resource-directory-uri",   
+        "printer-static-resource-directory-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 768
-        "printer-static-resource-k-octets-free",   
+        "printer-static-resource-k-octets-free",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 769
-        "printer-static-resource-k-octets-supported",   
+        "printer-static-resource-k-octets-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 770
-        "printer-strings-languages-supported",   
+        "printer-strings-languages-supported",
         { IPP_LANGUAGE | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 771
-        "printer-strings-uri",   
+        "printer-strings-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 772
-        "printer-supply",   
+        "printer-supply",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 773
-        "printer-supply-description",   
+        "printer-supply-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 774
-        "printer-supply-info-uri",   
+        "printer-supply-info-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 775
-        "printer-up-time",   
+        "printer-up-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 776
-        "printer-uri",   
+        "printer-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 777
-        "printer-uri-supported",   
+        "printer-uri-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 778
-        "printer-uuid",   
+        "printer-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 45
     },
     {   // index 779
-        "printer-volume-supported",   
+        "printer-volume-supported",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 780
-        "printer-xri-supported",   
+        "printer-xri-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 781
-        "profile-name",   
+        "profile-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 782
-        "profile-uri-actual",   
+        "profile-uri-actual",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 783
-        "profile-url",   
+        "profile-url",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 784
-        "proof-print",   
+        "proof-print",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 785
-        "proof-print-copies",   
+        "proof-print-copies",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 786
-        "proof-print-default",   
+        "proof-print-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 787
-        "proof-print-supported",   
+        "proof-print-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 788
-        "punching",   
+        "punching",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 789
-        "punching-hole-diameter-configured",   
+        "punching-hole-diameter-configured",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 790
-        "punching-locations",   
+        "punching-locations",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 791
-        "punching-locations-supported",   
+        "punching-locations-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 792
-        "punching-offset",   
+        "punching-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 793
-        "punching-offset-supported",   
+        "punching-offset-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 794
-        "punching-reference-edge",   
+        "punching-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 795
-        "punching-reference-edge-supported",   
+        "punching-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 796
-        "pwg-raster-document-resolution-supported",   
+        "pwg-raster-document-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 797
-        "pwg-raster-document-sheet-back",   
+        "pwg-raster-document-sheet-back",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 798
-        "pwg-raster-document-type-supported",   
+        "pwg-raster-document-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 799
-        "queued-job-count",   
+        "queued-job-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 800
-        "reference-uri-schemes-supported",   
+        "reference-uri-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 801
-        "repertoire-supported",   
+        "repertoire-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 802
-        "requested-attributes",   
+        "requested-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 803
-        "requesting-user-name",   
+        "requesting-user-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 804
-        "requesting-user-uri",   
+        "requesting-user-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 805
-        "requesting-user-uri-supported",   
+        "requesting-user-uri-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 806
-        "resolver-name",   
+        "resolver-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 807
-        "retry-interval",   
+        "retry-interval",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 808
-        "retry-interval-default",   
+        "retry-interval-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 809
-        "retry-interval-supported",   
+        "retry-interval-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 810
-        "retry-time-out",   
+        "retry-time-out",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 811
-        "retry-time-out-default",   
+        "retry-time-out-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 812
-        "retry-time-out-supported",   
+        "retry-time-out-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 813
-        "save-disposition",   
+        "save-disposition",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 814
-        "save-disposition-supported",   
+        "save-disposition-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 815
-        "save-document-format",   
+        "save-document-format",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 816
-        "save-document-format-default",   
+        "save-document-format-default",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 817
-        "save-document-format-supported",   
+        "save-document-format-supported",
         { IPP_MIME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 818
-        "save-info",   
+        "save-info",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 819
-        "save-location",   
+        "save-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 820
-        "save-location-default",   
+        "save-location-default",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 821
-        "save-location-supported",   
+        "save-location-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 822
-        "save-name",   
+        "save-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 823
-        "save-name-subdirectory-supported",   
+        "save-name-subdirectory-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 824
-        "save-name-supported",   
+        "save-name-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 825
-        "separator-sheets",   
+        "separator-sheets",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 826
-        "separator-sheets-actual",   
+        "separator-sheets-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 827
-        "separator-sheets-default",   
+        "separator-sheets-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 828
-        "separator-sheets-supported",   
+        "separator-sheets-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 829
-        "separator-sheets-type",   
+        "separator-sheets-type",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 830
-        "sheet-collate",   
+        "sheet-collate",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 831
-        "sheet-collate-actual",   
+        "sheet-collate-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 832
-        "sheet-collate-default",   
+        "sheet-collate-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 833
-        "sheet-collate-supported",   
+        "sheet-collate-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 834
-        "sheet-completed-copy-number",   
+        "sheet-completed-copy-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 835
-        "sheet-completed-document-number",   
+        "sheet-completed-document-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 836
-        "sides",   
+        "sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 837
-        "sides-actual",   
+        "sides-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 838
-        "sides-default",   
+        "sides-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 839
-        "sides-supported",   
+        "sides-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 840
-        "status-message",   
+        "status-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
     {   // index 841
-        "stitching",   
+        "stitching",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 842
-        "stitching-angle",   
+        "stitching-angle",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 359
     },
     {   // index 843
-        "stitching-angle-supported",   
+        "stitching-angle-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 359
     },
     {   // index 844
-        "stitching-locations",   
+        "stitching-locations",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 845
-        "stitching-locations-supported",   
+        "stitching-locations-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 846
-        "stitching-method",   
+        "stitching-method",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 847
-        "stitching-method-supported",   
+        "stitching-method-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 848
-        "stitching-offset",   
+        "stitching-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 849
-        "stitching-offset-supported",   
+        "stitching-offset-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 850
-        "stitching-reference-edge",   
+        "stitching-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 851
-        "stitching-reference-edge-supported",   
+        "stitching-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 852
-        "subject",   
+        "subject",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 853
-        "subject-supported",   
+        "subject-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 854
-        "subordinate-printers-supported",   
+        "subordinate-printers-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 855
-        "subscription-privacy-attributes",   
+        "subscription-privacy-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 856
-        "subscription-privacy-scope",   
+        "subscription-privacy-scope",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 857
-        "t33-subaddress",   
+        "t33-subaddress",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 858
-        "time-at-completed",   
+        "time-at-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 859
-        "time-at-creation",   
+        "time-at-creation",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 860
-        "time-at-processing",   
+        "time-at-processing",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 861
-        "to-name",   
+        "to-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 862
-        "to-name-supported",   
+        "to-name-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
     {   // index 863
-        "transmission-status",   
+        "transmission-status",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 864
-        "trimming",   
+        "trimming",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 865
-        "trimming-offset",   
+        "trimming-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 866
-        "trimming-offset-supported",   
+        "trimming-offset-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 867
-        "trimming-reference-edge",   
+        "trimming-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 868
-        "trimming-reference-edge-supported",   
+        "trimming-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 869
-        "trimming-type",   
+        "trimming-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
     {   // index 870
-        "trimming-type-supported",   
+        "trimming-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 871
-        "trimming-when",   
+        "trimming-when",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 872
-        "trimming-when-supported",   
+        "trimming-when-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 873
-        "uri-authentication-supported",   
+        "uri-authentication-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 874
-        "uri-security-supported",   
+        "uri-security-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 875
-        "user-defined-values-supported",   
+        "user-defined-values-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 876
-        "warnings-count",   
+        "warnings-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 877
-        "which-jobs",   
+        "which-jobs",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 878
-        "which-jobs-supported",   
+        "which-jobs-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 879
-        "x-accuracy",   
+        "x-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 880
-        "x-dimension",   
+        "x-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 881
-        "x-image-position",   
+        "x-image-position",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 882
-        "x-image-position-actual",   
+        "x-image-position-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 883
-        "x-image-position-default",   
+        "x-image-position-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 884
-        "x-image-position-supported",   
+        "x-image-position-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 885
-        "x-image-shift",   
+        "x-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 886
-        "x-image-shift-actual",   
+        "x-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 887
-        "x-image-shift-default",   
+        "x-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 888
-        "x-image-shift-supported",   
+        "x-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 889
-        "x-offset",   
+        "x-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 890
-        "x-origin",   
+        "x-origin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 891
-        "x-side1-image-shift",   
+        "x-side1-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 892
-        "x-side1-image-shift-actual",   
+        "x-side1-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 893
-        "x-side1-image-shift-default",   
+        "x-side1-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 894
-        "x-side1-image-shift-supported",   
+        "x-side1-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 895
-        "x-side2-image-shift",   
+        "x-side2-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 896
-        "x-side2-image-shift-actual",   
+        "x-side2-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 897
-        "x-side2-image-shift-default",   
+        "x-side2-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 898
-        "x-side2-image-shift-supported",   
+        "x-side2-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 899
-        "xri-authentication",   
+        "xri-authentication",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 900
-        "xri-authentication-supported",   
+        "xri-authentication-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 901
-        "xri-security",   
+        "xri-security",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 902
-        "xri-security-supported",   
+        "xri-security-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 903
-        "xri-uri",   
+        "xri-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 904
-        "xri-uri-scheme-supported",   
+        "xri-uri-scheme-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 905
-        "y-accuracy",   
+        "y-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 906
-        "y-dimension",   
+        "y-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 907
-        "y-image-position",   
+        "y-image-position",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 908
-        "y-image-position-actual",   
+        "y-image-position-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 909
-        "y-image-position-default",   
+        "y-image-position-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 910
-        "y-image-position-supported",   
+        "y-image-position-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 911
-        "y-image-shift",   
+        "y-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 912
-        "y-image-shift-actual",   
+        "y-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 913
-        "y-image-shift-default",   
+        "y-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 914
-        "y-image-shift-supported",   
+        "y-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 915
-        "y-offset",   
+        "y-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 916
-        "y-origin",   
+        "y-origin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
     {   // index 917
-        "y-side1-image-shift",   
+        "y-side1-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 918
-        "y-side1-image-shift-actual",   
+        "y-side1-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 919
-        "y-side1-image-shift-default",   
+        "y-side1-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 920
-        "y-side1-image-shift-supported",   
+        "y-side1-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 921
-        "y-side2-image-shift",   
+        "y-side2-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 922
-        "y-side2-image-shift-actual",   
+        "y-side2-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 923
-        "y-side2-image-shift-default",   
+        "y-side2-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 924
-        "y-side2-image-shift-supported",   
+        "y-side2-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
     {   // index 925
-        "z-accuracy",   
+        "z-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
     {   // index 926
-        "z-dimension",   
+        "z-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
     {   // index 927
-        "z-offset",   
+        "z-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
@@ -9893,6 +9884,11 @@ ipp_attr_t s_ipp_attr_group_prtdesc[] =
     },
     {
         511, // media-size-supported
+        0, 0,
+        NULL, NULL
+    },
+    {
+        515, // media-source-properties
         0, 0,
         NULL, NULL
     },

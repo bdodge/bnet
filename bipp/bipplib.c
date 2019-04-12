@@ -593,6 +593,8 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 "media-right-margin",
                                                 "media-source",
                                                 "media-size"
+//                                                "media-size-name",
+ //                                               "media-type"
                                             );
 
     result |= ipp_set_group_attr_string_value(
@@ -606,29 +608,6 @@ int ipp_set_static_environment(ipp_server_t *ipp)
                                                 1, "na_letter_8.5x11in"
                                             );
 
-    if (! result)
-    {
-        ipp_attr_t *letattr;
-        ipp_attr_t *a4attr;
-
-        result = ipp_dupe_collection("media-size-supported", &letattr);
-        if (! result)
-        {
-            result |= ipp_set_attr_int32_value("x-dimension", letattr, 1, 850);
-            result |= ipp_set_attr_int32_value("y-dimension", letattr, 1, 1100);
-        }
-        result = ipp_dupe_collection("media-size-supported", &a4attr);
-        if (! result)
-        {
-            result |= ipp_set_attr_int32_value("x-dimension", a4attr, 1, 800);
-            result |= ipp_set_attr_int32_value("y-dimension", a4attr, 1, 1200);
-        }
-        result |= ipp_set_group_attr_collection_value(
-                                            "media-size-supported",
-                                            IPP_GROUPING_PRINTER_DESCRIPTION,
-                                            2, letattr, a4attr
-                                        );
-    }
     result |= ipp_set_group_attr_string_value(
                                                 "media-source-supported",
                                                 IPP_GROUPING_PRINTER_DESCRIPTION,
@@ -831,16 +810,17 @@ int ipp_set_static_environment(ipp_server_t *ipp)
 
 static ipp_media_t s_media_table[] =
 {
-    { "na_letter_8.5x11in",   "paper",    "tray1",    100, 100, 100, 100  },
-    { "iso_a4_210x297mm",     "metal",    "tray2",    100, 100, 100, 100  }
+    { "na_letter_8.5x11in",   "paper",    "tray1",    21590, 27940, 100, 100, 100, 100  },
+    { "iso_a4_210x297mm",     "metal",    "tray2",    21000, 29700, 100, 100, 100, 100  }
 };
 
 int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
 {
     ipp_media_t *pm;
     ipp_attr_t *media_col_database;
+    ipp_attr_t *media_size_supported;
     ipp_attr_t *mcdbcolattr;
-    ipp_attr_t *medcolattr;
+    ipp_attr_t *sizcolattr;
     ipp_attr_t *srccolattr;
     ipp_attr_t *attr;
     size_t med_dex;
@@ -850,13 +830,21 @@ int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
     setdef = false;
 
     mcdbcolattr = NULL;
-    medcolattr = NULL;
+    sizcolattr = NULL;
     srccolattr = NULL;
 
     // get the list of attributes for printer description
     result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+
     // and find the database in that list
     result |= ipp_get_attr_by_name("media-col-database", attr, &media_col_database);
+    if (result)
+    {
+        butil_log(1, "No media-col-database\n");
+        return result;
+    }
+    // and find the supported sizes too
+    result |= ipp_get_attr_by_name("media-size-supported", attr, &media_size_supported);
     if (result)
     {
         butil_log(1, "No media-col-database\n");
@@ -868,14 +856,8 @@ int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
     {
         return result;
     }
-    // create a media collection
-    result = ipp_dupe_collection("media-col", &medcolattr);
-    if (result)
-    {
-        return result;
-    }
-    // create a media source collection
-    result  = ipp_dupe_collection("media-source-properties.media-col-database", &srccolattr);
+    // create a media size collection
+    result = ipp_dupe_collection("media-size", &sizcolattr);
     if (result)
     {
         return result;
@@ -884,45 +866,55 @@ int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
     {
         pm = &media[med_dex];
 
-        result |= ipp_set_attr_int32_value("media-top-margin", medcolattr, 1, pm->top_margin);
-        result |= ipp_set_attr_int32_value("media-bottom-margin", medcolattr, 1, pm->bottom_margin);
-        result |= ipp_set_attr_int32_value("media-left-margin", medcolattr, 1, pm->left_margin);
-        result |= ipp_set_attr_int32_value("media-right-margin", medcolattr, 1, pm->right_margin);
-        result |= ipp_set_attr_string_value("media-source", medcolattr, 1, pm->source);
-        result |= ipp_set_attr_string_value("media-type", medcolattr, 1, pm->type);
+        result |= ipp_set_attr_string_value("media-type", mcdbcolattr, 1, pm->type);
+
+        result |= ipp_set_attr_int32_value("x-dimension", sizcolattr, 1, pm->width);
+        result |= ipp_set_attr_int32_value("y-dimension", sizcolattr, 1, pm->height);
         if (result)
         {
             break;
         }
+        result |= ipp_set_attr_collection_value("media-size", mcdbcolattr, 1, sizcolattr);
+        if (result)
+        {
+            break;
+        }
+        result |= ipp_set_attr_string_value("media-size-name", mcdbcolattr, 1, pm->name);
+        result |= ipp_set_attr_string_value("media-source", mcdbcolattr, 1, pm->source);
+
+        result |= ipp_set_attr_int32_value("media-top-margin", mcdbcolattr, 1, pm->top_margin);
+        result |= ipp_set_attr_int32_value("media-left-margin", mcdbcolattr, 1, pm->left_margin);
+        result |= ipp_set_attr_int32_value("media-right-margin", mcdbcolattr, 1, pm->right_margin);
+        result |= ipp_set_attr_int32_value("media-bottom-margin", mcdbcolattr, 1, pm->bottom_margin);
+
         // media attributes we could support if we wanted
 
- //       result |= ipp_set_attr_string_value("media-back-coating", medcolattr, 1, "aaaa");
- //       result |= ipp_set_attr_string_value("media-color", medcolattr, 1, "white");
- //       result |= ipp_set_attr_string_value("media-front-coating", medcolattr, 1, "bbbb");
- //       result |= ipp_set_attr_string_value("media-grain", medcolattr, 1, "long");
- //       result |= ipp_set_attr_int32_value("media-hole-count", medcolattr, 1, 333);
- //       result |= ipp_set_attr_string_value("media-info", medcolattr, 1, "junk");
- //       result |= ipp_set_attr_string_value("media-key", medcolattr, 1, "brass");
- //       result |= ipp_set_attr_int32_value("media-order-count", medcolattr, 1, 222);
- //       result |= ipp_set_attr_string_value("media-pre-printed", medcolattr, 1, "yo");
- //       result |= ipp_set_attr_string_value("media-recycled", medcolattr, 1, "yoyo");
- //       result |= ipp_set_attr_string_value("media-size-name", medcolattr, 1, "bigger");
- //       result |= ipp_set_attr_int32_value("media-thickness", medcolattr, 1, 10);
- //       result |= ipp_set_attr_string_value("media-tooth", medcolattr, 1, "blue");
- //       result |= ipp_set_attr_int32_value("media-weight-metric", medcolattr, 1, 100);
+ //       result |= ipp_set_attr_string_value("media-back-coating", mcdbcolattr, 1, "aaaa");
+ //       result |= ipp_set_attr_string_value("media-color", mcdbcolattr, 1, "white");
+ //       result |= ipp_set_attr_string_value("media-front-coating", mcdbcolattr, 1, "bbbb");
+ //       result |= ipp_set_attr_string_value("media-grain", mcdbcolattr, 1, "long");
+ //       result |= ipp_set_attr_int32_value("media-hole-count", mcdbcolattr, 1, 333);
+ //       result |= ipp_set_attr_string_value("media-info", mcdbcolattr, 1, "junk");
+ //       result |= ipp_set_attr_string_value("media-key", mcdbcolattr, 1, "brass");
+ //       result |= ipp_set_attr_int32_value("media-order-count", mcdbcolattr, 1, 222);
+ //       result |= ipp_set_attr_string_value("media-pre-printed", mcdbcolattr, 1, "yo");
+ //       result |= ipp_set_attr_string_value("media-recycled", mcdbcolattr, 1, "yoyo");
+ //       result |= ipp_set_attr_int32_value("media-thickness", mcdbcolattr, 1, 10);
+ //       result |= ipp_set_attr_string_value("media-tooth", mcdbcolattr, 1, "blue");
+ //       result |= ipp_set_attr_int32_value("media-weight-metric", mcdbcolattr, 1, 100);
 
         if (! setdef)
         {
             result |= ipp_set_group_attr_collection_value(
                                             "media-col-default",
                                             IPP_GROUPING_PRINTER_DESCRIPTION,
-                                            1, medcolattr
+                                            1, mcdbcolattr
                                         );
 
             result |= ipp_set_group_attr_collection_value(
                                             "media-col-ready",
                                             IPP_GROUPING_PRINTER_DESCRIPTION,
-                                            1, medcolattr
+                                            1, mcdbcolattr
                                         );
             setdef = true;
         }
@@ -932,27 +924,13 @@ int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
         }
         // add to media collection database, which is an array of collections
         // with collection members
-
-        // set a source collection entry
-        result |= ipp_set_attr_string_value("media-source-feed-direction", srccolattr, 1, "short-edge-first");
-        result |= ipp_set_attr_int32_value("media-source-feed-orientation", srccolattr, 1, 3);
-        if (result)
-        {
-            break;
-        }
-        // set a media-col-database entry with this collection and this source
-        result |= ipp_set_attr_collection_value("media-col", mcdbcolattr, 1, medcolattr);
-        result |= ipp_set_attr_collection_value("media-source-properties", mcdbcolattr, 1, srccolattr);
-        if (result)
-        {
-            break;
-        }
-        // append it to the static printer description media-col-database
         result = ipp_add_member_attrs_to_attr(media_col_database, mcdbcolattr);
         if (result)
         {
             break;
         }
+        // add this media size to the media size supported attribute
+        result = ipp_add_member_attrs_to_attr(media_size_supported, sizcolattr);
     }
     if (result)
     {
@@ -964,9 +942,9 @@ int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
     {
         ipp_destroy_attrlist(mcdbcolattr);
     }
-    if (medcolattr != NULL)
+    if (sizcolattr != NULL)
     {
-        ipp_destroy_attrlist(medcolattr);
+        ipp_destroy_attrlist(sizcolattr);
     }
     if (srccolattr != NULL)
     {

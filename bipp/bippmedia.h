@@ -23,6 +23,8 @@ typedef struct tag_ipp_media
     const char         *name;               ///< media name
     const char         *type;               ///< media type
     const char         *source;             ///< media source
+    int32_t             width;              ///< width
+    int32_t             height;             ///< width
     int32_t             top_margin;         ///< top margin
     int32_t             bottom_margin;      ///< bottom margin
     int32_t             left_margin;        ///< left margin

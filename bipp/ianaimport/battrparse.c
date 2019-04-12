@@ -519,31 +519,22 @@ static int format_colname(art_list_t *col, char *buffer, size_t nbuffer)
 
 	i = 0;
 
-	while (col)
+	for (pn = col->name; *pn && i < nbuffer - 1; i++)
 	{
-		for (pn = col->name; *pn && i < nbuffer - 1; i++)
+		if (*pn == '-')
 		{
-			if (*pn == '-')
-			{
-				buffer[i] = '_';
-			}
-			else
-			{
-				buffer[i] = *pn;
-			}
-			pn++;
+			buffer[i] = '_';
 		}
-		if (i >= (nbuffer - 3))
+		else
 		{
-			butil_log(0, "Overflow name format\n");
-			return -1;
+			buffer[i] = *pn;
 		}
-		if (col->parent)
-		{
-			buffer[i++] = '_';
-			buffer[i++] = '_';
-		}
-		col = col->parent;
+		pn++;
+	}
+	if (i >= (nbuffer - 3))
+	{
+		butil_log(0, "Overflow name format\n");
+		return -1;
 	}
 	buffer[i] = '\0';
 	return 0;
@@ -556,22 +547,14 @@ static int format_colname_for_text(art_list_t *col, char *buffer, size_t nbuffer
 
 	i = 0;
 
-	while (col)
+	for (pn = col->name; *pn && i < nbuffer - 1; i++)
 	{
-		for (pn = col->name; *pn && i < nbuffer - 1; i++)
-		{
-			buffer[i] = *pn++;
-		}
-		if (i >= (nbuffer - 3))
-		{
-			butil_log(0, "Overflow name format\n");
-			return -1;
-		}
-		if (col->parent)
-		{
-			buffer[i++] = '.';
-		}
-		col = col->parent;
+		buffer[i] = *pn++;
+	}
+	if (i >= (nbuffer - 3))
+	{
+		butil_log(0, "Overflow name format\n");
+		return -1;
 	}
 	buffer[i] = '\0';
 	return 0;
@@ -678,8 +661,8 @@ static void emit_attrs(FILE *outfile, art_t *tree)
 	}
 	tree->index = s_attr_index++;
 	fprintf(outfile, "    {   // index %zu\n", tree->index);
-	fprintf(outfile, "        \"%s\",   %s\n", tree->attr->name,
-			tree->attr->name[0] == '*' ? "// indirect reference to" : "");
+	fprintf(outfile, "        \"%s\",%s\n", tree->attr->name,
+				((tree->attr->name[0] == '*') ? "   // indirect reference to" : ""));
 	fprintf(outfile, "        { %s, %s, %s, %s },\n",
 			type_code_to_name(tree->attr->syntax[0], tb1, sizeof(tb1)),
 			type_code_to_name(tree->attr->syntax[1], tb2, sizeof(tb2)),
@@ -1457,7 +1440,7 @@ int iana_parse_attributes(
 		}
 		fprintf(srcfile, "// Members of collection %s\n//\n",
 				sub_member_name);
-		fprintf(srcfile, "ipp_attr_rec_t s_ipp_col_%s[] = \n{\n",
+		fprintf(srcfile, "ipp_attr_rec_t s_ipp_col_%s[] =\n{\n",
 				member_name);
 		s_attr_index = 0;
 		emit_attrs(srcfile, curcol->tree);
@@ -1469,7 +1452,7 @@ int iana_parse_attributes(
 	// each other. the linking is possible but makes it much
 	// harder to later update the generated file by hand,
 	// and requires mutliple passes due to fwd references
-	// the text-based run time linking is a but less efficient
+	// the text-based run time linking is a bit less efficient
 	// but way easier to follow and understand
 	//
 	fprintf(hdrfile, "typedef struct tag_col_xref\n{\n");

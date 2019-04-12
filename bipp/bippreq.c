@@ -279,7 +279,30 @@ int ipp_write_attribute_name(ioring_t *out, int8_t tag, const char *text)
     return ipp_write_attribute_text(out, text);
 }
 
-int ipp_get_req_in_attribute(ipp_request_t *req, ipp_io_groups_t group, const char *name, ipp_attr_t **pattr)
+int ipp_create_unsupported_attr (
+                                ipp_request_t  *req,
+                                const char     *name,
+                                ipp_attr_t    **pattr
+                                )
+{
+    ipp_attr_t *attr;
+
+    if (! req || ! name || ! pattr)
+    {
+        return -1;
+    }
+    req->num_unsupported++;
+    attr = ipp_create_attr(IPP_RECDEX_NAME, (uint8_t*)name, strlen(name));
+    *pattr = attr;
+    return (attr != NULL) ? 0 : -1;
+}
+
+int ipp_get_req_in_attribute(
+                                ipp_request_t *req,
+                                ipp_io_groups_t group,
+                                const char *name,
+                                ipp_attr_t **pattr
+                            )
 {
     ipp_attr_t *attr;
 

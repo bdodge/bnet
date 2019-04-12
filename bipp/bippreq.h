@@ -48,6 +48,7 @@ typedef enum
     reqReplyOneAttribute,
     reqReplyAttributeValue,
     reqReplyOperationAttributes,
+    reqReplyUnsupportedAttributes,
     reqReplyJobAttributes,
     reqReplyPrinterAttributes,
     reqDone
@@ -59,6 +60,7 @@ typedef enum
     IPP_OPER_ATTRS,
     IPP_PRT_ATTRS,
     IPP_JOB_ATTRS,
+    IPP_UNS_ATTRS,
     IPP_MAX_IO_ATTRS
 }
 ipp_io_groups_t;
@@ -118,6 +120,9 @@ typedef struct tag_ipp_request
 
     // for incrementally sending attr value
     uint8_t        *attr_out_value;
+
+    // list of unsupported attributes in request
+    size_t          num_unsupported;
 }
 ipp_request_t;
 
@@ -145,6 +150,11 @@ int ipp_write_text              (ioring_t *out, const char *text, uint16_t len);
 int ipp_write_attribute_text    (ioring_t *out, const char *text);
 int ipp_write_attribute_name    (ioring_t *out, int8_t tag, const char *text);
 
+int ipp_create_unsupported_attr (
+                                ipp_request_t  *req,
+                                const char     *name,
+                                ipp_attr_t    **pattr
+                                );
 int ipp_get_req_in_attribute    (
                                 ipp_request_t  *req,
                                 ipp_io_groups_t group,

@@ -21,7 +21,9 @@
 
 /// Special attribute record index values
 //
-#define IPP_RECDEX_TAG (0x70000000) ///< attribute is really a tag
+#define IPP_RECDEX_TAG  (0x40000000) ///< attribute is really a tag with no name/value
+#define IPP_RECDEX_NAME (0x40000001) ///< attribute is really a name with no value
+#define IPP_IS_INTERNAL_RECDEX(t) (((t) & 0xF0000000) != 0)
 
 /// IPP data types. This is for internal representation only. It would be
 /// nice to use the same types as IPP but they are haphazard and can't

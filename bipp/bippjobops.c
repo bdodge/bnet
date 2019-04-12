@@ -137,7 +137,11 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
     return 0;
 }
 
-static int ipp_req_job_attrs(ipp_request_t *req, ipp_attr_t *reqattrs, ipp_job_t *job)
+static int ipp_req_job_attrs(
+                            ipp_request_t *req,
+                            ipp_attr_t *reqattrs,
+                            ipp_job_t *job
+                            )
 {
     char uri[IPP_MAX_TEXT];
     int result;
@@ -169,7 +173,7 @@ static int ipp_req_job_attrs(ipp_request_t *req, ipp_attr_t *reqattrs, ipp_job_t
     {
         ipp_attr_t *attr;
         ipp_attr_t *nattr;
-        char text[IPP_MAX_TEXT];
+        char reqname[IPP_MAX_TEXT];
         ipp_attr_iter_t *iterator;
         bool retall = false;
 
@@ -183,7 +187,7 @@ static int ipp_req_job_attrs(ipp_request_t *req, ipp_attr_t *reqattrs, ipp_job_t
         do
         {
             result = ipp_get_next_attr_string_value(
-                            reqattrs, iterator, text, sizeof(text));
+                            reqattrs, iterator, reqname, sizeof(reqname));
             if (result > 0)
             {
                 // end of values
@@ -196,34 +200,35 @@ static int ipp_req_job_attrs(ipp_request_t *req, ipp_attr_t *reqattrs, ipp_job_t
             }
             // if "all" is found, enumerate all
             //
-            if (! strcmp(text, "all"))
+            if (! strcmp(reqname, "all"))
             {
                 retall = true;
                 break;
             }
             // find the requested attribute
             //
-            result = ipp_get_attr_by_name(text, job->job_stat_attr, &attr);
+            result = ipp_get_attr_by_name(reqname, job->job_stat_attr, &attr);
             if (result)
             {
-                result = ipp_get_attr_by_name(text, job->job_desc_attr, &attr);
+                result = ipp_get_attr_by_name(reqname, job->job_desc_attr, &attr);
             }
             if (result)
             {
-                butil_log(1, "Can't find =%s= in job status/description\n", text);
-                // todo - add to unsupported?
                 ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
                 return result;
             }
-            result = ipp_dupe_attr(attr, &nattr);
-            if (result)
+            else if (attr->value)
             {
-                return result;
-            }
-            result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
-            if (result)
-            {
-                return result;
+                result = ipp_dupe_attr(attr, &nattr);
+                if (result)
+                {
+                    return result;
+                }
+                result = ipp_add_req_out_attribute(req, IPP_JOB_ATTRS, nattr);
+                if (result)
+                {
+                    return result;
+                }
             }
         }
         while (! result);
@@ -278,12 +283,14 @@ static int ipp_req_job_attrs(ipp_request_t *req, ipp_attr_t *reqattrs, ipp_job_t
 
 static int ipp_op_get_jobs(ipp_request_t *req)
 {
+    ipp_attr_t *requested_attrs;
     ipp_attr_t *reqattr;
     ipp_attr_t *attr;
+    ipp_attr_iter_t *iterator;
     ipp_job_t  *job;
     size_t      njobs;
     enum { opgjAll, opgjUser, opgjActive, opgjCompleted } which_jobs;
-    char text[IPP_MAX_TEXT];
+    char reqname[IPP_MAX_TEXT];
     char user[IPP_MAX_TEXT];
     int32_t     limit;
     int         myjobs;
@@ -295,22 +302,24 @@ static int ipp_op_get_jobs(ipp_request_t *req)
     myjobs = false;
     user[0] = '\0';
 
+    requested_attrs = NULL;
+
     // check for which-jobs
     result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "which-jobs", &reqattr);
     if (! result)
     {
-        result = ipp_get_only_attr_string_value(reqattr, text, sizeof(text));
-        if (! strcmp(text, "completed"))
+        result = ipp_get_only_attr_string_value(reqattr, reqname, sizeof(reqname));
+        if (! strcmp(reqname, "completed"))
         {
             which_jobs = opgjCompleted;
         }
-        else if (! strcmp(text, "not-completed"))
+        else if (! strcmp(reqname, "not-completed"))
         {
             which_jobs = opgjActive;
         }
         else
         {
-            butil_log(2, "Not sure what which-jobs=%s means\n", text);
+            butil_log(2, "Not sure what which-jobs=%s means\n", reqname);
         }
     }
     // check for user
@@ -343,18 +352,87 @@ static int ipp_op_get_jobs(ipp_request_t *req)
             return result;
         }
     }
-    // finally, check for requested-attributes, and leave in reqattr
+    // finally, check for requested-attributes, and sanitize the list
     result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requested-attributes", &reqattr);
-    if (result)
+    if (! result)
     {
-        reqattr = NULL;
+        result = ipp_dupe_attr(reqattr, &requested_attrs);
+        if (result)
+        {
+            requested_attrs = NULL;
+            return result;
+        }
+        ipp_reset_attr_value(requested_attrs);
+
+        result = ipp_open_attr_value(reqattr, &iterator);
+
+        while (! result)
+        {
+            result = ipp_get_next_attr_string_value(
+                            reqattr, iterator, reqname, sizeof(reqname));
+            if (result > 0)
+            {
+                // end of values
+                result = 0;
+                break;
+            }
+            if (result)
+            {
+                break;
+            }
+            result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_JOB_DESCRIPTION, &attr);
+            if (result)
+            {
+                result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_JOB_STATUS, &attr);
+            }
+            if (result)
+            {
+                butil_log(1, "Can't find %s in job status/description\n", reqname);
+                #if 1 // assume attr is unsupported, not bad
+                result = ipp_create_unsupported_attr(req, reqname, &attr);
+                if (! result)
+                {
+                    ipp_add_req_out_attribute(req, IPP_UNS_ATTRS, attr);
+                    result = 0;
+                }
+                else
+                #endif
+                {
+                    ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+                    break;
+                }
+            }
+            else
+            {
+                ipp_attr_t *nattr;
+
+                result = ipp_dupe_attr(requested_attrs, &nattr);
+                if (! result)
+                {
+                    result = ipp_set_attr_string_value("requested-attributes", nattr, 1, reqname);
+                    if (! result)
+                    {
+                        result = ipp_set_attr_from_attr_value("requested-attributes", requested_attrs, nattr);
+                    }
+                }
+            }
+        }
+        ipp_close_attr_value(iterator);
+
+        // if there are no valid requested attributes just delete it
+        //
+        if (! requested_attrs->value || ! requested_attrs->value_len)
+        {
+            ipp_destroy_attr(requested_attrs);
+            requested_attrs = NULL;
+        }
     }
     butil_log(5, "Get-Jobs limit=%d myjobs=%u user=%s reqattr=%p which=%u\n",
-                    limit, myjobs, user, reqattr, which_jobs);
+                                        limit, myjobs, user, reqattr, which_jobs);
 
     // iterate over active
     //
-    if (which_jobs == opgjAll || which_jobs == opgjActive)
+    if (! result && (which_jobs == opgjAll || which_jobs == opgjActive))
     {
         result = ipp_get_active_jobs(req->ipp, &job);
         if (result)
@@ -376,12 +454,12 @@ static int ipp_op_get_jobs(ipp_request_t *req)
                 result = ipp_get_attr_by_name("requesting-user-name", job->job_oper_attr, &attr);
                 if (! result)
                 {
-                    result = ipp_get_only_attr_string_value(attr, text, sizeof(text));
+                    result = ipp_get_only_attr_string_value(attr, reqname, sizeof(reqname));
                     if (! result)
                     {
-                        if (strcmp(user, text))
+                        if (strcmp(user, reqname))
                         {
-                            butil_log(5, "exclude job for user %s, only want %s\n", text, user);
+                            butil_log(5, "exclude job for user %s, only want %s\n", reqname, user);
                             job = job->next;
                             continue;
                         }
@@ -395,21 +473,21 @@ static int ipp_op_get_jobs(ipp_request_t *req)
                 result = ipp_set_req_out_tag(req, IPP_JOB_ATTRS, IPP_TAG_JOB);
                 if (result)
                 {
-                    return result;
+                    break;
                 }
             }
-            result = ipp_req_job_attrs(req, reqattr, job);
+            result = ipp_req_job_attrs(req, requested_attrs, job);
             if (result)
             {
                 ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-                return result;
+                break;
             }
             njobs++;
             job = job->next;
         }
     }
     // iterate over completed
-    if (which_jobs == opgjAll || which_jobs == opgjCompleted)
+    if (! result && (which_jobs == opgjAll || which_jobs == opgjCompleted))
     {
         result = ipp_get_completed_jobs(req->ipp, &job);
         if (result)
@@ -431,12 +509,12 @@ static int ipp_op_get_jobs(ipp_request_t *req)
                 result = ipp_get_attr_by_name("requesting-user-name", job->job_oper_attr, &attr);
                 if (! result)
                 {
-                    result = ipp_get_only_attr_string_value(attr, text, sizeof(text));
+                    result = ipp_get_only_attr_string_value(attr, reqname, sizeof(reqname));
                     if (! result)
                     {
-                        if (strcmp(user, text))
+                        if (strcmp(user, reqname))
                         {
-                            butil_log(5, "exclude job for user %s, only want %s\n", text, user);
+                            butil_log(5, "exclude job for user %s, only want %s\n", reqname, user);
                             job = job->next;
                             continue;
                         }
@@ -449,18 +527,22 @@ static int ipp_op_get_jobs(ipp_request_t *req)
                 if (result)
                 {
                     ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-                    return result;
+                    break;
                 }
             }
-            result = ipp_req_job_attrs(req, reqattr, job);
+            result = ipp_req_job_attrs(req, requested_attrs, job);
             if (result)
             {
                 ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-                return result;
+                break;
             }
             njobs++;
             job = job->next;
         }
+    }
+    if (requested_attrs)
+    {
+        ipp_destroy_attr(requested_attrs);
     }
     return result;
 }

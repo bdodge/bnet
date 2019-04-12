@@ -45,6 +45,7 @@ const char *ipp_state_string(ipp_req_state_t state)
     case reqReplyOneAttribute:      return "ReplyOneAttribute";
     case reqReplyAttributeValue:    return "ReplyAttributeValue";
     case reqReplyOperationAttributes:return "ReplyOperationAttributes";
+    case reqReplyUnsupportedAttributes:return "ReplyUnsupportedAttributes";
     case reqReplyJobAttributes:     return "ReplyJobAttributes";
     case reqReplyPrinterAttributes: return "ReplyPrinterAttributes";
     case reqDone:                   return "Done";
@@ -627,13 +628,13 @@ int ipp_send_tag(ipp_request_t *req)
 
 int ipp_send_attribute(ipp_request_t *req)
 {
-    ipp_attr_rec_t *attrec;
     ipp_attr_t *attr;
     int room;
     int result;
     ipp_tag_t tag;
     bool isarray;
     size_t len;
+    const char *name;
     uint16_t namelen;
     uint16_t vallen;
 
@@ -650,29 +651,43 @@ int ipp_send_attribute(ipp_request_t *req)
     {
         return ipp_send_tag(req);
     }
-    // if there's no value, there's no value sending it
-    //
-    if (! attr->value || ! attr->value_len)
+    if (attr->recdex == IPP_RECDEX_NAME)
     {
-        // move to next out attr to send
+        // an unsupported attr, name in in value
         //
-        result = ipp_pop_state(req);
-        req->cur_out_attr = req->cur_out_attr->next;
-        return result;
+        name = (char *)(attr->value + 3);
+        namelen = attr->value_len;
+        vallen = 0;
+        tag = IPP_TAG_UNSUPPORTED_VALUE;
     }
-    // get name for attr
-    //
-    result = ipp_get_attr_rec(attr, &attrec);
-    if (result || ! attrec)
+    else
     {
-        return -1;
+        ipp_attr_rec_t *attrec;
+
+        // if there's no value, there's no value sending it
+        //
+        if (! attr->value || ! attr->value_len)
+        {
+            // move to next out attr to send
+            //
+            result = ipp_pop_state(req);
+            req->cur_out_attr = req->cur_out_attr->next;
+            return result;
+        }
+        // get name for attr
+        //
+        result = ipp_get_attr_rec(attr, &attrec);
+        if (result || ! attrec)
+        {
+            return -1;
+        }
+        name = attrec->name;
+        namelen = strlen(attrec->name);
+        vallen  = attr->value_len;
+        tag = attr->value[0];
     }
     // make sure there is room in the output buffer for the attribute's name/value
     //
-    namelen = strlen(attrec->name);
-    vallen  = attr->value_len;
-    tag = attr->value[0];
-
     room = req->out.size - req->out.count;
 
     len = (size_t)namelen + (size_t)vallen + 5;
@@ -692,14 +707,9 @@ int ipp_send_attribute(ipp_request_t *req)
         }
         else
         {
-            // setup to incrementally send value bytes
-            //
-            req->attr_out_value = attr->value + 1;
-            req->attr_value_len = attr->value_len - 1;
-
             // write out name and come back to write value
             //
-            result = ipp_write_attribute_name(&req->out, tag, attrec->name);
+            result = ipp_write_attribute_name(&req->out, tag, name);
 
             // for collection tags, insert a 0 value length
             if (tag == IPP_TAG_BEGIN_COLLECTION)
@@ -710,6 +720,12 @@ int ipp_send_attribute(ipp_request_t *req)
                 // individually as member-values and when complete, terminate
                 // this collection
             }
+            // setup to incrementally send value bytes ( can't get here
+            // unelss value_len is large, so no need to check it/vallen)
+            //
+            req->attr_out_value = attr->value + 1;
+            req->attr_value_len = attr->value_len - 1;
+
             result |= ipp_move_state(req, reqReplyAttributeValue);
             if (! result)
             {
@@ -726,7 +742,7 @@ int ipp_send_attribute(ipp_request_t *req)
         }
         else
         {
-            result = ipp_write_attribute_name(&req->out, tag, attrec->name);
+            result = ipp_write_attribute_name(&req->out, tag, name);
 
             // for collection tags, insert a 0 value length
             if (tag == IPP_TAG_BEGIN_COLLECTION)
@@ -737,8 +753,15 @@ int ipp_send_attribute(ipp_request_t *req)
                 // individually as member-values and when complete, terminate
                 // this collection
             }
-            result |= ipp_write_bytes(&req->out, attr->value + 1, attr->value_len - 1);
-
+            if (attr->value && vallen > 0)
+            {
+                result |= ipp_write_bytes(&req->out, attr->value + 1, attr->value_len - 1);
+            }
+            else
+            {
+                // 0 value length
+                result |= ipp_write_uint16(&req->out, 0);
+            }
             if (! result)
             {
                 result = ipp_pop_state(req);
@@ -911,6 +934,8 @@ int ipp_process(ipp_request_t *req)
         //
         req->cur_attr = NULL;
         req->col_top = -1;
+
+        req->num_unsupported = 0;
 
         result = ipp_read_int8(&req->in, &tag);
         if (result < 0)
@@ -1184,6 +1209,26 @@ int ipp_process(ipp_request_t *req)
         break;
 
     case reqReplyOperationAttributes:
+
+        if (req->cur_out_attr)
+        {
+            ipp_push_state(req, reqReplyOneAttribute);
+        }
+        else
+        {
+            req->cur_out_group = IPP_UNS_ATTRS;
+            req->cur_out_attr = req->out_attrs[IPP_UNS_ATTRS];
+            if (req->cur_out_attr)
+            {
+                // there are unsupported attrs in response, send them
+                result = ipp_write_int8(&req->out, IPP_TAG_UNSUPPORTED_GROUP);
+            }
+            // but go to jobattr state in all cases, to move thing along
+            result = ipp_move_state(req, reqReplyUnsupportedAttributes);
+        }
+        break;
+
+    case reqReplyUnsupportedAttributes:
 
         if (req->cur_out_attr)
         {

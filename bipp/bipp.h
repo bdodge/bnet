@@ -50,7 +50,7 @@ typedef struct tag_ipp_server
     /// ipp scheme handle
     butil_url_scheme_t   scheme;
 
-    /// http server context list, open port server an secure server
+    /// http server context list, open port server and secure server
     http_server_t      *servers;
     http_server_t      *open_server;
     http_server_t      *secure_server;

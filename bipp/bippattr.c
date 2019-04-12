@@ -214,6 +214,18 @@ const char *ipp_name_of_attr(ipp_attr_t *attr)
     ipp_attr_rec_t *attrec;
     int result;
 
+    if (IPP_IS_INTERNAL_RECDEX(attr->recdex))
+    {
+        switch(attr->recdex)
+        {
+        case IPP_RECDEX_TAG:
+            return "<tag>";
+        case IPP_RECDEX_NAME:
+            return "<name>";
+        default:
+            return "???";
+        }
+    }
     result = ipp_get_attr_rec(attr, &attrec);
     if (result)
     {
@@ -298,6 +310,18 @@ int ipp_syntax_for_attr(ipp_attr_t *attr, ipp_tag_t *tag, bool *is_array)
     if (! attr)
     {
         return 1;
+    }
+    if (IPP_IS_INTERNAL_RECDEX(attr->recdex))
+    {
+        if (tag)
+        {
+            *tag = IPP_TAG_ZERO;
+        }
+        if (is_array)
+        {
+            *is_array = false;
+        }
+        return 0;
     }
     result = ipp_syntax_for_enc_type(
                                     s_ipp_attributes[attr->recdex].syntax,
@@ -430,6 +454,10 @@ int ipp_check_type_is(ipp_attr_t *attr, size_t ntypes, ...)
     size_t xdex;
     int result;
 
+    if (IPP_IS_INTERNAL_RECDEX(attr->recdex))
+    {
+        return 0;
+    }
     startdex = 0;
     encsyntax = s_ipp_attributes[attr->recdex].syntax;
     if (encsyntax[0] == IPP_ARRAY)

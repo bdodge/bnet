@@ -90,10 +90,21 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
             if (result)
             {
                 butil_log(1, "Can't find %s in printer status/description\n", reqname);
-                ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
-                return result;
+                #if 1 // assume attr is unsupported, not bad
+                result = ipp_create_unsupported_attr(req, reqname, &nattr);
+                if (! result)
+                {
+                    ipp_add_req_out_attribute(req, IPP_UNS_ATTRS, nattr);
+                    result = 0;
+                }
+                else
+                #endif
+                {
+                    ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+                    return result;
+                }
             }
-            if (attr->value)
+            else if (attr->value)
             {
                 result = ipp_dupe_attr(attr, &nattr);
                 if (result)

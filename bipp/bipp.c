@@ -143,12 +143,60 @@ static int ipp_parse_value(ipp_request_t *req)
         }
         req->attr_value[req->attr_bytes_read++] = vb;
     }
-    // got all value bytes, create and add the attribute to the group
+    // got all value bytes
     //
+    // if there is a collection building, and this is the member-name
+    // attribute, copy the value to the name, empty value, and go get
+    // actual value. Note that this depends on the attr_name of req
+    // being left alone for another round of attribute parsing. Be
+    // sure to not clear attr_name between now and then
+    //
+    if (req->attr_tag == IPP_TAG_MEMBERNAME)
+    {
+        // copy value to attribute name and go get actual value
+        //
+        if (req->attr_value_len == 0 || req->attr_value_len >= IPP_MAX_TEXT)
+        {
+            butil_log(1, "Member name too long\n");
+            ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+            return result;
+        }
+        memcpy(req->attr_name, req->attr_value, req->attr_value_len);
+        req->attr_name[req->attr_value_len] = '\0';
+        req->attr_value_len = 0;
+        butil_log(7, "Got member %s, get value\n", req->attr_name);
+        return ipp_move_state(req, reqAttributeTag);
+    }
+    if (req->attr_tag == IPP_TAG_END_COLLECTION)
+    {
+        // there is a blank name/value after the tag we can ignore
+        //
+        if (req->attr_name_len || req->attr_value_len)
+        {
+            butil_log(1, "Expected no name/value for end collection tag\n");
+            ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+            return -1;
+        }
+        return ipp_pop_state(req);
+    }
+    if (! req->attr_name_len && ! req->attr_value_len)
+    {
+        if (req->attr_tag != IPP_TAG_BEGIN_COLLECTION || req->col_top < 0)
+        {
+            // collections that are members have no name/value because
+            // the member tag carries the name, so ok of a collection in a collection
+            //
+            butil_log(1, "Expected name/value tag %d\n", req->attr_tag);
+            ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+            return -1;
+        }
+    }
     // first, if this is a secondary value (cur_attr not null)
     //
     if (req->cur_attr)
     {
+        butil_log(5, "Add next value to attr %s\n", ipp_name_of_attr(req->cur_attr));
+
         result = ipp_add_attr_value(req->cur_attr, req->attr_value, req->attr_value_len);
         if (result)
         {
@@ -181,6 +229,9 @@ static int ipp_parse_value(ipp_request_t *req)
         //
         if (req->col_top >= 0)
         {
+            butil_log(5, "Add member %s to %s\n", ipp_name_of_attr(attr),
+                           ipp_name_of_attr(req->cur_collection[req->col_top]));
+
             result = ipp_add_member_attrs_to_attr(req->cur_collection[req->col_top], attr);
             if (result)
             {
@@ -191,6 +242,8 @@ static int ipp_parse_value(ipp_request_t *req)
         }
         else
         {
+            butil_log(5, "Add attr %s\n", ipp_name_of_attr(attr));
+
             // add it to the right in group
             //
             if (req->in_attrs[req->cur_in_group] == NULL)
@@ -221,11 +274,14 @@ static int ipp_parse_value(ipp_request_t *req)
             req->col_top++;
             req->cur_collection[req->col_top] = attr;
         }
-        // set the currently building attribute so secondary
-        // values can be added if its an array type
-        // this gets reset the next non-0 name length parsed
-        //
-        req->cur_attr = attr;
+        else if (req->col_top < 0)
+        {
+            // if not building a collection, build an attribute
+            // so values can be added if its an array type
+            // this gets reset the next non-0 name length parsed
+            //
+            req->cur_attr = attr;
+        }
     }
     // and then go back to wherever we got here from
     //
@@ -315,6 +371,7 @@ static int ipp_parse_name_length(ipp_request_t *req)
     if (req->attr_name_len == 0)
     {
         // there is more value for the last attribute, so got to valuelen state
+        // (but leave name along, it could be a member name)
         //
         return ipp_move_state(req, reqAttributeValueLength);
     }
@@ -377,6 +434,16 @@ static int ipp_parse_attribute(ipp_request_t *req)
         req->cur_in_group = IPP_PRT_ATTRS;
         butil_log(IPPLAP, "Move to PRT attr from group, %s\n", ipp_state_string(req->state[req->top]));
         return ipp_move_state(req, reqPrinterAttributes);
+    }
+    if (req->attr_tag == IPP_TAG_END_COLLECTION)
+    {
+        if (req->col_top < 0)
+        {
+            butil_log(1, "No collection for END tag\n");
+            ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+            return -1;
+        }
+        req->col_top--;
     }
     return ipp_move_state(req, reqAttributeNameLength);
 }

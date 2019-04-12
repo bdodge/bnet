@@ -52,6 +52,11 @@
 //
 #define IPP_MAX_REQUESTS    (1)
 
+/// how many nestes collection values can we handle
+///
+//
+#define IPP_MAX_NESTED_COLLECTIONS  (3)
+
 /// version supported range
 ///
 /// minimum major/minor

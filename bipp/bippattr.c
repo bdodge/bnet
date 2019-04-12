@@ -489,6 +489,11 @@ int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
     {
         return -1;
     }
+    if (tag == IPP_TAG_BEGIN_COLLECTION)
+    {
+        butil_log(1, "Attempt to add plain value to collection, use add_member functions instead\n");
+        return -1;
+    }
     if (attr->value)
     {
         if (! is_array)
@@ -678,8 +683,10 @@ int ipp_set_attr_from_attr_value(
 
 int ipp_add_member_attrs_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
 {
-    ipp_tag_t tag;
-    bool is_array;
+    ipp_tag_t srctag;
+    ipp_tag_t dsttag;
+    bool is_srcarray;
+    bool is_dstarray;
     const char *srcname;
     size_t srcnamelen;
     size_t totlen;
@@ -692,15 +699,20 @@ int ipp_add_member_attrs_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
     }
     // get ipp tag type for result attr type
     //
-    result = ipp_syntax_for_attr(dstattr, &tag, &is_array);
+    result = ipp_syntax_for_attr(dstattr, &srctag, &is_srcarray);
     if (result)
     {
         return -1;
     }
-    // the only attribute that can have attribute values
+    result = ipp_syntax_for_attr(dstattr, &dsttag, &is_dstarray);
+    if (result)
+    {
+        return -1;
+    }
+    // the only attribute that can have member attribute values
     // is a collection, so insist that that is true
     //
-    if (tag != IPP_TAG_BEGIN_COLLECTION)
+    if (dsttag != IPP_TAG_BEGIN_COLLECTION)
     {
         butil_log(1, "Attempt to add attr value to non-collection %s\n",
                         ipp_name_of_attr(dstattr));
@@ -750,22 +762,22 @@ int ipp_add_member_attrs_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
             if (firstvalue)
             {
                 // prepend collection tag
-                dstattr->value[dstattr->value_len++] = tag;
+                dstattr->value[dstattr->value_len++] = dsttag;
 
                 // if this is the first member value adding to a collection
-                // that already has values, this is the next collection in
-                // an array of collections, so make sure the base type is
+                // that already has values, and this is the next collection in
+                // an array of collections, make sure the base type is
                 // properly an array type, and add a 0 namelen to indicate
                 //
-                if (dstattr->value_len > 1)
+                if (dstattr->value_len > 1 && srctag == IPP_TAG_BEGIN_COLLECTION)
                 {
-                    if (! is_array)
+                    if (! is_dstarray)
                     {
-                        butil_log(1, "Attempt to add second value to non-array %s\n",
+                        butil_log(1, "Attempt to add second collection value to non-array %s\n",
                                             ipp_name_of_attr(dstattr));
                         return -1;
                     }
-                    // and a 0 namelen for secondary collections
+                    // add a 0 namelen for secondary collections
                     dstattr->value[dstattr->value_len++] = 0;
                     dstattr->value[dstattr->value_len++] = 0;
 
@@ -1281,6 +1293,8 @@ int ipp_dupe_collection(const char *name, ipp_attr_t **pattrs)
         indirects++;
     }
     while (! result);
+
+    return result;
 }
 
 #define IPPATTR_XREF_LINEAR 0

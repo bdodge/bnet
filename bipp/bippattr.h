@@ -133,6 +133,7 @@ int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t 
 int ipp_open_attr_value         (ipp_attr_t *attr, ipp_attr_iter_t **iter);
 int ipp_close_attr_value        (ipp_attr_iter_t *iter);
 int ipp_get_next_attr_value     (ipp_attr_t *attr, ipp_attr_iter_t *iter, uint8_t **value, size_t *value_len);
+int ipp_add_member_attrs_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr);
 
 int ipp_get_next_attr_bool_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int *value);
 int ipp_get_next_attr_int32_value(ipp_attr_t *attr, ipp_attr_iter_t *iter, int32_t *value);

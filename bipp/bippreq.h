@@ -106,13 +106,15 @@ typedef struct tag_ipp_request
 
     // current attribute parsing
     //
+    ipp_attr_t     *cur_attr;
+    ipp_attr_t     *cur_collection[IPP_REQ_MAX_STACK];
+    int             col_top;
     int8_t          attr_tag;
     uint16_t        attr_name_len;
     char            attr_name[IPP_MAX_TEXT];
     uint8_t         attr_value[IPP_MAX_LENGTH];
     uint16_t        attr_value_len;
     uint16_t        attr_bytes_read;
-    ipp_attr_t     *cur_attr;
 
     // for incrementally sending attr value
     uint8_t        *attr_out_value;

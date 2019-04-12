@@ -175,19 +175,57 @@ static int ipp_parse_value(ipp_request_t *req)
             ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
             return -1;
         }
-        // add it to the right in group
+        attr->next = NULL;
+
+        // if there is a collection active, add this as a member to it
         //
-        if (req->in_attrs[req->cur_in_group] == NULL)
+        if (req->col_top >= 0)
         {
-            req->in_attrs[req->cur_in_group] = attr;
+            result = ipp_add_member_attrs_to_attr(req->cur_collection[req->col_top], attr);
+            if (result)
+            {
+                butil_log(0, "Can't add member %s\n", req->attr_name);
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                return result;
+            }
         }
         else
         {
-            req->cur_in_attr->next = attr;
+            // add it to the right in group
+            //
+            if (req->in_attrs[req->cur_in_group] == NULL)
+            {
+                req->in_attrs[req->cur_in_group] = attr;
+            }
+            else
+            {
+                req->cur_in_attr->next = attr;
+            }
+            req->cur_in_attr = attr;
         }
-        req->cur_in_attr = attr;
+        // if the attribute begins a collection, then set the
+        // current collection (stack it on top) so that
+        // subsequent values are added as members to the collection
+        //
+        // note that only the top level collection is added to
+        // the req->in_attrs list
+        //
+        if (req->attr_tag == IPP_TAG_BEGIN_COLLECTION)
+        {
+            if (req->col_top >= IPP_MAX_NESTED_COLLECTIONS)
+            {
+                butil_log(0, "Collections nested too deep\n");
+                ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
+                return -1;
+            }
+            req->col_top++;
+            req->cur_collection[req->col_top] = attr;
+        }
+        // set the currently building attribute so secondary
+        // values can be added if its an array type
+        // this gets reset the next non-0 name length parsed
+        //
         req->cur_attr = attr;
-        attr->next = NULL;
     }
     // and then go back to wherever we got here from
     //
@@ -805,6 +843,8 @@ int ipp_process(ipp_request_t *req)
         // has a charset and natural language operation attributes
         //
         req->cur_attr = NULL;
+        req->col_top = -1;
+
         result = ipp_read_int8(&req->in, &tag);
         if (result < 0)
         {

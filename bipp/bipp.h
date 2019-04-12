@@ -19,6 +19,7 @@
 #include "bippconfig.h"
 #include "bippjobs.h"
 #include "bippreq.h"
+#include "bippmedia.h"
 #include "bhttpconfig.h"
 #include "bhttp.h"
 #include "bstreamio.h"

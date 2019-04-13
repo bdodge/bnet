@@ -121,6 +121,10 @@ typedef struct tag_ipp_request
     // for incrementally sending attr value
     uint8_t        *attr_out_value;
 
+    // list of requested attributes
+    ipp_attr_t     *requested_attributes;
+    bool            requested_all_attributes;
+
     // list of unsupported attributes in request
     size_t          num_unsupported;
 }

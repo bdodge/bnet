@@ -33,9 +33,11 @@
 typedef enum
 {
     IPP_NOTYPE      = 0x00, // meta-type
-    IPP_INTEGER     = 0x03,
     IPP_BOOLEAN     = 0x04,
-    IPP_ENUM        = 0x05,
+
+    IPP_NUMERICTYPE = 0x10, // type is a number
+    IPP_INTEGER     = 0x11,
+    IPP_ENUM        = 0x12,
 
     IPP_STRINGTYPE  = 0x20, // meta-type, bit indicates type is a string
     IPP_TEXT        = 0x21,
@@ -57,6 +59,11 @@ typedef enum
     IPP_ARRAY       = 0x80, // 1setOf, bit indicates array-of-type
 }
 ipp_syntax_t;
+
+#define IPP_IS_ARRAY_TYPE(t)        (((t) & 0x80) == 0x80)
+#define IPP_IS_NUMBERIC_TYPE(t)     (((t) & 0x70) == 0x10)
+#define IPP_IS_STRING_TYPE(t)       (((t) & 0x70) == 0x20)
+#define IPP_IS_COMPOSITE_TYPE(t)    (((t) & 0x70) == 0x40)
 
 /// grouping codes. used for attribute table, not part of protocol
 //
@@ -131,6 +138,8 @@ int ipp_base_enc_syntax_for_attr(ipp_attr_t *attr, ipp_syntax_enc_t *penc);
 
 int ipp_add_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
 int ipp_set_attr_value          (ipp_attr_t *attr, const uint8_t *value, size_t value_len);
+int ipp_add_attr_to_attr        (ipp_attr_t *attr, ipp_attr_t *srcattr);
+int ipp_set_attr_to_attr        (ipp_attr_t *attr, ipp_attr_t *srcattr);
 
 int ipp_open_attr_value         (ipp_attr_t *attr, ipp_attr_iter_t **iter);
 int ipp_close_attr_value        (ipp_attr_iter_t *iter);
@@ -158,6 +167,13 @@ int ipp_dupe_collection         (const char *name, ipp_attr_t **pdupeattrs);
 int ipp_get_group_attr_by_index (const size_t recdex, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 int ipp_get_group_attr_by_name  (const char *name, ipp_attr_grouping_code_t group, ipp_attr_t **pattr);
 
+int ipp_set_group_attr_attr_value(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nattrs,
+                                ...
+                                /* parm list of type ipp_attr_t *attrs, ... */
+                                );
 int ipp_set_group_attr_bool_value(
                                 const char *name,
                                 ipp_attr_grouping_code_t group,
@@ -210,10 +226,12 @@ int ipp_set_group_attr_collection_value(
 
 int ipp_get_attr_by_name        (const char *name, ipp_attr_t *attrlist, ipp_attr_t **pattr);
 
-int ipp_set_attr_from_attr_value(
+int ipp_set_attr_attr_value(
                                 const char *name,
                                 ipp_attr_t *attrlist,
-                                ipp_attr_t *vattr
+                                size_t nattrs,
+                                ...
+                                /* parm list of type ipp_attr_t *attrs, ... */
                                 );
 int ipp_set_attr_bool_value(
                                 const char *name,

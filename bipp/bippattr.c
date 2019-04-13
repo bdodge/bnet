@@ -499,6 +499,64 @@ int ipp_check_type_is(ipp_attr_t *attr, size_t ntypes, ...)
     return -1;
 }
 
+int ipp_attr_types_compatible(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
+{
+    ipp_syntax_enc_t *dstsyntax;
+    ipp_syntax_enc_t *srcsyntax;
+    ipp_syntax_enc_t attr_syntax;
+    ipp_syntax_enc_t base_syntax[IPP_MAX_ALT_TYPES];
+    ipp_syntax_enc_t ok_syntax;
+    char dsttype[32];
+    char srctype[32];
+    uint8_t dstx;
+    uint8_t srcx;
+    int result;
+
+    if (IPP_IS_INTERNAL_RECDEX(srcattr->recdex))
+    {
+        return 0;
+    }
+    if (IPP_IS_INTERNAL_RECDEX(dstattr->recdex))
+    {
+        return 0;
+    }
+    dstsyntax = s_ipp_attributes[srcattr->recdex].syntax;
+    if (dstsyntax[0] == IPP_ARRAY)
+    {
+        // ignore 1setof modifier alone
+        dstsyntax++;
+    }
+    srcsyntax = s_ipp_attributes[srcattr->recdex].syntax;
+    if (srcsyntax[0] == IPP_ARRAY)
+    {
+        // ignore 1setof modifier alone
+        srcsyntax++;
+    }
+    dstx = dstsyntax[0] & ~IPP_ARRAY;
+    srcx = srcsyntax[0] & ~IPP_ARRAY;
+    if (srcx == dstx)
+    {
+        // both base types the same, compatible
+        return 0;
+    }
+    if (IPP_IS_NUMBERIC_TYPE(dstx) && IPP_IS_NUMBERIC_TYPE(srcx))
+    {
+        // both types are int or enum
+        return 0;
+    }
+    if (IPP_IS_NUMBERIC_TYPE(dstx) && IPP_IS_NUMBERIC_TYPE(srcx))
+    {
+        // both types are string types
+        return 0;
+    }
+    ipp_type_string(dstsyntax, dsttype, sizeof(dsttype));
+    ipp_type_string(srcsyntax, srctype, sizeof(srctype));
+
+    butil_log(1, "Attempt to set %s, an %s, with a type like %s\n",
+                               ipp_name_of_attr(dstattr), dsttype, srctype);
+    return -1;
+}
+
 int ipp_add_attr_value(ipp_attr_t *attr, const uint8_t *value, size_t value_len)
 {
     ipp_tag_t tag;
@@ -681,32 +739,6 @@ int ipp_add_attr_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
         dstattr->value_len += srcattr->value_len - 1;
     }
     return 0;
-}
-
-int ipp_set_attr_from_attr_value(
-                                const char *name,
-                                ipp_attr_t *attrlist,
-                                ipp_attr_t *vattr
-                                )
-{
-    ipp_attr_t *attr;
-    int result;
-
-    if (! name || ! attr)
-    {
-        return -1;
-    }
-    result = ipp_get_attr_by_name(name, attrlist, &attr);
-    if (result)
-    {
-        return result;
-    }
-    result = ipp_reset_attr_value(attr);
-    if (result)
-    {
-        return result;
-    }
-    return ipp_add_attr_to_attr(attr, vattr);
 }
 
 int ipp_add_member_attrs_to_attr(ipp_attr_t *dstattr, ipp_attr_t *srcattr)
@@ -1414,6 +1446,64 @@ int ipp_get_group_attr_by_index(const size_t recdex, ipp_attr_grouping_code_t gr
     return -1;
 }
 
+static int vset_attr_attr_value(
+                                ipp_attr_t *attr,
+                                size_t nattrs,
+                                va_list args
+                                /* parm list of type "ipp_attr_t *attr, ..." */
+                                )
+{
+    int result;
+    ipp_attr_t *vattr;
+
+    if (! attr || ! args)
+    {
+        return -1;
+    }
+    if (nattrs == 0)
+    {
+        return 0;
+    }
+    vattr = (ipp_attr_t *)va_arg(args, ipp_attr_t *);
+    nattrs--;
+
+    if (! vattr || ! vattr->value || ! vattr->value_len)
+    {
+        return -1;
+    }
+    result = ipp_attr_types_compatible(attr, vattr);
+    if (result)
+    {
+        return -1;
+    }
+    result = ipp_set_attr_value(attr, vattr->value, vattr->value_len);
+    if (result)
+    {
+        return result;
+    }
+    while (nattrs-- > 0)
+    {
+        vattr = (ipp_attr_t *)va_arg(args, ipp_attr_t *);
+
+        nattrs--;
+        if (! vattr || ! vattr->value || ! vattr->value_len)
+        {
+            return -1;
+        }
+        result = ipp_attr_types_compatible(attr, vattr);
+        if (result)
+        {
+            return -1;
+        }
+        result = ipp_add_attr_value(attr, vattr->value, vattr->value_len);
+        if (result)
+        {
+            return result;
+        }
+    }
+    return 0;
+}
+
 static int vset_attr_bool_value(
                                 ipp_attr_t *attr,
                                 size_t nvalues,
@@ -1789,8 +1879,40 @@ int ipp_get_group_attr_by_name(const char *name, ipp_attr_grouping_code_t group,
     result = ipp_get_group_attr_by_index(recdex, group, pattr);
     if (result)
     {
-        butil_log(2, "Didn't find %s in group %u\n", name, group);
+        butil_log(6, "Didn't find %s in group %u\n", name, group);
     }
+    return result;
+}
+
+int ipp_set_group_attr_attr_value(
+                                const char *name,
+                                ipp_attr_grouping_code_t group,
+                                size_t nattrs,
+                                ...
+                                /* parm list of type ipp_attr_t *attrs, ... */
+                                )
+{
+    ipp_attr_t *attr;
+    va_list args;
+    int result;
+
+    if (! name)
+    {
+        return -1;
+    }
+    if (nattrs == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_group_attr_by_name(name, group, &attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nattrs);
+    result = vset_attr_attr_value(attr, nattrs, args);
+    va_end(args);
     return result;
 }
 
@@ -2044,6 +2166,38 @@ int ipp_get_attr_by_name(const char *name, ipp_attr_t *attrlist, ipp_attr_t **pa
         butil_log(6, "  have %s\n", ipp_name_of_attr(attr));
     }
     return -1;
+}
+
+int ipp_set_attr_attr_value(
+                                const char *name,
+                                ipp_attr_t *attrlist,
+                                size_t nattrs,
+                                ...
+                                /* parm list of type ipp_attr_t *attrs, ... */
+                                )
+{
+    ipp_attr_t *attr;
+    va_list args;
+    int result;
+
+    if (! name || ! attrlist)
+    {
+        return -1;
+    }
+    if (nattrs == 0)
+    {
+        // todo - think about this
+        return 0;
+    }
+    result = ipp_get_attr_by_name(name, attrlist, &attr);
+    if (result)
+    {
+        return result;
+    }
+    va_start(args, nattrs);
+    result = vset_attr_attr_value(attr, nattrs, args);
+    va_end(args);
+    return result;
 }
 
 int ipp_set_attr_bool_value(

@@ -472,12 +472,110 @@ int ipp_request(ipp_request_t *req)
 
 int ipp_dispatch(ipp_request_t *req)
 {
+    ipp_attr_iter_t *iterator;
+    ipp_attr_t *reqattr;
     ipp_attr_t *attr;
+    ipp_attr_t *nattr;
     int result;
 
     if (! req)
     {
         return -1;
+    }
+    // check for requested-attributes, and sanitize the list, before dispatch
+    //
+    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requested-attributes", &reqattr);
+    if (! result)
+    {
+        char reqname[IPP_MAX_NAME];
+
+        // duplicate, and empty, the requested attrs list in operation
+        //
+        result = ipp_dupe_attr(reqattr, &req->requested_attributes);
+        if (result)
+        {
+            return result;
+        }
+        ipp_reset_attr_value(req->requested_attributes);
+
+        // get an iterator on the value
+        //
+        result = ipp_open_attr_value(reqattr, &iterator);
+
+        while (! result)
+        {
+            result = ipp_get_next_attr_string_value(
+                                reqattr, iterator, reqname, sizeof(reqname));
+            if (result > 0)
+            {
+                // end of values
+                result = 0;
+                break;
+            }
+            if (result)
+            {
+                break;
+            }
+            result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_JOB_DESCRIPTION, &attr);
+            if (result)
+            {
+                result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_JOB_STATUS, &attr);
+                if (result)
+                {
+                    result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
+                    if (result)
+                    {
+                        result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_PRINTER_STATUS, &attr);
+                    }
+                }
+            }
+            if (result)
+            {
+                if (! strcmp(reqname, "all"))
+                {
+                    req->requested_all_attributes = true;
+                    result = 0;
+                    break;
+                }
+                butil_log(3, "Can't find %s in job/printer status/description\n", reqname);
+                #if 1 // assume attr is unsupported, not bad
+                result = ipp_create_unsupported_attr(req, reqname, &attr);
+                if (! result)
+                {
+                    ipp_add_req_out_attribute(req, IPP_UNS_ATTRS, attr);
+                    result = 0;
+                }
+                else
+                #endif
+                {
+                    ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+                    break;
+                }
+            }
+            else
+            {
+                ipp_attr_t *nattr;
+
+                result = ipp_dupe_attr(req->requested_attributes, &nattr);
+                if (! result)
+                {
+                    result = ipp_set_attr_string_value("requested-attributes", nattr, 1, reqname);
+                    if (! result)
+                    {
+                        result = ipp_add_attr_to_attr(req->requested_attributes, nattr);
+                    }
+                }
+            }
+        }
+        ipp_close_attr_value(iterator);
+
+        // if there are no valid requested attributes just delete it
+        //
+        if (! req->requested_attributes->value || ! req->requested_attributes->value_len)
+        {
+            ipp_destroy_attr(req->requested_attributes);
+            req->requested_attributes = NULL;
+        }
     }
     switch (req->opid)
     {
@@ -587,6 +685,11 @@ int ipp_dispatch(ipp_request_t *req)
     default:
         ipp_set_error(req, IPP_STATUS_ERROR_OPERATION_NOT_SUPPORTED);
         result = -1;
+    }
+    if (req->requested_attributes)
+    {
+        ipp_destroy_attr(req->requested_attributes);
+        req->requested_attributes = NULL;
     }
     return result;
 }

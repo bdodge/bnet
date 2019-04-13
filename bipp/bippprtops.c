@@ -22,24 +22,13 @@
 static int ipp_op_get_printer_attributes(ipp_request_t *req)
 {
     ipp_attr_iter_t *reqiterator;
-    ipp_attr_t *reqattrs;
     ipp_attr_t *attr;
     ipp_attr_t *nattr;
-    bool retall;
     int result;
 
     // see if there are requested return attributes list
     //
-    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requested-attributes", &reqattrs);
-    if (result)
-    {
-        butil_log(5, "No requested attributes, returning all\n");
-        reqattrs = NULL;
-        result = 0;
-    }
-    retall = false;
-
-    if (reqattrs)
+    if (req->requested_attributes)
     {
         char reqname[IPP_MAX_TEXT];
         uint8_t *value;
@@ -48,7 +37,7 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
         // iterate over requested attributes and return, if we can,
         // any that are set in printer description or status
         //
-        result = ipp_open_attr_value(reqattrs, &reqiterator);
+        result = ipp_open_attr_value(req->requested_attributes, &reqiterator);
         if (result)
         {
             ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
@@ -57,7 +46,7 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
         do
         {
             result = ipp_get_next_attr_string_value(
-                                            reqattrs,
+                                            req->requested_attributes,
                                             reqiterator,
                                             reqname,
                                             sizeof(reqname)
@@ -73,13 +62,6 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
                 // error getting them
                 break;
             }
-            // escape if "all" is in there
-            //
-            if (! strcmp(reqname, "all"))
-            {
-                retall = true;
-                break;
-            }
             // look up the requested name in the usual places
             //
             result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
@@ -89,20 +71,9 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
             }
             if (result)
             {
-                butil_log(1, "Can't find %s in printer status/description\n", reqname);
-                #if 1 // assume attr is unsupported, not bad
-                result = ipp_create_unsupported_attr(req, reqname, &nattr);
-                if (! result)
-                {
-                    ipp_add_req_out_attribute(req, IPP_UNS_ATTRS, nattr);
-                    result = 0;
-                }
-                else
-                #endif
-                {
-                    ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
-                    return result;
-                }
+                // list is pre-sanitized in ipp_dispatch, so this is an error
+                ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
+                return result;
             }
             else if (attr->value)
             {
@@ -121,16 +92,12 @@ static int ipp_op_get_printer_attributes(ipp_request_t *req)
         }
         while (! result);
 
-        result = ipp_close_attr_value(reqiterator);
-        if (result)
-        {
-            ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
-            return result;
-        }
-        if (! retall)
-        {
-            return 0;
-        }
+        ipp_close_attr_value(reqiterator);
+    }
+    if ((! req->requested_all_attributes) && req->requested_attributes)
+    {
+        // don't want all, so all set
+        return 0;
     }
     // iterate over printer description group adding each set attribute
     // into the response

@@ -625,8 +625,15 @@ ipp_request_t *ipp_req_create(ipp_server_t *ipp, http_client_t *client)
     req->cur_in_attr = NULL;
     req->cur_out_attr = NULL;
 
+    req->col_top = -1;
+    req->cur_attr = NULL;
+
     req->top = 0;
     req->state[0] = reqHeader;
+
+    req->requested_all_attributes = false;
+    req->requested_attributes = NULL;
+
     return req;
 }
 

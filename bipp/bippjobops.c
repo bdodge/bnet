@@ -96,7 +96,7 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
         result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "job-name", &attr);
         if (! result)
         {
-            result = ipp_set_attr_from_attr_value("job-name", job->job_desc_attr, attr);
+            result = ipp_set_attr_attr_value("job-name", job->job_desc_attr, 1, attr);
             if (result)
             {
                 break;
@@ -105,7 +105,7 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
         result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requesting-user-name", &attr);
         if (! result)
         {
-            result = ipp_set_attr_from_attr_value("job-originating-user-name", job->job_stat_attr, attr);
+            result = ipp_set_attr_attr_value("job-originating-user-name", job->job_stat_attr, 1, attr);
             if (result)
             {
                 break;
@@ -140,6 +140,7 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
 static int ipp_req_job_attrs(
                             ipp_request_t *req,
                             ipp_attr_t *reqattrs,
+                            bool request_all,
                             ipp_job_t *job
                             )
 {
@@ -150,7 +151,7 @@ static int ipp_req_job_attrs(
     {
         return -1;
     }
-    if (! reqattrs)
+    if (! reqattrs && ! request_all)
     {
         // put job id into response
         //
@@ -169,13 +170,12 @@ static int ipp_req_job_attrs(
             return result;
         }
     }
-    else
+    else if (reqattrs && ! request_all)
     {
         ipp_attr_t *attr;
         ipp_attr_t *nattr;
         char reqname[IPP_MAX_TEXT];
         ipp_attr_iter_t *iterator;
-        bool retall = false;
 
         // for each reqattr, lookup attr and add to response
         //
@@ -198,13 +198,6 @@ static int ipp_req_job_attrs(
             {
                 break;
             }
-            // if "all" is found, enumerate all
-            //
-            if (! strcmp(reqname, "all"))
-            {
-                retall = true;
-                break;
-            }
             // find the requested attribute
             //
             result = ipp_get_attr_by_name(reqname, job->job_stat_attr, &attr);
@@ -214,6 +207,8 @@ static int ipp_req_job_attrs(
             }
             if (result)
             {
+                // list was pre-santized in ipp_dispatch, so this is an error
+                //
                 ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
                 return result;
             }
@@ -234,12 +229,13 @@ static int ipp_req_job_attrs(
         while (! result);
 
         ipp_close_attr_value(iterator);
+    }
+    else /* request_all, even if that's false */
+    {
+        ipp_attr_t *attr;
+        ipp_attr_t *nattr;
 
-        if (! retall || result)
-        {
-            return result;
-        }
-        // return all attributes in job description
+        // return all attributes in job status
         //
         attr = job->job_stat_attr;
         while (attr)
@@ -259,6 +255,8 @@ static int ipp_req_job_attrs(
             }
             attr = attr->next;
         }
+        // return all attributes in job description
+        //
         attr = job->job_desc_attr;
         while (attr)
         {
@@ -294,6 +292,7 @@ static int ipp_op_get_jobs(ipp_request_t *req)
     char user[IPP_MAX_TEXT];
     int32_t     limit;
     int         myjobs;
+    bool        request_all;
     int         result;
 
     which_jobs = opgjAll;
@@ -303,6 +302,7 @@ static int ipp_op_get_jobs(ipp_request_t *req)
     user[0] = '\0';
 
     requested_attrs = NULL;
+    request_all = false;
 
     // check for which-jobs
     result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "which-jobs", &reqattr);
@@ -352,83 +352,11 @@ static int ipp_op_get_jobs(ipp_request_t *req)
             return result;
         }
     }
-    // finally, check for requested-attributes, and sanitize the list
-    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requested-attributes", &reqattr);
-    if (! result)
-    {
-        result = ipp_dupe_attr(reqattr, &requested_attrs);
-        if (result)
-        {
-            requested_attrs = NULL;
-            return result;
-        }
-        ipp_reset_attr_value(requested_attrs);
+    result = 0;
 
-        result = ipp_open_attr_value(reqattr, &iterator);
-
-        while (! result)
-        {
-            result = ipp_get_next_attr_string_value(
-                            reqattr, iterator, reqname, sizeof(reqname));
-            if (result > 0)
-            {
-                // end of values
-                result = 0;
-                break;
-            }
-            if (result)
-            {
-                break;
-            }
-            result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_JOB_DESCRIPTION, &attr);
-            if (result)
-            {
-                result = ipp_get_group_attr_by_name(reqname, IPP_GROUPING_JOB_STATUS, &attr);
-            }
-            if (result)
-            {
-                butil_log(1, "Can't find %s in job status/description\n", reqname);
-                #if 1 // assume attr is unsupported, not bad
-                result = ipp_create_unsupported_attr(req, reqname, &attr);
-                if (! result)
-                {
-                    ipp_add_req_out_attribute(req, IPP_UNS_ATTRS, attr);
-                    result = 0;
-                }
-                else
-                #endif
-                {
-                    ipp_set_error(req, IPP_STATUS_ERROR_ATTRIBUTES_OR_VALUES);
-                    break;
-                }
-            }
-            else
-            {
-                ipp_attr_t *nattr;
-
-                result = ipp_dupe_attr(requested_attrs, &nattr);
-                if (! result)
-                {
-                    result = ipp_set_attr_string_value("requested-attributes", nattr, 1, reqname);
-                    if (! result)
-                    {
-                        result = ipp_set_attr_from_attr_value("requested-attributes", requested_attrs, nattr);
-                    }
-                }
-            }
-        }
-        ipp_close_attr_value(iterator);
-
-        // if there are no valid requested attributes just delete it
-        //
-        if (! requested_attrs->value || ! requested_attrs->value_len)
-        {
-            ipp_destroy_attr(requested_attrs);
-            requested_attrs = NULL;
-        }
-    }
-    butil_log(5, "Get-Jobs limit=%d myjobs=%u user=%s reqattr=%p which=%u\n",
-                                        limit, myjobs, user, reqattr, which_jobs);
+    butil_log(5, "Get-Jobs limit=%d myjobs=%u user=%s reqattr=%s all=%d which=%u\n",
+                    limit, myjobs, user, req->requested_attributes ? "some" : "none",
+                                               req->requested_all_attributes, which_jobs);
 
     // iterate over active
     //
@@ -476,7 +404,7 @@ static int ipp_op_get_jobs(ipp_request_t *req)
                     break;
                 }
             }
-            result = ipp_req_job_attrs(req, requested_attrs, job);
+            result = ipp_req_job_attrs(req, req->requested_attributes, req->requested_all_attributes, job);
             if (result)
             {
                 ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
@@ -530,7 +458,7 @@ static int ipp_op_get_jobs(ipp_request_t *req)
                     break;
                 }
             }
-            result = ipp_req_job_attrs(req, requested_attrs, job);
+            result = ipp_req_job_attrs(req, req->requested_attributes, req->requested_all_attributes, job);
             if (result)
             {
                 ipp_set_error(req, IPP_STATUS_ERROR_INTERNAL);
@@ -549,8 +477,6 @@ static int ipp_op_get_jobs(ipp_request_t *req)
 
 static int ipp_op_get_job_attributes(ipp_request_t *req)
 {
-    ipp_attr_t *reqattr;
-    ipp_attr_t *allattr;
     ipp_attr_t *attr;
     ipp_job_t  *job;
     int32_t     jobid;
@@ -585,34 +511,13 @@ static int ipp_op_get_job_attributes(ipp_request_t *req)
                     IPP_STATUS_ERROR_NOT_POSSIBLE);
         return -1;
     }
-    // see if there are requested return attributes list
-    //
-    allattr = NULL;
-    result = ipp_get_req_in_attribute(req, IPP_OPER_ATTRS, "requested-attributes", &reqattr);
-    if (result)
+    if (! req->requested_attributes)
     {
-        butil_log(5, "No requested attributes, returning all\n");
-
-        // duplicate this attr from oper group
-        result = ipp_get_group_attr_by_name("requested-attributes", IPP_GROUPING_OPERATION, &attr);
-        if (! result)
-        {
-            result = ipp_dupe_attr(attr, &allattr);
-            if (! result)
-            {
-                result = ipp_set_attr_string_value("requested-attributes", allattr, 1, "all");
-                reqattr = allattr;
-            }
-        }
+        req->requested_all_attributes = true;
     }
     // dump all the job attributes into the response
     //
-    result = ipp_req_job_attrs(req, reqattr, job);
-
-    if (allattr)
-    {
-        ipp_destroy_attr(allattr);
-    }
+    result = ipp_req_job_attrs(req, req->requested_attributes, req->requested_all_attributes, job);
     return result;
 }
 

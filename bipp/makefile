@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+BNET_JPEG=1
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
@@ -45,7 +45,7 @@ PROGOBJECTS=$(OBJDIR)/bipptest.o
 
 CFLAGS+=-I$(HTTP_PATH) -I$(UTIL_PATH) -I$(IO_PATH)
 
-bipp: $(PROGOBJECTS) $(IPPLIB) $(LIBS) $(TLSDEPS)
+bipp: $(PROGOBJECTS) $(IPPLIB) $(LIBS) $(TLSDEPS) $(JPEGDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(IPPLIB)

@@ -10,6 +10,7 @@ git commit -m "Begin bnet repo"
 git remote add origin https://github.com/bdodge/bnet.git
 git push -u origin master
 git submodule add https://github.com/ARMmbed/mbedtls.git mbedtls
+git submodule add https://github.com/libjpeg-turbo/libjpeg-turbo.git libjpeg-turbo
 
 --- cloning
 

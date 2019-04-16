@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef HTTP_H
-#define HTTP_H 1
+#ifndef BHTTP_H
+#define BHTTP_H 1
 
 #include "bnetheaders.h"
 #include "bhttpconfig.h"
@@ -27,6 +27,9 @@
 #endif
 #if HTTP_SUPPORT_WEBSOCKET
 #include "bhttpws.h"
+#endif
+#if HTTP_SUPPORT_COMPRESSION
+#include "zlib.h"
 #endif
 
 #define HTTP_ERROR BERROR
@@ -107,6 +110,16 @@ http_transfer_t;
 
 typedef enum
 {
+    httpDontCompress,
+    httpCanCompress,
+    httpWillCompress,
+    httpCompressing,
+    httpDidCompress
+}
+http_zip_state_t;
+
+typedef enum
+{
     httpServeInit,
     httpClientInit,
     httpReadline,
@@ -179,6 +192,11 @@ typedef struct http_client
     #endif
     #if HTTP_SUPPORT_TLS
     bool                tls_upgrade;
+    #endif
+    #if HTTP_SUPPORT_COMPRESSION
+    ioring_t            comprio;
+    http_zip_state_t    compress;
+    z_stream            zstrm;
     #endif
     #if HTTP_SUPPORT_WEBSOCKET
     bool                ws_upgrade;

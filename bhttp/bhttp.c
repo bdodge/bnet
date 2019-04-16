@@ -74,6 +74,17 @@ http_client_t *http_client_create(http_resource_t *resources, bool isclient)
     #if HTTP_SUPPORT_TLS
     client->tls_upgrade = false;
     #endif
+    #if HTTP_SUPPORT_COMPRESSION
+    client->comprio.size = HTTP_IO_SIZE;
+    client->comprio.data = (uint8_t *)malloc(client->comprio.size);
+    if (! client->comprio.data)
+    {
+        HTTP_ERROR("Can't alloc compression buffer data");
+        free(client);
+        return NULL;
+    }
+    client->compress = httpDontCompress;
+    #endif
     #if HTTP_SUPPORT_WEBSOCKET
     client->ws_upgrade = false;
     client->ws_key[0] = '\0';
@@ -118,6 +129,13 @@ void http_client_reinit(http_client_t *client, bool newstream)
     client->resource = NULL;
     client->resource_open = false;
 
+    #if HTTP_SUPPORT_COMPRESSION
+    if (client->compress >= httpWillCompress)
+    {
+        deflateEnd(&client->zstrm);
+    }
+    client->compress = httpDontCompress;
+    #endif
     #if HTTP_SUPPORT_MULTIPART
     client->boundary[0] = '\0';
     client->boundary_length = 0;
@@ -192,9 +210,23 @@ void http_client_free(http_client_t *client)
             client->ws_stream = NULL;
         }
         #endif
+        #if HTTP_SUPPORT_COMPRESSION
+        if (client->compress >= httpWillCompress)
+        {
+            deflateEnd(&client->zstrm);
+        }
+        if (client->comprio.data)
+        {
+            free(client->comprio.data);
+        }
+        #endif
         if (client->in.data)
         {
             free(client->in.data);
+        }
+        if (client->out.data)
+        {
+            free(client->out.data);
         }
         free(client);
     }
@@ -782,6 +814,31 @@ static int http_process_header(http_client_t *client, char *header)
         }
     }
     #endif
+    else if (! http_ncasecmp(header, "accept-encoding:"))
+    {
+    #if HTTP_SUPPORT_COMPRESSION
+         value = strstr(value, "gzip");
+         if (value)
+         {
+             client->compress = httpCanCompress;
+         }
+    #endif
+    }
+    else if (! http_ncasecmp(header, "content-encoding:"))
+    {
+    #if HTTP_SUPPORT_COMPRESSION
+         value = strstr(value, "gzip");
+         if (value)
+         {
+             client->compress = httpCanCompress;
+         }
+         else
+         {
+             HTTP_ERROR("Unsupported content-encoding");
+             return -1;
+         }
+    #endif
+    }
     #if HTTP_SUPPORT_WEBDAV
     else if (! http_ncasecmp(header, "token:"))
     {
@@ -1231,6 +1288,9 @@ int http_client_slice(http_client_t *client)
             #endif
             result |= http_append_request(client, "Content-Length: 0");
             result |= http_append_request(client, "Accept: */*");
+            #if HTTP_SUPPORT_COMPRESSION
+            result |= http_append_request(client, "Accept-Encoding: gzip");
+            #endif
             result |= http_append_request(client, "");
             break;
         }
@@ -1695,6 +1755,10 @@ int http_client_slice(http_client_t *client)
             // tell resource that we are starting a request
             //
             // NOTE: this callback can change the client state, set a reply, and setup xfer state
+            // NOTE: this callback can change state of compress and open a compression context
+            //  the only time a Content-Encoding: gzip is sent is if this callback changes
+            //  compress from httpCanCompress to httpWillCompress, so all callbacks have control
+            //  over whether to compress data or not
             //
             result = client->resource->callback(
                                         client,
@@ -2053,6 +2117,9 @@ int http_client_slice(http_client_t *client)
                 }
                 if (client->resource && client->out_content_length)
                 {
+                    result |= http_append_reply(client, "Content-Type: %s",
+                                    butil_mime_string_for_content_type(client->out_content_type));
+
                     if (client->out_transfer_type != httpChunked)
                     {
                         result |= http_append_reply(client, "Content-Length: %d",
@@ -2062,8 +2129,10 @@ int http_client_slice(http_client_t *client)
                     {
                         result |= http_append_reply(client, "Transfer-Encoding: chunked");
                     }
-                    result |= http_append_reply(client, "Content-Type: %s",
-                                    butil_mime_string_for_content_type(client->out_content_type));
+                    if (client->compress >= httpWillCompress)
+                    {
+                        result |= http_append_reply(client, "Content-Encoding: gzip");
+                     }
                 }
                 else
                 {
@@ -2528,12 +2597,14 @@ int http_client_slice(http_client_t *client)
                 content += 8;
                 room -= 8;
             }
-            // limit data request to remaining output content
+        #if 0 // not needed really, we check after that we didn't get too much
+            // limit data we want to remaining output content for normal xfers
             //
             if (room > count)
             {
                 room = count;
             }
+        #endif
             #if HTTP_SUPPORT_RANGES
             // further limit request to bytes before byte range start
             //
@@ -2664,7 +2735,7 @@ int http_client_slice(http_client_t *client)
             }
             else
             {
-                // serving client - flush reply-and-data and move to done state
+                // serving client - flush reply-and-data and move to done/keep-alive state
                 http_log(4, "cl:%u reply with no body\n", client->id);
                 result = http_send_out_data(client, httpSendReply, httpKeepAlive);
             }

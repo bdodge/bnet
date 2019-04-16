@@ -139,6 +139,12 @@
 #define HTTP_SUPPORT_WEBDAV (1)
 #endif
 
+/// Is compression supported
+//
+#ifndef HTTP_SUPPORT_COMPRESSION
+#define HTTP_SUPPORT_COMPRESSION (0)
+#endif
+
 /// Is WebSockets supported (needs TLS)
 //
 #ifndef HTTP_SUPPORT_WEBSOCKET

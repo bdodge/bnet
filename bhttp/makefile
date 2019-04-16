@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+BNET_ZLIB=1
 
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
@@ -21,6 +22,7 @@ SOURCES=$(SRCDIR)/bhttp.c \
 		$(SRCDIR)/bhttpres.c \
 		$(SRCDIR)/bhttpdav.c \
 		$(SRCDIR)/bhttpws.c  \
+		$(SRCDIR)/bhttpgz.c  \
 		$(SRCDIR)/bhttputil.c
 
 HEADERS=$(SOURCES:%.c=%.h) bhttpconfig.h
@@ -34,6 +36,9 @@ CFLAGS += $(LIBINCLS)
 ifdef BNET_TLS
 	CFLAGS += -DHTTP_SUPPORT_TLS=$(BNET_TLS)
 endif
+ifdef BNET_ZLIB
+	CFLAGS += -DHTTP_SUPPORT_COMPRESSION=$(BNET_ZLIB)
+endif
 ifdef NO_WEB_SOCKETS
 	CFLAGS += -DHTTP_SUPPORT_WEBSOCKET=$(NO_WEB_SOCKETS)
 endif
@@ -42,7 +47,7 @@ CFLAGS += $(EXTRA_DEFINES:%=-D%)
 PROGSOURCES=$(SRCDIR)/bhttpmain.c
 PROGOBJECTS=$(OBJDIR)/bhttpmain.o
 
-bhttp: $(PROGOBJECTS) $(HTTPLIB) $(LIBS) $(TLSDEPS)
+bhttp: $(PROGOBJECTS) $(HTTPLIB) $(LIBS) $(TLSDEPS) $(ZLIBDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(HTTPLIB)

@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 #include "bhttp.h"
+#if HTTP_SUPPORT_COMPRESSION
+#include "bhttpgz.h"
+#endif
 
 http_resource_t *http_resource_create(void)
 {
@@ -237,6 +240,30 @@ int http_file_callback(
             {
                 return http_error_reply(client, 500, "Stream", false);
             }
+            #if HTTP_SUPPORT_COMPRESSION
+            // always use chunked for compressed results
+            client->out_transfer_type = httpChunked;
+
+            // bump content-length higher to handle headers on short files
+            // this is fudged back down later
+            //
+            client->out_content_length += 128;
+            if (client->compress == httpCanCompress)
+            {
+                http_log(6, "starting compression of file data\n");
+                result = http_open_compression(client);
+                if (result)
+                {
+                    http_log(2, "Can't compress\n");
+                    client->compress = httpDontCompress;
+                    result = 0;
+                }
+                else
+                {
+                    client->compress = httpWillCompress;
+                }
+            }
+            #endif
             client->ctxpriv = (void*)stream;
         }
         else if (isdownload)
@@ -270,6 +297,23 @@ int http_file_callback(
                     return http_error_reply(client, 500, "Stream", false);
                 }
             }
+            #if HTTP_SUPPORT_COMPRESSION
+            if (client->compress == httpCanCompress)
+            {
+                http_log(6, "starting decompression of file data\n");
+                result = http_open_decompression(client);
+                if (result)
+                {
+                    http_log(2, "Can't decompress\n");
+                    client->compress = httpDontCompress;
+                    result = -1;
+                }
+                else
+                {
+                    client->compress = httpWillCompress;
+                }
+            }
+            #endif
             client->ctxpriv = (void*)stream;
         }
         break;
@@ -277,6 +321,22 @@ int http_file_callback(
     case httpDownloadData:
         if (stream)
         {
+            #if HTTP_SUPPORT_COMPRESSION
+            if (client->compress >= httpWillCompress)
+            {
+                result = http_decompress_stream(client, stream, *data, count);
+                if (result)
+                {
+                    return -1;
+                }
+                if (*count == 0)
+                {
+                    // terminate upload when file done
+                    client->out_content_length = 0;
+                }
+                return 0;
+            }
+            #endif
             result = stream->write(stream, *data, *count);
             *count = result;
             return (result >= 0) ? 0 : -1;
@@ -290,21 +350,53 @@ int http_file_callback(
     case httpUploadData:
         if (stream)
         {
-            result = stream->read(stream, *data, *count);
-            *count = result;
+            #if HTTP_SUPPORT_COMPRESSION
+            if (client->compress >= httpWillCompress)
+            {
+                result = http_compress_stream(client, stream, *data, count);
+                if (result)
+                {
+                    return -1;
+                }
+                if (*count == 0)
+                {
+                    // terminate upload when file done
+                    client->out_content_length = 0;
+                }
+                return 0;
+            }
+            #endif
+            {
+                result = stream->read(stream, *data, *count);
+                *count = result;
+            }
             return (result >= 0) ? 0 : -1;
         }
         HTTP_ERROR("No stream");
         return 1;
 
     case httpComplete:
+        #if HTTP_SUPPORT_COMPRESSION
+        if (client->compress >= httpWillCompress)
+        {
+            if (isdownload)
+            {
+                http_close_decompression(client);
+            }
+            else
+            {
+                http_close_compression(client);
+            }
+            client->compress = httpDontCompress;
+        }
+        #endif
         if (stream)
         {
             client->ctxpriv = NULL;
             stream->close(stream);
             return 0;
         }
-        HTTP_ERROR("No stream");
+        http_log(5, "No stream");
         return 1;
 
     default:

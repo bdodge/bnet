@@ -20,6 +20,7 @@ MBEDTLS_PATH=$(SRCROOT)/mbedtls
 MBEDTLS_LIBS=mbedtls mbedx509 mbedcrypto
 
 LIBJPEGT_PATH=$(SRCROOT)/libjpeg-turbo
+BLDJPEGT_PATH=$(SRCROOT)/bldjpeg-turbo
 LIBJPEGT_LIBS=turbojpeg
 
 UTIL_PATH=$(SRCROOT)/butil
@@ -151,7 +152,7 @@ ifndef BNET_JPEG
 endif
 ifneq ($(BNET_JPEG),0)
 	JPEGLIBS=-L$(LIBJPEGT_PATH)/library $(LIBJPEGT_LIBS:%=-l%)
-	JPEGDEPS=$(LIBJPEGT_LIBS:%=$(LIBJPEGT_PATH)/lib%.a$)
+	JPEGDEPS=$(LIBJPEGT_LIBS:%=$(OBJDIR)/lib%.a$)
 	CFLAGS+=-I$(LIBJPEGT_PATH) -DBNET_JPEG=1
 else
 	TLSLIBS=
@@ -205,7 +206,6 @@ $(IPP_PATH)/%.a:
 $(MBEDTLS_PATH)/library/%.a:
 	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
 
-$(LIBJPEGT_PATH)/%.a:
-	cd $(LIBJPEGT_PATH) && cmake -G"Unix Makefiles"
-	make -C $(LIBJPEGT_PATH) OS=$(OS) BNET_JPEG=$(BNET_JPEG) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
+$(OBJDIR)/%.a:
+	make -C $(OBJDIR) -f ../$(SRCROOT)/common/makejpegturbo.mk $@ BLDJPEGT_PATH=$(OBJDIR) LIBJPEGT_PATH=../$(LIBJPEGT_PATH) OS=$(OS) BNET_JPEG=$(BNET_JPEG) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
 

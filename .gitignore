@@ -20,6 +20,7 @@ bsip/bsip
 bipp/bipp
 bipp/printout
 bipp/ianaimport/bianaimp
+bipp/.obj*
 
 # Prerequisites
 *.d

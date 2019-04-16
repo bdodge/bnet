@@ -1647,7 +1647,9 @@ int http_client_slice(http_client_t *client)
         case httpUser12: case httpUser13: case httpUser14: case httpUser15:
             client->resource = http_find_resource(
                                                 client->resources,
-                                                http_scheme_base(client->scheme),
+                                                client->ws_upgrade ?
+                                                    (client->secure ? schemeWSS : schemeWS) :
+                                                    http_scheme_base(client->scheme),
                                                 client->path,
                                                 client->method
                                                 );

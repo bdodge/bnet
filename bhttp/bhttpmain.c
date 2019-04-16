@@ -27,6 +27,7 @@ int echo_callback(
     size_t bytes;
     static uint8_t echobuf[1024];
     static size_t echobytes;
+    int result;
 
     switch (cbtype)
     {
@@ -70,6 +71,12 @@ int echo_callback(
     case httpDownloadData:
         http_log(5, "ECB: %d\n", cbtype);
         http_log(4, "%s",*data);
+        // set format to text, or wsdfBinary, and set mask perhaps
+        result = http_websocket_set_format(client, wsdfText, false, "mask");
+        if (result)
+        {
+            return -1;
+        }
         bytes = *count;
         if (bytes > sizeof(echobuf))
         {
@@ -145,6 +152,7 @@ int main(int argc, char **argv)
     char url[HTTP_MAX_LINE];
     const char *program, *arg;
     http_method_t method;
+    int loglevel = 5;
     int result;
 
 #ifdef Windows
@@ -158,7 +166,7 @@ int main(int argc, char **argv)
 #else
     signal(SIGPIPE, SIG_IGN);
 #endif
-    http_set_log_level(5);
+    http_set_log_level(loglevel);
 
 #if HTTP_SUPPORT_TLS
     result = iostream_tls_prolog();
@@ -173,6 +181,7 @@ int main(int argc, char **argv)
     argc--;
 
     isserver = true;
+    loglevel = 3;
 
     port = 8080;
     url[0] = '\0';
@@ -222,6 +231,18 @@ int main(int argc, char **argv)
                     http_log(0, "Use: -p [port]");
                 }
                 break;
+            case 'l':
+                if (argc > 0)
+                {
+                    loglevel = strtoul(*argv, NULL, 0);
+                    argv++;
+                    argc--;
+                }
+                else
+                {
+                    http_log(0, "Use: -l [level]");
+                }
+                break;
             default:
                 http_log(0, "Bad Switch: %s\n", arg);
                 break;
@@ -233,6 +254,8 @@ int main(int argc, char **argv)
             url[sizeof(url) - 1] = '\0';
         }
     }
+    http_set_log_level(loglevel);
+
     if (isserver)
     {
         http_server_t server;

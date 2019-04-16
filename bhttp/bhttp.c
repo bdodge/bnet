@@ -1893,6 +1893,11 @@ int http_client_slice(http_client_t *client)
         {
             // reading 0 means last chunk, switch to length xfer to stop
             client->in_transfer_type = httpLength;
+
+            // read the blank line after the 0, then go back to downloading
+            client->next_state = httpBodyDownload;
+            http_get_line(client, httpBodyDownload);
+            break;
         }
         client->state = httpBodyDownload;
         break;

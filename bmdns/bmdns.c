@@ -437,6 +437,8 @@ int mdns_compare_resource_to_name(mdns_responder_t *res, uint8_t *answer, int an
     res_in.size  = anslen;
     res_in.data  = answer;
 
+    mdns_init_name(&res_name);
+
     // read the resource name in to a dns name. the
     // name can NOT have any compression or this doesn't
     // work, so make sure any answer text is flattened

@@ -65,6 +65,9 @@ int ipp_resource_callback(
 {
     ipp_server_t *ipp;
     ipp_request_t *req;
+    char req_hostname[IPP_MAX_NAME];
+    char req_path[IPP_MAX_NAME];
+    butil_url_scheme_t req_scheme;
     int result;
 
     butil_log(7, "IPP Resource CB: %d\n", cbtype);
@@ -114,6 +117,32 @@ int ipp_resource_callback(
         //
         client->ctxpriv = req;
 
+        // check host header to match
+        //
+        result = butil_parse_url(
+                            client->host,
+                            &req_scheme,
+                            req_hostname,
+                            sizeof(req_hostname),
+                            NULL,
+                            req_path,
+                            sizeof(req_path)
+                            );
+        if (result)
+        {
+            return result;
+        }
+        if (strcmp(req_hostname, ipp->hostname))
+        {
+            // allow host to be ip addr for static discovery
+            //
+            if (strcmp(client->path, "/"))
+            {
+                butil_log(3, "Host %s not a match to ours: %s for path %s\n",
+                                    client->host, ipp->hostname, client->path);
+                ipp_set_error(req, IPP_STATUS_ERROR_BAD_REQUEST);
+            }
+        }
         // ensure the output buffer is empty and aligned
         //
         if (client->out.count != 0)
@@ -835,7 +864,10 @@ int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
 
     // get the list of attributes for printer description
     result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
-
+    if (result)
+    {
+        return result;
+    }
     // and find the database in that list
     result |= ipp_get_attr_by_name("media-col-database", attr, &media_col_database);
     if (result)
@@ -953,32 +985,225 @@ int ipp_set_media(ipp_server_t *ipp, ipp_media_t *media, size_t nmedia)
     return result;
 }
 
-int ipp_set_environment(ipp_server_t *ipp)
+static ipp_marker_t s_marker_table[] =
 {
-    char hostname[HTTP_MAX_PATH];
+    { "cyan",       "#FF00FF",  "toner", 50, 0, 90  },
+    { "magenta",    "#00FFFF",  "toner", 60, 0, 90  },
+    { "yellow",     "#FFFF00",  "toner", 70, 0, 90  },
+    { "black",      "#FFFFFF",  "toner", 80, 0, 90  },
+};
+
+int ipp_set_markers(ipp_server_t *ipp, ipp_marker_t *markers, size_t nmarkers)
+{
+    ipp_marker_t *pm;
+    ipp_attr_t *marker_names;
+    ipp_attr_t *marker_colors;
+    ipp_attr_t *marker_types;
+    ipp_attr_t *marker_levels_low;
+    ipp_attr_t *marker_levels_high;
+    ipp_attr_t *marker_levels;
+    ipp_attr_t *attr;
+    size_t m_dex;
     int result;
 
-    result = gethostname(hostname, sizeof(hostname));
+    marker_names = NULL;
+    marker_colors = NULL;
+    marker_types = NULL;
+    marker_levels_low = NULL;
+    marker_levels_high = NULL;
+    marker_levels = NULL;
+
+    // get the list of attributes for printer description
+    result = ipp_get_attr_for_grouping(IPP_GROUPING_PRINTER_DESCRIPTION, &attr);
     if (result)
     {
         return result;
     }
+    result |= ipp_get_attr_by_name("marker-names", attr, &marker_names);
+    if (result)
+    {
+        butil_log(1, "No marker-names\n");
+        // ignore we'll deal
+    }
+    else
+    {
+        ipp_reset_attr_value(marker_names);
+    }
+    result |= ipp_get_attr_by_name("marker-colors", attr, &marker_colors);
+    if (result)
+    {
+        butil_log(1, "No marker-colors\n");
+    }
+    else
+    {
+        ipp_reset_attr_value(marker_colors);
+    }
+    result  = ipp_get_attr_by_name("marker-types", attr, &marker_types);
+    if (result)
+    {
+        butil_log(1, "No marker-types\n");
+    }
+    else
+    {
+        ipp_reset_attr_value(marker_types);
+    }
+    result = ipp_get_attr_by_name("marker-levels", attr, &marker_levels);
+    if (result)
+    {
+        butil_log(1, "No marker-levels\n");
+    }
+    else
+    {
+        ipp_reset_attr_value(marker_levels);
+    }
+    result = ipp_get_attr_by_name("marker-low-levels", attr, &marker_levels_low);
+    if (result)
+    {
+        butil_log(1, "No marker-levels-low\n");
+    }
+    else
+    {
+        ipp_reset_attr_value(marker_levels_low);
+    }
+    result = ipp_get_attr_by_name("marker-high-levels", attr, &marker_levels_high);
+    if (result)
+    {
+        butil_log(1, "No marker-levels-high\n");
+    }
+    else
+    {
+        ipp_reset_attr_value(marker_levels_high);
+    }
+    for (m_dex = 0; m_dex < nmarkers; m_dex++)
+    {
+        pm = &markers[m_dex];
+
+        if (marker_names)
+        {
+            result = ipp_dupe_attr(marker_names, &attr);
+            if (! result)
+            {
+                result = ipp_set_attr_string_value("marker-names", attr, 1, pm->name);
+                if (! result)
+                {
+                    result = ipp_add_attr_to_attr(marker_names, attr);
+                }
+                ipp_destroy_attr(attr);
+            }
+        }
+        if (marker_colors)
+        {
+            result = ipp_dupe_attr(marker_colors, &attr);
+            if (! result)
+            {
+                result = ipp_set_attr_string_value("marker-colors", attr, 1, pm->colorant);
+                if (! result)
+                {
+                    result = ipp_add_attr_to_attr(marker_colors, attr);
+                }
+                ipp_destroy_attr(attr);
+            }
+        }
+        if (marker_types)
+        {
+            result = ipp_dupe_attr(marker_types, &attr);
+            if (! result)
+            {
+                result = ipp_set_attr_string_value("marker-types", attr, 1, pm->type);
+                if (! result)
+                {
+                    result = ipp_add_attr_to_attr(marker_types, attr);
+                }
+                ipp_destroy_attr(attr);
+            }
+        }
+        if (marker_levels)
+        {
+            result = ipp_dupe_attr(marker_levels, &attr);
+            if (! result)
+            {
+                result = ipp_set_attr_int32_value("marker-levels", attr, 1, pm->level);
+                if (! result)
+                {
+                    result = ipp_add_attr_to_attr(marker_levels, attr);
+                }
+                ipp_destroy_attr(attr);
+            }
+        }
+        if (marker_levels_low)
+        {
+            result = ipp_dupe_attr(marker_levels_low, &attr);
+            if (! result)
+            {
+                result = ipp_set_attr_int32_value("marker-low-levels", attr, 1, pm->level_low);
+                if (! result)
+                {
+                    result = ipp_add_attr_to_attr(marker_levels_low, attr);
+                }
+                ipp_destroy_attr(attr);
+            }
+        }
+        if (marker_levels_high)
+        {
+            result = ipp_dupe_attr(marker_levels_high, &attr);
+            if (! result)
+            {
+                result = ipp_set_attr_int32_value("marker-high-levels", attr, 1, pm->level_high);
+                if (! result)
+                {
+                    result = ipp_add_attr_to_attr(marker_levels_high, attr);
+                }
+                ipp_destroy_attr(attr);
+            }
+        }
+    }
+    if (result)
+    {
+        butil_log(1, "Adding marker %s failed\n", pm->name);
+    }
+    return result;
+}
+
+int ipp_set_environment(ipp_server_t *ipp)
+{
+    int result;
+
+    result = gethostname(ipp->hostname, sizeof(ipp->hostname));
+    if (result)
+    {
+        return result;
+    }
+    snprintf(ipp->hostname + strlen(ipp->hostname),
+                sizeof(ipp->hostname) - strlen(ipp->hostname), "%s", ".local");
+
     // for uri of printers ipp url
     //
+    result = butil_paste_url(ipp->base_uri, sizeof(ipp->base_uri),
+                                ipp->scheme, ipp->hostname, ipp->open_port, "/");
+    if (result)
+    {
+        return result;
+    }
     result = butil_paste_url(ipp->print_uri, sizeof(ipp->print_uri),
-                                ipp->scheme, hostname, ipp->open_port, ipp->path);
+                                ipp->scheme, ipp->hostname, ipp->open_port, ipp->path);
+    if (result)
+    {
+        return result;
+    }
+    result = butil_paste_url(ipp->secure_base_uri, sizeof(ipp->secure_base_uri),
+                                ipp->scheme, ipp->hostname, ipp->secure_port, "/");
     if (result)
     {
         return result;
     }
     result = butil_paste_url(ipp->secure_print_uri, sizeof(ipp->secure_print_uri),
-                                ipp->scheme, hostname, ipp->secure_port, ipp->path);
+                                ipp->scheme, ipp->hostname, ipp->secure_port, ipp->path);
     if (result)
     {
         return result;
     }
     result = butil_paste_url(ipp->web_uri, sizeof(ipp->web_uri),
-                                schemeHTTP, hostname, ipp->web_port, "/");
+                                schemeHTTP, ipp->hostname, ipp->web_port, "/");
     if (result)
     {
         return result;
@@ -1033,6 +1258,8 @@ int ipp_set_environment(ipp_server_t *ipp)
                                             );
 #endif
     result |= ipp_set_media(ipp, s_media_table, sizeof(s_media_table)/sizeof(ipp_media_t));
+
+    result |= ipp_set_markers(ipp, s_marker_table, sizeof(s_marker_table)/sizeof(ipp_marker_t));
 
     return result;
 }
@@ -1117,7 +1344,7 @@ int ipp_server(const char *program, uint16_t open_port, uint16_t secure_port, co
     ipp->secure_port = secure_port;
     ipp->web_port = 8080;
 
-    strncpy(ipp->path, "/ipp", sizeof(ipp->path) - 1);
+    strncpy(ipp->path, "/ipp/print", sizeof(ipp->path) - 1);
     ipp->path[sizeof(ipp->path) - 1] = '\0';
 
     result = ipp_set_static_environment(ipp);
@@ -1132,7 +1359,7 @@ int ipp_server(const char *program, uint16_t open_port, uint16_t secure_port, co
     }
     // handle all HTTP scheme urls in callback
     //
-    result = http_add_func_resource(&resources, schemeHTTP,  ipp->path,
+    result = http_add_func_resource(&resources, schemeHTTP,  "/",
                     NULL, ipp_resource_callback, ipp);
     if (result)
     {

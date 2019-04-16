@@ -32,5 +32,16 @@ typedef struct tag_ipp_media
 }
 ipp_media_t;
 
+typedef struct tag_ipp_marker
+{
+    const char         *name;               ///< marker name
+    const char         *colorant;           ///< marker colror #RRGGBB
+    const char         *type;               ///< marker type
+    int32_t             level;              ///< current level
+    int32_t             level_low;          ///< level when near empty
+    int32_t             level_high;         ///< level when high
+}
+ipp_marker_t;
+
 #endif
 

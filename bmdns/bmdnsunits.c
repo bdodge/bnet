@@ -139,6 +139,9 @@ int mdns_basic_unit_test(mdns_responder_t *res)
     pkt = &packet;
     memset(pkt, 0, sizeof(packet));
 
+    mdns_init_name(&dname1);
+    mdns_init_name(&dname2);
+
     // test name conversion in and out of domain name
     //
     name1 = "ABCD.EFGH.IJKL.MNOP.qrst.uvwx.yz";
@@ -514,6 +517,7 @@ int mdns_test_iface_rr_type(mdns_responder_t *res, uint16_t rectype)
         //
         outpkt->io.tail = MDNS_OFF_QUESTION;
 
+        mdns_init_name(&domain_name);
         result = mdns_read_name(res, &outpkt->io, &domain_name);
         if (result)
         {
@@ -742,6 +746,7 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
             //
             outpkt->io.tail = MDNS_OFF_QUESTION;
 
+            mdns_init_name(&domain_name);
             result = mdns_read_name(res, &outpkt->io, &domain_name);
             if (result)
             {
@@ -794,6 +799,7 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
             {
             case DNS_RRTYPE_PTR:
                 // ptr for host name is just host name
+                mdns_init_name(&domain_name);
                 result = mdns_read_name(res, &outpkt->io, &domain_name);
                 if (result)
                 {
@@ -847,6 +853,7 @@ int mdns_test_service_rr_type(mdns_responder_t *res, uint16_t rectype)
             case DNS_RRTYPE_SRV:
                 outpkt->io.tail += 6;
                 outpkt->io.count -= 6;
+                mdns_init_name(&domain_name);
                 result = mdns_read_name(res, &outpkt->io, &domain_name);
 
                 if (mdns_compare_names(
@@ -1034,6 +1041,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             //
             outpkt->io.tail = MDNS_OFF_QUESTION;
 
+            mdns_init_name(&domain_name);
             result = mdns_read_name(res, &outpkt->io, &domain_name);
             if (result)
             {
@@ -1086,6 +1094,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             {
             case DNS_RRTYPE_PTR:
                 // ptr for host name is just host name
+                mdns_init_name(&domain_name);
                 result = mdns_read_name(res, &outpkt->io, &domain_name);
                 if (result)
                 {
@@ -1139,6 +1148,7 @@ int mdns_test_service_known_answer(mdns_responder_t *res, uint32_t ttl)
             case DNS_RRTYPE_SRV:
                 outpkt->io.tail += 6;
                 outpkt->io.count -= 6;
+                mdns_init_name(&domain_name);
                 result = mdns_read_name(res, &outpkt->io, &domain_name);
 
                 if (mdns_compare_names(

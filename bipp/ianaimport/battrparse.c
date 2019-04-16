@@ -49,6 +49,7 @@ s_syntax_to_type[] =
 	{ "1setOf",			IPP_ARRAY		}, // adds array bit
 	{ "type1",			IPP_NOTYPE		}, // ignored
 	{ "type2",			IPP_NOTYPE		}, // ignored
+	{ "type3",			IPP_NOTYPE		}, // ignored
 	{ "no-value",		IPP_NOTYPE		}, // ignored
 	{ "unknown",		IPP_NOTYPE		}, // ignored
 	{ "|",				IPP_NOTYPE		}, // advances type index

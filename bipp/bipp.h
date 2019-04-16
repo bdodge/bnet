@@ -37,15 +37,18 @@
 typedef struct tag_ipp_server
 {
     /// path and port we serve on
-    char                path[IPP_MAX_TEXT];
+    char                hostname[IPP_MAX_NAME];
+    char                path[IPP_MAX_NAME];
     uint16_t            open_port;
     uint16_t            secure_port;
     uint16_t            web_port;
 
     /// serving uri, for convenience
-    char                print_uri[IPP_MAX_TEXT];
-    char                secure_print_uri[IPP_MAX_TEXT];
-    char                web_uri[IPP_MAX_TEXT];
+    char                base_uri[IPP_MAX_NAME];
+    char                print_uri[IPP_MAX_NAME];
+    char                secure_base_uri[IPP_MAX_NAME];
+    char                secure_print_uri[IPP_MAX_NAME];
+    char                web_uri[IPP_MAX_NAME];
 
     /// ipp scheme handle
     butil_url_scheme_t   scheme;
@@ -59,7 +62,7 @@ typedef struct tag_ipp_server
     uint32_t            job_id;
 
     /// print stream path
-    char                stream_path[IPP_MAX_TEXT];
+    char                stream_path[IPP_MAX_NAME];
 
     /// last time jobs were checked
     time_t              idle_time;

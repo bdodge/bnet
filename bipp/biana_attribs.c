@@ -4365,2466 +4365,2501 @@ ipp_attr_rec_t s_ipp_attributes[] =
         0, 0
     },
     {   // index 435
+        "marker-colors",
+        { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
+        0, IPP_MAX_TEXT
+    },
+    {   // index 436
+        "marker-high-levels",
+        { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
+        0, 100
+    },
+    {   // index 437
+        "marker-levels",
+        { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
+        0, 100
+    },
+    {   // index 438
+        "marker-low-levels",
+        { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
+        0, 100
+    },
+    {   // index 439
+        "marker-message",
+        { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
+        0, IPP_MAX_TEXT
+    },
+    {   // index 440
+        "marker-names",
+        { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
+        0, IPP_MAX_TEXT
+    },
+    {   // index 441
+        "marker-types",
+        { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
+        0, 0
+    },
+    {   // index 442
         "material-amount",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 436
+    {   // index 443
         "material-amount-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 437
+    {   // index 444
         "material-amount-units-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 438
+    {   // index 445
         "material-color",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 439
+    {   // index 446
         "material-diameter",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 440
+    {   // index 447
         "material-diameter-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 441
+    {   // index 448
         "material-diameter-tolerance",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 442
+    {   // index 449
         "material-fill-density",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
-    {   // index 443
+    {   // index 450
         "material-key",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 444
+    {   // index 451
         "material-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 445
+    {   // index 452
         "material-purpose",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 446
+    {   // index 453
         "material-purpose-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 447
+    {   // index 454
         "material-rate",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 448
+    {   // index 455
         "material-rate-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 449
+    {   // index 456
         "material-rate-units",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 450
+    {   // index 457
         "material-rate-units-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 451
+    {   // index 458
         "material-shell-thickness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 452
+    {   // index 459
         "material-shell-thickness-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 453
+    {   // index 460
         "material-temperature",
         { IPP_INTEGER, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 454
+    {   // index 461
         "material-temperature-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 455
+    {   // index 462
         "material-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 456
+    {   // index 463
         "material-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 457
+    {   // index 464
         "materials-col",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 458
+    {   // index 465
         "materials-col-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 459
+    {   // index 466
         "materials-col-database",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 460
+    {   // index 467
         "materials-col-default",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 461
+    {   // index 468
         "materials-col-ready",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 462
+    {   // index 469
         "materials-col-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 463
+    {   // index 470
         "max-materials-col-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 464
+    {   // index 471
         "max-save-info-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 465
+    {   // index 472
         "max-stitching-locations-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 466
+    {   // index 473
         "media",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 467
+    {   // index 474
         "media-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 468
+    {   // index 475
         "media-back-coating",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 469
+    {   // index 476
         "media-back-coating-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 470
+    {   // index 477
         "media-bottom-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 471
+    {   // index 478
         "media-bottom-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 472
+    {   // index 479
         "media-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 473
+    {   // index 480
         "media-col-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 474
+    {   // index 481
         "media-col-database",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 475
+    {   // index 482
         "media-col-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 476
+    {   // index 483
         "media-col-ready",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 477
+    {   // index 484
         "media-col-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 478
+    {   // index 485
         "media-color",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 479
+    {   // index 486
         "media-color-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 480
+    {   // index 487
         "media-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 481
+    {   // index 488
         "media-front-coating",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 482
+    {   // index 489
         "media-front-coating-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 483
+    {   // index 490
         "media-grain",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 484
+    {   // index 491
         "media-grain-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 485
+    {   // index 492
         "media-hole-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 486
+    {   // index 493
         "media-hole-count-supported",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 487
+    {   // index 494
         "media-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
-    {   // index 488
+    {   // index 495
         "media-info-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 489
+    {   // index 496
         "media-input-tray-check",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 490
+    {   // index 497
         "media-input-tray-check-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 491
+    {   // index 498
         "media-key",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 492
+    {   // index 499
         "media-key-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 493
+    {   // index 500
         "media-left-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 494
+    {   // index 501
         "media-left-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 495
+    {   // index 502
         "media-order-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 496
+    {   // index 503
         "media-order-count-supported",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 497
+    {   // index 504
         "media-pre-printed",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 498
+    {   // index 505
         "media-pre-printed-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 499
+    {   // index 506
         "media-ready",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 500
+    {   // index 507
         "media-recycled",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 501
+    {   // index 508
         "media-recycled-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 502
+    {   // index 509
         "media-right-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 503
+    {   // index 510
         "media-right-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 504
+    {   // index 511
         "media-sheets",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 505
+    {   // index 512
         "media-sheets-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 506
+    {   // index 513
         "media-sheets-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 507
+    {   // index 514
         "media-sheets-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 508
+    {   // index 515
         "media-sheets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 509
+    {   // index 516
         "media-size",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 510
+    {   // index 517
         "media-size-name",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 511
+    {   // index 518
         "media-size-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 512
+    {   // index 519
         "media-source",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 513
+    {   // index 520
         "media-source-feed-direction",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 514
+    {   // index 521
         "media-source-feed-orientation",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 515
+    {   // index 522
         "media-source-properties",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 516
+    {   // index 523
         "media-source-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 517
+    {   // index 524
         "media-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 518
+    {   // index 525
         "media-thickness",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 519
+    {   // index 526
         "media-thickness-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 520
+    {   // index 527
         "media-tooth",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 521
+    {   // index 528
         "media-tooth-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 522
+    {   // index 529
         "media-top-margin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 523
+    {   // index 530
         "media-top-margin-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 524
+    {   // index 531
         "media-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 525
+    {   // index 532
         "media-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 526
+    {   // index 533
         "media-weight-metric",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 527
+    {   // index 534
         "media-weight-metric-supported",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 528
+    {   // index 535
         "message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 529
+    {   // index 536
         "message-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
-    {   // index 530
+    {   // index 537
         "monochrome",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 531
+    {   // index 538
         "monochrome-two-sided",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 532
+    {   // index 539
         "more-info",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 533
+    {   // index 540
         "multiple-destination-uris-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 534
+    {   // index 541
         "multiple-document-handling",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 535
+    {   // index 542
         "multiple-document-handling-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 536
+    {   // index 543
         "multiple-document-handling-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 537
+    {   // index 544
         "multiple-document-handling-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 538
+    {   // index 545
         "multiple-document-jobs-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 539
+    {   // index 546
         "multiple-object-handling",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 540
+    {   // index 547
         "multiple-object-handling-actual",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 541
+    {   // index 548
         "multiple-object-handling-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 542
+    {   // index 549
         "multiple-object-handling-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 543
+    {   // index 550
         "multiple-operation-time-out",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 544
+    {   // index 551
         "multiple-operation-time-out-action",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 545
+    {   // index 552
         "my-jobs",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 546
+    {   // index 553
         "natural-language-configured",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 547
+    {   // index 554
         "noise-removal",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
-    {   // index 548
+    {   // index 555
         "notify-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 549
+    {   // index 556
         "notify-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 550
+    {   // index 557
         "notify-charset",
         { IPP_CHARSET, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 551
+    {   // index 558
         "notify-events",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 552
+    {   // index 559
         "notify-events-default",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 553
+    {   // index 560
         "notify-events-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 554
+    {   // index 561
         "notify-get-interval",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 555
+    {   // index 562
         "notify-job-id",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 556
+    {   // index 563
         "notify-lease-duration",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 67108863
     },
-    {   // index 557
+    {   // index 564
         "notify-lease-duration-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 67108863
     },
-    {   // index 558
+    {   // index 565
         "notify-lease-duration-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 67108863
     },
-    {   // index 559
+    {   // index 566
         "notify-lease-expiration-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 560
+    {   // index 567
         "notify-max-events-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         2, 2147483647
     },
-    {   // index 561
+    {   // index 568
         "notify-natural-language",
         { IPP_LANGUAGE, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 562
+    {   // index 569
         "notify-printer-up-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 563
+    {   // index 570
         "notify-printer-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 564
+    {   // index 571
         "notify-pull-method",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 565
+    {   // index 572
         "notify-pull-method-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 566
+    {   // index 573
         "notify-recipient-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 567
+    {   // index 574
         "notify-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 568
+    {   // index 575
         "notify-sequence-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 569
+    {   // index 576
         "notify-sequence-numbers",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 570
+    {   // index 577
         "notify-status-code",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 571
+    {   // index 578
         "notify-subscribed-event",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 572
+    {   // index 579
         "notify-subscriber-user-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 573
+    {   // index 580
         "notify-subscriber-user-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 574
+    {   // index 581
         "notify-subscription-id",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 575
+    {   // index 582
         "notify-subscription-ids",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 576
+    {   // index 583
         "notify-subscription-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 577
+    {   // index 584
         "notify-text",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 578
+    {   // index 585
         "notify-time-interval",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 579
+    {   // index 586
         "notify-user-data",
         { IPP_OCTETSTRING, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 63
     },
-    {   // index 580
+    {   // index 587
         "notify-wait",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 581
+    {   // index 588
         "number-of-documents",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 582
+    {   // index 589
         "number-of-intervening-jobs",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 583
+    {   // index 590
         "number-of-retries",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 584
+    {   // index 591
         "number-of-retries-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 585
+    {   // index 592
         "number-of-retries-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 586
+    {   // index 593
         "number-up",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 587
+    {   // index 594
         "number-up-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 588
+    {   // index 595
         "number-up-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 589
+    {   // index 596
         "number-up-supported",
         { IPP_INTEGER, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 590
+    {   // index 597
         "oauth-authorization-server-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 591
+    {   // index 598
         "object-offset",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 592
+    {   // index 599
         "object-size",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 593
+    {   // index 600
         "object-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 594
+    {   // index 601
         "operations-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 595
+    {   // index 602
         "organization-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 596
+    {   // index 603
         "organization-name-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
-    {   // index 597
+    {   // index 604
         "orientation-requested",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 598
+    {   // index 605
         "orientation-requested-actual",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 599
+    {   // index 606
         "orientation-requested-default",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 600
+    {   // index 607
         "orientation-requested-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 601
+    {   // index 608
         "original-requesting-user-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 602
+    {   // index 609
         "output-attributes",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 603
+    {   // index 610
         "output-attributes-actual",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 604
+    {   // index 611
         "output-attributes-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 605
+    {   // index 612
         "output-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 606
+    {   // index 613
         "output-bin",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 607
+    {   // index 614
         "output-bin-actual",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 608
+    {   // index 615
         "output-bin-default",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 609
+    {   // index 616
         "output-bin-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 610
+    {   // index 617
         "output-compression-quality-factor",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 100
     },
-    {   // index 611
+    {   // index 618
         "output-device",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 612
+    {   // index 619
         "output-device-actual",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 613
+    {   // index 620
         "output-device-assigned",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 614
+    {   // index 621
         "output-device-document-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 615
+    {   // index 622
         "output-device-document-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 616
+    {   // index 623
         "output-device-document-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 617
+    {   // index 624
         "output-device-job-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 618
+    {   // index 625
         "output-device-job-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 619
+    {   // index 626
         "output-device-job-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 620
+    {   // index 627
         "output-device-job-states",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 621
+    {   // index 628
         "output-device-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 622
+    {   // index 629
         "output-device-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 623
+    {   // index 630
         "output-device-uuid-assigned",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 624
+    {   // index 631
         "output-device-uuid-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 625
+    {   // index 632
         "overrides",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 626
+    {   // index 633
         "overrides-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 627
+    {   // index 634
         "overrides-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 628
+    {   // index 635
         "page-delivery",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 629
+    {   // index 636
         "page-delivery-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 630
+    {   // index 637
         "page-delivery-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 631
+    {   // index 638
         "page-delivery-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 632
+    {   // index 639
         "page-order-received",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 633
+    {   // index 640
         "page-order-received-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 634
+    {   // index 641
         "page-order-received-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 635
+    {   // index 642
         "page-order-received-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 636
+    {   // index 643
         "page-ranges",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 637
+    {   // index 644
         "page-ranges-actual",
         { IPP_RANGEOFINT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 638
+    {   // index 645
         "page-ranges-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 639
+    {   // index 646
         "pages",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 640
+    {   // index 647
         "pages-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 641
+    {   // index 648
         "pages-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 642
+    {   // index 649
         "pages-completed-col",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 643
+    {   // index 650
         "pages-completed-current-copy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 644
+    {   // index 651
         "pages-per-minute",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 645
+    {   // index 652
         "pages-per-minute-color",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 646
+    {   // index 653
         "pages-per-subset",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 647
+    {   // index 654
         "pages-per-subset-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 648
+    {   // index 655
         "parent-printers-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 649
+    {   // index 656
         "pclm-raster-back-side",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 650
+    {   // index 657
         "pclm-source-resolution",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 651
+    {   // index 658
         "pclm-source-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 652
+    {   // index 659
         "pclm-strip-height-preferred",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 653
+    {   // index 660
         "pclm-strip-height-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 654
+    {   // index 661
         "pdf-features-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 655
+    {   // index 662
         "pdf-k-octets-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 656
+    {   // index 663
         "pdf-versions-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 657
+    {   // index 664
         "pdl-init-file",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 658
+    {   // index 665
         "pdl-init-file-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 659
+    {   // index 666
         "pdl-init-file-entry",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 660
+    {   // index 667
         "pdl-init-file-entry-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 661
+    {   // index 668
         "pdl-init-file-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 662
+    {   // index 669
         "pdl-init-file-location-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 663
+    {   // index 670
         "pdl-init-file-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 664
+    {   // index 671
         "pdl-init-file-name-subdirectory-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 665
+    {   // index 672
         "pdl-init-file-name-supported",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 666
+    {   // index 673
         "pdl-init-file-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 667
+    {   // index 674
         "pdl-override-guaranteed-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 668
+    {   // index 675
         "pdl-override-supported",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 669
+    {   // index 676
         "platform-shape",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 670
+    {   // index 677
         "platform-temperature",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 671
+    {   // index 678
         "platform-temperature-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 672
+    {   // index 679
         "platform-temperature-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 673
+    {   // index 680
         "platform-temperature-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 674
+    {   // index 681
         "post-dial-string",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 675
+    {   // index 682
         "pre-dial-string",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 676
+    {   // index 683
         "preferred-attributes",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 677
+    {   // index 684
         "preferred-attributes-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 678
+    {   // index 685
         "presentation-direction-number-up",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 679
+    {   // index 686
         "presentation-direction-number-up-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 680
+    {   // index 687
         "presentation-direction-number-up-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 681
+    {   // index 688
         "presentation-direction-number-up-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 682
+    {   // index 689
         "preset-name",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 683
+    {   // index 690
         "print-accuracy",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 684
+    {   // index 691
         "print-accuracy-actual",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 685
+    {   // index 692
         "print-accuracy-supported",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 686
+    {   // index 693
         "print-base",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 687
+    {   // index 694
         "print-base-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 688
+    {   // index 695
         "print-base-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 689
+    {   // index 696
         "print-base-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 690
+    {   // index 697
         "print-color-mode",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 691
+    {   // index 698
         "print-color-mode-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 692
+    {   // index 699
         "print-color-mode-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 693
+    {   // index 700
         "print-color-mode-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 694
+    {   // index 701
         "print-content-optimize",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 695
+    {   // index 702
         "print-content-optimize-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 696
+    {   // index 703
         "print-content-optimize-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 697
+    {   // index 704
         "print-content-optimize-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 698
+    {   // index 705
         "print-objects",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 699
+    {   // index 706
         "print-objects-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 700
+    {   // index 707
         "print-objects-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 701
+    {   // index 708
         "print-quality",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 702
+    {   // index 709
         "print-quality-actual",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 703
+    {   // index 710
         "print-quality-default",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 704
+    {   // index 711
         "print-quality-supported",
         { IPP_ENUM | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 705
+    {   // index 712
         "print-rendering-intent",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 706
+    {   // index 713
         "print-rendering-intent-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 707
+    {   // index 714
         "print-rendering-intent-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 708
+    {   // index 715
         "print-rendering-intent-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 709
+    {   // index 716
         "print-scaling",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 710
+    {   // index 717
         "print-scaling-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 711
+    {   // index 718
         "print-scaling-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 712
+    {   // index 719
         "print-supports",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 713
+    {   // index 720
         "print-supports-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 714
+    {   // index 721
         "print-supports-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 715
+    {   // index 722
         "print-supports-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 716
+    {   // index 723
         "printer-alert",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 717
+    {   // index 724
         "printer-alert-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 718
+    {   // index 725
         "printer-camera-image-uri",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 719
+    {   // index 726
         "printer-charge-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 720
+    {   // index 727
         "printer-charge-info-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 721
+    {   // index 728
         "printer-config-change-date-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 722
+    {   // index 729
         "printer-config-change-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 723
+    {   // index 730
         "printer-current-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 724
+    {   // index 731
         "printer-detailed-status-messages",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 725
+    {   // index 732
         "printer-device-id",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
-    {   // index 726
+    {   // index 733
         "printer-dns-sd-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
-        0, 63
+        0, IPP_MAX_TEXT
     },
-    {   // index 727
+    {   // index 734
         "printer-driver-installer",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 728
+    {   // index 735
         "printer-fax-log-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 729
+    {   // index 736
         "printer-fax-modem-info",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 730
+    {   // index 737
         "printer-fax-modem-name",
         { IPP_NAME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 731
+    {   // index 738
         "printer-fax-modem-number",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 732
+    {   // index 739
         "printer-finisher",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 733
+    {   // index 740
         "printer-finisher-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 734
+    {   // index 741
         "printer-finisher-supplies",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 735
+    {   // index 742
         "printer-finisher-supplies-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 736
+    {   // index 743
         "printer-geo-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 737
+    {   // index 744
         "printer-get-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 738
+    {   // index 745
         "printer-icc-profiles",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 739
+    {   // index 746
         "printer-icons",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 740
+    {   // index 747
         "printer-info",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 741
+    {   // index 748
         "printer-input-tray",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 742
+    {   // index 749
         "printer-is-accepting-jobs",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 743
+    {   // index 750
         "printer-kind",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 744
+    {   // index 751
         "printer-location",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 745
+    {   // index 752
         "printer-make-and-model",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 746
+    {   // index 753
         "printer-mandatory-job-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 747
+    {   // index 754
         "printer-message-date-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 748
+    {   // index 755
         "printer-message-from-operator",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 749
+    {   // index 756
         "printer-message-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 750
+    {   // index 757
         "printer-more-info",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 751
+    {   // index 758
         "printer-more-info-manufacturer",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 752
+    {   // index 759
         "printer-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 127
     },
-    {   // index 753
+    {   // index 760
         "printer-organization",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 754
+    {   // index 761
         "printer-organizational-unit",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 755
+    {   // index 762
         "printer-output-tray",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 756
+    {   // index 763
         "printer-privacy-policy-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 757
+    {   // index 764
         "printer-resolution",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 758
+    {   // index 765
         "printer-resolution-actual",
         { IPP_RESOLUTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 759
+    {   // index 766
         "printer-resolution-default",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 760
+    {   // index 767
         "printer-resolution-supported",
         { IPP_RESOLUTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 761
+    {   // index 768
         "printer-settable-attributes-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 762
+    {   // index 769
         "printer-state",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 763
+    {   // index 770
         "printer-state-change-date-time",
         { IPP_DATETIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 764
+    {   // index 771
         "printer-state-change-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 765
+    {   // index 772
         "printer-state-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 766
+    {   // index 773
         "printer-state-reasons",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 767
+    {   // index 774
         "printer-static-resource-directory-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 768
+    {   // index 775
         "printer-static-resource-k-octets-free",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 769
+    {   // index 776
         "printer-static-resource-k-octets-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 770
+    {   // index 777
         "printer-strings-languages-supported",
         { IPP_LANGUAGE | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 771
+    {   // index 778
         "printer-strings-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 772
+    {   // index 779
         "printer-supply",
         { IPP_OCTETSTRING | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 773
+    {   // index 780
         "printer-supply-description",
         { IPP_TEXT | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 774
+    {   // index 781
         "printer-supply-info-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 775
+    {   // index 782
         "printer-up-time",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 776
+    {   // index 783
         "printer-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 777
+    {   // index 784
         "printer-uri-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 778
+    {   // index 785
         "printer-uuid",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 45
     },
-    {   // index 779
+    {   // index 786
         "printer-volume-supported",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 780
+    {   // index 787
         "printer-xri-supported",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 781
+    {   // index 788
         "profile-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 782
+    {   // index 789
         "profile-uri-actual",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 783
+    {   // index 790
         "profile-url",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 784
+    {   // index 791
         "proof-print",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 785
+    {   // index 792
         "proof-print-copies",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 786
+    {   // index 793
         "proof-print-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 787
+    {   // index 794
         "proof-print-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 788
+    {   // index 795
         "punching",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 789
+    {   // index 796
         "punching-hole-diameter-configured",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 790
+    {   // index 797
         "punching-locations",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 791
+    {   // index 798
         "punching-locations-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 792
+    {   // index 799
         "punching-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 793
+    {   // index 800
         "punching-offset-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 794
+    {   // index 801
         "punching-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 795
+    {   // index 802
         "punching-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 796
+    {   // index 803
         "pwg-raster-document-resolution-supported",
         { IPP_RESOLUTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 797
+    {   // index 804
         "pwg-raster-document-sheet-back",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 798
+    {   // index 805
         "pwg-raster-document-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 799
+    {   // index 806
         "queued-job-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 800
+    {   // index 807
         "reference-uri-schemes-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 801
+    {   // index 808
         "repertoire-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 802
+    {   // index 809
         "requested-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 803
+    {   // index 810
         "requesting-user-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 804
+    {   // index 811
         "requesting-user-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 805
+    {   // index 812
         "requesting-user-uri-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 806
+    {   // index 813
         "resolver-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 807
+    {   // index 814
         "retry-interval",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 808
+    {   // index 815
         "retry-interval-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 809
+    {   // index 816
         "retry-interval-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 810
+    {   // index 817
         "retry-time-out",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 811
+    {   // index 818
         "retry-time-out-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 812
+    {   // index 819
         "retry-time-out-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 813
+    {   // index 820
         "save-disposition",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 814
+    {   // index 821
         "save-disposition-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 815
+    {   // index 822
         "save-document-format",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 816
+    {   // index 823
         "save-document-format-default",
         { IPP_MIME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 817
+    {   // index 824
         "save-document-format-supported",
         { IPP_MIME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 818
+    {   // index 825
         "save-info",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 819
+    {   // index 826
         "save-location",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 820
+    {   // index 827
         "save-location-default",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 821
+    {   // index 828
         "save-location-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 822
+    {   // index 829
         "save-name",
         { IPP_NAME, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 823
+    {   // index 830
         "save-name-subdirectory-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 824
+    {   // index 831
         "save-name-supported",
         { IPP_BOOLEAN, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 825
+    {   // index 832
         "separator-sheets",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 826
+    {   // index 833
         "separator-sheets-actual",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 827
+    {   // index 834
         "separator-sheets-default",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 828
+    {   // index 835
         "separator-sheets-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 829
+    {   // index 836
         "separator-sheets-type",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 830
+    {   // index 837
         "sheet-collate",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 831
+    {   // index 838
         "sheet-collate-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 832
+    {   // index 839
         "sheet-collate-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 833
+    {   // index 840
         "sheet-collate-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 834
+    {   // index 841
         "sheet-completed-copy-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 835
+    {   // index 842
         "sheet-completed-document-number",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 836
+    {   // index 843
         "sides",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 837
+    {   // index 844
         "sides-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 838
+    {   // index 845
         "sides-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 839
+    {   // index 846
         "sides-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 840
+    {   // index 847
         "status-message",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 255
     },
-    {   // index 841
+    {   // index 848
         "stitching",
         { IPP_COLLECTION, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 842
+    {   // index 849
         "stitching-angle",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 359
     },
-    {   // index 843
+    {   // index 850
         "stitching-angle-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 359
     },
-    {   // index 844
+    {   // index 851
         "stitching-locations",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 845
+    {   // index 852
         "stitching-locations-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 846
+    {   // index 853
         "stitching-method",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 847
+    {   // index 854
         "stitching-method-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 848
+    {   // index 855
         "stitching-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 849
+    {   // index 856
         "stitching-offset-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 850
+    {   // index 857
         "stitching-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 851
+    {   // index 858
         "stitching-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 852
+    {   // index 859
         "subject",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 853
+    {   // index 860
         "subject-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
-    {   // index 854
+    {   // index 861
         "subordinate-printers-supported",
         { IPP_URI | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 855
+    {   // index 862
         "subscription-privacy-attributes",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 856
+    {   // index 863
         "subscription-privacy-scope",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 857
+    {   // index 864
         "t33-subaddress",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 858
+    {   // index 865
         "time-at-completed",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 859
+    {   // index 866
         "time-at-creation",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 860
+    {   // index 867
         "time-at-processing",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 861
+    {   // index 868
         "to-name",
         { IPP_TEXT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 862
+    {   // index 869
         "to-name-supported",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 1023
     },
-    {   // index 863
+    {   // index 870
         "transmission-status",
         { IPP_ENUM, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 864
+    {   // index 871
         "trimming",
         { IPP_COLLECTION | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 865
+    {   // index 872
         "trimming-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 866
+    {   // index 873
         "trimming-offset-supported",
         { IPP_INTEGER | IPP_ARRAY, IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 867
+    {   // index 874
         "trimming-reference-edge",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 868
+    {   // index 875
         "trimming-reference-edge-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 869
+    {   // index 876
         "trimming-type",
         { IPP_KEYWORD, IPP_NAME, IPP_NOTYPE, IPP_NOTYPE },
         0, IPP_MAX_TEXT
     },
-    {   // index 870
+    {   // index 877
         "trimming-type-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 871
+    {   // index 878
         "trimming-when",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 872
+    {   // index 879
         "trimming-when-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 873
+    {   // index 880
         "uri-authentication-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 874
+    {   // index 881
         "uri-security-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 875
+    {   // index 882
         "user-defined-values-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 876
+    {   // index 883
         "warnings-count",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 877
+    {   // index 884
         "which-jobs",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 878
+    {   // index 885
         "which-jobs-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 879
+    {   // index 886
         "x-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 880
+    {   // index 887
         "x-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 881
+    {   // index 888
         "x-image-position",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 882
+    {   // index 889
         "x-image-position-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 883
+    {   // index 890
         "x-image-position-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 884
+    {   // index 891
         "x-image-position-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 885
+    {   // index 892
         "x-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 886
+    {   // index 893
         "x-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 887
+    {   // index 894
         "x-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 888
+    {   // index 895
         "x-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 889
+    {   // index 896
         "x-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 890
+    {   // index 897
         "x-origin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 891
+    {   // index 898
         "x-side1-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 892
+    {   // index 899
         "x-side1-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 893
+    {   // index 900
         "x-side1-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 894
+    {   // index 901
         "x-side1-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 895
+    {   // index 902
         "x-side2-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 896
+    {   // index 903
         "x-side2-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 897
+    {   // index 904
         "x-side2-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 898
+    {   // index 905
         "x-side2-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 899
+    {   // index 906
         "xri-authentication",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 900
+    {   // index 907
         "xri-authentication-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 901
+    {   // index 908
         "xri-security",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 902
+    {   // index 909
         "xri-security-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 903
+    {   // index 910
         "xri-uri",
         { IPP_URI, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 904
+    {   // index 911
         "xri-uri-scheme-supported",
         { IPP_URISCHEME | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 905
+    {   // index 912
         "y-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 906
+    {   // index 913
         "y-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 907
+    {   // index 914
         "y-image-position",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 908
+    {   // index 915
         "y-image-position-actual",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 909
+    {   // index 916
         "y-image-position-default",
         { IPP_KEYWORD, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 910
+    {   // index 917
         "y-image-position-supported",
         { IPP_KEYWORD | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 911
+    {   // index 918
         "y-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 912
+    {   // index 919
         "y-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 913
+    {   // index 920
         "y-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 914
+    {   // index 921
         "y-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 915
+    {   // index 922
         "y-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 916
+    {   // index 923
         "y-origin",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 0
     },
-    {   // index 917
+    {   // index 924
         "y-side1-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 918
+    {   // index 925
         "y-side1-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 919
+    {   // index 926
         "y-side1-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 920
+    {   // index 927
         "y-side1-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 921
+    {   // index 928
         "y-side2-image-shift",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 922
+    {   // index 929
         "y-side2-image-shift-actual",
         { IPP_INTEGER | IPP_ARRAY, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 923
+    {   // index 930
         "y-side2-image-shift-default",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 924
+    {   // index 931
         "y-side2-image-shift-supported",
         { IPP_RANGEOFINT, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         -2147483648, 2147483647
     },
-    {   // index 925
+    {   // index 932
         "z-accuracy",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
     },
-    {   // index 926
+    {   // index 933
         "z-dimension",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         1, 2147483647
     },
-    {   // index 927
+    {   // index 934
         "z-offset",
         { IPP_INTEGER, IPP_NOTYPE, IPP_NOTYPE, IPP_NOTYPE },
         0, 2147483647
@@ -6861,22 +6896,22 @@ ipp_attr_t s_ipp_attr_group_decdesc[] =
         NULL, NULL
     },
     {
-        504, // media-sheets
+        511, // media-sheets
         0, 0,
         NULL, NULL
     },
     {
-        505, // media-sheets-col
+        512, // media-sheets-col
         0, 0,
         NULL, NULL
     },
     {
-        639, // pages
+        646, // pages
         0, 0,
         NULL, NULL
     },
     {
-        640, // pages-col
+        647, // pages-col
         0, 0,
         NULL, NULL
     },
@@ -7120,247 +7155,247 @@ ipp_attr_t s_ipp_attr_group_docstat[] =
         NULL, NULL
     },
     {
-        458, // materials-col-actual
+        465, // materials-col-actual
         0, 0,
         NULL, NULL
     },
     {
-        467, // media-actual
+        474, // media-actual
         0, 0,
         NULL, NULL
     },
     {
-        473, // media-col-actual
+        480, // media-col-actual
         0, 0,
         NULL, NULL
     },
     {
-        490, // media-input-tray-check-actual
+        497, // media-input-tray-check-actual
         0, 0,
         NULL, NULL
     },
     {
-        506, // media-sheets-completed
+        513, // media-sheets-completed
         0, 0,
         NULL, NULL
     },
     {
-        507, // media-sheets-completed-col
+        514, // media-sheets-completed-col
         0, 0,
         NULL, NULL
     },
     {
-        532, // more-info
+        539, // more-info
         0, 0,
         NULL, NULL
     },
     {
-        540, // multiple-object-handling-actual
+        547, // multiple-object-handling-actual
         0, 0,
         NULL, NULL
     },
     {
-        587, // number-up-actual
+        594, // number-up-actual
         0, 0,
         NULL, NULL
     },
     {
-        598, // orientation-requested-actual
+        605, // orientation-requested-actual
         0, 0,
         NULL, NULL
     },
     {
-        603, // output-attributes-actual
+        610, // output-attributes-actual
         0, 0,
         NULL, NULL
     },
     {
-        607, // output-bin-actual
+        614, // output-bin-actual
         0, 0,
         NULL, NULL
     },
     {
-        613, // output-device-assigned
+        620, // output-device-assigned
         0, 0,
         NULL, NULL
     },
     {
-        614, // output-device-document-state
+        621, // output-device-document-state
         0, 0,
         NULL, NULL
     },
     {
-        615, // output-device-document-state-message
+        622, // output-device-document-state-message
         0, 0,
         NULL, NULL
     },
     {
-        616, // output-device-document-state-reasons
+        623, // output-device-document-state-reasons
         0, 0,
         NULL, NULL
     },
     {
-        629, // page-delivery-actual
+        636, // page-delivery-actual
         0, 0,
         NULL, NULL
     },
     {
-        633, // page-order-received-actual
+        640, // page-order-received-actual
         0, 0,
         NULL, NULL
     },
     {
-        637, // page-ranges-actual
+        644, // page-ranges-actual
         0, 0,
         NULL, NULL
     },
     {
-        641, // pages-completed
+        648, // pages-completed
         0, 0,
         NULL, NULL
     },
     {
-        642, // pages-completed-col
+        649, // pages-completed-col
         0, 0,
         NULL, NULL
     },
     {
-        643, // pages-completed-current-copy
+        650, // pages-completed-current-copy
         0, 0,
         NULL, NULL
     },
     {
-        671, // platform-temperature-actual
+        678, // platform-temperature-actual
         0, 0,
         NULL, NULL
     },
     {
-        679, // presentation-direction-number-up-actual
+        686, // presentation-direction-number-up-actual
         0, 0,
         NULL, NULL
     },
     {
-        684, // print-accuracy-actual
+        691, // print-accuracy-actual
         0, 0,
         NULL, NULL
     },
     {
-        687, // print-base-actual
+        694, // print-base-actual
         0, 0,
         NULL, NULL
     },
     {
-        691, // print-color-mode-actual
+        698, // print-color-mode-actual
         0, 0,
         NULL, NULL
     },
     {
-        695, // print-content-optimize-actual
+        702, // print-content-optimize-actual
         0, 0,
         NULL, NULL
     },
     {
-        699, // print-objects-actual
+        706, // print-objects-actual
         0, 0,
         NULL, NULL
     },
     {
-        702, // print-quality-actual
+        709, // print-quality-actual
         0, 0,
         NULL, NULL
     },
     {
-        706, // print-rendering-intent-actual
+        713, // print-rendering-intent-actual
         0, 0,
         NULL, NULL
     },
     {
-        713, // print-supports-actual
+        720, // print-supports-actual
         0, 0,
         NULL, NULL
     },
     {
-        758, // printer-resolution-actual
+        765, // printer-resolution-actual
         0, 0,
         NULL, NULL
     },
     {
-        775, // printer-up-time
+        782, // printer-up-time
         0, 0,
         NULL, NULL
     },
     {
-        826, // separator-sheets-actual
+        833, // separator-sheets-actual
         0, 0,
         NULL, NULL
     },
     {
-        834, // sheet-completed-copy-number
+        841, // sheet-completed-copy-number
         0, 0,
         NULL, NULL
     },
     {
-        837, // sides-actual
+        844, // sides-actual
         0, 0,
         NULL, NULL
     },
     {
-        858, // time-at-completed
+        865, // time-at-completed
         0, 0,
         NULL, NULL
     },
     {
-        859, // time-at-creation
+        866, // time-at-creation
         0, 0,
         NULL, NULL
     },
     {
-        860, // time-at-processing
+        867, // time-at-processing
         0, 0,
         NULL, NULL
     },
     {
-        876, // warnings-count
+        883, // warnings-count
         0, 0,
         NULL, NULL
     },
     {
-        882, // x-image-position-actual
+        889, // x-image-position-actual
         0, 0,
         NULL, NULL
     },
     {
-        886, // x-image-shift-actual
+        893, // x-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        892, // x-side1-image-shift-actual
+        899, // x-side1-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        896, // x-side2-image-shift-actual
+        903, // x-side2-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        908, // y-image-position-actual
+        915, // y-image-position-actual
         0, 0,
         NULL, NULL
     },
     {
-        912, // y-image-shift-actual
+        919, // y-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        918, // y-side1-image-shift-actual
+        925, // y-side1-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        922, // y-side2-image-shift-actual
+        929, // y-side2-image-shift-actual
         0, 0,
         NULL, NULL
     },
@@ -7398,72 +7433,72 @@ ipp_attr_t s_ipp_attr_group_evtnot[] =
         NULL, NULL
     },
     {
-        550, // notify-charset
+        557, // notify-charset
         0, 0,
         NULL, NULL
     },
     {
-        561, // notify-natural-language
+        568, // notify-natural-language
         0, 0,
         NULL, NULL
     },
     {
-        563, // notify-printer-uri
+        570, // notify-printer-uri
         0, 0,
         NULL, NULL
     },
     {
-        568, // notify-sequence-number
+        575, // notify-sequence-number
         0, 0,
         NULL, NULL
     },
     {
-        571, // notify-subscribed-event
+        578, // notify-subscribed-event
         0, 0,
         NULL, NULL
     },
     {
-        574, // notify-subscription-id
+        581, // notify-subscription-id
         0, 0,
         NULL, NULL
     },
     {
-        576, // notify-subscription-uuid
+        583, // notify-subscription-uuid
         0, 0,
         NULL, NULL
     },
     {
-        577, // notify-text
+        584, // notify-text
         0, 0,
         NULL, NULL
     },
     {
-        579, // notify-user-data
+        586, // notify-user-data
         0, 0,
         NULL, NULL
     },
     {
-        723, // printer-current-time
+        730, // printer-current-time
         0, 0,
         NULL, NULL
     },
     {
-        742, // printer-is-accepting-jobs
+        749, // printer-is-accepting-jobs
         0, 0,
         NULL, NULL
     },
     {
-        762, // printer-state
+        769, // printer-state
         0, 0,
         NULL, NULL
     },
     {
-        766, // printer-state-reasons
+        773, // printer-state-reasons
         0, 0,
         NULL, NULL
     },
     {
-        775, // printer-up-time
+        782, // printer-up-time
         0, 0,
         NULL, NULL
     },
@@ -7876,257 +7911,257 @@ ipp_attr_t s_ipp_attr_group_jobstat[] =
         NULL, NULL
     },
     {
-        458, // materials-col-actual
+        465, // materials-col-actual
         0, 0,
         NULL, NULL
     },
     {
-        467, // media-actual
+        474, // media-actual
         0, 0,
         NULL, NULL
     },
     {
-        473, // media-col-actual
+        480, // media-col-actual
         0, 0,
         NULL, NULL
     },
     {
-        490, // media-input-tray-check-actual
+        497, // media-input-tray-check-actual
         0, 0,
         NULL, NULL
     },
     {
-        535, // multiple-document-handling-actual
+        542, // multiple-document-handling-actual
         0, 0,
         NULL, NULL
     },
     {
-        540, // multiple-object-handling-actual
+        547, // multiple-object-handling-actual
         0, 0,
         NULL, NULL
     },
     {
-        581, // number-of-documents
+        588, // number-of-documents
         0, 0,
         NULL, NULL
     },
     {
-        582, // number-of-intervening-jobs
+        589, // number-of-intervening-jobs
         0, 0,
         NULL, NULL
     },
     {
-        587, // number-up-actual
+        594, // number-up-actual
         0, 0,
         NULL, NULL
     },
     {
-        598, // orientation-requested-actual
+        605, // orientation-requested-actual
         0, 0,
         NULL, NULL
     },
     {
-        601, // original-requesting-user-name
+        608, // original-requesting-user-name
         0, 0,
         NULL, NULL
     },
     {
-        603, // output-attributes-actual
+        610, // output-attributes-actual
         0, 0,
         NULL, NULL
     },
     {
-        607, // output-bin-actual
+        614, // output-bin-actual
         0, 0,
         NULL, NULL
     },
     {
-        612, // output-device-actual
+        619, // output-device-actual
         0, 0,
         NULL, NULL
     },
     {
-        613, // output-device-assigned
+        620, // output-device-assigned
         0, 0,
         NULL, NULL
     },
     {
-        617, // output-device-job-state
+        624, // output-device-job-state
         0, 0,
         NULL, NULL
     },
     {
-        618, // output-device-job-state-message
+        625, // output-device-job-state-message
         0, 0,
         NULL, NULL
     },
     {
-        619, // output-device-job-state-reasons
+        626, // output-device-job-state-reasons
         0, 0,
         NULL, NULL
     },
     {
-        623, // output-device-uuid-assigned
+        630, // output-device-uuid-assigned
         0, 0,
         NULL, NULL
     },
     {
-        626, // overrides-actual
+        633, // overrides-actual
         0, 0,
         NULL, NULL
     },
     {
-        629, // page-delivery-actual
+        636, // page-delivery-actual
         0, 0,
         NULL, NULL
     },
     {
-        633, // page-order-received-actual
+        640, // page-order-received-actual
         0, 0,
         NULL, NULL
     },
     {
-        637, // page-ranges-actual
+        644, // page-ranges-actual
         0, 0,
         NULL, NULL
     },
     {
-        671, // platform-temperature-actual
+        678, // platform-temperature-actual
         0, 0,
         NULL, NULL
     },
     {
-        679, // presentation-direction-number-up-actual
+        686, // presentation-direction-number-up-actual
         0, 0,
         NULL, NULL
     },
     {
-        684, // print-accuracy-actual
+        691, // print-accuracy-actual
         0, 0,
         NULL, NULL
     },
     {
-        687, // print-base-actual
+        694, // print-base-actual
         0, 0,
         NULL, NULL
     },
     {
-        691, // print-color-mode-actual
+        698, // print-color-mode-actual
         0, 0,
         NULL, NULL
     },
     {
-        695, // print-content-optimize-actual
+        702, // print-content-optimize-actual
         0, 0,
         NULL, NULL
     },
     {
-        699, // print-objects-actual
+        706, // print-objects-actual
         0, 0,
         NULL, NULL
     },
     {
-        702, // print-quality-actual
+        709, // print-quality-actual
         0, 0,
         NULL, NULL
     },
     {
-        706, // print-rendering-intent-actual
+        713, // print-rendering-intent-actual
         0, 0,
         NULL, NULL
     },
     {
-        713, // print-supports-actual
+        720, // print-supports-actual
         0, 0,
         NULL, NULL
     },
     {
-        758, // printer-resolution-actual
+        765, // printer-resolution-actual
         0, 0,
         NULL, NULL
     },
     {
-        826, // separator-sheets-actual
+        833, // separator-sheets-actual
         0, 0,
         NULL, NULL
     },
     {
-        831, // sheet-collate-actual
+        838, // sheet-collate-actual
         0, 0,
         NULL, NULL
     },
     {
-        834, // sheet-completed-copy-number
+        841, // sheet-completed-copy-number
         0, 0,
         NULL, NULL
     },
     {
-        835, // sheet-completed-document-number
+        842, // sheet-completed-document-number
         0, 0,
         NULL, NULL
     },
     {
-        837, // sides-actual
+        844, // sides-actual
         0, 0,
         NULL, NULL
     },
     {
-        858, // time-at-completed
+        865, // time-at-completed
         0, 0,
         NULL, NULL
     },
     {
-        859, // time-at-creation
+        866, // time-at-creation
         0, 0,
         NULL, NULL
     },
     {
-        860, // time-at-processing
+        867, // time-at-processing
         0, 0,
         NULL, NULL
     },
     {
-        876, // warnings-count
+        883, // warnings-count
         0, 0,
         NULL, NULL
     },
     {
-        882, // x-image-position-actual
+        889, // x-image-position-actual
         0, 0,
         NULL, NULL
     },
     {
-        886, // x-image-shift-actual
+        893, // x-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        892, // x-side1-image-shift-actual
+        899, // x-side1-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        896, // x-side2-image-shift-actual
+        903, // x-side2-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        908, // y-image-position-actual
+        915, // y-image-position-actual
         0, 0,
         NULL, NULL
     },
     {
-        912, // y-image-shift-actual
+        919, // y-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        918, // y-side1-image-shift-actual
+        925, // y-side1-image-shift-actual
         0, 0,
         NULL, NULL
     },
     {
-        922, // y-side2-image-shift-actual
+        929, // y-side2-image-shift-actual
         0, 0,
         NULL, NULL
     },
@@ -8330,222 +8365,222 @@ ipp_attr_t s_ipp_attr_group_jobtemp[] =
         NULL, NULL
     },
     {
-        457, // materials-col
+        464, // materials-col
         0, 0,
         NULL, NULL
     },
     {
-        466, // media
+        473, // media
         0, 0,
         NULL, NULL
     },
     {
-        472, // media-col
+        479, // media-col
         0, 0,
         NULL, NULL
     },
     {
-        489, // media-input-tray-check
+        496, // media-input-tray-check
         0, 0,
         NULL, NULL
     },
     {
-        534, // multiple-document-handling
+        541, // multiple-document-handling
         0, 0,
         NULL, NULL
     },
     {
-        539, // multiple-object-handling
+        546, // multiple-object-handling
         0, 0,
         NULL, NULL
     },
     {
-        583, // number-of-retries
+        590, // number-of-retries
         0, 0,
         NULL, NULL
     },
     {
-        586, // number-up
+        593, // number-up
         0, 0,
         NULL, NULL
     },
     {
-        597, // orientation-requested
+        604, // orientation-requested
         0, 0,
         NULL, NULL
     },
     {
-        606, // output-bin
+        613, // output-bin
         0, 0,
         NULL, NULL
     },
     {
-        611, // output-device
+        618, // output-device
         0, 0,
         NULL, NULL
     },
     {
-        625, // overrides
+        632, // overrides
         0, 0,
         NULL, NULL
     },
     {
-        628, // page-delivery
+        635, // page-delivery
         0, 0,
         NULL, NULL
     },
     {
-        632, // page-order-received
+        639, // page-order-received
         0, 0,
         NULL, NULL
     },
     {
-        636, // page-ranges
+        643, // page-ranges
         0, 0,
         NULL, NULL
     },
     {
-        646, // pages-per-subset
+        653, // pages-per-subset
         0, 0,
         NULL, NULL
     },
     {
-        650, // pclm-source-resolution
+        657, // pclm-source-resolution
         0, 0,
         NULL, NULL
     },
     {
-        657, // pdl-init-file
+        664, // pdl-init-file
         0, 0,
         NULL, NULL
     },
     {
-        670, // platform-temperature
+        677, // platform-temperature
         0, 0,
         NULL, NULL
     },
     {
-        678, // presentation-direction-number-up
+        685, // presentation-direction-number-up
         0, 0,
         NULL, NULL
     },
     {
-        683, // print-accuracy
+        690, // print-accuracy
         0, 0,
         NULL, NULL
     },
     {
-        686, // print-base
+        693, // print-base
         0, 0,
         NULL, NULL
     },
     {
-        690, // print-color-mode
+        697, // print-color-mode
         0, 0,
         NULL, NULL
     },
     {
-        694, // print-content-optimize
+        701, // print-content-optimize
         0, 0,
         NULL, NULL
     },
     {
-        698, // print-objects
+        705, // print-objects
         0, 0,
         NULL, NULL
     },
     {
-        701, // print-quality
+        708, // print-quality
         0, 0,
         NULL, NULL
     },
     {
-        705, // print-rendering-intent
+        712, // print-rendering-intent
         0, 0,
         NULL, NULL
     },
     {
-        709, // print-scaling
+        716, // print-scaling
         0, 0,
         NULL, NULL
     },
     {
-        712, // print-supports
+        719, // print-supports
         0, 0,
         NULL, NULL
     },
     {
-        757, // printer-resolution
+        764, // printer-resolution
         0, 0,
         NULL, NULL
     },
     {
-        784, // proof-print
+        791, // proof-print
         0, 0,
         NULL, NULL
     },
     {
-        807, // retry-interval
+        814, // retry-interval
         0, 0,
         NULL, NULL
     },
     {
-        810, // retry-time-out
+        817, // retry-time-out
         0, 0,
         NULL, NULL
     },
     {
-        825, // separator-sheets
+        832, // separator-sheets
         0, 0,
         NULL, NULL
     },
     {
-        830, // sheet-collate
+        837, // sheet-collate
         0, 0,
         NULL, NULL
     },
     {
-        836, // sides
+        843, // sides
         0, 0,
         NULL, NULL
     },
     {
-        881, // x-image-position
+        888, // x-image-position
         0, 0,
         NULL, NULL
     },
     {
-        885, // x-image-shift
+        892, // x-image-shift
         0, 0,
         NULL, NULL
     },
     {
-        891, // x-side1-image-shift
+        898, // x-side1-image-shift
         0, 0,
         NULL, NULL
     },
     {
-        895, // x-side2-image-shift
+        902, // x-side2-image-shift
         0, 0,
         NULL, NULL
     },
     {
-        907, // y-image-position
+        914, // y-image-position
         0, 0,
         NULL, NULL
     },
     {
-        911, // y-image-shift
+        918, // y-image-shift
         0, 0,
         NULL, NULL
     },
     {
-        917, // y-side1-image-shift
+        924, // y-side1-image-shift
         0, 0,
         NULL, NULL
     },
     {
-        921, // y-side2-image-shift
+        928, // y-side2-image-shift
         0, 0,
         NULL, NULL
     },
@@ -8814,102 +8849,102 @@ ipp_attr_t s_ipp_attr_group_operation[] =
         NULL, NULL
     },
     {
-        528, // message
+        535, // message
         0, 0,
         NULL, NULL
     },
     {
-        545, // my-jobs
+        552, // my-jobs
         0, 0,
         NULL, NULL
     },
     {
-        554, // notify-get-interval
+        561, // notify-get-interval
         0, 0,
         NULL, NULL
     },
     {
-        569, // notify-sequence-numbers
+        576, // notify-sequence-numbers
         0, 0,
         NULL, NULL
     },
     {
-        575, // notify-subscription-ids
+        582, // notify-subscription-ids
         0, 0,
         NULL, NULL
     },
     {
-        580, // notify-wait
+        587, // notify-wait
         0, 0,
         NULL, NULL
     },
     {
-        601, // original-requesting-user-name
+        608, // original-requesting-user-name
         0, 0,
         NULL, NULL
     },
     {
-        602, // output-attributes
+        609, // output-attributes
         0, 0,
         NULL, NULL
     },
     {
-        620, // output-device-job-states
+        627, // output-device-job-states
         0, 0,
         NULL, NULL
     },
     {
-        622, // output-device-uuid
+        629, // output-device-uuid
         0, 0,
         NULL, NULL
     },
     {
-        676, // preferred-attributes
+        683, // preferred-attributes
         0, 0,
         NULL, NULL
     },
     {
-        748, // printer-message-from-operator
+        755, // printer-message-from-operator
         0, 0,
         NULL, NULL
     },
     {
-        775, // printer-up-time
+        782, // printer-up-time
         0, 0,
         NULL, NULL
     },
     {
-        776, // printer-uri
+        783, // printer-uri
         0, 0,
         NULL, NULL
     },
     {
-        782, // profile-uri-actual
+        789, // profile-uri-actual
         0, 0,
         NULL, NULL
     },
     {
-        802, // requested-attributes
+        809, // requested-attributes
         0, 0,
         NULL, NULL
     },
     {
-        803, // requesting-user-name
+        810, // requesting-user-name
         0, 0,
         NULL, NULL
     },
     {
-        804, // requesting-user-uri
+        811, // requesting-user-uri
         0, 0,
         NULL, NULL
     },
     {
-        840, // status-message
+        847, // status-message
         0, 0,
         NULL, NULL
     },
     {
-        877, // which-jobs
+        884, // which-jobs
         0, 0,
         NULL, NULL
     },
@@ -9713,1082 +9748,1117 @@ ipp_attr_t s_ipp_attr_group_prtdesc[] =
         NULL, NULL
     },
     {
-        437, // material-amount-units-supported
+        435, // marker-colors
         0, 0,
         NULL, NULL
     },
     {
-        440, // material-diameter-supported
+        436, // marker-high-levels
         0, 0,
         NULL, NULL
     },
     {
-        446, // material-purpose-supported
+        437, // marker-levels
         0, 0,
         NULL, NULL
     },
     {
-        448, // material-rate-supported
+        438, // marker-low-levels
         0, 0,
         NULL, NULL
     },
     {
-        450, // material-rate-units-supported
+        439, // marker-message
         0, 0,
         NULL, NULL
     },
     {
-        452, // material-shell-thickness-supported
+        440, // marker-names
         0, 0,
         NULL, NULL
     },
     {
-        454, // material-temperature-supported
+        441, // marker-types
         0, 0,
         NULL, NULL
     },
     {
-        456, // material-type-supported
+        444, // material-amount-units-supported
         0, 0,
         NULL, NULL
     },
     {
-        459, // materials-col-database
+        447, // material-diameter-supported
         0, 0,
         NULL, NULL
     },
     {
-        460, // materials-col-default
+        453, // material-purpose-supported
         0, 0,
         NULL, NULL
     },
     {
-        461, // materials-col-ready
+        455, // material-rate-supported
         0, 0,
         NULL, NULL
     },
     {
-        462, // materials-col-supported
+        457, // material-rate-units-supported
         0, 0,
         NULL, NULL
     },
     {
-        463, // max-materials-col-supported
+        459, // material-shell-thickness-supported
         0, 0,
         NULL, NULL
     },
     {
-        464, // max-save-info-supported
+        461, // material-temperature-supported
         0, 0,
         NULL, NULL
     },
     {
-        465, // max-stitching-locations-supported
+        463, // material-type-supported
         0, 0,
         NULL, NULL
     },
     {
-        469, // media-back-coating-supported
+        466, // materials-col-database
         0, 0,
         NULL, NULL
     },
     {
-        471, // media-bottom-margin-supported
+        467, // materials-col-default
         0, 0,
         NULL, NULL
     },
     {
-        474, // media-col-database
+        468, // materials-col-ready
         0, 0,
         NULL, NULL
     },
     {
-        475, // media-col-default
+        469, // materials-col-supported
         0, 0,
         NULL, NULL
     },
     {
-        476, // media-col-ready
+        470, // max-materials-col-supported
         0, 0,
         NULL, NULL
     },
     {
-        477, // media-col-supported
+        471, // max-save-info-supported
         0, 0,
         NULL, NULL
     },
     {
-        479, // media-color-supported
+        472, // max-stitching-locations-supported
         0, 0,
         NULL, NULL
     },
     {
-        480, // media-default
+        476, // media-back-coating-supported
         0, 0,
         NULL, NULL
     },
     {
-        482, // media-front-coating-supported
+        478, // media-bottom-margin-supported
         0, 0,
         NULL, NULL
     },
     {
-        484, // media-grain-supported
+        481, // media-col-database
         0, 0,
         NULL, NULL
     },
     {
-        486, // media-hole-count-supported
+        482, // media-col-default
         0, 0,
         NULL, NULL
     },
     {
-        488, // media-info-supported
+        483, // media-col-ready
         0, 0,
         NULL, NULL
     },
     {
-        492, // media-key-supported
+        484, // media-col-supported
         0, 0,
         NULL, NULL
     },
     {
-        494, // media-left-margin-supported
+        486, // media-color-supported
         0, 0,
         NULL, NULL
     },
     {
-        496, // media-order-count-supported
+        487, // media-default
         0, 0,
         NULL, NULL
     },
     {
-        498, // media-pre-printed-supported
+        489, // media-front-coating-supported
         0, 0,
         NULL, NULL
     },
     {
-        499, // media-ready
+        491, // media-grain-supported
         0, 0,
         NULL, NULL
     },
     {
-        501, // media-recycled-supported
+        493, // media-hole-count-supported
         0, 0,
         NULL, NULL
     },
     {
-        503, // media-right-margin-supported
+        495, // media-info-supported
         0, 0,
         NULL, NULL
     },
     {
-        511, // media-size-supported
+        499, // media-key-supported
         0, 0,
         NULL, NULL
     },
     {
-        515, // media-source-properties
+        501, // media-left-margin-supported
         0, 0,
         NULL, NULL
     },
     {
-        516, // media-source-supported
+        503, // media-order-count-supported
         0, 0,
         NULL, NULL
     },
     {
-        517, // media-supported
+        505, // media-pre-printed-supported
         0, 0,
         NULL, NULL
     },
     {
-        519, // media-thickness-supported
+        506, // media-ready
         0, 0,
         NULL, NULL
     },
     {
-        521, // media-tooth-supported
+        508, // media-recycled-supported
         0, 0,
         NULL, NULL
     },
     {
-        523, // media-top-margin-supported
+        510, // media-right-margin-supported
         0, 0,
         NULL, NULL
     },
     {
-        525, // media-type-supported
+        518, // media-size-supported
         0, 0,
         NULL, NULL
     },
     {
-        527, // media-weight-metric-supported
+        522, // media-source-properties
         0, 0,
         NULL, NULL
     },
     {
-        529, // message-supported
+        523, // media-source-supported
         0, 0,
         NULL, NULL
     },
     {
-        533, // multiple-destination-uris-supported
+        524, // media-supported
         0, 0,
         NULL, NULL
     },
     {
-        536, // multiple-document-handling-default
+        526, // media-thickness-supported
         0, 0,
         NULL, NULL
     },
     {
-        537, // multiple-document-handling-supported
+        528, // media-tooth-supported
         0, 0,
         NULL, NULL
     },
     {
-        538, // multiple-document-jobs-supported
+        530, // media-top-margin-supported
         0, 0,
         NULL, NULL
     },
     {
-        541, // multiple-object-handling-default
+        532, // media-type-supported
         0, 0,
         NULL, NULL
     },
     {
-        542, // multiple-object-handling-supported
+        534, // media-weight-metric-supported
         0, 0,
         NULL, NULL
     },
     {
-        543, // multiple-operation-time-out
+        536, // message-supported
         0, 0,
         NULL, NULL
     },
     {
-        544, // multiple-operation-time-out-action
+        540, // multiple-destination-uris-supported
         0, 0,
         NULL, NULL
     },
     {
-        546, // natural-language-configured
+        543, // multiple-document-handling-default
         0, 0,
         NULL, NULL
     },
     {
-        549, // notify-attributes-supported
+        544, // multiple-document-handling-supported
         0, 0,
         NULL, NULL
     },
     {
-        552, // notify-events-default
+        545, // multiple-document-jobs-supported
         0, 0,
         NULL, NULL
     },
     {
-        553, // notify-events-supported
+        548, // multiple-object-handling-default
         0, 0,
         NULL, NULL
     },
     {
-        557, // notify-lease-duration-default
+        549, // multiple-object-handling-supported
         0, 0,
         NULL, NULL
     },
     {
-        558, // notify-lease-duration-supported
+        550, // multiple-operation-time-out
         0, 0,
         NULL, NULL
     },
     {
-        565, // notify-pull-method-supported
+        551, // multiple-operation-time-out-action
         0, 0,
         NULL, NULL
     },
     {
-        567, // notify-schemes-supported
+        553, // natural-language-configured
         0, 0,
         NULL, NULL
     },
     {
-        584, // number-of-retries-default
+        556, // notify-attributes-supported
         0, 0,
         NULL, NULL
     },
     {
-        585, // number-of-retries-supported
+        559, // notify-events-default
         0, 0,
         NULL, NULL
     },
     {
-        588, // number-up-default
+        560, // notify-events-supported
         0, 0,
         NULL, NULL
     },
     {
-        589, // number-up-supported
+        564, // notify-lease-duration-default
         0, 0,
         NULL, NULL
     },
     {
-        590, // oauth-authorization-server-uri
+        565, // notify-lease-duration-supported
         0, 0,
         NULL, NULL
     },
     {
-        594, // operations-supported
+        572, // notify-pull-method-supported
         0, 0,
         NULL, NULL
     },
     {
-        596, // organization-name-supported
+        574, // notify-schemes-supported
         0, 0,
         NULL, NULL
     },
     {
-        599, // orientation-requested-default
+        591, // number-of-retries-default
         0, 0,
         NULL, NULL
     },
     {
-        600, // orientation-requested-supported
+        592, // number-of-retries-supported
         0, 0,
         NULL, NULL
     },
     {
-        604, // output-attributes-default
+        595, // number-up-default
         0, 0,
         NULL, NULL
     },
     {
-        605, // output-attributes-supported
+        596, // number-up-supported
         0, 0,
         NULL, NULL
     },
     {
-        608, // output-bin-default
+        597, // oauth-authorization-server-uri
         0, 0,
         NULL, NULL
     },
     {
-        609, // output-bin-supported
+        601, // operations-supported
         0, 0,
         NULL, NULL
     },
     {
-        621, // output-device-supported
+        603, // organization-name-supported
         0, 0,
         NULL, NULL
     },
     {
-        624, // output-device-uuid-supported
+        606, // orientation-requested-default
         0, 0,
         NULL, NULL
     },
     {
-        627, // overrides-supported
+        607, // orientation-requested-supported
         0, 0,
         NULL, NULL
     },
     {
-        630, // page-delivery-default
+        611, // output-attributes-default
         0, 0,
         NULL, NULL
     },
     {
-        631, // page-delivery-supported
+        612, // output-attributes-supported
         0, 0,
         NULL, NULL
     },
     {
-        634, // page-order-received-default
+        615, // output-bin-default
         0, 0,
         NULL, NULL
     },
     {
-        635, // page-order-received-supported
+        616, // output-bin-supported
         0, 0,
         NULL, NULL
     },
     {
-        638, // page-ranges-supported
+        628, // output-device-supported
         0, 0,
         NULL, NULL
     },
     {
-        647, // pages-per-subset-supported
+        631, // output-device-uuid-supported
         0, 0,
         NULL, NULL
     },
     {
-        648, // parent-printers-supported
+        634, // overrides-supported
         0, 0,
         NULL, NULL
     },
     {
-        649, // pclm-raster-back-side
+        637, // page-delivery-default
         0, 0,
         NULL, NULL
     },
     {
-        651, // pclm-source-resolution-supported
+        638, // page-delivery-supported
         0, 0,
         NULL, NULL
     },
     {
-        652, // pclm-strip-height-preferred
+        641, // page-order-received-default
         0, 0,
         NULL, NULL
     },
     {
-        653, // pclm-strip-height-supported
+        642, // page-order-received-supported
         0, 0,
         NULL, NULL
     },
     {
-        654, // pdf-features-supported
+        645, // page-ranges-supported
         0, 0,
         NULL, NULL
     },
     {
-        655, // pdf-k-octets-supported
+        654, // pages-per-subset-supported
         0, 0,
         NULL, NULL
     },
     {
-        656, // pdf-versions-supported
+        655, // parent-printers-supported
         0, 0,
         NULL, NULL
     },
     {
-        658, // pdl-init-file-default
+        656, // pclm-raster-back-side
         0, 0,
         NULL, NULL
     },
     {
-        660, // pdl-init-file-entry-supported
+        658, // pclm-source-resolution-supported
         0, 0,
         NULL, NULL
     },
     {
-        662, // pdl-init-file-location-supported
+        659, // pclm-strip-height-preferred
         0, 0,
         NULL, NULL
     },
     {
-        664, // pdl-init-file-name-subdirectory-supported
+        660, // pclm-strip-height-supported
         0, 0,
         NULL, NULL
     },
     {
-        665, // pdl-init-file-name-supported
+        661, // pdf-features-supported
         0, 0,
         NULL, NULL
     },
     {
-        666, // pdl-init-file-supported
+        662, // pdf-k-octets-supported
         0, 0,
         NULL, NULL
     },
     {
-        667, // pdl-override-guaranteed-supported
+        663, // pdf-versions-supported
         0, 0,
         NULL, NULL
     },
     {
-        668, // pdl-override-supported
+        665, // pdl-init-file-default
         0, 0,
         NULL, NULL
     },
     {
-        669, // platform-shape
+        667, // pdl-init-file-entry-supported
         0, 0,
         NULL, NULL
     },
     {
-        672, // platform-temperature-default
+        669, // pdl-init-file-location-supported
         0, 0,
         NULL, NULL
     },
     {
-        673, // platform-temperature-supported
+        671, // pdl-init-file-name-subdirectory-supported
         0, 0,
         NULL, NULL
     },
     {
-        677, // preferred-attributes-supported
+        672, // pdl-init-file-name-supported
         0, 0,
         NULL, NULL
     },
     {
-        680, // presentation-direction-number-up-default
+        673, // pdl-init-file-supported
         0, 0,
         NULL, NULL
     },
     {
-        681, // presentation-direction-number-up-supported
+        674, // pdl-override-guaranteed-supported
         0, 0,
         NULL, NULL
     },
     {
-        685, // print-accuracy-supported
+        675, // pdl-override-supported
         0, 0,
         NULL, NULL
     },
     {
-        688, // print-base-default
+        676, // platform-shape
         0, 0,
         NULL, NULL
     },
     {
-        689, // print-base-supported
+        679, // platform-temperature-default
         0, 0,
         NULL, NULL
     },
     {
-        692, // print-color-mode-default
+        680, // platform-temperature-supported
         0, 0,
         NULL, NULL
     },
     {
-        693, // print-color-mode-supported
+        684, // preferred-attributes-supported
         0, 0,
         NULL, NULL
     },
     {
-        696, // print-content-optimize-default
+        687, // presentation-direction-number-up-default
         0, 0,
         NULL, NULL
     },
     {
-        697, // print-content-optimize-supported
+        688, // presentation-direction-number-up-supported
         0, 0,
         NULL, NULL
     },
     {
-        700, // print-objects-supported
+        692, // print-accuracy-supported
         0, 0,
         NULL, NULL
     },
     {
-        703, // print-quality-default
+        695, // print-base-default
         0, 0,
         NULL, NULL
     },
     {
-        704, // print-quality-supported
+        696, // print-base-supported
         0, 0,
         NULL, NULL
     },
     {
-        707, // print-rendering-intent-default
+        699, // print-color-mode-default
         0, 0,
         NULL, NULL
     },
     {
-        708, // print-rendering-intent-supported
+        700, // print-color-mode-supported
         0, 0,
         NULL, NULL
     },
     {
-        710, // print-scaling-default
+        703, // print-content-optimize-default
         0, 0,
         NULL, NULL
     },
     {
-        711, // print-scaling-supported
+        704, // print-content-optimize-supported
         0, 0,
         NULL, NULL
     },
     {
-        714, // print-supports-default
+        707, // print-objects-supported
         0, 0,
         NULL, NULL
     },
     {
-        715, // print-supports-supported
+        710, // print-quality-default
         0, 0,
         NULL, NULL
     },
     {
-        718, // printer-camera-image-uri
+        711, // print-quality-supported
         0, 0,
         NULL, NULL
     },
     {
-        719, // printer-charge-info
+        714, // print-rendering-intent-default
         0, 0,
         NULL, NULL
     },
     {
-        720, // printer-charge-info-uri
+        715, // print-rendering-intent-supported
         0, 0,
         NULL, NULL
     },
     {
-        723, // printer-current-time
+        717, // print-scaling-default
         0, 0,
         NULL, NULL
     },
     {
-        725, // printer-device-id
+        718, // print-scaling-supported
         0, 0,
         NULL, NULL
     },
     {
-        726, // printer-dns-sd-name
+        721, // print-supports-default
         0, 0,
         NULL, NULL
     },
     {
-        727, // printer-driver-installer
+        722, // print-supports-supported
         0, 0,
         NULL, NULL
     },
     {
-        728, // printer-fax-log-uri
+        725, // printer-camera-image-uri
         0, 0,
         NULL, NULL
     },
     {
-        729, // printer-fax-modem-info
+        726, // printer-charge-info
         0, 0,
         NULL, NULL
     },
     {
-        730, // printer-fax-modem-name
+        727, // printer-charge-info-uri
         0, 0,
         NULL, NULL
     },
     {
-        731, // printer-fax-modem-number
+        730, // printer-current-time
         0, 0,
         NULL, NULL
     },
     {
-        736, // printer-geo-location
+        732, // printer-device-id
         0, 0,
         NULL, NULL
     },
     {
-        737, // printer-get-attributes-supported
+        733, // printer-dns-sd-name
         0, 0,
         NULL, NULL
     },
     {
-        738, // printer-icc-profiles
+        734, // printer-driver-installer
         0, 0,
         NULL, NULL
     },
     {
-        739, // printer-icons
+        735, // printer-fax-log-uri
         0, 0,
         NULL, NULL
     },
     {
-        740, // printer-info
+        736, // printer-fax-modem-info
         0, 0,
         NULL, NULL
     },
     {
-        743, // printer-kind
+        737, // printer-fax-modem-name
         0, 0,
         NULL, NULL
     },
     {
-        744, // printer-location
+        738, // printer-fax-modem-number
         0, 0,
         NULL, NULL
     },
     {
-        745, // printer-make-and-model
+        743, // printer-geo-location
         0, 0,
         NULL, NULL
     },
     {
-        746, // printer-mandatory-job-attributes
+        744, // printer-get-attributes-supported
         0, 0,
         NULL, NULL
     },
     {
-        751, // printer-more-info-manufacturer
+        745, // printer-icc-profiles
         0, 0,
         NULL, NULL
     },
     {
-        752, // printer-name
+        746, // printer-icons
         0, 0,
         NULL, NULL
     },
     {
-        753, // printer-organization
+        747, // printer-info
         0, 0,
         NULL, NULL
     },
     {
-        754, // printer-organizational-unit
+        750, // printer-kind
         0, 0,
         NULL, NULL
     },
     {
-        756, // printer-privacy-policy-uri
+        751, // printer-location
         0, 0,
         NULL, NULL
     },
     {
-        759, // printer-resolution-default
+        752, // printer-make-and-model
         0, 0,
         NULL, NULL
     },
     {
-        760, // printer-resolution-supported
+        753, // printer-mandatory-job-attributes
         0, 0,
         NULL, NULL
     },
     {
-        767, // printer-static-resource-directory-uri
+        758, // printer-more-info-manufacturer
         0, 0,
         NULL, NULL
     },
     {
-        769, // printer-static-resource-k-octets-supported
+        759, // printer-name
         0, 0,
         NULL, NULL
     },
     {
-        770, // printer-strings-languages-supported
+        760, // printer-organization
         0, 0,
         NULL, NULL
     },
     {
-        771, // printer-strings-uri
+        761, // printer-organizational-unit
         0, 0,
         NULL, NULL
     },
     {
-        779, // printer-volume-supported
+        763, // printer-privacy-policy-uri
         0, 0,
         NULL, NULL
     },
     {
-        780, // printer-xri-supported
+        766, // printer-resolution-default
         0, 0,
         NULL, NULL
     },
     {
-        786, // proof-print-default
+        767, // printer-resolution-supported
         0, 0,
         NULL, NULL
     },
     {
-        787, // proof-print-supported
+        774, // printer-static-resource-directory-uri
         0, 0,
         NULL, NULL
     },
     {
-        789, // punching-hole-diameter-configured
+        776, // printer-static-resource-k-octets-supported
         0, 0,
         NULL, NULL
     },
     {
-        791, // punching-locations-supported
+        777, // printer-strings-languages-supported
         0, 0,
         NULL, NULL
     },
     {
-        793, // punching-offset-supported
+        778, // printer-strings-uri
         0, 0,
         NULL, NULL
     },
     {
-        795, // punching-reference-edge-supported
+        786, // printer-volume-supported
         0, 0,
         NULL, NULL
     },
     {
-        796, // pwg-raster-document-resolution-supported
+        787, // printer-xri-supported
         0, 0,
         NULL, NULL
     },
     {
-        797, // pwg-raster-document-sheet-back
+        793, // proof-print-default
         0, 0,
         NULL, NULL
     },
     {
-        798, // pwg-raster-document-type-supported
+        794, // proof-print-supported
         0, 0,
         NULL, NULL
     },
     {
-        800, // reference-uri-schemes-supported
+        796, // punching-hole-diameter-configured
         0, 0,
         NULL, NULL
     },
     {
-        801, // repertoire-supported
+        798, // punching-locations-supported
         0, 0,
         NULL, NULL
     },
     {
-        805, // requesting-user-uri-supported
+        800, // punching-offset-supported
         0, 0,
         NULL, NULL
     },
     {
-        808, // retry-interval-default
+        802, // punching-reference-edge-supported
         0, 0,
         NULL, NULL
     },
     {
-        809, // retry-interval-supported
+        803, // pwg-raster-document-resolution-supported
         0, 0,
         NULL, NULL
     },
     {
-        811, // retry-time-out-default
+        804, // pwg-raster-document-sheet-back
         0, 0,
         NULL, NULL
     },
     {
-        812, // retry-time-out-supported
+        805, // pwg-raster-document-type-supported
         0, 0,
         NULL, NULL
     },
     {
-        814, // save-disposition-supported
+        807, // reference-uri-schemes-supported
         0, 0,
         NULL, NULL
     },
     {
-        816, // save-document-format-default
+        808, // repertoire-supported
         0, 0,
         NULL, NULL
     },
     {
-        817, // save-document-format-supported
+        812, // requesting-user-uri-supported
         0, 0,
         NULL, NULL
     },
     {
-        820, // save-location-default
+        815, // retry-interval-default
         0, 0,
         NULL, NULL
     },
     {
-        821, // save-location-supported
+        816, // retry-interval-supported
         0, 0,
         NULL, NULL
     },
     {
-        823, // save-name-subdirectory-supported
+        818, // retry-time-out-default
         0, 0,
         NULL, NULL
     },
     {
-        824, // save-name-supported
+        819, // retry-time-out-supported
         0, 0,
         NULL, NULL
     },
     {
-        827, // separator-sheets-default
+        821, // save-disposition-supported
         0, 0,
         NULL, NULL
     },
     {
-        828, // separator-sheets-supported
+        823, // save-document-format-default
         0, 0,
         NULL, NULL
     },
     {
-        832, // sheet-collate-default
+        824, // save-document-format-supported
         0, 0,
         NULL, NULL
     },
     {
-        833, // sheet-collate-supported
+        827, // save-location-default
         0, 0,
         NULL, NULL
     },
     {
-        838, // sides-default
+        828, // save-location-supported
         0, 0,
         NULL, NULL
     },
     {
-        839, // sides-supported
+        830, // save-name-subdirectory-supported
         0, 0,
         NULL, NULL
     },
     {
-        843, // stitching-angle-supported
+        831, // save-name-supported
         0, 0,
         NULL, NULL
     },
     {
-        845, // stitching-locations-supported
+        834, // separator-sheets-default
         0, 0,
         NULL, NULL
     },
     {
-        847, // stitching-method-supported
+        835, // separator-sheets-supported
         0, 0,
         NULL, NULL
     },
     {
-        849, // stitching-offset-supported
+        839, // sheet-collate-default
         0, 0,
         NULL, NULL
     },
     {
-        851, // stitching-reference-edge-supported
+        840, // sheet-collate-supported
         0, 0,
         NULL, NULL
     },
     {
-        853, // subject-supported
+        845, // sides-default
         0, 0,
         NULL, NULL
     },
     {
-        854, // subordinate-printers-supported
+        846, // sides-supported
         0, 0,
         NULL, NULL
     },
     {
-        855, // subscription-privacy-attributes
+        850, // stitching-angle-supported
         0, 0,
         NULL, NULL
     },
     {
-        856, // subscription-privacy-scope
+        852, // stitching-locations-supported
         0, 0,
         NULL, NULL
     },
     {
-        862, // to-name-supported
+        854, // stitching-method-supported
         0, 0,
         NULL, NULL
     },
     {
-        866, // trimming-offset-supported
+        856, // stitching-offset-supported
         0, 0,
         NULL, NULL
     },
     {
-        868, // trimming-reference-edge-supported
+        858, // stitching-reference-edge-supported
         0, 0,
         NULL, NULL
     },
     {
-        870, // trimming-type-supported
+        860, // subject-supported
         0, 0,
         NULL, NULL
     },
     {
-        872, // trimming-when-supported
+        861, // subordinate-printers-supported
         0, 0,
         NULL, NULL
     },
     {
-        873, // uri-authentication-supported
+        862, // subscription-privacy-attributes
         0, 0,
         NULL, NULL
     },
     {
-        874, // uri-security-supported
+        863, // subscription-privacy-scope
         0, 0,
         NULL, NULL
     },
     {
-        875, // user-defined-values-supported
+        869, // to-name-supported
         0, 0,
         NULL, NULL
     },
     {
-        878, // which-jobs-supported
+        873, // trimming-offset-supported
         0, 0,
         NULL, NULL
     },
     {
-        883, // x-image-position-default
+        875, // trimming-reference-edge-supported
         0, 0,
         NULL, NULL
     },
     {
-        884, // x-image-position-supported
+        877, // trimming-type-supported
         0, 0,
         NULL, NULL
     },
     {
-        887, // x-image-shift-default
+        879, // trimming-when-supported
         0, 0,
         NULL, NULL
     },
     {
-        888, // x-image-shift-supported
+        880, // uri-authentication-supported
         0, 0,
         NULL, NULL
     },
     {
-        893, // x-side1-image-shift-default
+        881, // uri-security-supported
         0, 0,
         NULL, NULL
     },
     {
-        894, // x-side1-image-shift-supported
+        882, // user-defined-values-supported
         0, 0,
         NULL, NULL
     },
     {
-        897, // x-side2-image-shift-default
+        885, // which-jobs-supported
         0, 0,
         NULL, NULL
     },
     {
-        898, // x-side2-image-shift-supported
+        890, // x-image-position-default
         0, 0,
         NULL, NULL
     },
     {
-        909, // y-image-position-default
+        891, // x-image-position-supported
         0, 0,
         NULL, NULL
     },
     {
-        910, // y-image-position-supported
+        894, // x-image-shift-default
         0, 0,
         NULL, NULL
     },
     {
-        913, // y-image-shift-default
+        895, // x-image-shift-supported
         0, 0,
         NULL, NULL
     },
     {
-        914, // y-image-shift-supported
+        900, // x-side1-image-shift-default
         0, 0,
         NULL, NULL
     },
     {
-        919, // y-side1-image-shift-default
+        901, // x-side1-image-shift-supported
         0, 0,
         NULL, NULL
     },
     {
-        920, // y-side1-image-shift-supported
+        904, // x-side2-image-shift-default
         0, 0,
         NULL, NULL
     },
     {
-        923, // y-side2-image-shift-default
+        905, // x-side2-image-shift-supported
         0, 0,
         NULL, NULL
     },
     {
-        924, // y-side2-image-shift-supported
+        916, // y-image-position-default
+        0, 0,
+        NULL, NULL
+    },
+    {
+        917, // y-image-position-supported
+        0, 0,
+        NULL, NULL
+    },
+    {
+        920, // y-image-shift-default
+        0, 0,
+        NULL, NULL
+    },
+    {
+        921, // y-image-shift-supported
+        0, 0,
+        NULL, NULL
+    },
+    {
+        926, // y-side1-image-shift-default
+        0, 0,
+        NULL, NULL
+    },
+    {
+        927, // y-side1-image-shift-supported
+        0, 0,
+        NULL, NULL
+    },
+    {
+        930, // y-side2-image-shift-default
+        0, 0,
+        NULL, NULL
+    },
+    {
+        931, // y-side2-image-shift-supported
         0, 0,
         NULL, NULL
     },
@@ -10817,177 +10887,177 @@ ipp_attr_t s_ipp_attr_group_prtstat[] =
         NULL, NULL
     },
     {
-        644, // pages-per-minute
+        651, // pages-per-minute
         0, 0,
         NULL, NULL
     },
     {
-        645, // pages-per-minute-color
+        652, // pages-per-minute-color
         0, 0,
         NULL, NULL
     },
     {
-        716, // printer-alert
+        723, // printer-alert
         0, 0,
         NULL, NULL
     },
     {
-        717, // printer-alert-description
+        724, // printer-alert-description
         0, 0,
         NULL, NULL
     },
     {
-        721, // printer-config-change-date-time
+        728, // printer-config-change-date-time
         0, 0,
         NULL, NULL
     },
     {
-        722, // printer-config-change-time
+        729, // printer-config-change-time
         0, 0,
         NULL, NULL
     },
     {
-        724, // printer-detailed-status-messages
+        731, // printer-detailed-status-messages
         0, 0,
         NULL, NULL
     },
     {
-        732, // printer-finisher
+        739, // printer-finisher
         0, 0,
         NULL, NULL
     },
     {
-        733, // printer-finisher-description
+        740, // printer-finisher-description
         0, 0,
         NULL, NULL
     },
     {
-        734, // printer-finisher-supplies
+        741, // printer-finisher-supplies
         0, 0,
         NULL, NULL
     },
     {
-        735, // printer-finisher-supplies-description
+        742, // printer-finisher-supplies-description
         0, 0,
         NULL, NULL
     },
     {
-        741, // printer-input-tray
+        748, // printer-input-tray
         0, 0,
         NULL, NULL
     },
     {
-        742, // printer-is-accepting-jobs
+        749, // printer-is-accepting-jobs
         0, 0,
         NULL, NULL
     },
     {
-        747, // printer-message-date-time
+        754, // printer-message-date-time
         0, 0,
         NULL, NULL
     },
     {
-        748, // printer-message-from-operator
+        755, // printer-message-from-operator
         0, 0,
         NULL, NULL
     },
     {
-        749, // printer-message-time
+        756, // printer-message-time
         0, 0,
         NULL, NULL
     },
     {
-        750, // printer-more-info
+        757, // printer-more-info
         0, 0,
         NULL, NULL
     },
     {
-        755, // printer-output-tray
+        762, // printer-output-tray
         0, 0,
         NULL, NULL
     },
     {
-        761, // printer-settable-attributes-supported
+        768, // printer-settable-attributes-supported
         0, 0,
         NULL, NULL
     },
     {
-        762, // printer-state
+        769, // printer-state
         0, 0,
         NULL, NULL
     },
     {
-        763, // printer-state-change-date-time
+        770, // printer-state-change-date-time
         0, 0,
         NULL, NULL
     },
     {
-        764, // printer-state-change-time
+        771, // printer-state-change-time
         0, 0,
         NULL, NULL
     },
     {
-        765, // printer-state-message
+        772, // printer-state-message
         0, 0,
         NULL, NULL
     },
     {
-        766, // printer-state-reasons
+        773, // printer-state-reasons
         0, 0,
         NULL, NULL
     },
     {
-        768, // printer-static-resource-k-octets-free
+        775, // printer-static-resource-k-octets-free
         0, 0,
         NULL, NULL
     },
     {
-        772, // printer-supply
+        779, // printer-supply
         0, 0,
         NULL, NULL
     },
     {
-        773, // printer-supply-description
+        780, // printer-supply-description
         0, 0,
         NULL, NULL
     },
     {
-        774, // printer-supply-info-uri
+        781, // printer-supply-info-uri
         0, 0,
         NULL, NULL
     },
     {
-        775, // printer-up-time
+        782, // printer-up-time
         0, 0,
         NULL, NULL
     },
     {
-        777, // printer-uri-supported
+        784, // printer-uri-supported
         0, 0,
         NULL, NULL
     },
     {
-        778, // printer-uuid
+        785, // printer-uuid
         0, 0,
         NULL, NULL
     },
     {
-        799, // queued-job-count
+        806, // queued-job-count
         0, 0,
         NULL, NULL
     },
     {
-        900, // xri-authentication-supported
+        907, // xri-authentication-supported
         0, 0,
         NULL, NULL
     },
     {
-        902, // xri-security-supported
+        909, // xri-security-supported
         0, 0,
         NULL, NULL
     },
     {
-        904, // xri-uri-scheme-supported
+        911, // xri-uri-scheme-supported
         0, 0,
         NULL, NULL
     },
@@ -10996,52 +11066,52 @@ ipp_attr_t s_ipp_attr_group_prtstat[] =
 ipp_attr_t s_ipp_attr_group_substat[] =
 {
     {
-        555, // notify-job-id
+        562, // notify-job-id
         0, 0,
         NULL, NULL
     },
     {
-        559, // notify-lease-expiration-time
+        566, // notify-lease-expiration-time
         0, 0,
         NULL, NULL
     },
     {
-        562, // notify-printer-up-time
+        569, // notify-printer-up-time
         0, 0,
         NULL, NULL
     },
     {
-        563, // notify-printer-uri
+        570, // notify-printer-uri
         0, 0,
         NULL, NULL
     },
     {
-        568, // notify-sequence-number
+        575, // notify-sequence-number
         0, 0,
         NULL, NULL
     },
     {
-        570, // notify-status-code
+        577, // notify-status-code
         0, 0,
         NULL, NULL
     },
     {
-        572, // notify-subscriber-user-name
+        579, // notify-subscriber-user-name
         0, 0,
         NULL, NULL
     },
     {
-        573, // notify-subscriber-user-uri
+        580, // notify-subscriber-user-uri
         0, 0,
         NULL, NULL
     },
     {
-        574, // notify-subscription-id
+        581, // notify-subscription-id
         0, 0,
         NULL, NULL
     },
     {
-        576, // notify-subscription-uuid
+        583, // notify-subscription-uuid
         0, 0,
         NULL, NULL
     },
@@ -11050,52 +11120,52 @@ ipp_attr_t s_ipp_attr_group_substat[] =
 ipp_attr_t s_ipp_attr_group_subtemp[] =
 {
     {
-        548, // notify-attributes
+        555, // notify-attributes
         0, 0,
         NULL, NULL
     },
     {
-        550, // notify-charset
+        557, // notify-charset
         0, 0,
         NULL, NULL
     },
     {
-        551, // notify-events
+        558, // notify-events
         0, 0,
         NULL, NULL
     },
     {
-        556, // notify-lease-duration
+        563, // notify-lease-duration
         0, 0,
         NULL, NULL
     },
     {
-        560, // notify-max-events-supported
+        567, // notify-max-events-supported
         0, 0,
         NULL, NULL
     },
     {
-        561, // notify-natural-language
+        568, // notify-natural-language
         0, 0,
         NULL, NULL
     },
     {
-        564, // notify-pull-method
+        571, // notify-pull-method
         0, 0,
         NULL, NULL
     },
     {
-        566, // notify-recipient-uri
+        573, // notify-recipient-uri
         0, 0,
         NULL, NULL
     },
     {
-        578, // notify-time-interval
+        585, // notify-time-interval
         0, 0,
         NULL, NULL
     },
     {
-        579, // notify-user-data
+        586, // notify-user-data
         0, 0,
         NULL, NULL
     },

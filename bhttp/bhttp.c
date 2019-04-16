@@ -700,6 +700,15 @@ static int http_process_header(http_client_t *client, char *header)
         }
         strcpy(client->location, value);
     }
+    else if (! http_ncasecmp(header, "host:"))
+    {
+        if (strlen(value) >= sizeof(client->host))
+        {
+            HTTP_ERROR("Host len");
+            return -1;
+        }
+        strcpy(client->host, value);
+    }
     else if (! http_ncasecmp(header, "expect:"))
     {
         client->expect100 = !strcasecmp(value, "100-continue") ? true : false;

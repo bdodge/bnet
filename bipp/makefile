@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 BNET_JPEG=1
+BNET_ZLIB=1
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
@@ -37,6 +38,9 @@ CFLAGS += $(LIBINCLS)
 ifdef BNET_TLS
 	CFLAGS += -DHTTP_SUPPORT_TLS=$(BNET_TLS)
 endif
+ifdef BNET_ZLIB
+	CFLAGS += -DHTTP_SUPPORT_COMPRESSION=$(BNET_ZLIB)
+endif
 
 CFLAGS += $(EXTRA_DEFINES:%=-D%)
 
@@ -45,7 +49,7 @@ PROGOBJECTS=$(OBJDIR)/bipptest.o
 
 CFLAGS+=-I$(HTTP_PATH) -I$(UTIL_PATH) -I$(IO_PATH)
 
-bipp: $(PROGOBJECTS) $(IPPLIB) $(LIBS) $(TLSDEPS) $(JPEGDEPS)
+bipp: $(PROGOBJECTS) $(IPPLIB) $(LIBS) $(TLSDEPS) $(JPEGDEPS) $(ZLIBDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(IPPLIB)

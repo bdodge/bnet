@@ -56,11 +56,17 @@ int ipp_op_create_job(ipp_request_t *req, ipp_job_t **pjob)
     }
     else
     {
-        // check mime type against supported values
-        //
-        butil_log(5, "Create-Job: document-format is %s\n", ((char*)attr->value + 2));
-
-        //ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
+        if (attr && attr->value && attr->value_len)
+        {
+            // check mime type against supported values
+            //
+            butil_log(5, "Create-Job: document-format is %s\n", ((char*)attr->value + 2));
+        }
+        else
+        {
+            ipp_set_error(req, IPP_STATUS_ERROR_DOCUMENT_FORMAT_NOT_SUPPORTED);
+            return -1;
+        }
     }
     job = NULL;
 

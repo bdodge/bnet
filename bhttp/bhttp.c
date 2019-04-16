@@ -1358,6 +1358,19 @@ int http_client_slice(http_client_t *client)
                 http_scheme_base_name(client->scheme),
                 client->vmaj, client->vmin);
 
+        // per RFC7230 - http 1.1 defaults to persistent connection
+        if (client->vmaj == 1)
+        {
+            if (client->vmin == 1)
+            {
+                client->keepalive = true;
+            }
+            else
+            {
+                client->keepalive = false;
+            }
+            // consider closing on bad versions.
+        }
         client->resource = NULL;
         client->resource_open = false;
         client->ctxpriv  = NULL;
@@ -1771,11 +1784,10 @@ int http_client_slice(http_client_t *client)
             client->tls_upgrade = false;
 
             result = http_begin_reply(client, 101, "Switching Protocols");
-            result |= http_append_reply(client, "Upgrade: TLS/1.2,HTTP/1.1");
+            result |= http_append_reply(client, "Upgrade: TLS/1.2, HTTP/1.1");
             result |= http_append_reply(client, "Connection: Upgrade");
             result |= http_append_reply(client, "Content-Length: 0");
             result |= http_append_reply(client, "");
-            //result |= http_append_reply(client, "");
 
             return http_send_out_data(client, httpSendReply, httpTLSsocketUpgrade);
         }
@@ -1801,6 +1813,7 @@ int http_client_slice(http_client_t *client)
                 return http_slice_fatal(client, -1);
             }
             client->stream = stream;
+            client->state = httpBodyDownload;
         }
         break;
 #endif
@@ -2130,8 +2143,8 @@ int http_client_slice(http_client_t *client)
                 result |= http_append_reply(client, "Allow: GET,HEAD,POST,DELETE,OPTIONS");
             #if HTTP_SUPPORT_WEBDAV
                 result |= http_append_reply(client, "Allow: PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK");
-            #endif
                 result |= http_append_reply(client, "DAV: 1, 2");
+            #endif
                 result |= http_append_reply(client, "Content-Length: 0");
                 result |= http_append_connection_to_reply(client, false);
                 result |= http_append_reply(client, "");

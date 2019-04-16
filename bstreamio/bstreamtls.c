@@ -82,7 +82,7 @@ tlsctx_t;
 
 /// set this from 0 to 5 to get debug output on console. 0 is none, 5 is verbose
 ///
-#define TLS_DEBUG_LEVEL 1
+#define TLS_DEBUG_LEVEL 4
 
 static void tls_log(int level, const char *fmt, ...)
 {
@@ -296,10 +296,16 @@ static int iostream_tls_write(iostream_t *stream, uint8_t *buf, int len)
 static int iostream_tls_poll(iostream_t *stream, polldir_t pollfor, int to_secs, int to_usecs)
 {
     tlsctx_t *tls = (tlsctx_t *)stream->priv;
+    size_t avail;
 
     if (! tls || ! tls->stream)
     {
         return MBEDTLS_ERR_NET_INVALID_CONTEXT;
+    }
+    avail = mbedtls_ssl_get_bytes_avail(&tls->ssl);
+    if (avail)
+    {
+        return 1;
     }
     return iostream_posix_poll(tls->stream, pollfor, to_secs, to_usecs);
 }

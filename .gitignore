@@ -2,6 +2,7 @@ bftp/bftptest
 bftp/fromremote.jpg
 bhttp/bhttp
 bhttp/media/
+bhttp/.obj*
 bjson/bjsontest
 bmem/bmemtest
 bmqtt/mqtt

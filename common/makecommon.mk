@@ -16,13 +16,7 @@
 
 SRCROOT ?= ..
 
-MBEDTLS_PATH=$(SRCROOT)/mbedtls
-MBEDTLS_LIBS=mbedtls mbedx509 mbedcrypto
-
-LIBJPEGT_PATH=$(SRCROOT)/libjpeg-turbo
-BLDJPEGT_PATH=$(SRCROOT)/bldjpeg-turbo
-LIBJPEGT_LIBS=turbojpeg
-
+# Our libraries
 UTIL_PATH=$(SRCROOT)/butil
 IO_PATH=$(SRCROOT)/bstreamio
 MEM_PATH=$(SRCROOT)/bmem
@@ -39,6 +33,16 @@ SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
 SIP_PATH=$(SRCROOT)/bsip
 IPP_PATH=$(SRCROOT)/bipp
+
+# Third party libaries
+MBEDTLS_PATH=$(SRCROOT)/mbedtls
+MBEDTLS_LIBS=mbedtls mbedx509 mbedcrypto
+
+LIBJPEGT_PATH=$(SRCROOT)/libjpeg-turbo
+LIBJPEGT_LIBS=turbojpeg
+
+LIBZ_PATH=$(SRCROOT)/zlib-1.2.11
+LIBZ_LIBS=z
 
 CC=gcc
 CFLAGS+=-g -fno-diagnostics-color
@@ -151,9 +155,20 @@ ifndef BNET_JPEG
 	BNET_JPEG=0
 endif
 ifneq ($(BNET_JPEG),0)
-	JPEGLIBS=-L$(LIBJPEGT_PATH)/library $(LIBJPEGT_LIBS:%=-l%)
+	JPEGLIBS=$(LIBJPEGT_LIBS:%=-l%)
 	JPEGDEPS=$(LIBJPEGT_LIBS:%=$(OBJDIR)/lib%.a$)
 	CFLAGS+=-I$(LIBJPEGT_PATH) -DBNET_JPEG=1
+else
+	JPEGLIBS=
+	JPEGDEPS=
+endif
+ifndef BNET_ZLIB
+	BNET_JPEG=0
+endif
+ifneq ($(BNET_ZLIB),0)
+	ZLIBS=$(LIBZ_LIBS:%=-l%)
+	ZLIBDEPS=$(LIBZ_LIBS:%=$(OBJDIR)/lib%.a$)
+	CFLAGS+=-I$(LIBZ_PATH) -DBNET_ZLIB=1
 else
 	JPEGLIBS=
 	JPEGDEPS=
@@ -205,6 +220,11 @@ $(IPP_PATH)/%.a:
 $(MBEDTLS_PATH)/library/%.a:
 	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
 
-$(OBJDIR)/%.a:
+$(OBJDIR)/%turbojpeg.a:
+	mkdir -p $(OBJDIR)
 	make -C $(OBJDIR) -f ../$(SRCROOT)/common/makejpegturbo.mk $@ BLDJPEGT_PATH=$(OBJDIR) LIBJPEGT_PATH=../$(LIBJPEGT_PATH) OS=$(OS) BNET_JPEG=$(BNET_JPEG) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
+
+$(OBJDIR)/%z.a:
+	mkdir -p $(OBJDIR)
+	make -C $(OBJDIR) -f ../$(SRCROOT)/common/makezlib.mk $@ BLDZLIB_PATH=$(OBJDIR) LIBZ_PATH=../$(LIBZ_PATH) OS=$(OS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
 

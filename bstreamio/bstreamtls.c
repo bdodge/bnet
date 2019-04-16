@@ -82,7 +82,7 @@ tlsctx_t;
 
 /// set this from 0 to 5 to get debug output on console. 0 is none, 5 is verbose
 ///
-#define TLS_DEBUG_LEVEL 4
+#define TLS_DEBUG_LEVEL 1
 
 static void tls_log(int level, const char *fmt, ...)
 {

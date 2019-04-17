@@ -22,6 +22,8 @@ bipp/bipp
 bipp/printout
 bipp/ianaimport/bianaimp
 bipp/.obj*
+bgcloudprt/bgcp
+bgcloudprt/.obj*
 
 # Prerequisites
 *.d

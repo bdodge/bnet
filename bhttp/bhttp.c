@@ -98,6 +98,7 @@ http_client_t *http_client_create(http_resource_t *resources, bool isclient)
 void http_client_reinit(http_client_t *client, bool newstream)
 {
     // init context
+    client->response = 0;
     client->long_timeout = HTTP_LONG_TIMEOUT;
     client->last_in_time = 0;
     client->last_out_time = 0;
@@ -1258,8 +1259,17 @@ int http_client_slice(http_client_t *client)
                 {
                     result |= http_append_request(client, "Transfer-Encoding: chunked");
                 }
-                result |= http_append_request(client, "Content-Type: %s",
+                if (client->out_content_type == butil_mime_multi)
+                {
+                    result |= http_append_request(client, "Content-Type: %s;boundary=%s",
+                                butil_mime_string_for_content_type(client->out_content_type),
+                                client->boundary);
+                }
+                else
+                {
+                    result |= http_append_request(client, "Content-Type: %s",
                                 butil_mime_string_for_content_type(client->out_content_type));
+                }
             }
             else
             {

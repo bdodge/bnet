@@ -33,6 +33,7 @@ SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
 SIP_PATH=$(SRCROOT)/bsip
 IPP_PATH=$(SRCROOT)/bipp
+GCP_PATH=$(SRCROOT)/bgcloudprt
 
 # Third party libaries
 MBEDTLS_PATH=$(SRCROOT)/mbedtls
@@ -138,6 +139,7 @@ SMTPLIB=$(SMTP_PATH)/$(OBJDIR)/libbsmtp.a
 SNMPLIB=$(SNMP_PATH)/$(OBJDIR)/libbsnmp.a
 SIPLIB=$(SIP_PATH)/$(OBJDIR)/libbsip.a
 IPPLIB=$(IPP_PATH)/$(OBJDIR)/libbipp.a
+GCPLIB=$(GCP_PATH)/$(OBJDIR)/libbgcp.a
 
 ifndef BNET_TLS
 	BNET_TLS=1
@@ -216,6 +218,9 @@ $(SIP_PATH)/%.a:
 
 $(IPP_PATH)/%.a:
 	make -C $(IPP_PATH) library
+
+$(GCP_PATH)/%.a:
+	make -C $(GCP_PATH) library
 
 $(MBEDTLS_PATH)/library/%.a:
 	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)

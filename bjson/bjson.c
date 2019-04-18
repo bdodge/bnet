@@ -339,9 +339,7 @@ static int bjson_unescape_string(
                 return bjson_overflow;
             }
             i = 0;
-            value[i++] = *psrc;
         }
-        psrc++;
     }
     else if (value)
     {

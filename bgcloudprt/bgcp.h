@@ -33,8 +33,17 @@
 typedef enum
 {
     gcpInit,
-    gcpRegister,
-    gcpRegisterReply,
+    gcpAnonRegister,
+    gcpAnonRegisterReply,
+    gcpPromptForClaim,
+    gcpWaitForClaim,
+    gcpGetAuthCode,
+    gcpPollForAuthorization,
+    gcpAuthorizationReply,
+    gcpGetAccessToken,
+    gcpListPrinter,
+    gcpFetch,
+    gcpPollWait,
     gcpGetReply,
     gcpError,
     gcpFatal
@@ -51,13 +60,21 @@ typedef struct tag_gcp_context
     char                uuid[64];
     char                proxy_id[64];
     char                boundary[64];
-    char                registration_token[GCP_MAX_TOKEN];
-    char                invite_url[HTTP_MAX_URL];
+    char                printer_id[GCP_SHORT_TOKEN];
     char                complete_invite_url[HTTP_MAX_URL];
+    char                invite_url[HTTP_MAX_URL];
     char                invite_page_url[HTTP_MAX_URL];
+    char                registration_token[GCP_SHORT_TOKEN];
+    char                oath_scope[HTTP_MAX_URL];
+    char                automated_invite_url[HTTP_MAX_URL];
     char                polling_url[HTTP_MAX_URL];
     time_t              token_duration;
+    char                confirmation_page_url[HTTP_MAX_URL];
+    char                xmpp_jid[GCP_SHORT_TOKEN];
     time_t              next_poll;
+    char                authorization_code[GCP_MAX_TOKEN];
+    char                refresh_token[GCP_MAX_TOKEN];
+    char                access_token[GCP_MAX_TOKEN];
     http_client_t      *http_client;
     http_resource_t    *http_resources;
     char                cds[GCP_MAX_CDS];

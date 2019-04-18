@@ -17,58 +17,14 @@
 #include "bgcpio.h"
 #include "bgcpcdd.h"
 
-int gcp_register(gcp_context_t *gcp)
-{
-    char verstring[8];
-    int result;
-
-    if (! gcp)
-    {
-        return -1;
-    }
-    if (gcp->state != gcpRegister)
-    {
-        BERROR("wrong state");
-        return -1;
-    }
-    butil_log(5, "Registering\n");
-
-    snprintf(verstring, sizeof(verstring), "%d.%d", GCP_VER_MAJ, GCP_VER_MIN);
-
-    // mime encode the parameters
-    //
-    result = gcp_encode_parameters(
-                gcp,
-                "name", butil_mime_text, "BNET",
-                "proxy", butil_mime_text, gcp->proxy_id,
-                "uuid", butil_mime_text, gcp->uuid,
-                "manufacturer", butil_mime_text, "bnet",
-                "model", butil_mime_text, "gcp20",
-                "gcp_version", butil_mime_text, verstring,
-                "setup_url", butil_mime_text, "http://www.msn.com",
-                "support_url", butil_mime_text, "http://www.cnn.com",
-                "update_url", butil_mime_text, "http://www.abc.com",
-                "firmware", butil_mime_text, "1.1",
-                "semantic_state", butil_mime_json, gcp->cds,
-                "use_cdd", butil_mime_text, "true",
-                "capabilities", butil_mime_json, gcp->cdd,
-                "sentinal", butil_mime_text, NULL
-            );
-    if (result)
-    {
-        return result;
-    }
-    result = gcp_request(gcp, "register");
-
-    return result;
-}
-
-int gcp_reply_status(gcp_context_t *gcp)
+int gcp_reply_status(gcp_context_t *gcp, bool *success)
 {
     bjson_parser_t *pjx;
     const char *pvalue;
     char value[128];
     int result;
+
+    *success = false;
 
     pjx = bjson_parser_create(gcp->io.data);
     if (! pjx)
@@ -101,7 +57,7 @@ int gcp_reply_status(gcp_context_t *gcp)
                     butil_log(4, "Message: %s\n", value);
                 }
             }
-            result = -1;
+            result = 0;
             break;
         }
         else if (strcmp(value, "true"))
@@ -110,6 +66,7 @@ int gcp_reply_status(gcp_context_t *gcp)
             result = -1;
             break;
         }
+        *success = true;
         result = 0;
         break;
     }
@@ -120,19 +77,100 @@ int gcp_reply_status(gcp_context_t *gcp)
     return result;
 }
 
-int gcp_register_reply(gcp_context_t *gcp)
+int gcp_reply_value(gcp_context_t *gcp, const char *key, char *value, size_t nvalue)
+{
+    int result;
+
+    result = bjson_find_and_copy_json_key_value(
+                                            gcp->io.data,
+                                            key,
+                                            '.',
+                                            0,
+                                            value,
+                                            nvalue
+                                            );
+    // dequote string values
+    if (! result && value[0] == '\"')
+    {
+        size_t len = strlen(value);
+
+        if (len > 2)
+        {
+            memmove(value, value + 1, len - 2);
+            value[len - 2] = '\0';
+        }
+        else
+        {
+            value[0] = '\0';
+        }
+    }
+    return result;
+}
+
+int gcp_anon_register(gcp_context_t *gcp)
+{
+    char verstring[8];
+    int result;
+
+    if (! gcp)
+    {
+        return -1;
+    }
+    if (gcp->state != gcpAnonRegister)
+    {
+        BERROR("wrong state");
+        return -1;
+    }
+    butil_log(5, "Registering - Anonymous\n");
+
+    snprintf(verstring, sizeof(verstring), "%d.%d", GCP_VER_MAJ, GCP_VER_MIN);
+
+    // mime encode the parameters
+    //
+    result = gcp_encode_parameters(
+                gcp,
+                "name", butil_mime_text, "BNET",
+                "proxy", butil_mime_text, gcp->proxy_id,
+                "uuid", butil_mime_text, gcp->uuid,
+                "manufacturer", butil_mime_text, "bnet",
+                "model", butil_mime_text, "gcp20",
+                "gcp_version", butil_mime_text, verstring,
+                "setup_url", butil_mime_text, "http://www.msn.com",
+                "support_url", butil_mime_text, "http://www.cnn.com",
+                "update_url", butil_mime_text, "http://www.abc.com",
+                "firmware", butil_mime_text, "1.1",
+                "semantic_state", butil_mime_json, gcp->cds,
+                "use_cdd", butil_mime_text, "true",
+                "capabilities", butil_mime_json, gcp->cdd,
+                "sentinal", butil_mime_text, NULL
+            );
+    if (result)
+    {
+        return result;
+    }
+    result = gcp_request(gcp, "register");
+
+    return result;
+}
+
+int gcp_anon_register_reply(gcp_context_t *gcp)
 {
     bjson_parser_t *pjx;
     const char *pvalue;
     char value[128];
+    bool success;
     int result;
 
     // check reply status
     //
-    result = gcp_reply_status(gcp);
+    result = gcp_reply_status(gcp, &success);
     if (result)
     {
         return result;
+    }
+    if (! success)
+    {
+        return -2;
     }
     // get things we need out of reply
     //
@@ -142,97 +180,132 @@ int gcp_register_reply(gcp_context_t *gcp)
         BERROR("can't create parser");
         return -1;
     }
-    do // try
+    result = gcp_reply_value(gcp, "printers.id",
+                    gcp->printer_id, sizeof(gcp->printer_id));
+    if (! result)
     {
-        result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            "registration_token",
-                                            '.',
-                                            0,
-                                            gcp->registration_token,
-                                            sizeof(gcp->registration_token)
-                                            );
-        if (result)
-        {
-            break;
-        }
-        result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            "registration_token",
-                                            '.',
-                                            0,
-                                            gcp->registration_token,
-                                            sizeof(gcp->registration_token)
-                                            );
-        if (result)
-        {
-            break;
-        }
-        result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            "invite_url",
-                                            '.',
-                                            0,
-                                            gcp->invite_url,
-                                            sizeof(gcp->invite_url)
-                                            );
-        if (result)
-        {
-            break;
-        }
-        result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            "complete_invite_url",
-                                            '.',
-                                            0,
-                                            gcp->complete_invite_url,
-                                            sizeof(gcp->complete_invite_url)
-                                            );
-        if (result)
-        {
-            break;
-        }
-        result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            "invite_page_url",
-                                            '.',
-                                            0,
-                                            gcp->invite_page_url,
-                                            sizeof(gcp->invite_page_url)
-                                            );
-        if (result)
-        {
-            break;
-        }
-        result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            "polling_url",
-                                            '.',
-                                            0,
-                                            gcp->polling_url,
-                                            sizeof(gcp->polling_url)
-                                            );
-        if (result)
-        {
-            break;
-        }
-        result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            "token_duration",
-                                            '.',
-                                            0,
-                                            value,
-                                            sizeof(value)
-                                            );
-        if (result)
-        {
-            break;
-        }
-        gcp->token_duration = strtoul(value, NULL, 10);
+        butil_log(5, "Registering Printer ID:%s\n", gcp->printer_id);
     }
-    while (0); // catch
+
+    result |= gcp_reply_value(gcp, "invite_url",
+                    gcp->invite_url, sizeof(gcp->invite_url));
+    result |= gcp_reply_value(gcp, "complete_invite_url",
+                    gcp->complete_invite_url, sizeof(gcp->complete_invite_url));
+    result |= gcp_reply_value(gcp, "oauth_scope",
+                    gcp->oath_scope, sizeof(gcp->oath_scope));
+    result |= gcp_reply_value(gcp, "invite_page_url",
+                    gcp->invite_page_url, sizeof(gcp->invite_page_url));
+    result |= gcp_reply_value(gcp, "registration_token",
+                    gcp->registration_token, sizeof(gcp->registration_token));
+    result |= gcp_reply_value(gcp, "automated_invite_url",
+                    gcp->automated_invite_url, sizeof(gcp->automated_invite_url));
+    result |= gcp_reply_value(gcp, "polling_url",
+                    gcp->polling_url, sizeof(gcp->polling_url));
+    result |= gcp_reply_value(gcp, "token_duration",
+                    value, sizeof(value));
+    gcp->token_duration = strtoul(value, NULL, 10);
 
     return result;
+}
+
+int gcp_poll_for_authorization(gcp_context_t *gcp)
+{
+    int result;
+
+    if (! gcp)
+    {
+        return -1;
+    }
+    if (gcp->state != gcpPollForAuthorization)
+    {
+        BERROR("wrong state");
+        return -1;
+    }
+    butil_log(5, "Poll for Authorization Code\n");
+
+    // mime encode the parameters
+    //
+    result = gcp_encode_parameters(
+                gcp,
+                "printerid", butil_mime_text, gcp->printer_id,
+                "oauth_client_id", butil_mime_text, GCP_CLIENT_ID,
+                "sentinal", butil_mime_text, NULL
+            );
+    if (result)
+    {
+        return result;
+    }
+    result = gcp_request(gcp, "getauthcode");
+
+    return result;
+}
+
+int gcp_authorization_reply(gcp_context_t *gcp, bool *done)
+{
+    bjson_parser_t *pjx;
+    const char *pvalue;
+    char value[128];
+    bool success;
+    int result;
+
+    // check reply status
+    //
+    *done = false;
+
+    result = gcp_reply_status(gcp, &success);
+    if (result)
+    {
+        return result;
+    }
+    if (! success)
+    {
+        return 0;
+    }
+    *done = true;
+
+    // get things we need out of reply
+    //
+    result = 0;
+
+    result |= gcp_reply_value(gcp, "authorization_code",
+                    gcp->authorization_code, sizeof(gcp->authorization_code));
+    result |= gcp_reply_value(gcp, "xmpp_jid",
+                    gcp->xmpp_jid, sizeof(gcp->xmpp_jid));
+    result |= gcp_reply_value(gcp, "confirmation_page_url",
+                    gcp->confirmation_page_url, sizeof(gcp->confirmation_page_url));
+    return result;
+}
+
+int gcp_prompt_for_claim(gcp_context_t *gcp)
+{
+    butil_log(0, "\nYou can register your printer by going to:\n"
+                 "\n"
+                 "%s\n"
+                 "\n"
+                 "Your registraion token is: %s\n\n"
+                 "Press \'C\' to cancel or any other letter to procede, and then Enter\n\n"
+                 " > ",
+                 gcp->complete_invite_url,
+                 gcp->registration_token
+             );
+    return 0;
+}
+
+int gcp_wait_for_claim(gcp_context_t *gcp, bool *cancel)
+{
+    int ic;
+
+    ic = getchar();
+
+    if (ic == 'c' || ic == 'C')
+    {
+        *cancel = true;
+    }
+    else
+    {
+        *cancel = false;
+    }
+    return 0;
 }
 
 const char *gcp_state_string(gcp_state_t state)
@@ -241,12 +314,30 @@ const char *gcp_state_string(gcp_state_t state)
     {
     case gcpInit:
         return "Init";
-    case gcpRegister:
-        return "Registering";
-    case gcpRegisterReply:
-        return "Parse Register Reply";
+    case gcpAnonRegister:
+        return "Registering(Anon)";
+    case gcpAnonRegisterReply:
+        return "Parse Register(Anon) Reply";
+    case gcpPromptForClaim:
+        return "Prompt For Claim";
+    case gcpWaitForClaim:
+        return "Waiting For Claim-continue";
+    case gcpGetAuthCode:
+        return "Get Authorization Code";
+    case gcpPollForAuthorization:
+        return "Polling For Authorization Code";
+    case gcpAuthorizationReply:
+        return "Checking Authorization Code";
+    case gcpGetAccessToken:
+        return "Get Access Token";
+    case gcpListPrinter:
+        return "List Printer";
+    case gcpFetch:
+        return "Fetching Jobs";
+    case gcpPollWait:
+        return "Poll Time-wait";
     case gcpGetReply:
-        return "Getting a Reply";
+        return "Getting Reply from cloud";
     case gcpError:
         return "Error";
     case gcpFatal:
@@ -258,6 +349,7 @@ const char *gcp_state_string(gcp_state_t state)
 
 int gcp_slice(gcp_context_t *gcp)
 {
+    time_t now;
     bool done;
     int result;
 
@@ -273,27 +365,100 @@ int gcp_slice(gcp_context_t *gcp)
     switch (gcp->state)
     {
     case gcpInit:
-        gcp->state = gcpRegister;
+        gcp->state = gcpAnonRegister;
         break;
 
-    case gcpRegister:
-        result = gcp_register(gcp);
+    case gcpAnonRegister:
+        result = gcp_anon_register(gcp);
         if (result)
         {
             gcp->state = gcpError;
             break;
         }
-        gcp->nextstate = gcpRegisterReply;
+        gcp->nextstate = gcpAnonRegisterReply;
         gcp->state  = gcpGetReply;
         break;
 
-    case gcpRegisterReply:
-        result = gcp_register_reply(gcp);
+    case gcpAnonRegisterReply:
+        result = gcp_anon_register_reply(gcp);
         if (result)
         {
             gcp->state = gcpError;
             break;
         }
+        gcp->state = gcpPromptForClaim;
+        break;
+
+    case gcpPromptForClaim:
+        result = gcp_prompt_for_claim(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->state = gcpWaitForClaim;
+        break;
+
+    case gcpWaitForClaim:
+        result = gcp_wait_for_claim(gcp, &done);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        if (done)
+        {
+            // user wishes to NOT claim printer
+            return 1;
+        }
+        gcp->state = gcpPollForAuthorization;
+        break;
+
+    case gcpPollForAuthorization:
+        result = gcp_poll_for_authorization(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->nextstate = gcpAuthorizationReply;
+        gcp->state = gcpGetReply;
+        break;
+
+    case gcpAuthorizationReply:
+        result = gcp_authorization_reply(gcp, &done);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        if (done)
+        {
+            gcp->state = gcpGetAccessToken;
+            break;
+        }
+        time(&gcp->next_poll);
+        gcp->next_poll += GCP_AUTHCODE_POLL_PERIOD;
+        gcp->nextstate = gcpPollForAuthorization;
+        gcp->state = gcpPollWait;
+        break;
+
+    case gcpGetAccessToken:
+        break;
+
+    case gcpListPrinter:
+        break;
+
+    case gcpFetch:
+        break;
+
+    case gcpPollWait:
+        time(&now);
+        if (now >= gcp->next_poll)
+        {
+            gcp->state = gcp->nextstate;
+        }
+        sleep(1);
         break;
 
     case gcpGetReply:
@@ -372,8 +537,8 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
         BERROR("add resource");
         return result;
     }
-    gcp->prevstate = gcpRegister;
-    gcp->nextstate = gcpRegister;
+    gcp->prevstate = gcpAnonRegister;
+    gcp->nextstate = gcpAnonRegister;
     gcp->state = gcpInit;
 
     return 0;

@@ -403,7 +403,7 @@ static int bjson_unescape_string(
                 }
                 break;
             case 'u':
-                if ((psrc - start_src) >= (nsrc - 5))
+                if ((psrc - start_src) > (nsrc - 5))
                 {
                     return bjson_underflow;
                 }
@@ -465,24 +465,24 @@ static int bjson_unescape_string(
                 value[i++] = *psrc;
             }
             psrc++;
-            if (*psrc == '\"')
+        }
+        if (*psrc == '\"')
+        {
+            if (isquoted)
             {
-                if (isquoted)
+                if (value)
                 {
-                    if (value)
-                    {
-                        value[i++] = '\"';
-                        value[i] = '\0';
-                    }
-                    psrc++;
-                    if (used_src)
-                    {
-                        *used_src = psrc - start_src;
-                    }
-                    return bjson_ok;
+                    value[i++] = '\"';
+                    value[i] = '\0';
                 }
-                return bjson_syntax;
+                psrc++;
+                if (used_src)
+                {
+                    *used_src = psrc - start_src;
+                }
+                return bjson_ok;
             }
+            return bjson_syntax;
         }
     }
     while (*psrc && ((psrc - start_src) < nsrc));

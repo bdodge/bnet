@@ -30,6 +30,7 @@ json_test_entry_t;
 
 json_test_entry_t s_tests_1[] =
 {
+    /*
     {
     "name", 0, "null", 0,
     "{\n"
@@ -214,6 +215,15 @@ json_test_entry_t s_tests_1[] =
     "hi\\n\\rbye", 0, "\"yo\"", 0,
     "{\"hi\n\rbye\":\"yo\"}"
     },
+    {
+    "key", 0, "\"abcdef\"", 0,
+    "\"key\": \"ab\\u0063\\u0064ef\""
+    },
+    */
+    {
+    "key", 0, "\"abcd\"", 0,
+    "\"key\": \"ab\\u0063\\u0064\""
+    }
 };
 
 json_test_entry_t s_tests_2[] =

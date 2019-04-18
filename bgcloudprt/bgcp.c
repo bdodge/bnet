@@ -17,96 +17,6 @@
 #include "bgcpio.h"
 #include "bgcpcdd.h"
 
-int gcp_reply_status(gcp_context_t *gcp, bool *success)
-{
-    bjson_parser_t *pjx;
-    const char *pvalue;
-    char value[128];
-    int result;
-
-    *success = false;
-
-    pjx = bjson_parser_create(gcp->io.data);
-    if (! pjx)
-    {
-        BERROR("can't create parser");
-        return -1;
-    }
-    do // try
-    {
-        result = bjson_find_key_value(pjx, "success", '\0', 0, &pvalue);
-        if (result)
-        {
-            butil_log(2, "No success in reply\n");
-            break;
-        }
-        result = bjson_copy_key_value(pjx, pvalue, value, sizeof(value));
-        if (result)
-        {
-            butil_log(2, "Can't copy result\n");
-            break;
-        }
-        if (! strcmp(value, "false"))
-        {
-            result = bjson_find_key_value(pjx, "message", '\0', 0, &pvalue);
-            if (! result)
-            {
-                result = bjson_copy_key_value(pjx, pvalue, value, sizeof(value));
-                if (! result)
-                {
-                    butil_log(4, "Message: %s\n", value);
-                }
-            }
-            result = 0;
-            break;
-        }
-        else if (strcmp(value, "true"))
-        {
-            butil_log(2, "Success not true/false\n");
-            result = -1;
-            break;
-        }
-        *success = true;
-        result = 0;
-        break;
-    }
-    while (0); // catch
-
-    bjson_parser_destroy(pjx);
-
-    return result;
-}
-
-int gcp_reply_value(gcp_context_t *gcp, const char *key, char *value, size_t nvalue)
-{
-    int result;
-
-    result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
-                                            key,
-                                            '.',
-                                            0,
-                                            value,
-                                            nvalue
-                                            );
-    // dequote string values
-    if (! result && value[0] == '\"')
-    {
-        size_t len = strlen(value);
-
-        if (len > 2)
-        {
-            memmove(value, value + 1, len - 2);
-            value[len - 2] = '\0';
-        }
-        else
-        {
-            value[0] = '\0';
-        }
-    }
-    return result;
-}
-
 int gcp_anon_register(gcp_context_t *gcp)
 {
     char verstring[8];
@@ -518,8 +428,6 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
 
     strncpy(gcp->uuid, uuid, sizeof(gcp->uuid) - 1);
     gcp->uuid[sizeof(gcp->uuid) - 1] = '\0';
-
-    snprintf(gcp->boundary, sizeof(gcp->boundary), "aaaaaaaaaaaaaabbbbbbbbbbbbcccccccccc");
 
     gcp->io.data = gcp->io_data;
     gcp->io.size = sizeof(gcp->io_data);

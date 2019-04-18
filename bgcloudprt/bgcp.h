@@ -59,7 +59,6 @@ typedef struct tag_gcp_context
     gcp_state_t         nextstate;
     char                uuid[64];
     char                proxy_id[64];
-    char                boundary[64];
     char                printer_id[GCP_SHORT_TOKEN];
     char                complete_invite_url[HTTP_MAX_URL];
     char                invite_url[HTTP_MAX_URL];

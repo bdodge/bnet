@@ -41,8 +41,11 @@ typedef enum
     gcpPollForAuthorization,
     gcpAuthorizationReply,
     gcpGetAccessToken,
+    gcpAccessTokenReply,
     gcpListPrinter,
+    gcpListPrinterReply,
     gcpFetch,
+    gcpFetchReply,
     gcpPollWait,
     gcpGetReply,
     gcpError,
@@ -93,6 +96,12 @@ int gcp_set_error     (gcp_context_t *gcp, int ecode);
 int gcp_init    (gcp_context_t *gcp, const char *proxy_id, const char *uuid);
 int gcp_deinit  (gcp_context_t *gcp);
 int gcp_slice   (gcp_context_t *gcp);
+
+// for unit test
+int gcp_anon_register_reply(gcp_context_t *gcp);
+int gcp_prompt_for_claim(gcp_context_t *gcp);
+int gcp_wait_for_claim(gcp_context_t *gcp, bool *cancel);
+int gcp_authorization_reply(gcp_context_t *gcp, bool *done);
 
 #endif
 

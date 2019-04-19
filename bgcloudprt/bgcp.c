@@ -65,9 +65,7 @@ int gcp_anon_register(gcp_context_t *gcp)
 
 int gcp_anon_register_reply(gcp_context_t *gcp)
 {
-    bjson_parser_t *pjx;
-    const char *pvalue;
-    char value[128];
+    char value[GCP_SHORT_TOKEN];
     bool success;
     int result;
 
@@ -84,12 +82,6 @@ int gcp_anon_register_reply(gcp_context_t *gcp)
     }
     // get things we need out of reply
     //
-    pjx = bjson_parser_create(gcp->io.data);
-    if (! pjx)
-    {
-        BERROR("can't create parser");
-        return -1;
-    }
     result = gcp_reply_value(gcp, "printers.id",
                     gcp->printer_id, sizeof(gcp->printer_id));
     if (! result)
@@ -152,9 +144,6 @@ int gcp_poll_for_authorization(gcp_context_t *gcp)
 
 int gcp_authorization_reply(gcp_context_t *gcp, bool *done)
 {
-    bjson_parser_t *pjx;
-    const char *pvalue;
-    char value[128];
     bool success;
     int result;
 
@@ -183,6 +172,173 @@ int gcp_authorization_reply(gcp_context_t *gcp, bool *done)
                     gcp->xmpp_jid, sizeof(gcp->xmpp_jid));
     result |= gcp_reply_value(gcp, "confirmation_page_url",
                     gcp->confirmation_page_url, sizeof(gcp->confirmation_page_url));
+    return result;
+}
+
+int gcp_get_access_token(gcp_context_t *gcp)
+{
+    int result;
+
+    if (! gcp)
+    {
+        return -1;
+    }
+    if (gcp->state != gcpGetAccessToken)
+    {
+        BERROR("wrong state");
+        return -1;
+    }
+    butil_log(5, "Get Access Token\n");
+
+    // mime encode the parameters
+    //
+    result = gcp_encode_parameters(
+                gcp,
+                "printerid", butil_mime_text, gcp->printer_id,
+                "oauth_client_id", butil_mime_text, GCP_CLIENT_ID,
+                "sentinal", butil_mime_text, NULL
+            );
+    if (result)
+    {
+        return result;
+    }
+    result = gcp_request(gcp, "getauthcode");
+
+    return result;
+}
+
+int gcp_access_token_reply(gcp_context_t *gcp)
+{
+    bool success;
+    int result;
+
+    // check reply status
+    //
+    result = gcp_reply_status(gcp, &success);
+    if (result)
+    {
+        return result;
+    }
+    if (! success)
+    {
+        return -1;
+    }
+    // get things we need out of reply
+    //
+    result = 0;
+
+    result |= gcp_reply_value(gcp, "refresh_token",
+                    gcp->refresh_token, sizeof(gcp->refresh_token));
+    result |= gcp_reply_value(gcp, "access_token",
+                    gcp->access_token, sizeof(gcp->access_token));
+    return result;
+}
+
+int gcp_list_printer(gcp_context_t *gcp)
+{
+    int result;
+
+    if (! gcp)
+    {
+        return -1;
+    }
+    if (gcp->state != gcpListPrinter)
+    {
+        BERROR("wrong state");
+        return -1;
+    }
+    butil_log(5, "List Printer\n");
+
+    // mime encode the parameters
+    //
+    result = gcp_encode_parameters(
+                gcp,
+                "printerid", butil_mime_text, gcp->printer_id,
+                "oauth_client_id", butil_mime_text, GCP_CLIENT_ID,
+                "sentinal", butil_mime_text, NULL
+            );
+    if (result)
+    {
+        return result;
+    }
+    result = gcp_request(gcp, "list");
+
+    return result;
+}
+
+int gcp_list_printer_reply(gcp_context_t *gcp)
+{
+    bool success;
+    int result;
+
+    // check reply status
+    //
+    result = gcp_reply_status(gcp, &success);
+    if (result)
+    {
+        return result;
+    }
+    if (! success)
+    {
+        return -1;
+    }
+    // get things we need out of reply
+    //
+    result = 0;
+    return result;
+}
+
+int gcp_fetch(gcp_context_t *gcp)
+{
+    int result;
+
+    if (! gcp)
+    {
+        return -1;
+    }
+    if (gcp->state != gcpListPrinter)
+    {
+        BERROR("wrong state");
+        return -1;
+    }
+    butil_log(5, "List Printer\n");
+
+    // mime encode the parameters
+    //
+    result = gcp_encode_parameters(
+                gcp,
+                "printerid", butil_mime_text, gcp->printer_id,
+                "oauth_client_id", butil_mime_text, GCP_CLIENT_ID,
+                "sentinal", butil_mime_text, NULL
+            );
+    if (result)
+    {
+        return result;
+    }
+    result = gcp_request(gcp, "list");
+
+    return result;
+}
+
+int gcp_fetch_reply(gcp_context_t *gcp)
+{
+    bool success;
+    int result;
+
+    // check reply status
+    //
+    result = gcp_reply_status(gcp, &success);
+    if (result)
+    {
+        return result;
+    }
+    if (! success)
+    {
+        return -1;
+    }
+    // get things we need out of reply
+    //
+    result = 0;
     return result;
 }
 
@@ -240,10 +396,16 @@ const char *gcp_state_string(gcp_state_t state)
         return "Checking Authorization Code";
     case gcpGetAccessToken:
         return "Get Access Token";
+    case gcpAccessTokenReply:
+        return "Parse Access Token";
     case gcpListPrinter:
         return "List Printer";
+    case gcpListPrinterReply:
+        return "List Printer";
     case gcpFetch:
-        return "Fetching Jobs";
+        return "Fetch Jobs";
+    case gcpFetchReply:
+        return "Parsing Fetched Job List";
     case gcpPollWait:
         return "Poll Time-wait";
     case gcpGetReply:
@@ -354,12 +516,65 @@ int gcp_slice(gcp_context_t *gcp)
         break;
 
     case gcpGetAccessToken:
+        result = gcp_get_access_token(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->nextstate = gcpAccessTokenReply;
+        gcp->state = gcpGetReply;
+        break;
+
+    case gcpAccessTokenReply:
+        result = gcp_access_token_reply(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->state = gcpListPrinter;
         break;
 
     case gcpListPrinter:
+        result = gcp_list_printer(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->state = gcpListPrinterReply;
+        break;
+
+    case gcpListPrinterReply:
+        result = gcp_list_printer_reply(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->state = gcpFetch;
         break;
 
     case gcpFetch:
+        result = gcp_fetch(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->state = gcpFetchReply;
+        break;
+
+    case gcpFetchReply:
+        result = gcp_fetch_reply(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->nextstate = gcpFetchReply;
+        gcp->state = gcpPollWait;
         break;
 
     case gcpPollWait:

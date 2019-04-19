@@ -25,7 +25,7 @@ int gcp_reply_status(gcp_context_t *gcp, bool *success)
 
     *success = false;
 
-    pjx = bjson_parser_create(gcp->io.data);
+    pjx = bjson_parser_create((char*)gcp->io.data);
     if (! pjx)
     {
         BERROR("can't create parser");
@@ -81,7 +81,7 @@ int gcp_reply_value(gcp_context_t *gcp, const char *key, char *value, size_t nva
     int result;
 
     result = bjson_find_and_copy_json_key_value(
-                                            gcp->io.data,
+                                            (char*)gcp->io.data,
                                             key,
                                             '.',
                                             0,
@@ -126,8 +126,7 @@ int gcp_resource_func(
         case httpPost:
             http_log(7, "post %d\n", gcp->io.count);
             client->out_content_length = gcp->io.count;
-//            strncpy(gcp->http_client->boundary, gcp->boundary, sizeof(gcp->http_client->boundary) - 1);
-//            gcp->http_client->boundary[sizeof(gcp->http_client->boundary) - 1] = '\0';
+            http_generate_boundary(gcp->http_client->boundary, sizeof(gcp->http_client->boundary));
             client->out_content_type   = butil_mime_multi;
             // add headers needed
             result = http_append_request(client, "X-CloudPrint-Proxy: Yes");
@@ -248,7 +247,7 @@ int gcp_encode_parameters(gcp_context_t *gcp, ...)
             content_type[0] = '\0';
         }
         len = snprintf(
-                        gcp->io.data + gcp->io.head,
+                        (char*)gcp->io.data + gcp->io.head,
                         gcp->io.size - gcp->io.count,
                         "--%s\r\nContent-Disposition: form-data; name=\"%s\"\r\n"
                         "%s"
@@ -270,7 +269,7 @@ int gcp_encode_parameters(gcp_context_t *gcp, ...)
     va_end(args);
 
     len = snprintf(
-                    gcp->io.data + gcp->io.head,
+                    (char*)gcp->io.data + gcp->io.head,
                     gcp->io.size - gcp->io.count,
                     "--%s\r\n",
                     gcp->http_client->boundary

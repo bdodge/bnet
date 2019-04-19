@@ -18,6 +18,9 @@
 
 #include "bgcp.h"
 
+int gcp_reply_status(gcp_context_t *gcp, bool *success);
+int gcp_reply_value(gcp_context_t *gcp, const char *key, char *value, size_t nvalue);
+
 int gcp_resource_func(
                         http_client_t       *client,
                         http_resource_t     *resource,

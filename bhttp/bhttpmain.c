@@ -101,6 +101,66 @@ int echo_callback(
 
 #endif
 
+int cgi_callback(
+                        http_client_t       *client,
+                        http_resource_t     *resource,
+                        http_callback_type_t cbtype,
+                        uint8_t            **data,
+                        size_t              *count
+                     )
+{
+    int result;
+
+    result = 0;
+
+    http_log(5, "CGI Call % to %s\n",
+                    http_method_name(client->method), client->path);
+    switch (cbtype)
+    {
+    case httpRequest:
+
+        switch (client->method)
+        {
+        case httpPost:
+            client->ctxpriv = (void*)client->path;
+            client->out_content_length = strlen(client->path);
+            break;
+
+        default:
+            HTTP_ERROR("Can't do method on cgi, post only");
+            return -1;
+        }
+        break;
+
+    case httpDownloadData:
+        http_log(4, "Download %s", *data);
+        break;
+
+    case httpDownloadDone:
+        break;
+
+    case httpUploadData:
+        if (client->ctxpriv)
+        {
+            strcpy(*data, (char*)client->ctxpriv);
+            client->ctxpriv = NULL;
+            *count = strlen((char*)*data);
+        }
+        else
+        {
+            *count = 0;
+        }
+        break;;
+
+    case httpComplete:
+        break;
+
+    default:
+        return -1;
+    }
+    return result;
+}
+
 int on_evil_scheme(
                     http_client_t *client,
                     http_method_callback_type_t type,
@@ -296,6 +356,13 @@ int main(int argc, char **argv)
         fs_creds.type = httpAuthBasic;
 #endif
         result = http_add_file_resource(&resources, schemeHTTP, "*", "./media", &fs_creds);
+        if (result)
+        {
+            HTTP_ERROR("Can't make resource");
+            return result;
+        }
+        // add cgi url
+        result = http_add_func_resource(&resources, schemeHTTP, "*.cgi", &fs_creds, cgi_callback, NULL);
         if (result)
         {
             HTTP_ERROR("Can't make resource");

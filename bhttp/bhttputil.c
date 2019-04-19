@@ -443,3 +443,23 @@ const char *http_auth_type_to_string(http_auth_type_t auth_type)
     default:                return "???";
     }
 }
+
+int http_generate_boundary(char *boundary, size_t nboundary)
+{
+    char stamp[64];
+    char randbuf[64];
+    time_t now;
+
+    if (! boundary || (nboundary < 32))
+    {
+        return -1;
+    }
+    time(&now);
+    ctime_r(&now, stamp);
+    butil_base64_encode(randbuf, sizeof(randbuf), (uint8_t*)stamp, strlen(stamp), false, false);
+    randbuf[28] = '\0';
+    snprintf(boundary, nboundary, "----%s", randbuf);
+    boundary[nboundary - 1] = '\0';
+    return 0;
+}
+

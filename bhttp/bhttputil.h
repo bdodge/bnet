@@ -96,5 +96,7 @@ const char *http_auth_type_to_string(
                             http_auth_type_t auth_type
                             );
 
+int http_generate_boundary  (char *boundary, size_t nboundary);
+
 #endif
 

@@ -906,6 +906,7 @@ static butil_mime_entry_t s_mimetab[] =
     { butil_mime_tiff, ".tif",   "image/tiff" },
     { butil_mime_tiff, ".tiff",  "image/tiff" },
     { butil_mime_xml,  ".xml",   "application/xml" },
+    { butil_mime_xwwwformurl,".www", "application/x-www-form-urlencoded" },
 #if BUTIL_SUPPORT_MULTIPART
     { butil_mime_multi,".",      "multipart/form-data" },
 #endif

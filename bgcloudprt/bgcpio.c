@@ -126,10 +126,18 @@ int gcp_resource_func(
         case httpPost:
             http_log(7, "post %d\n", gcp->io.count);
             client->out_content_length = gcp->io.count;
-            http_generate_boundary(gcp->http_client->boundary, sizeof(gcp->http_client->boundary));
-            client->out_content_type   = butil_mime_multi;
+            client->out_content_type = butil_mime_multi;
+            strncpy(client->boundary, gcp->boundary, sizeof(client->boundary) - 1);
+            client->boundary[sizeof(client->boundary) - 1] = '\0';
             // add headers needed
             result = http_append_request(client, "X-CloudPrint-Proxy: Yes");
+            if (gcp->state >= gcpListPrinter)
+            {
+                // add auth header for "real" requests, past registration
+                //
+                result += http_append_request(client, "Authorization: OAuth %s",
+                                                                gcp->access_token);
+            }
             break;
 
         default:
@@ -237,7 +245,7 @@ int gcp_encode_parameters(gcp_context_t *gcp, ...)
         {
             break;
         }
-        if (1) //(type != butil_mime_text)
+        if (type != butil_mime_text)
         {
             snprintf(content_type, sizeof(content_type),
                         "Content-Type: %s\r\n", butil_mime_string_for_content_type(type));
@@ -252,7 +260,7 @@ int gcp_encode_parameters(gcp_context_t *gcp, ...)
                         "--%s\r\nContent-Disposition: form-data; name=\"%s\"\r\n"
                         "%s"
                         "\r\n%s\r\n",
-                        gcp->http_client->boundary,
+                        gcp->boundary,
                         name,
                         content_type,
                         value
@@ -271,8 +279,8 @@ int gcp_encode_parameters(gcp_context_t *gcp, ...)
     len = snprintf(
                     (char*)gcp->io.data + gcp->io.head,
                     gcp->io.size - gcp->io.count,
-                    "--%s\r\n",
-                    gcp->http_client->boundary
+                    "--%s--\r\n",
+                    gcp->boundary
                   );
     if (len < 0 || gcp->io.count == gcp->io.size)
     {
@@ -284,9 +292,9 @@ int gcp_encode_parameters(gcp_context_t *gcp, ...)
     return 0;
 }
 
-int gcp_request(gcp_context_t *gcp, const char *path)
+int gcp_request(gcp_context_t *gcp, const char *url, const char *path)
 {
-    char url[HTTP_MAX_URL];
+    char fullurl[HTTP_MAX_URL];
     http_method_t method;
     uint16_t port;
     int to_secs, to_usecs;
@@ -295,15 +303,15 @@ int gcp_request(gcp_context_t *gcp, const char *path)
 
     method = httpPost;
 
-    snprintf(url, sizeof(url), "%s/%s", GCP_URL, path);
+    snprintf(fullurl, sizeof(fullurl), "%s/%s", url, path);
 
-    butil_log(3, "%s %s\n", http_method_name(method), url);
+    butil_log(3, "%s %s\n", http_method_name(method), fullurl);
 
     http_client_reinit(gcp->http_client, true);
     gcp->http_client->keepalive = false;
     redirects = 0;
 
-    result = http_client_request(gcp->http_client, method, url, httpTCP, false, NULL, gcp->http_resources);
+    result = http_client_request(gcp->http_client, method, fullurl, httpTCP, false, NULL, gcp->http_resources);
     if (result)
     {
         butil_log(1, "Failed to request %s\n", path);

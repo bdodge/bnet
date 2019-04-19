@@ -25,14 +25,24 @@
 //
 #define GCP_AUTHCODE_POLL_PERIOD (6)
 
+/// how often to poll for jobs (fetch) (no sooner than on each power-up per spec)
+//
+#define GCP_JOBFETCH_POLL_PERIOD (30)
+
 /// Bytes in io buffers, should hold a whole gcp request/response
 //
 #define GCP_IO_SIZE         (8192)
 
 /// URL to cloud
 //
-#define GCP_URL            "https://www.google.com/cloudprint"
-//#define GCP_URL             "http://localhost:8080/cloudprint"
+#define GCP_CLOUD_URL       "https://www.google.com/cloudprint"
+//#define GCP_CLOUD_URL     "http://localhost:8080/cloudprint"
+
+/// URL to auth
+//
+#define GCP_OAUTH2_URL      "https://accounts.google.com"
+//#define GCP_OAUTH2_URL    "http://localhost:8080/cloudoauth2"
+
 
 #define GCP_VER_MAJ         (2)
 #define GCP_VER_MIN         (0)

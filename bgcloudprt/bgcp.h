@@ -40,6 +40,8 @@ typedef enum
     gcpGetAuthCode,
     gcpPollForAuthorization,
     gcpAuthorizationReply,
+    gcpGetOAuth2Token,
+    gcpOAuth2TokenReply,
     gcpGetAccessToken,
     gcpAccessTokenReply,
     gcpListPrinter,
@@ -62,6 +64,8 @@ typedef struct tag_gcp_context
     gcp_state_t         nextstate;
     char                uuid[64];
     char                proxy_id[64];
+    void               *nvhandle;
+    char                user_email[GCP_SHORT_TOKEN];
     char                printer_id[GCP_SHORT_TOKEN];
     char                complete_invite_url[HTTP_MAX_URL];
     char                invite_url[HTTP_MAX_URL];
@@ -74,9 +78,12 @@ typedef struct tag_gcp_context
     char                confirmation_page_url[HTTP_MAX_URL];
     char                xmpp_jid[GCP_SHORT_TOKEN];
     time_t              next_poll;
+    time_t              next_fetch;
+    time_t              next_refresh;
     char                authorization_code[GCP_MAX_TOKEN];
     char                refresh_token[GCP_MAX_TOKEN];
     char                access_token[GCP_MAX_TOKEN];
+    char                boundary[64];
     http_client_t      *http_client;
     http_resource_t    *http_resources;
     char                cds[GCP_MAX_CDS];

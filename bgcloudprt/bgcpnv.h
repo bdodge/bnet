@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BGCPIO_H
-#define BGCPIO_H 1
+#ifndef BGCPNV_H
+#define BGCPNV_H 1
 
+#include "bgcp.h"
+
+int gcp_nv_read(gcp_context_t *gcp);
+int gcp_nv_write(gcp_context_t *gcp);
+int gcp_nv_init(gcp_context_t *gcp);
+int gcp_nv_deinit(gcp_context_t *gcp);
 
 #endif
 

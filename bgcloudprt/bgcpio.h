@@ -18,19 +18,19 @@
 
 #include "bgcp.h"
 
-int gcp_reply_status(gcp_context_t *gcp, bool *success);
-int gcp_reply_value(gcp_context_t *gcp, const char *key, char *value, size_t nvalue);
+int gcp_reply_status      (gcp_context_t *gcp, bool *success);
+int gcp_reply_value       (gcp_context_t *gcp, const char *key, char *value, size_t nvalue);
 
-int gcp_resource_func(
-                        http_client_t       *client,
-                        http_resource_t     *resource,
-                        http_callback_type_t cbtype,
-                        uint8_t            **data,
-                        size_t              *count
-                     );
+int gcp_resource_func     (
+                          http_client_t       *client,
+                          http_resource_t     *resource,
+                          http_callback_type_t cbtype,
+                          uint8_t            **data,
+                          size_t              *count
+                          );
 int gcp_encode_parameters(gcp_context_t *gcp, ...);
-int gcp_request(gcp_context_t *gcp, const char *path);
-int gcp_check_on_reply(gcp_context_t *gcp, bool *done);
+int gcp_request          (gcp_context_t *gcp, const char *url, const char *path);
+int gcp_check_on_reply   (gcp_context_t *gcp, bool *done);
 
 #endif
 

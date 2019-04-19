@@ -15,6 +15,7 @@
  */
 #include "bgcp.h"
 #include "bgcpio.h"
+#include "bgcpnv.h"
 #include "bgcpcdd.h"
 
 int gcp_anon_register(gcp_context_t *gcp)
@@ -58,7 +59,7 @@ int gcp_anon_register(gcp_context_t *gcp)
     {
         return result;
     }
-    result = gcp_request(gcp, "register");
+    result = gcp_request(gcp, GCP_CLOUD_URL, "register");
 
     return result;
 }
@@ -137,7 +138,7 @@ int gcp_poll_for_authorization(gcp_context_t *gcp)
     {
         return result;
     }
-    result = gcp_request(gcp, "getauthcode");
+    result = gcp_request(gcp, GCP_CLOUD_URL, "getauthcode");
 
     return result;
 }
@@ -166,12 +167,67 @@ int gcp_authorization_reply(gcp_context_t *gcp, bool *done)
     //
     result = 0;
 
+    result |= gcp_reply_value(gcp, "user_email",
+                    gcp->user_email, sizeof(gcp->user_email));
     result |= gcp_reply_value(gcp, "authorization_code",
                     gcp->authorization_code, sizeof(gcp->authorization_code));
     result |= gcp_reply_value(gcp, "xmpp_jid",
                     gcp->xmpp_jid, sizeof(gcp->xmpp_jid));
     result |= gcp_reply_value(gcp, "confirmation_page_url",
                     gcp->confirmation_page_url, sizeof(gcp->confirmation_page_url));
+    return result;
+}
+
+int gcp_get_oauth2_token(gcp_context_t *gcp)
+{
+    int result;
+
+    if (! gcp)
+    {
+        return -1;
+    }
+    if (gcp->state != gcpGetOAuth2Token)
+    {
+        BERROR("wrong state");
+        return -1;
+    }
+    butil_log(5, "Get OAuth2 Token\n");
+
+    // mime encode the parameters
+    //
+    result = gcp_encode_parameters(
+                gcp,
+                "client_id", butil_mime_text, GCP_CLIENT_ID,
+                "redirect_uri", butil_mime_text, "oob",
+                "client_secret", butil_mime_text, GCP_CLIENT_SECRET,
+                "grant_type", butil_mime_text, "authorization_code",
+//                "code", butil_mime_xwwwformurl, gcp->authorization_code,
+                "code", butil_mime_text, gcp->authorization_code,
+                "sentinal", butil_mime_text, NULL
+            );
+    if (result)
+    {
+        return result;
+    }
+    result = gcp_request(gcp, GCP_OAUTH2_URL, "o/oauth2/token");
+
+    return result;
+}
+
+int gcp_oauth2_token_reply(gcp_context_t *gcp)
+{
+    int result;
+
+    // check reply status
+    //
+    // get things we need out of reply
+    //
+    result = 0;
+
+    result |= gcp_reply_value(gcp, "refresh_token",
+                    gcp->refresh_token, sizeof(gcp->refresh_token));
+    result |= gcp_reply_value(gcp, "access_token",
+                    gcp->access_token, sizeof(gcp->access_token));
     return result;
 }
 
@@ -188,47 +244,36 @@ int gcp_get_access_token(gcp_context_t *gcp)
         BERROR("wrong state");
         return -1;
     }
-    butil_log(5, "Get Access Token\n");
+    butil_log(5, "Get OAuth2 Token\n");
 
     // mime encode the parameters
     //
     result = gcp_encode_parameters(
                 gcp,
-                "printerid", butil_mime_text, gcp->printer_id,
-                "oauth_client_id", butil_mime_text, GCP_CLIENT_ID,
+                "client_id", butil_mime_text, GCP_CLIENT_ID,
+                "redirect_uri", butil_mime_text, "oob",
+                "client_secret", butil_mime_text, GCP_CLIENT_SECRET,
+                "grant_type", butil_mime_text, "refresh_token",
+                "refresh_token", butil_mime_text, gcp->refresh_token,
                 "sentinal", butil_mime_text, NULL
             );
     if (result)
     {
         return result;
     }
-    result = gcp_request(gcp, "getauthcode");
+    result = gcp_request(gcp, GCP_OAUTH2_URL, "o/oauth2/token");
 
     return result;
 }
 
 int gcp_access_token_reply(gcp_context_t *gcp)
 {
-    bool success;
     int result;
 
-    // check reply status
-    //
-    result = gcp_reply_status(gcp, &success);
-    if (result)
-    {
-        return result;
-    }
-    if (! success)
-    {
-        return -1;
-    }
     // get things we need out of reply
     //
     result = 0;
 
-    result |= gcp_reply_value(gcp, "refresh_token",
-                    gcp->refresh_token, sizeof(gcp->refresh_token));
     result |= gcp_reply_value(gcp, "access_token",
                     gcp->access_token, sizeof(gcp->access_token));
     return result;
@@ -253,15 +298,14 @@ int gcp_list_printer(gcp_context_t *gcp)
     //
     result = gcp_encode_parameters(
                 gcp,
-                "printerid", butil_mime_text, gcp->printer_id,
-                "oauth_client_id", butil_mime_text, GCP_CLIENT_ID,
+                "proxy", butil_mime_text, gcp->proxy_id,
                 "sentinal", butil_mime_text, NULL
             );
     if (result)
     {
         return result;
     }
-    result = gcp_request(gcp, "list");
+    result = gcp_request(gcp, GCP_CLOUD_URL, "list");
 
     return result;
 }
@@ -296,7 +340,7 @@ int gcp_fetch(gcp_context_t *gcp)
     {
         return -1;
     }
-    if (gcp->state != gcpListPrinter)
+    if (gcp->state != gcpFetch)
     {
         BERROR("wrong state");
         return -1;
@@ -308,20 +352,21 @@ int gcp_fetch(gcp_context_t *gcp)
     result = gcp_encode_parameters(
                 gcp,
                 "printerid", butil_mime_text, gcp->printer_id,
-                "oauth_client_id", butil_mime_text, GCP_CLIENT_ID,
                 "sentinal", butil_mime_text, NULL
             );
     if (result)
     {
         return result;
     }
-    result = gcp_request(gcp, "list");
+    result = gcp_request(gcp, GCP_CLOUD_URL, "fetch");
 
     return result;
 }
 
 int gcp_fetch_reply(gcp_context_t *gcp)
 {
+    char text[GCP_SHORT_TOKEN];
+    char url[HTTP_MAX_URL];
     bool success;
     int result;
 
@@ -334,12 +379,34 @@ int gcp_fetch_reply(gcp_context_t *gcp)
     }
     if (! success)
     {
-        return -1;
+        butil_log(4, "No Jobs for printer %s\n", gcp->printer_id);
+        return 0;
     }
-    // get things we need out of reply
-    //
-    result = 0;
-    return result;
+    result = gcp_reply_value(gcp, "jobs[0].id", text, sizeof(text));
+    if (! result)
+    {
+        butil_log(4, "JOB ID   =%s\n", text);
+        result = gcp_reply_value(gcp, "jobs[0].title", text, sizeof(text));
+        if (! result)
+        {
+            butil_log(4, "    Title =%s\n", text);
+        }
+        result = gcp_reply_value(gcp, "jobs[0].title", text, sizeof(text));
+        if (! result)
+        {
+            butil_log(4, "    Status=%s\n", text);
+        }
+        result = gcp_reply_value(gcp, "jobs[0].rasterUrl", url, sizeof(url));
+        if (! result)
+        {
+            butil_log(4, "       url=%s\n", url);
+        }
+    }
+    else
+    {
+        butil_log(4, "No Jobs\n");
+    }
+    return 0;
 }
 
 int gcp_prompt_for_claim(gcp_context_t *gcp)
@@ -394,6 +461,10 @@ const char *gcp_state_string(gcp_state_t state)
         return "Polling For Authorization Code";
     case gcpAuthorizationReply:
         return "Checking Authorization Code";
+    case gcpGetOAuth2Token:
+        return "Get OAuth2 Token";
+    case gcpOAuth2TokenReply:
+        return "Parse OAuth2 Token";
     case gcpGetAccessToken:
         return "Get Access Token";
     case gcpAccessTokenReply:
@@ -434,10 +505,32 @@ int gcp_slice(gcp_context_t *gcp)
         butil_log(5, "State: %s\n", gcp_state_string(gcp->state));
         gcp->prevstate = gcp->state;
     }
+    time(&now);
+
     switch (gcp->state)
     {
     case gcpInit:
-        gcp->state = gcpAnonRegister;
+        if (gcp->authorization_code[0])
+        {
+            if (gcp->refresh_token[0])
+            {
+                // there is an existing auth code, and refresh
+                // token, so just need to get access token
+                //
+                gcp->state = gcpGetAccessToken;
+            }
+            else
+            {
+                // authorized (registered) but no OAuth2 token
+                //
+                gcp->state = gcpGetOAuth2Token;
+            }
+        }
+        else
+        {
+            // no auth-code restart registration
+            gcp->state = gcpAnonRegister;
+        }
         break;
 
     case gcpAnonRegister:
@@ -506,13 +599,38 @@ int gcp_slice(gcp_context_t *gcp)
         }
         if (done)
         {
-            gcp->state = gcpGetAccessToken;
+            gcp->state = gcpGetOAuth2Token;
             break;
         }
         time(&gcp->next_poll);
         gcp->next_poll += GCP_AUTHCODE_POLL_PERIOD;
         gcp->nextstate = gcpPollForAuthorization;
         gcp->state = gcpPollWait;
+        break;
+
+    case gcpGetOAuth2Token:
+        result = gcp_get_oauth2_token(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        gcp->nextstate = gcpOAuth2TokenReply;
+        gcp->state = gcpGetReply;
+        break;
+
+    case gcpOAuth2TokenReply:
+        result = gcp_oauth2_token_reply(gcp);
+        if (result)
+        {
+            gcp->state = gcpError;
+            break;
+        }
+        // snapshot state
+        (void)gcp_nv_write(gcp);
+
+        // bypass GetAccessToken, got one already with refresh token
+        gcp->state = gcpListPrinter;
         break;
 
     case gcpGetAccessToken:
@@ -543,7 +661,8 @@ int gcp_slice(gcp_context_t *gcp)
             gcp->state = gcpError;
             break;
         }
-        gcp->state = gcpListPrinterReply;
+        gcp->nextstate = gcpListPrinterReply;
+        gcp->state = gcpGetReply;
         break;
 
     case gcpListPrinterReply:
@@ -563,7 +682,8 @@ int gcp_slice(gcp_context_t *gcp)
             gcp->state = gcpError;
             break;
         }
-        gcp->state = gcpFetchReply;
+        gcp->nextstate = gcpFetchReply;
+        gcp->state = gcpGetReply;
         break;
 
     case gcpFetchReply:
@@ -573,12 +693,12 @@ int gcp_slice(gcp_context_t *gcp)
             gcp->state = gcpError;
             break;
         }
-        gcp->nextstate = gcpFetchReply;
+        gcp->next_poll = now + GCP_JOBFETCH_POLL_PERIOD;
+        gcp->nextstate = gcpFetch;
         gcp->state = gcpPollWait;
         break;
 
     case gcpPollWait:
-        time(&now);
         if (now >= gcp->next_poll)
         {
             gcp->state = gcp->nextstate;
@@ -620,10 +740,19 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
     }
     memset(gcp, 0, sizeof(gcp_context_t));
 
+    gcp->io.data = gcp->io_data;
+    gcp->io.size = sizeof(gcp->io_data);
+
     result = iostream_tls_prolog();
     if (result)
     {
         BERROR("Can't init TLS");
+        return -1;
+    }
+    result = gcp_nv_init(gcp);
+    if (result)
+    {
+        BERROR("Can't init NVMEM");
         return -1;
     }
     result = gcp_format_cdd(gcp);
@@ -644,8 +773,7 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
     strncpy(gcp->uuid, uuid, sizeof(gcp->uuid) - 1);
     gcp->uuid[sizeof(gcp->uuid) - 1] = '\0';
 
-    gcp->io.data = gcp->io_data;
-    gcp->io.size = sizeof(gcp->io_data);
+    http_generate_boundary(gcp->boundary, sizeof(gcp->boundary));
 
     gcp->http_client = http_client_create(NULL, true);
     if (! gcp->http_client)
@@ -673,6 +801,7 @@ int gcp_deinit(gcp_context_t *gcp)
     {
         return -1;
     }
+    gcp_nv_deinit(gcp);
     return 0;
 }
 

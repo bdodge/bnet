@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "bgcp.h"
+#include "bgcpnv.h"
 
 static const char *s_regrep_test =
 "{\r\n"
@@ -250,6 +251,42 @@ int gcp_unit_test(gcp_context_t *gcp)
              return result;
          }
     }
+    gcp->io.data = gcp->io_data;
+    gcp->io.size = sizeof(gcp->io_data);
+   /*
+    result = gcp_nv_write(gcp);
+    if (result)
+    {
+        butil_log(0, "Fail: NV Write\n");
+        return result;
+    }
+   */
+    result = gcp_nv_init(gcp);
+    if (result)
+    {
+        butil_log(0, "Fail: NV Init\n");
+        return result;
+    }
+    result = gcp_nv_read(gcp);
+    if (result)
+    {
+        butil_log(0, "Fail: NV Read\n");
+        return result;
+    }
+    result = gcp_nv_write(gcp);
+    if (result)
+    {
+        butil_log(0, "Fail: NV Write\n");
+        return result;
+    }
+    result = gcp_nv_read(gcp);
+    if (result)
+    {
+        butil_log(0, "Fail: NV re-Read\n");
+        return result;
+    }
+    result = gcp_nv_deinit(gcp);
+
     gcp_deinit(gcp);
     return result;
 }

@@ -48,6 +48,7 @@ typedef enum
     butil_mime_text,
     butil_mime_tiff,
     butil_mime_xml,
+    butil_mime_xwwwformurl,
 #if BUTIL_SUPPORT_MULTIPART
     butil_mime_multi,
 #endif

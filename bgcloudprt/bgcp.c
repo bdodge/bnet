@@ -15,6 +15,7 @@
  */
 #include "bgcp.h"
 #include "bgcpio.h"
+#include "bgcpxmpp.h"
 #include "bgcpnv.h"
 #include "bgcpcdd.h"
 
@@ -599,6 +600,9 @@ int gcp_slice(gcp_context_t *gcp)
         }
         if (done)
         {
+            // snapshot state
+            (void)gcp_nv_write(gcp);
+
             gcp->state = gcpGetOAuth2Token;
             break;
         }
@@ -703,7 +707,15 @@ int gcp_slice(gcp_context_t *gcp)
         {
             gcp->state = gcp->nextstate;
         }
-        sleep(1);
+        result = gcp_xmpp_slice(gcp);
+        if (result)
+        {
+            butil_log(1, "XMPP failed\n");
+        }
+        if (gcp->bxp->state == bxmppDone)
+        {
+            sleep(1);
+        }
         break;
 
     case gcpGetReply:
@@ -755,6 +767,12 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
         BERROR("Can't init NVMEM");
         return -1;
     }
+    result = gcp_xmpp_init(gcp);
+    if (result)
+    {
+        BERROR("Can't init XMPP");
+        return -1;
+    }
     result = gcp_format_cdd(gcp);
     if (result)
     {
@@ -801,6 +819,7 @@ int gcp_deinit(gcp_context_t *gcp)
     {
         return -1;
     }
+    gcp_xmpp_deinit(gcp);
     gcp_nv_deinit(gcp);
     return 0;
 }

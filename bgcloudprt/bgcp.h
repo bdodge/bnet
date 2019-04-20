@@ -20,6 +20,7 @@
 #include "bhttpconfig.h"
 #include "bhttp.h"
 #include "bjson.h"
+#include "bxmpp.h"
 #include "bstreamio.h"
 #include "butil.h"
 
@@ -86,6 +87,7 @@ typedef struct tag_gcp_context
     char                boundary[64];
     http_client_t      *http_client;
     http_resource_t    *http_resources;
+    bxmpp_t            *bxp;
     char                cds[GCP_MAX_CDS];
     char                cdd[GCP_MAX_CDD];
     ioring_t            io;

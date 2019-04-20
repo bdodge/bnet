@@ -390,6 +390,29 @@ xml_test_entry_t s_tests_4[] =
     },
 };
 
+static const char s_xml_xmpp[] =
+"<stream:stream from=\"xmpp.google.com\" id=\"887DC951F6C8C24A\" version=\"1.0\" xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:client\">"
+"<stream:features>"
+"<mechanisms xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">"
+"<mechanism>X-OAUTH2</mechanism><mechanism>X-GOOGLE-TOKEN</mechanism><mechanism>PLAIN</mechanism></mechanisms>"
+"</stream:features>";
+
+xml_test_entry_t s_tests_5[] =
+{
+    {
+    "mechanism", "", 0, "X-OAUTH2", 0,
+    s_xml_xmpp
+    },
+    {
+    "mechanism", "", 1, "X-GOOGLE-TOKEN", 0,
+    s_xml_xmpp
+    },
+    {
+    "mechanism", "", 2, "PLAIN", 0,
+    s_xml_xmpp
+    }
+};
+
 static int runtest(xml_test_entry_t *entry, int numentries, char pathdelim)
 {
     char val[1024];
@@ -456,13 +479,14 @@ static int runtest(xml_test_entry_t *entry, int numentries, char pathdelim)
 
 int main(int argc, char **argv)
 {
-    bxml_parser_t *pjx;
+    bxml_parser_t *pxp;
     const char *element;
+    const char *ptag;
     size_t elindex;
     char val[1024];
     int result;
 
-#if 1
+#if 0
     // basic
     printf("Basic Test\n");
     result = runtest(s_tests_1, sizeof(s_tests_1) / sizeof(xml_test_entry_t),'\0');
@@ -471,7 +495,7 @@ int main(int argc, char **argv)
         return result;
     }
 #endif
-#if 1
+#if 0
     // basic indexing
     printf("Basic Indexing Test\n");
     result = runtest(s_tests_2, dimoftest(s_tests_2), '\0');
@@ -480,7 +504,7 @@ int main(int argc, char **argv)
         return result;
     }
 #endif
-#if 1
+#if 0
     // real xml
     printf("Basic XML Test\n");
     result = runtest(s_tests_3, dimoftest(s_tests_3), '.');
@@ -489,13 +513,67 @@ int main(int argc, char **argv)
         return result;
     }
 #endif
-#if 1
+#if 0
     // real xml
     printf("Basic Attributes Test\n");
     result = runtest(s_tests_4, dimoftest(s_tests_4), '.');
     if (result)
     {
         return result;
+    }
+#endif
+#if 1
+    // real xml no line breaks
+    printf("Multi-element no line breaks Test\n");
+    result = runtest(s_tests_5, dimoftest(s_tests_5), '.');
+    if (result)
+    {
+        return result;
+    }
+    {
+        pxp = bxml_parser_create(NULL, s_xml_xmpp);
+
+        result = bxml_find_element(pxp, "stream.features.mechanisms", '.', 0, &ptag);
+        if (result)
+        {
+            fprintf(stderr, "Can't find mechanisms\n");
+            bxml_parser_destroy(pxp);
+            return result;
+        }
+        for (elindex = 0; elindex < 4; elindex++)
+        {
+            result = bxml_find_and_copy_element(
+                            pxp,
+                            "mechanism", '.',
+                            elindex,
+                            val, sizeof(val),
+                            false, false
+                            );
+            if (! result)
+            {
+                printf("mech[%zu]=%s\n", elindex, val);
+                if (strcmp(val, s_tests_5[elindex].exp_value))
+                {
+                    fprintf(stderr, "Expected %s, got %s at %zu\n",
+                            s_tests_5[elindex].exp_value, val, elindex);
+                    result = -1;
+                    break;
+                }
+            }
+            else if (elindex != 3)
+            {
+                fprintf(stderr, "Fail: %zu\n", elindex);
+            }
+            else
+            {
+                result = 0;
+            }
+        }
+        bxml_parser_destroy(pxp);
+        if (result)
+        {
+            return result;
+        }
     }
 #endif
     return 0;

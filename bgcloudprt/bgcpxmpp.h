@@ -13,9 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BGCPIO_H
-#define BGCPIO_H 1
+#ifndef BGCPXMPP_H
+#define BGCPXMPP_H 1
 
+#include "bgcp.h"
+
+int gcp_xmpp_init(gcp_context_t *gcp);
+int gcp_xmpp_slice(gcp_context_t *gcp);
+int gcp_xmpp_deinit(gcp_context_t *gcp);
 
 #endif
 

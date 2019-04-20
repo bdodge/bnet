@@ -90,7 +90,7 @@ int gcp_nv_write(gcp_context_t *gcp)
     gcp->io.head  = 0;
 
     result = snprintf(
-                        gcp->io.data + gcp->io.tail,
+                        (char*)gcp->io.data + gcp->io.tail,
                         gcp->io.size - gcp->io.count,
                         "{\n"
                         "  \"printer\":\n"

@@ -529,10 +529,15 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
 
 int iostream_tls_prolog(void)
 {
+    static bool tls_is_setup = false;
     mbedtls_entropy_context  entropy;
     const char *entropy_string = "this is random";
     int result;
 
+    if (tls_is_setup)
+    {
+        return 0;
+    }
     // init random number generator interface
     //
     mbedtls_ctr_drbg_init(&s_tls_ctr_drbg);
@@ -578,6 +583,7 @@ int iostream_tls_prolog(void)
         BERROR("Private key load failed");
         return -1;
     }
+    tls_is_setup = true;
     return 0;
 }
 

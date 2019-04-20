@@ -199,6 +199,9 @@ static const char *s_authrep_test =
 " \"authorization_code\": \"4/MAHdZyBasQKkT3a9xluvtKH-I6eP8xZAp0YEhhFKrZvoa7wpSh_xQS4rAJqEhSSvJ8CbIE869wFvMWFgTCQhPyc\"\r\n"
 "}\r\n";
 
+static const char *s_xmpp_test =
+"<stream:stream from=\"xmpp.google.com\" id=\"887DC951F6C8C24A\" version=\"1.0\" xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:client\"><stream:features><mechanisms xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\"><mechanism>X-OAUTH2</mechanism><mechanism>X-GOOGLE-TOKEN</mechanism><mechanism>PLAIN</mechanism></mechanisms></stream:features>";
+
 int gcp_unit_test(gcp_context_t *gcp)
 {
     int result;

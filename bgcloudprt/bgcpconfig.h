@@ -43,6 +43,10 @@
 #define GCP_OAUTH2_URL      "https://accounts.google.com"
 //#define GCP_OAUTH2_URL    "http://localhost:8080/cloudoauth2"
 
+/// URL for XMPP server
+//
+#define GCP_XMPP_SERVER      "xmpp.google.com"
+
 
 #define GCP_VER_MAJ         (2)
 #define GCP_VER_MIN         (0)

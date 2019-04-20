@@ -18,10 +18,17 @@
 
 #include "bnetheaders.h"
 
+/// define non-0 to support Google extensions like OAuth2 for XMPP
+//
+#define SASL_SUPPORT_GOOGLE_EXTENSIONS  (1)
+
 #define BSASL_NONCE_SIZE    24
 #define BSASL_MAX_NONCE     128
-#define BSASL_MAX_AUTHLEN   128
-
+#if SASL_SUPPORT_GOOGLE_EXTENSIONS
+#define BSASL_MAX_AUTHLEN   2048
+#else
+#define BSASL_MAX_AUTHLEN   256
+#endif
 #define BSASL_SHA1_KEY_SIZE 20
 #define BSASL_MAX_KEY_SIZE  20
 
@@ -29,7 +36,10 @@ typedef enum
 {
     bsaslAuthNone,
     bsaslAuthPLAIN,
+#if SASL_SUPPORT_GOOGLE_EXTENSIONS
     bsaslAuthOAUTH2,
+    bsaslAuthGOOGLETOKEN,
+#endif
     bsaslAuthSCRAMSHA1
 }
 bsasl_auth_type_t;

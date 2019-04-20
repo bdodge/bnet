@@ -105,14 +105,15 @@ int bsasl_start_authentication(bsasl_auth_t *sasl, bsasl_auth_type_t authtype)
     {
     case bsaslAuthNone:
     case bsaslAuthPLAIN:
+    case bsaslAuthOAUTH2:
 
         len = 0;
 
-        // skip
+        // skip authorization idendity (let server derive)
         sasl->authMessage[len++] = '\0';
 
         // add username plain text
-        for (i = 0; len < sizeof(sasl->authMessage); i++)
+        for (i = 0; len < sizeof(sasl->authMessage) - 2; i++)
         {
             sasl->authMessage[len++] = sasl->username[i];
             if (sasl->username[i] == '\0')
@@ -121,14 +122,14 @@ int bsasl_start_authentication(bsasl_auth_t *sasl, bsasl_auth_type_t authtype)
                 break;
             }
         }
-        if (len == sizeof(sasl->authMessage))
+        if (len == sizeof(sasl->authMessage) - 2)
         {
             BERROR("username overflow");
             result = -1;
             break;
         }
         // add password plain text
-        for (i = 0; len < sizeof(sasl->authMessage); i++)
+        for (i = 0; len < sizeof(sasl->authMessage) - 1; i++)
         {
             if (sasl->password[i] == '\0')
             {
@@ -136,16 +137,18 @@ int bsasl_start_authentication(bsasl_auth_t *sasl, bsasl_auth_type_t authtype)
             }
             sasl->authMessage[len++] = sasl->password[i];
         }
-        if (len == sizeof(sasl->authMessage))
+        if (len == sizeof(sasl->authMessage) - 1)
         {
             BERROR("password overflow");
             result = -1;
             break;
         }
+        sasl->authMessage[len] = '\0';
+
         // base64 encode auth/user/pass into message
         //
         result = butil_base64_encode(
-                                    sasl->clientFinalMessage,
+                                    (char*)sasl->clientFinalMessage,
                                     sizeof(sasl->clientFinalMessage),
                                     sasl->authMessage,
                                     len,
@@ -184,7 +187,7 @@ int bsasl_start_authentication(bsasl_auth_t *sasl, bsasl_auth_type_t authtype)
         }
         // base64 encode it
         result = butil_base64_encode(
-                                    sasl->clientFinalMessage,
+                                    (char*)sasl->clientFinalMessage,
                                     sizeof(sasl->clientFinalMessage),
                                     sasl->authMessage,
                                     len,
@@ -225,6 +228,7 @@ int bsasl_finish_authentication(bsasl_auth_t *sasl, const char *challenge)
     switch (sasl->authtype)
     {
     case bsaslAuthPLAIN:
+    case bsaslAuthOAUTH2:
         // nothing to do
         result = 0;
         break;
@@ -257,7 +261,7 @@ int bsasl_finish_authentication(bsasl_auth_t *sasl, const char *challenge)
         }
         // get server nonce
         //
-        pe = strstr(pc, ",s=");
+        pe = (uint8_t*)strstr((char*)pc, ",s=");
         if (! pe)
         {
             butil_log(1, "No salt section\n");
@@ -277,14 +281,14 @@ int bsasl_finish_authentication(bsasl_auth_t *sasl, const char *challenge)
         // get salt
         //
         pc = pe + 3;
-        pe = strstr(pc, ",i=");
+        pe = (uint8_t*)strstr((char*)pc, ",i=");
         if (! pe)
         {
             butil_log(1, "No iterations\n");
             return -1;
         }
         *pe = '\0';
-        result = butil_base64_decode(sasl->serverSalt, sizeof(sasl->serverSalt), pc);
+        result = butil_base64_decode(sasl->serverSalt, sizeof(sasl->serverSalt), (char*)pc);
         *pe = ',';
 
         if (result < 0)
@@ -301,7 +305,7 @@ int bsasl_finish_authentication(bsasl_auth_t *sasl, const char *challenge)
         {
             butil_log(1, "No interations\n");
         }
-        iterations = strtoul(pe, NULL, 10);
+        iterations = strtoul((char*)pe, NULL, 10);
 
         butil_log(5, "Iterations: %u\n", iterations);
 
@@ -321,7 +325,7 @@ int bsasl_finish_authentication(bsasl_auth_t *sasl, const char *challenge)
                                 sasl->saltedPassword,
                                 BSASL_SHA1_KEY_SIZE,
                                 sasl->password,
-                                strlen(sasl->password),
+                                strlen((char*)sasl->password),
                                 sasl->serverSalt,
                                 sasl->serverSalt_len,
                                 iterations
@@ -506,7 +510,7 @@ int bsasl_finish_authentication(bsasl_auth_t *sasl, const char *challenge)
         bsasl_dump_item("clientFinalMessage", sasl->authMessage, len);
 
         result = butil_base64_encode(
-                                    sasl->clientFinalMessage,
+                                    (char*)sasl->clientFinalMessage,
                                     sizeof(sasl->clientFinalMessage),
                                     sasl->authMessage,
                                     len,

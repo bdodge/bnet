@@ -47,6 +47,9 @@
 //
 #define GCP_XMPP_SERVER      "xmpp.google.com"
 
+/// How long to wait before re-trying xmpp
+//
+#define GCP_XMPP_RECONNECT_PERIOD (10)
 
 #define GCP_VER_MAJ         (2)
 #define GCP_VER_MIN         (0)

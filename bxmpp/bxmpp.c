@@ -32,6 +32,17 @@ s_authlist[] =
 };
 #define BXMPP_NUM_AUTHS   (sizeof(s_authlist)/sizeof(struct tag_authlist))
 
+static uint32_t bxmpp_next_id(bxmpp_t *bxp)
+{
+    return bxp->next_id++;
+}
+
+static const char *bxmpp_next_id_str(bxmpp_t *bxp)
+{
+    snprintf(bxp->idbuf, sizeof(bxp->idbuf), "%u", bxmpp_next_id(bxp));
+    return bxp->idbuf;
+}
+
 static int bxmpp_check_errors(bxmpp_t *bxp)
 {
     const char *etag;
@@ -60,11 +71,11 @@ static int bxmpp_check_errors(bxmpp_t *bxp)
         }
         else
         {
-            butil_log(5, "BAD XML? %s\n", bxp->pxp->xml);
+            butil_log(3, "XMPP: BAD XML? %s\n", bxp->pxp->xml);
             return result;
         }
     }
-    butil_log(3, "error: %s\n", bxp->abuf);
+    butil_log(3, "XMPP Error: %s\n", bxp->abuf);
     return -1;
 }
 
@@ -192,9 +203,8 @@ static const char *bxmpp_state(bxmpp_state_t state)
     case bxmppSCRAMreply:       return "SCRAMreply";
     case bxmppBind:             return "Bind";
     case bxmppBindReply:        return "BindReply";
-    case bxmppSession:          return "Session";
-    case bxmppSessionReply:     return "SessionReply";
     case bxmppConnected:        return "Connected";
+    case bxmppCheckIQreply:     return "CheckIQreply";
     case bxmppOutPhase:         return "OutPhase";
     case bxmppInPhase:          return "InPhase";
     }
@@ -214,8 +224,35 @@ static const char *bxmpp_layer(bxmpp_layer_t layer)
     return "???";
 }
 
+int bxmpp_finished(bxmpp_t *bxp)
+{
+    if (! bxp)
+    {
+        return -1;
+    }
+    return (bxp->state == bxmppDone) ? 1 : 0;
+}
+
+int bxmpp_connected(bxmpp_t *bxp)
+{
+    if (! bxp)
+    {
+        return 0;
+    }
+    if (bxp->state == bxmppConnected)
+    {
+        return 1;
+    }
+    if (bxp->state == bxmppInPhase && bxp->next_state == bxmppConnected)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 static void bxmpp_push_state(bxmpp_t *bxp, bxmpp_state_t to_state, bxmpp_state_t ret_state)
 {
+    bxp->long_timeout = 0;
     bxp->next_state = ret_state;
     bxp->state = to_state;
 }
@@ -226,33 +263,7 @@ static void bxmpp_pop_state(bxmpp_t *bxp)
     bxp->next_state = bxmppInit;
 }
 
-int bxmpp_restart(bxmpp_t *bxp, const char *user, const char *password)
-{
-    if (! bxp || ! user || ! password)
-    {
-        return -1;
-    }
-    if (strlen(user) >= BXMPP_MAX_ADDR)
-    {
-        return -1;
-    }
-    if (strlen(password) >= BXMPP_MAX_ADDR)
-    {
-        return -1;
-    }
-    strcpy(bxp->user, user);
-    strcpy(bxp->pass, password);
-
-    if (bxp->stream)
-    {
-        bxp->stream->close(bxp->stream);
-        bxp->stream = NULL;
-    }
-    bxp->state = bxmppInit;
-    return 0;
-}
-
-int bxmpp_setup(bxmpp_t *bxp)
+int bxmpp_slice(bxmpp_t *bxp)
 {
     iostream_t *stream;
     const char *ptag;
@@ -260,6 +271,7 @@ int bxmpp_setup(bxmpp_t *bxp)
     size_t val_len;
     size_t nmade;
     size_t count;
+    time_t now;
     int result;
 
     static int oldincount;
@@ -269,7 +281,7 @@ int bxmpp_setup(bxmpp_t *bxp)
 
     if (bxp->state != oldstate || bxp->in.count != oldincount)
     {
-        butil_log(5, "state=%s layer=%s  in=%u out=%u\n",
+        butil_log(6, "XMPP state=%s layer=%s  in=%u out=%u\n",
               bxmpp_state(bxp->state),
               bxmpp_layer(bxp->layer),
               bxp->in.count, bxp->out.count);
@@ -296,7 +308,7 @@ int bxmpp_setup(bxmpp_t *bxp)
             bxp->stream = iostream_create_from_tcp_connection(bxp->host, BXMPP_TLS_PORT);
             if (bxp->stream)
             {
-                butil_log(4, "Connected to TLS port\n");
+                butil_log(4, "XMPP Connected to TLS port\n");
                 bxp->port = BXMPP_TLS_PORT;
             }
         }
@@ -307,7 +319,7 @@ int bxmpp_setup(bxmpp_t *bxp)
         }
         else
         {
-            butil_log(4, "Connnected to %s:%u\n", bxp->host, bxp->port);
+            butil_log(4, "XMPP Connnected to %s:%u\n", bxp->host, bxp->port);
             bxp->state = bxmppTransport;
             bxp->next_state = bxmppInit;
             bxp->layer = bxmppLayerTCP;
@@ -336,7 +348,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                                 );
         if (result)
         {
-            butil_log(1, "Failed to format stream start\n");
+            butil_log(1, "XMPP Failed to format stream start\n");
             return result;
         }
         bxp->out.count = nmade;
@@ -382,21 +394,21 @@ int bxmpp_setup(bxmpp_t *bxp)
                     result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
                     if (! result)
                     {
-                        butil_log(5, "starttttls=%s\n", pval);
+                        butil_log(7, "startttls=%s\n", pval);
 
                         // see if starttls is really required
                         //
                         result = strncmp(pval + 1, "required", 8);
                         if (! result)
                         {
-                            butil_log(4, "TLS required\n");
+                            butil_log(5, "XMPP TLS required\n");
                             bxp->state = bxmppTLS;
                         }
                     }
                 }
                 else if (result != bxml_not_found)
                 {
-                    butil_log(4, "Bad Reply XML:%s\n", bxp->pxp->xml);
+                    butil_log(4, "XMPP Bad Reply XML:%s\n", bxp->pxp->xml);
                     bxp->state = bxmppDone;
                 }
                 break;
@@ -421,7 +433,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                                         );
                         if (! result)
                         {
-                            butil_log(5, "mechanism[%d]=%s\n", i, bxp->abuf);
+                            butil_log(6, "mechanism[%d]=%s\n", i, bxp->abuf);
 
                             // match auth avail to auths configured and then to preferred
                             //
@@ -438,7 +450,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                                             ||  (bxp->authpreferred == bsaslAuthNone)
                                         )
                                         {
-                                            butil_log(4, "Selected Auth %s\n", (char*)bxp->abuf);
+                                            butil_log(5, "XMPP Selected Auth %s\n", (char*)bxp->abuf);
                                             bxp->authtype = s_authlist[j].type;
                                             break;
                                         }
@@ -470,7 +482,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                 else
                 {
                     // Bind stream
-                    butil_log(6, "Can Bind\n");
+                    butil_log(7, "Can Bind\n");
                     bxp->state = bxmppBind;
                 }
                 result = 0;
@@ -542,7 +554,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                     bxp->stream = NULL;
                     bxp->state = bxmppDone;
                 }
-                butil_log(4, "TLS started\n");
+                butil_log(5, "XMPP TLS started\n");
 
                 // use tcp stream wrapped in tls io
                 //
@@ -560,7 +572,7 @@ int bxmpp_setup(bxmpp_t *bxp)
             }
             else
             {
-                butil_log(4, "Bad Reply XML:%s\n", bxp->pxp->xml);
+                butil_log(4, "XMPP Bad Reply XML:%s\n", bxp->pxp->xml);
                 bxp->state = bxmppDone;
             }
         }
@@ -644,12 +656,14 @@ int bxmpp_setup(bxmpp_t *bxp)
                         {
                             n = butil_base64_decode((uint8_t*)bxp->abuf,
                                     sizeof(bxp->abuf), (char*)bxp->out.data + 2);
+                            #if 0
                             printf("REPLY SERVERSIG=\n");
                             for (j = 0; j < n; j++)
                             {
                                 printf("%02X", (uint8_t)bxp->abuf[j]);
                             }
                             printf("\n");
+                            #endif
                         }
                     }
                 }
@@ -667,14 +681,14 @@ int bxmpp_setup(bxmpp_t *bxp)
                     result = bxml_find_element(bxp->pxp, "aborted", '\0', 0, &ptag);
                     if (! result)
                     {
-                        butil_log(2, "Aborted in SASL\n");
+                        butil_log(2, "XMPP Aborted in SASL\n");
                         explained_it = true;
                         break;
                     }
                     result = bxml_find_element(bxp->pxp, "failure", '\0', 0, &ptag);
                     if (result)
                     {
-                        butil_log(4, "Bad SASL reply XML? %s\n", bxp->pxp->xml);
+                        butil_log(4, "XMPP Bad SASL reply XML? %s\n", bxp->pxp->xml);
                         explained_it = true;
                         break;
                     }
@@ -689,7 +703,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                                         );
                     if (! result)
                     {
-                        butil_log(3, "SASL Failed: %s\n", bxp->abuf);
+                        butil_log(3, "XMPP SASL Failed: %s\n", bxp->abuf);
                         explained_it = true;
                     }
                 }
@@ -697,13 +711,13 @@ int bxmpp_setup(bxmpp_t *bxp)
 
                 if (! explained_it)
                 {
-                    butil_log(3, "SASL Failure (unspecified)\n");
+                    butil_log(3, "XMPP SASL Failure (unspecified)\n");
                 }
                 bxp->state = bxmppDone;
             }
             else
             {
-                butil_log(4, "Bad Reply XML:%s\n", bxp->pxp->xml);
+                butil_log(4, "XMPP Bad Reply XML:%s\n", bxp->pxp->xml);
                 bxp->state = bxmppDone;
             }
         }
@@ -737,7 +751,7 @@ int bxmpp_setup(bxmpp_t *bxp)
                                 bxp->abuf,
                                 2,
                                 "type", "set",
-                                "id", "0"
+                                "id", bxmpp_next_id_str(bxp)
                                 );
         if (result)
         {
@@ -798,60 +812,29 @@ int bxmpp_setup(bxmpp_t *bxp)
                 BERROR("Copy JID");
                 break;
             }
-            butil_log(4, "Bound to ID:%s\n", bxp->jid);
-        #if 0
-            bxp->layer = bxmppLayerSession;
-            bxp->state = bxmppSession;
-        #else
+            butil_log(7, "Bound to ID:%s\n", bxp->jid);
+
             bxp->layer = bxmppLayerSession;
             bxp->state = bxmppConnected;
-
-            // send a message to ourselves
-            //
-            result = bxml_format_element(
-                                    (char*)bxp->out.data,
-                                    bxp->out.size,
-                                    &nmade,
-                                    false,
-                                    "message",
-                                    "<body>Hello</body>",
-                                    5,
-                                    "from", bxp->jid,
-                                    "to", bxp->jid,
-                                    "version", "1.0",
-                                    "xmlns", "jabber:client",
-                                    "xmlns:stream", "http://etherx.jabber.org/streams"
-                                    );
-            if (result)
-            {
-                BERROR("Format IQ");
-                return result;
-            }
-            bxp->out.count = nmade;
-            bxp->out.head = bxp->out.count;
-            bxmpp_push_state(bxp, bxmppOutPhase, bxmppConnected);
-        #endif
         }
-        break;
-
-    case bxmppSession:
-
-        bxp->state = bxmppDone;
-        break;
-
-    case bxmppSessionReply:
-
-        bxp->state = bxmppDone;
         break;
 
     case bxmppConnected:
 
+        // if no data, go get some
+        //
+        if (bxp->in.count == 0)
+        {
+            bxmpp_push_state(bxp, bxmppInPhase, bxmppConnected);
+            result = 0;
+            break;
+        }
         // parse xml from server
         //
         bxp->pxp = bxml_parser_create(&bxp->xmlparser, bxp->ibuf);
         if (! bxp->pxp)
         {
-            BERROR("No XML parser for sasl reply");
+            BERROR("No XML parser for message");
             return -1;
         }
         bxp->in.count = 0;
@@ -886,37 +869,109 @@ int bxmpp_setup(bxmpp_t *bxp)
                 {
                     bxp->abuf[0] = '\0';
                 }
-                result = bxml_find_element(bxp->pxp, "message.body", '.', 0, &ptag);
-                if (! result)
+                result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
+                if (result)
                 {
-                    result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
-                    if (result)
-                    {
-                        BERROR("Parse Message");
-                        break;
-                    }
-                    result = bxml_copy_element((char *)bxp->out.data, bxp->out.size, pval, val_len, false, false);
-                    if (result)
-                    {
-                        BERROR("Copy message");
-                        break;
-                    }
-                    butil_log(2, "MESSAGE From %s:\n%s\n", bxp->abuf, bxp->out.data);
+                    BERROR("Parse Message");
+                    break;
                 }
-                bxmpp_push_state(bxp, bxmppInPhase, bxmppConnected);
-                result = 0;
+                result = bxml_copy_element((char *)bxp->out.data, bxp->out.size, pval, val_len, false, false);
+                if (result)
+                {
+                    BERROR("Copy message");
+                    break;
+                }
+                butil_log(6, "XMPP MESSAGE From %s:\n%s\n", bxp->abuf, bxp->out.data);
+                if (bxp->message_callback)
+                {
+                    result = bxp->message_callback(bxp, bxp->message_priv, bxp->abuf, (char*)bxp->out.data);
+                    if (result)
+                    {
+                        butil_log(1, "Message callback cancels\n");
+                        bxp->state = bxmppDone;
+                        return result;
+                    }
+                }
             }
-            else if (result != bxml_not_found)
+            bxmpp_push_state(bxp, bxmppInPhase, bxmppConnected);
+            result = 0;
+        }
+        while (0);
+
+        break;
+
+    case bxmppCheckIQreply:
+
+        // parse xml from server
+        //
+        bxp->pxp = bxml_parser_create(&bxp->xmlparser, bxp->ibuf);
+        if (! bxp->pxp)
+        {
+            BERROR("No XML parser for IQ reply");
+            return -1;
+        }
+        bxp->in.count = 0;
+        bxp->in.head = bxp->in.tail = 0;
+
+        bxp->state = bxmppDone;
+
+        do // try
+        {
+            // check for errors from server
+            //
+            result = bxmpp_check_errors(bxp);
+            if (result)
             {
                 break;
             }
-            else
+            // check for iq
+            //
+            result = bxml_find_element(bxp->pxp, "iq", '.', 0, &ptag);
+            if (! result)
             {
+                result = bxml_find_and_copy_attribute(
+                                                    bxp->pxp,
+                                                    ptag,
+                                                    "from",
+                                                    bxp->abuf,
+                                                    sizeof(bxp->abuf),
+                                                    false,
+                                                    false
+                                                    );
+                if (result)
+                {
+                    bxp->abuf[0] = '\0';
+                }
+                result = bxml_parse_value(bxp->pxp, ptag, NULL, 0, NULL, &pval, &val_len);
+                if (result)
+                {
+                    BERROR("Parse IQ");
+                    break;
+                }
+                result = bxml_copy_element((char *)bxp->out.data, bxp->out.size, pval, val_len, false, false);
+                if (result)
+                {
+                    BERROR("Copy message");
+                    break;
+                }
+                butil_log(6, "XMPP IQ From %s:\n%s\n", bxp->abuf, bxp->out.data);
+                #if 0   // perhaps, in case we want to tell user?
+                if (bxp->message_callback)
+                {
+                    result = bxp->message_callback(bxp, bxp->message_priv, bxp->abuf, (char*)bxp->out.data);
+                    if (result)
+                    {
+                        butil_log(1, "Message callback cancels\n");
+                        bxp->state = bxmppDone;
+                        return result;
+                    }
+                }
+                #endif
+                bxmpp_push_state(bxp, bxmppInPhase, bxmppConnected);
                 result = 0;
             }
         }
         while (0);
-
         break;
 
     case bxmppDone:
@@ -938,16 +993,34 @@ int bxmpp_setup(bxmpp_t *bxp)
 
         // ensure stream is writeable
         //
-        result = bxp->stream->poll(bxp->stream, writeable, 1, 10000);
+        result = bxp->stream->poll(bxp->stream, writeable, 0, 50000);
         if (result < 0)
         {
+            bxp->state = bxmppDone;
             return result;
         }
         if (result == 0)
         {
-            // todo - long timeout
-            return 0;
+            time(&now);
+            if (bxp->long_timeout == 0)
+            {
+                bxp->long_timeout = now + BXMPP_IO_TIMEOUT;
+            }
+            else
+            {
+                if (now > bxp->long_timeout)
+                {
+                    butil_log(2, "XMPP Output Timeout\n");
+                    bxp->state = bxmppDone;
+                    result = -1;
+                    break;
+                }
+            }
+            break;
         }
+        // got data, reset timout
+        bxp->long_timeout = 0;
+
         // get contiguous data to send
         //
         if (bxp->out.head > bxp->out.tail)
@@ -958,13 +1031,14 @@ int bxmpp_setup(bxmpp_t *bxp)
         {
             count = bxp->out.size - bxp->out.tail;
         }
-        butil_log(5, "XML REQ>>>=%s\n", bxp->out.data);
+        butil_log(6, "XMPP XML REQ>>>=%s\n", bxp->out.data);
 
         // send it up stream
         //
         result = bxp->stream->write(bxp->stream, bxp->out.data + bxp->out.tail, count);
         if (result < 0)
         {
+            bxp->state = bxmppDone;
             return result;
         }
         bxp->out.tail += result;
@@ -974,7 +1048,8 @@ int bxmpp_setup(bxmpp_t *bxp)
         }
         bxp->out.count -= result;
 
-        // if sent it all, pop state
+        // if sent it all the got get any reply, then go back to the
+        // next state after the reply is i
         //
         if (bxp->out.count == 0)
         {
@@ -989,17 +1064,39 @@ int bxmpp_setup(bxmpp_t *bxp)
 
         // check for stream readable
         //
-        result = bxp->stream->poll(bxp->stream, readable, 5, 50000);
+        result = bxp->stream->poll(bxp->stream, readable, 0, 50000);
         if (result < 0)
         {
             return result;
         }
         if (result == 0)
         {
-            // todo - long timeout
-            //
-            return 0;
+            time(&now);
+            if (bxp->long_timeout == 0)
+            {
+                bxp->long_timeout = now + BXMPP_IO_TIMEOUT;
+            }
+            else
+            {
+                if (now > bxp->long_timeout)
+                {
+                    if(bxp->next_state != bxmppConnected)
+                    {
+                        butil_log(2, "XMPP Input Timeout\n");
+                        bxp->state = bxmppDone;
+                        result = -1;
+                    }
+                    else
+                    {
+                        bxmpp_pop_state(bxp);
+                    }
+                }
+            }
+            break;
         }
+        // got data, reset timout
+        bxp->long_timeout = 0;
+
         do
         {
             // ensure max contiguous data to read, will always leave head > tail
@@ -1013,7 +1110,14 @@ int bxmpp_setup(bxmpp_t *bxp)
             result = bxp->stream->read(bxp->stream, bxp->in.data + bxp->in.head, count);
             if (result < 0)
             {
+                bxp->state = bxmppDone;
                 return result;
+            }
+            if (result == 0)
+            {
+                butil_log(2, "XMPP Connection closed\n");
+                bxp->state = bxmppDone;
+                return -1;
             }
             bxp->in.head += result;
             if (bxp->in.head > bxp->in.size)
@@ -1025,6 +1129,7 @@ int bxmpp_setup(bxmpp_t *bxp)
             result = bxp->stream->poll(bxp->stream, readable, 0, 50000);
             if (result < 0)
             {
+                bxp->state = bxmppDone;
                 return result;
             }
         }
@@ -1040,7 +1145,7 @@ int bxmpp_setup(bxmpp_t *bxp)
         }
         bxp->in.count++;
 
-        butil_log(5, "XML REPLY<<<<=%s\n", bxp->in.data);
+        butil_log(6, "XMPP XML REPLY<<<<=%s\n", bxp->in.data);
 
         // return to state
         //
@@ -1055,14 +1160,138 @@ int bxmpp_setup(bxmpp_t *bxp)
     return result;
 }
 
+int bxmpp_send_message(bxmpp_t *bxp, const char *recipient, const char *msg)
+{
+    size_t nmade;
+    int result;
+
+    if (! bxp || ! recipient || ! msg)
+    {
+        return -1;
+    }
+    if (bxp->state != bxmppConnected)
+    {
+        butil_log(2, "XMPP Not connected for send message\n");
+        return -1;
+    }
+    result = bxml_format_element(
+                            (char*)bxp->out.data,
+                            bxp->out.size,
+                            &nmade,
+                            false,
+                            "message",
+                            msg,
+                            5,
+                            "from", bxp->jid,
+                            "to", recipient,
+                            "version", "1.0",
+                            "xmlns", "jabber:client",
+                            "xmlns:stream", "http://etherx.jabber.org/streams"
+                            );
+    if (result)
+    {
+        BERROR("Format Message");
+        return result;
+    }
+    bxp->out.count = nmade;
+    bxp->out.head = bxp->out.count;
+    bxmpp_push_state(bxp, bxmppOutPhase, bxmppConnected);
+    return 0;
+}
+
+int bxmpp_send_infoquery(bxmpp_t *bxp, const char *recipient, const char *msg)
+{
+    size_t nmade;
+    int result;
+
+    if (! bxp || ! recipient || ! msg)
+    {
+        return -1;
+    }
+    if (bxp->state != bxmppConnected)
+    {
+        butil_log(2, "XMPP Not connected for send message\n");
+        return -1;
+    }
+    result = bxml_format_element(
+                            (char*)bxp->out.data,
+                            bxp->out.size,
+                            &nmade,
+                            false,
+                            "iq",
+                            msg,
+                            2,
+                            "type", "set",
+                            "to", recipient,
+                            "id", bxmpp_next_id_str(bxp)
+                            );
+    if (result)
+    {
+        BERROR("Format IQ");
+        return result;
+    }
+    bxp->out.count = nmade;
+    bxp->out.head = bxp->out.count;
+    bxmpp_push_state(bxp, bxmppOutPhase, bxmppCheckIQreply);
+    return 0;
+}
+
+int bxmpp_restart(bxmpp_t *bxp, const char *user, const char *password)
+{
+    if (! bxp || ! user || ! password)
+    {
+        return -1;
+    }
+    if (strlen(user) >= BXMPP_MAX_ADDR)
+    {
+        return -1;
+    }
+    if (strlen(password) >= BXMPP_MAX_ADDR)
+    {
+        return -1;
+    }
+    strcpy(bxp->user, user);
+    strcpy(bxp->pass, password);
+
+    if (bxp->stream)
+    {
+        bxp->stream->close(bxp->stream);
+        bxp->stream = NULL;
+    }
+    if (bxp->sasl)
+    {
+        bsasl_auth_context_destroy(bxp->sasl);
+        bxp->sasl = NULL;
+    }
+    bxp->layer = bxmppLayerNone;
+    bxp->state = bxmppInit;
+    bxp->next_state = bxmppInit;
+
+    bxp->in.head = 0;
+    bxp->in.tail = 0;
+    bxp->in.count = 0;
+
+    bxp->out.head = 0;
+    bxp->out.tail = 0;
+    bxp->out.count = 0;
+
+    bxp->long_timeout = 0;
+
+    bxp->authtype = bsaslAuthNone;
+
+    bxp->state = bxmppInit;
+    return 0;
+}
 
 bxmpp_t *bxmpp_create(
-                        const char       *host,
-                        uint16_t          port,
-                        bsasl_auth_type_t preferred_auth,
-                        const char       *user,
-                        const char       *password,
-                        const char       *id
+                        const char         *host,
+                        uint16_t            port,
+                        bsasl_auth_type_t   preferred_auth,
+                        const char         *user,
+                        const char         *password,
+                        const char         *id,
+                        xmpp_msg_callback_t callback,
+                        void               *priv
                      )
 {
     bxmpp_t *bxp;
@@ -1090,27 +1319,24 @@ bxmpp_t *bxmpp_create(
     bxp = (bxmpp_t *)malloc(sizeof(bxmpp_t));
     if (bxp)
     {
+        if (bxmpp_restart(bxp, user, password))
+        {
+            free(bxp);
+            return NULL;
+        }
+        bxp->message_callback = callback;
+        bxp->message_priv = priv;
         bxp->in.size = BXMPP_IO_SIZE;
         bxp->in.data = (uint8_t *)bxp->ibuf;
-        bxp->in.head = 0;
-        bxp->in.tail = 0;
-        bxp->in.count = 0;
         bxp->out.size = BXMPP_IO_SIZE;
         bxp->out.data = (uint8_t*)bxp->obuf;
-        bxp->out.head = 0;
-        bxp->out.tail = 0;
-        bxp->out.count = 0;
-        bxp->authtype = bsaslAuthNone;
         bxp->authpreferred = preferred_auth;
-        bxp->sasl = NULL;
         strcpy(bxp->host, host);
         bxp->port = port;
         strcpy(bxp->user, user);
         strcpy(bxp->pass, password);
         strcpy(bxp->id, id);
-        bxp->layer = bxmppLayerNone;
-        bxp->state = bxmppInit;
-        bxp->next_state = bxmppInit;
+        bxp->sasl = NULL;
         bxp->stream = NULL;
     }
     return bxp;
@@ -1120,16 +1346,7 @@ int bxmpp_destroy(bxmpp_t *bxp)
 {
     if (bxp)
     {
-        if (bxp->stream)
-        {
-            bxp->stream->close(bxp->stream);
-            bxp->stream = NULL;
-        }
-        if (bxp->sasl)
-        {
-            bsasl_auth_context_destroy(bxp->sasl);
-            bxp->sasl = NULL;
-        }
+        bxmpp_restart(bxp, "", "");
         free(bxp);
         return 0;
     }

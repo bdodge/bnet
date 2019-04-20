@@ -56,6 +56,15 @@ typedef enum
 }
 gcp_state_t;
 
+typedef enum
+{
+    gcpxInit,
+    gcpxConnecting,
+    gcpxConnected,
+    gcpxRestart
+}
+gcp_xmpp_state_t;
+
 /// Context for an cloud print entity (a printer)
 //
 typedef struct tag_gcp_context
@@ -88,6 +97,8 @@ typedef struct tag_gcp_context
     http_client_t      *http_client;
     http_resource_t    *http_resources;
     bxmpp_t            *bxp;
+    gcp_xmpp_state_t    xmpp_state;
+    time_t              xmpp_restart;
     char                cds[GCP_MAX_CDS];
     char                cdd[GCP_MAX_CDD];
     ioring_t            io;

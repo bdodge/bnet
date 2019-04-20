@@ -15,7 +15,7 @@
  */
 #include "bxmpp.h"
 
-#if 1
+#if 0
 //const char *s_username = "bnettester1111@gmail.com";
 const char *s_server   = "xmpp.google.com";
 const char *s_password = "ya29.GlvxBuoI01xMDojrU1N0Zbim40GFZ1WqVRs1Mnpet8_5d5DjD8B1Z1PclYqxCkEccnpsjCgN6O3Uw7p2POXNxh2tHYhqUgUmnnynhoKjUxJpAk3AChBNU3noDq5y";
@@ -30,6 +30,15 @@ const char *s_password = "jabberwocky";
 bsasl_auth_type_t s_saslAuth = bsaslAuthSCRAMSHA1;
 #endif
 
+int mcb(bxmpp_t *bxp, void *priv, const char *sender, const char *msg)
+{
+	if (bxp && sender && msg)
+	{
+		butil_log(2, "Message from %s: %s\n", sender, msg);
+	}
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	bxmpp_t *bxp;
@@ -41,15 +50,33 @@ int main(int argc, char **argv)
 						s_server, BXMPP_PORT,
 						s_saslAuth,
 						s_username, s_password,
-						"talk"
+						"talk",
+						mcb, NULL
 						);
 	if (! bxp)
 	{
 		BERROR("Can't create context\n");
 	}
-	while (bxp->state != bxmppDone)
+	while (! bxmpp_connected(bxp))
 	{
-		result = bxmpp_setup(bxp);
+		result = bxmpp_slice(bxp);
+		if (result)
+		{
+			break;
+		}
+		if (bxmpp_finished(bxp))
+		{
+			break;
+		}
+	}
+	result = bxmpp_send_message(bxp, bxp->jid, "Hey this is testing\n");
+	if (result)
+	{
+		butil_log(0, "Fail: send message\n");
+	}
+	while (! bxmpp_finished(bxp))
+	{
+		result = bxmpp_slice(bxp);
 		if (result)
 		{
 			break;

@@ -22,18 +22,23 @@
 #include "bxml.h"
 #include "bsasl.h"
 
-#define BXMPP_PORT 5222
-#define BXMPP_TLS_PORT 443
+#define BXMPP_PORT          (5222)
+#define BXMPP_TLS_PORT      (443)
 
 #if SASL_SUPPORT_GOOGLE_EXTESNSIONS
-#define BXMPP_IO_SIZE 4096
+#define BXMPP_IO_SIZE       (4096)
 #else
-#define BXMPP_IO_SIZE 1436
+#define BXMPP_IO_SIZE       (1436)
 #endif
+#define BXMPP_IO_TIMEOUT    (15)
 
-#define BXMPP_MAX_HOST  256
-#define BXMPP_MAX_ADDR  256
-#define BXMPP_MAX_JID   256
+#define BXMPP_MAX_HOST      (256)
+#define BXMPP_MAX_ADDR      (256)
+#define BXMPP_MAX_JID       (256)
+
+struct tag_bxmpp;
+
+typedef int (*xmpp_msg_callback_t)(struct tag_bxmpp *bxp, void *priv, const char *sender, const char *message);
 
 typedef enum
 {
@@ -49,9 +54,8 @@ typedef enum
     bxmppSCRAMreply,
     bxmppBind,
     bxmppBindReply,
-    bxmppSession,
-    bxmppSessionReply,
     bxmppConnected,
+    bxmppCheckIQreply,
     bxmppOutPhase,
     bxmppInPhase
 }
@@ -67,33 +71,41 @@ typedef enum
 }
 bxmpp_layer_t;
 
-typedef struct
+typedef struct tag_bxmpp
 {
-    char host[BXMPP_MAX_HOST];
-    char user[BXMPP_MAX_ADDR];
-    char pass[BXMPP_MAX_ADDR];
-    char id[BXMPP_MAX_ADDR];
-    char jid[BXMPP_MAX_JID];
-    uint16_t        port;
-    bxmpp_layer_t   layer;
-    bxmpp_state_t   state;
-    bxmpp_state_t   next_state;
-    bsasl_auth_type_t authtype;
-    bsasl_auth_type_t authpreferred;
-    bsasl_auth_t   *sasl;
-    bxml_parser_t   xmlparser;
-    bxml_parser_t  *pxp;
-    char            abuf[BXMPP_IO_SIZE];
-    char            ibuf[BXMPP_IO_SIZE];
-    char            obuf[BXMPP_IO_SIZE];
-    ioring_t        in;
-    ioring_t        out;
-    iostream_t     *stream;
+    char                host[BXMPP_MAX_HOST];
+    char                user[BXMPP_MAX_ADDR];
+    char                pass[BXMPP_MAX_ADDR];
+    char                id[BXMPP_MAX_ADDR];
+    char                jid[BXMPP_MAX_JID];
+    xmpp_msg_callback_t message_callback;
+    void               *message_priv;
+    uint16_t            port;
+    bxmpp_layer_t       layer;
+    bxmpp_state_t       state;
+    bxmpp_state_t       next_state;
+    bsasl_auth_type_t   authtype;
+    bsasl_auth_type_t   authpreferred;
+    bsasl_auth_t       *sasl;
+    bxml_parser_t       xmlparser;
+    bxml_parser_t      *pxp;
+    uint32_t            next_id;
+    char                idbuf[16];
+    char                abuf[BXMPP_IO_SIZE];
+    char                ibuf[BXMPP_IO_SIZE];
+    char                obuf[BXMPP_IO_SIZE];
+    ioring_t            in;
+    ioring_t            out;
+    iostream_t         *stream;
+    time_t              long_timeout;
 }
 bxmpp_t;
 
-int bxmpp_setup         (bxmpp_t *bxp);
-
+int bxmpp_finished      (bxmpp_t *bxp);
+int bxmpp_connected     (bxmpp_t *bxp);
+int bxmpp_slice         (bxmpp_t *bxp);
+int bxmpp_send_message  (bxmpp_t *bxp, const char *recipient, const char *msg);
+int bxmpp_send_infoquery(bxmpp_t *bxp, const char *recipient, const char *msg);
 int bxmpp_restart       (bxmpp_t *bxp, const char *user, const char *password);
 
 bxmpp_t *bxmpp_create   (
@@ -102,7 +114,9 @@ bxmpp_t *bxmpp_create   (
                         bsasl_auth_type_t  preferred_auth,
                         const char        *user,
                         const char        *password,
-                        const char        *id
+                        const char        *id,
+                        xmpp_msg_callback_t callback,
+                        void              *priv
                         );
 
 int bxmpp_destroy       (bxmpp_t *bxp);

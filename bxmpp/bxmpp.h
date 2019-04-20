@@ -23,12 +23,17 @@
 #include "bsasl.h"
 
 #define BXMPP_PORT 5222
+#define BXMPP_TLS_PORT 443
 
+#if SASL_SUPPORT_GOOGLE_EXTESNSIONS
+#define BXMPP_IO_SIZE 4096
+#else
 #define BXMPP_IO_SIZE 1436
+#endif
 
 #define BXMPP_MAX_HOST  256
-#define BXMPP_MAX_ADDR  128
-#define BXMPP_MAX_JID   128
+#define BXMPP_MAX_ADDR  256
+#define BXMPP_MAX_JID   256
 
 typedef enum
 {
@@ -74,6 +79,7 @@ typedef struct
     bxmpp_state_t   state;
     bxmpp_state_t   next_state;
     bsasl_auth_type_t authtype;
+    bsasl_auth_type_t authpreferred;
     bsasl_auth_t   *sasl;
     bxml_parser_t   xmlparser;
     bxml_parser_t  *pxp;
@@ -86,17 +92,20 @@ typedef struct
 }
 bxmpp_t;
 
-int bxmpp_setup(bxmpp_t *bxp);
+int bxmpp_setup         (bxmpp_t *bxp);
 
-bxmpp_t *bxmpp_create(
-                        const char *host,
-                        uint16_t    port,
-                        const char *user,
-                        const char *password,
-                        const char *id
-                    );
+int bxmpp_restart       (bxmpp_t *bxp, const char *user, const char *password);
 
-int bxmpp_destroy(bxmpp_t *bxp);
+bxmpp_t *bxmpp_create   (
+                        const char        *host,
+                        uint16_t           port,
+                        bsasl_auth_type_t  preferred_auth,
+                        const char        *user,
+                        const char        *password,
+                        const char        *id
+                        );
+
+int bxmpp_destroy       (bxmpp_t *bxp);
 
 #endif
 

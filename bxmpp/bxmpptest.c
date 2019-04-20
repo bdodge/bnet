@@ -15,10 +15,20 @@
  */
 #include "bxmpp.h"
 
+#if 1
+//const char *s_username = "bnettester1111@gmail.com";
+const char *s_server   = "xmpp.google.com";
+const char *s_password = "ya29.GlvxBuoI01xMDojrU1N0Zbim40GFZ1WqVRs1Mnpet8_5d5DjD8B1Z1PclYqxCkEccnpsjCgN6O3Uw7p2POXNxh2tHYhqUgUmnnynhoKjUxJpAk3AChBNU3noDq5y";
+const char *s_username = "441b6afa351b24e78ef471243fda7d80@cloudprint.googleusercontent.com";
+bsasl_auth_type_t s_saslAuth = bsaslAuthOAUTH2;
+#else
 const char *s_username = "bnet_test_account";
 //const char *s_server   = "xmpp.jp";
 const char *s_server   = "jwchat.org";
 const char *s_password = "jabberwocky";
+//bsasl_auth_type_t s_saslAuth = bsaslAuthPLAIN;
+bsasl_auth_type_t s_saslAuth = bsaslAuthSCRAMSHA1;
+#endif
 
 int main(int argc, char **argv)
 {
@@ -29,6 +39,7 @@ int main(int argc, char **argv)
 
 	bxp = bxmpp_create(
 						s_server, BXMPP_PORT,
+						s_saslAuth,
 						s_username, s_password,
 						"talk"
 						);

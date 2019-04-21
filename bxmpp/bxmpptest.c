@@ -26,8 +26,8 @@ const char *s_username = "bnet_test_account";
 //const char *s_server   = "xmpp.jp";
 const char *s_server   = "jwchat.org";
 const char *s_password = "jabberwocky";
-//bsasl_auth_type_t s_saslAuth = bsaslAuthPLAIN;
-bsasl_auth_type_t s_saslAuth = bsaslAuthSCRAMSHA1;
+bsasl_auth_type_t s_saslAuth = bsaslAuthPLAIN;
+//bsasl_auth_type_t s_saslAuth = bsaslAuthSCRAMSHA1;
 #endif
 
 int mcb(bxmpp_t *bxp, void *priv, const char *sender, const char *msg)
@@ -44,13 +44,14 @@ int main(int argc, char **argv)
 	bxmpp_t *bxp;
 	int result;
 
-	butil_set_log_level(5);
+	butil_set_log_level(7);
 
 	bxp = bxmpp_create(
 						s_server, BXMPP_PORT,
 						s_saslAuth,
 						s_username, s_password,
 						"talk",
+						10,
 						mcb, NULL
 						);
 	if (! bxp)

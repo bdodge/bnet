@@ -814,6 +814,8 @@ int bxmpp_slice(bxmpp_t *bxp)
             }
             butil_log(7, "Bound to ID:%s\n", bxp->jid);
 
+            time(&bxp->ping_time);
+            bxp->ping_time += bxp->ping_period;
             bxp->layer = bxmppLayerSession;
             bxp->state = bxmppConnected;
         }
@@ -821,6 +823,27 @@ int bxmpp_slice(bxmpp_t *bxp)
 
     case bxmppConnected:
 
+        // if there's a ping period, check ping timer
+        //
+        if (bxp->ping_period > 0)
+        {
+            time(&now);
+
+            if (now > bxp->ping_time)
+            {
+                bxp->ping_time = now + bxp->ping_period;
+                result = bxmpp_send_infoquery(bxp,
+                            true, bxp->host, "<ping xmlns='urn:xmpp:ping'/>");
+                if (result)
+                {
+                    butil_log(3, "Ping failed\n");
+                    bxp->state = bxmppDone;
+                    result = 0;
+                    break;
+                }
+                break;
+            }
+        }
         // if no data, go get some
         //
         if (bxp->in.count == 0)
@@ -828,6 +851,34 @@ int bxmpp_slice(bxmpp_t *bxp)
             bxmpp_push_state(bxp, bxmppInPhase, bxmppConnected);
             result = 0;
             break;
+        }
+        // have some data. ignore white-space pinging
+        //
+        if (bxp->in.count < 6 /* <iq/> is shortest viable xml */)
+        {
+            int i;
+
+
+            for (i = 0; i < bxp->in.count - 1; i++)
+            {
+                if (
+                        bxp->in.data[i] != ' '
+                    &&  bxp->in.data[i] != '\t'
+                    &&  bxp->in.data[i] != '\r'
+                    &&  bxp->in.data[i] != '\n'
+                )
+                {
+                    break;
+                }
+            }
+            if (i == (bxp->in.count - 1))
+            {
+                butil_log(6, "Whitespace Ping\n");
+                bxp->in.count = 0;
+                bxp->in.head = 0;
+                result = 0;
+                break;
+            }
         }
         // parse xml from server
         //
@@ -1199,7 +1250,7 @@ int bxmpp_send_message(bxmpp_t *bxp, const char *recipient, const char *msg)
     return 0;
 }
 
-int bxmpp_send_infoquery(bxmpp_t *bxp, const char *recipient, const char *msg)
+int bxmpp_send_infoquery(bxmpp_t *bxp, bool is_query, const char *recipient, const char *msg)
 {
     size_t nmade;
     int result;
@@ -1220,8 +1271,9 @@ int bxmpp_send_infoquery(bxmpp_t *bxp, const char *recipient, const char *msg)
                             false,
                             "iq",
                             msg,
-                            2,
-                            "type", "set",
+                            4,
+                            "type", ((is_query) ? "get" : "set"),
+                            "from", bxp->jid,
                             "to", recipient,
                             "id", bxmpp_next_id_str(bxp)
                             );
@@ -1290,6 +1342,7 @@ bxmpp_t *bxmpp_create(
                         const char         *user,
                         const char         *password,
                         const char         *id,
+                        time_t              ping_period,
                         xmpp_msg_callback_t callback,
                         void               *priv
                      )
@@ -1326,6 +1379,7 @@ bxmpp_t *bxmpp_create(
         }
         bxp->message_callback = callback;
         bxp->message_priv = priv;
+        bxp->ping_period = ping_period;
         bxp->in.size = BXMPP_IO_SIZE;
         bxp->in.data = (uint8_t *)bxp->ibuf;
         bxp->out.size = BXMPP_IO_SIZE;

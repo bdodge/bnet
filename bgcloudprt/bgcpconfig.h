@@ -27,7 +27,7 @@
 
 /// how often to poll for jobs (fetch) (no sooner than on each power-up per spec)
 //
-#define GCP_JOBFETCH_POLL_PERIOD (30)
+#define GCP_JOBFETCH_POLL_PERIOD (60*60) /* 1 hour */
 
 /// Bytes in io buffers, should hold a whole gcp request/response
 //
@@ -49,7 +49,11 @@
 
 /// How long to wait before re-trying xmpp
 //
-#define GCP_XMPP_RECONNECT_PERIOD (10)
+#define GCP_XMPP_RECONNECT_PERIOD (30)
+
+/// How often to ping xmpp server for "keep alive"
+//
+#define GCP_XMPP_CLIENT_PING_PERIOD (10*60) /* 10 minutes */
 
 #define GCP_VER_MAJ         (2)
 #define GCP_VER_MIN         (0)

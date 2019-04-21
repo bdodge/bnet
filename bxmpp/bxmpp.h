@@ -97,6 +97,8 @@ typedef struct tag_bxmpp
     ioring_t            in;
     ioring_t            out;
     iostream_t         *stream;
+    time_t              ping_period;
+    time_t              ping_time;
     time_t              long_timeout;
 }
 bxmpp_t;
@@ -105,7 +107,7 @@ int bxmpp_finished      (bxmpp_t *bxp);
 int bxmpp_connected     (bxmpp_t *bxp);
 int bxmpp_slice         (bxmpp_t *bxp);
 int bxmpp_send_message  (bxmpp_t *bxp, const char *recipient, const char *msg);
-int bxmpp_send_infoquery(bxmpp_t *bxp, const char *recipient, const char *msg);
+int bxmpp_send_infoquery(bxmpp_t *bxp, bool is_query, const char *recipient, const char *msg);
 int bxmpp_restart       (bxmpp_t *bxp, const char *user, const char *password);
 
 bxmpp_t *bxmpp_create   (
@@ -115,6 +117,7 @@ bxmpp_t *bxmpp_create   (
                         const char        *user,
                         const char        *password,
                         const char        *id,
+                        time_t             ping_period,
                         xmpp_msg_callback_t callback,
                         void              *priv
                         );

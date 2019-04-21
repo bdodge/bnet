@@ -83,6 +83,7 @@ int gcp_xmpp_init(gcp_context_t *gcp)
                         bsaslAuthOAUTH2,
                         gcp->xmpp_jid, gcp->access_token,
                         "talk",
+                        GCP_XMPP_CLIENT_PING_PERIOD,
                         gcp_xmpp_on_message, gcp
                       );
     if (! gcp->bxp)
@@ -161,7 +162,7 @@ int gcp_xmpp_slice(gcp_context_t *gcp)
                                 );
             if (! result)
             {
-                result = bxmpp_send_infoquery(gcp->bxp, gcp->xmpp_jid , subscribe);
+                result = bxmpp_send_infoquery(gcp->bxp, false, gcp->xmpp_jid , subscribe);
             }
             if (result)
             {

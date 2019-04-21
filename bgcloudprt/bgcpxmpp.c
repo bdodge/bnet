@@ -16,7 +16,8 @@
 #include "bgcpxmpp.h"
 #include "bgcp.h"
 
-static int gcp_xmpp_on_message(bxmpp_t *bxp, void *priv, const char *sender, const char *msg)
+static int gcp_xmpp_on_message(bxmpp_t *bxp, void *priv,
+                bxmpp_cb_type_t type, const char *sender, const char *msg)
 {
     gcp_context_t *gcp;
     bxml_parser_t xmlparser;
@@ -33,7 +34,12 @@ static int gcp_xmpp_on_message(bxmpp_t *bxp, void *priv, const char *sender, con
     }
     gcp = (gcp_context_t *)priv;
 
-    butil_log(1, "MSG from:%s = %s\n", sender, msg);
+    if (type == bxmppINFOQUERY)
+    {
+        butil_log(5, "IQ from:%s = %s\n", sender, msg);
+        return 0;
+    }
+    butil_log(5, "MSG from:%s = %s\n", sender, msg);
 
     pxp = bxml_parser_create(&bxp->xmlparser, bxp->ibuf);
     if (! bxp->pxp)

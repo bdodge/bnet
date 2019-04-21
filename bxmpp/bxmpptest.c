@@ -30,11 +30,11 @@ bsasl_auth_type_t s_saslAuth = bsaslAuthPLAIN;
 //bsasl_auth_type_t s_saslAuth = bsaslAuthSCRAMSHA1;
 #endif
 
-int mcb(bxmpp_t *bxp, void *priv, const char *sender, const char *msg)
+int mcb(bxmpp_t *bxp, void *priv, bxmpp_cb_type_t type, const char *sender, const char *msg)
 {
 	if (bxp && sender && msg)
 	{
-		butil_log(2, "Message from %s: %s\n", sender, msg);
+		butil_log(2, "%s from %s: %s\n", (type == bxmppMESSAGE)?"Message":"IQ", sender, msg);
 	}
 	return 0;
 }

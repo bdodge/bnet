@@ -38,7 +38,15 @@
 
 struct tag_bxmpp;
 
-typedef int (*xmpp_msg_callback_t)(struct tag_bxmpp *bxp, void *priv, const char *sender, const char *message);
+typedef enum
+{
+    bxmppMESSAGE,
+    bxmppINFOQUERY
+}
+bxmpp_cb_type_t;
+
+typedef int (*xmpp_msg_callback_t)(struct tag_bxmpp *bxp, void *priv,
+                   bxmpp_cb_type_t type, const char *sender, const char *message);
 
 typedef enum
 {

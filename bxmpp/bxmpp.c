@@ -858,7 +858,6 @@ int bxmpp_slice(bxmpp_t *bxp)
         {
             int i;
 
-
             for (i = 0; i < bxp->in.count - 1; i++)
             {
                 if (
@@ -935,7 +934,8 @@ int bxmpp_slice(bxmpp_t *bxp)
                 butil_log(6, "XMPP MESSAGE From %s:\n%s\n", bxp->abuf, bxp->out.data);
                 if (bxp->message_callback)
                 {
-                    result = bxp->message_callback(bxp, bxp->message_priv, bxp->abuf, (char*)bxp->out.data);
+                    result = bxp->message_callback(bxp, bxp->message_priv,
+                                        bxmppMESSAGE, bxp->abuf, (char*)bxp->out.data);
                     if (result)
                     {
                         butil_log(1, "Message callback cancels\n");
@@ -960,6 +960,33 @@ int bxmpp_slice(bxmpp_t *bxp)
         {
             BERROR("No XML parser for IQ reply");
             return -1;
+        }
+        // have some data. ignore white-space pinging
+        //
+        if (bxp->in.count < 6 /* <iq/> is shortest viable xml */)
+        {
+            int i;
+
+            for (i = 0; i < bxp->in.count - 1; i++)
+            {
+                if (
+                        bxp->in.data[i] != ' '
+                    &&  bxp->in.data[i] != '\t'
+                    &&  bxp->in.data[i] != '\r'
+                    &&  bxp->in.data[i] != '\n'
+                )
+                {
+                    break;
+                }
+            }
+            if (i == (bxp->in.count - 1))
+            {
+                butil_log(6, "Whitespace Ping\n");
+                bxp->in.count = 0;
+                bxp->in.head = 0;
+                result = 0;
+                break;
+            }
         }
         bxp->in.count = 0;
         bxp->in.head = bxp->in.tail = 0;
@@ -1006,10 +1033,10 @@ int bxmpp_slice(bxmpp_t *bxp)
                     break;
                 }
                 butil_log(6, "XMPP IQ From %s:\n%s\n", bxp->abuf, bxp->out.data);
-                #if 0   // perhaps, in case we want to tell user?
                 if (bxp->message_callback)
                 {
-                    result = bxp->message_callback(bxp, bxp->message_priv, bxp->abuf, (char*)bxp->out.data);
+                    result = bxp->message_callback(bxp, bxp->message_priv,
+                                        bxmppINFOQUERY, bxp->abuf, (char*)bxp->out.data);
                     if (result)
                     {
                         butil_log(1, "Message callback cancels\n");
@@ -1017,7 +1044,6 @@ int bxmpp_slice(bxmpp_t *bxp)
                         return result;
                     }
                 }
-                #endif
                 bxmpp_push_state(bxp, bxmppInPhase, bxmppConnected);
                 result = 0;
             }

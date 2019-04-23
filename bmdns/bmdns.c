@@ -882,6 +882,16 @@ int mdns_answer_question(
                     record_domain = &service->sub_domain_name;
                     resource_domain = &service->usr_domain_name;
                 }
+                else
+                {
+                    cmp = mdns_compare_names(&service->sd_domain_name, dname);
+                    if (! cmp)
+                    {
+                        butil_log(lma, "**D==Matched dns-sd record\n");
+                        record_domain = &service->sd_domain_name;
+                        resource_domain = &service->srv_domain_name;
+                    }
+                }
             }
         }
         if (! cmp)
@@ -1018,6 +1028,12 @@ bool mdns_question_relates(
             if (! cmp)
             {
                 butil_log(lma, "Q*S Matched sub service\n");
+                return true;
+            }
+            cmp = mdns_compare_names(&service->sd_domain_name, dname);
+            if (! cmp)
+            {
+                butil_log(lma, "Q*D Matched dns-sd ptr\n");
                 return true;
             }
         }
@@ -1511,17 +1527,23 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
 
         butil_log(5, "Announcing service %s\n", mdns_str_for_domain_name(&service->usr_domain_name));
 
+        // service instance record. text record
+        //
         result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_TXT, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
         }
-        result = mdns_answer_question(res, iface, &service->sub_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        // service domain name record, PTR to our service instance
+        //
+        result = mdns_answer_question(res, iface, &service->srv_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
         }
-        result = mdns_answer_question(res, iface, &service->srv_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        // sub service domain name record, PTR to our service instance
+        //
+        result = mdns_answer_question(res, iface, &service->sub_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
@@ -1577,6 +1599,18 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
             return result;
         }
     }
+    /*
+    for (service = iface->services; service; service = service->next)
+    {
+        // dns service discovery record. PTR to our service (srv_domain_name)
+        //
+        result = mdns_answer_question(res, iface, &service->sd_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        if (result)
+        {
+            return result;
+        }
+    }
+    */
     result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 220 : 0);
     return result;
 }
@@ -1999,7 +2033,7 @@ int mdns_responder_add_service(
     char name[MDNS_MAX_DNTEXT];
     int result;
 
-    if (! res || ! iface || ! srvname || ! dnsname || subname)
+    if (! res || ! iface || ! srvname || ! dnsname || ! subname)
     {
         return -1;
     }
@@ -2045,7 +2079,7 @@ int mdns_responder_add_service(
         free(service);
         return result;
     }
-    memset(&service->usr_domain_name.last_sent, 0, sizeof(service->txt_records.last_sent));
+    memset(&service->usr_domain_name.last_sent, 0, sizeof(service->usr_domain_name.last_sent));
 
     // create a domain name like "_servicename._proto.local"
     //
@@ -2071,9 +2105,9 @@ int mdns_responder_add_service(
         free(service);
         return result;
     }
-    memset(&service->srv_domain_name.last_sent, 0, sizeof(service->txt_records.last_sent));
+    memset(&service->srv_domain_name.last_sent, 0, sizeof(service->srv_domain_name.last_sent));
 
-    // finally create a domain name like "_universal._sub._servicename._proto.local"
+    // create a domain name like "_universal._sub._dnsname._proto.local"
     //
     result = mdns_assemble_name(
                                 name,
@@ -2081,7 +2115,7 @@ int mdns_responder_add_service(
                                 5,
                                 subname,
                                 "_sub",
-                                srvname,
+                                dnsname,
                                 mdns_srv_proto_name(proto),
                                 "local"
                                 );
@@ -2099,7 +2133,31 @@ int mdns_responder_add_service(
         free(service);
         return result;
     }
-    memset(&service->sub_domain_name.last_sent, 0, sizeof(service->txt_records.last_sent));
+    memset(&service->sub_domain_name.last_sent, 0, sizeof(service->sub_domain_name.last_sent));
+
+    // finally create a domain name like "_dns-sd._udp.local" to point to the service
+    //
+    result = mdns_assemble_name(
+                                name,
+                                sizeof(name),
+                                1,
+                                "_services._dns-sd._udp.local"
+                                );
+    if (result)
+    {
+        butil_log(0, "can't make dns-sd name\n");
+        free(service);
+        return result;
+    }
+    // convert to domain name struct
+    //
+    result = mdns_unflatten_name(res, name, &service->sd_domain_name);
+    if (result)
+    {
+        free(service);
+        return result;
+    }
+    memset(&service->sd_domain_name.last_sent, 0, sizeof(service->sd_domain_name.last_sent));
 
     if (txtrecs)
     {

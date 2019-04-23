@@ -261,6 +261,7 @@ int mdns_responder_add_service(
                                 mdns_interface_t *iface,
                                 const char *srvname,
                                 const char *dnsname,
+                                const char *subname,
                                 mdns_service_protocol_t proto,
                                 uint16_t port,
                                 const char *txtrecs,

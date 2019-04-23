@@ -1569,7 +1569,7 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
             return result;
         }
     }
-    if (iface->ipv6addr.addr != 0)
+    if (iface->ipv6addr.addr[0] != 0)
     {
         result = mdns_answer_question(res, iface, &iface->rev_ipv6, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
@@ -1986,8 +1986,9 @@ int mdns_responder_add_interface(
 int mdns_responder_add_service(
                                 mdns_responder_t *res,
                                 mdns_interface_t *iface,
-                                const char *usrname,
                                 const char *srvname,
+                                const char *dnsname,
+                                const char *subname,
                                 mdns_service_protocol_t proto,
                                 uint16_t port,
                                 const char *txtrecs,
@@ -1998,7 +1999,7 @@ int mdns_responder_add_service(
     char name[MDNS_MAX_DNTEXT];
     int result;
 
-    if (! res || ! iface || ! usrname || ! srvname)
+    if (! res || ! iface || ! srvname || ! dnsname || subname)
     {
         return -1;
     }
@@ -2025,8 +2026,8 @@ int mdns_responder_add_service(
                                 name,
                                 sizeof(name),
                                 4,
-                                usrname,
                                 srvname,
+                                dnsname,
                                 mdns_srv_proto_name(proto),
                                 "local"
                                 );
@@ -2052,7 +2053,7 @@ int mdns_responder_add_service(
                                 name,
                                 sizeof(name),
                                 3,
-                                srvname,
+                                dnsname,
                                 mdns_srv_proto_name(proto),
                                 "local"
                                 );
@@ -2078,7 +2079,7 @@ int mdns_responder_add_service(
                                 name,
                                 sizeof(name),
                                 5,
-                                "_universal",
+                                subname,
                                 "_sub",
                                 srvname,
                                 mdns_srv_proto_name(proto),
@@ -2086,7 +2087,7 @@ int mdns_responder_add_service(
                                 );
     if (result)
     {
-        butil_log(0, "service: name too big\n");
+        butil_log(0, "subservice: name too big\n");
         free(service);
         return result;
     }

@@ -32,6 +32,7 @@ MDNS_PATH=$(SRCROOT)/bmdns
 SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
 SIP_PATH=$(SRCROOT)/bsip
+PWG_PATH=$(SRCROOT)/bpwg
 IPP_PATH=$(SRCROOT)/bipp
 GCP_PATH=$(SRCROOT)/bgcloudprt
 
@@ -138,6 +139,7 @@ MDNSLIB=$(MDNS_PATH)/$(OBJDIR)/libbmdns.a
 SMTPLIB=$(SMTP_PATH)/$(OBJDIR)/libbsmtp.a
 SNMPLIB=$(SNMP_PATH)/$(OBJDIR)/libbsnmp.a
 SIPLIB=$(SIP_PATH)/$(OBJDIR)/libbsip.a
+PWGLIB=$(PWG_PATH)/$(OBJDIR)/libbpwg.a
 IPPLIB=$(IPP_PATH)/$(OBJDIR)/libbipp.a
 GCPLIB=$(GCP_PATH)/$(OBJDIR)/libbgcp.a
 
@@ -215,6 +217,9 @@ $(SNMP_PATH)/%.a:
 
 $(SIP_PATH)/%.a:
 	make -C $(SIP_PATH) library
+
+$(PWG_PATH)/%.a:
+	make -C $(PWG_PATH) library
 
 $(IPP_PATH)/%.a:
 	make -C $(IPP_PATH) library

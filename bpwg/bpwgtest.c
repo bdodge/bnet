@@ -20,6 +20,7 @@ int pwg_rip_file(const char *fname)
 {
     pwg_context_t spwg;
     iostream_t *fs;
+    uint8_t iobuf[256];
     int result;
 
     result = pwg_init_context(&spwg);
@@ -34,6 +35,51 @@ int pwg_rip_file(const char *fname)
         butil_log(0, "Can't open %s\n", fname);
         return -1;
     }
+    do
+    {
+        result = fs->poll(fs, readable, 0, 50000);
+        if (result < 0)
+        {
+            break;
+        }
+        if (result > 0)
+        {
+            size_t nread;
+            size_t navail;
+            size_t ntook;
+
+            nread = fs->read(fs, iobuf, sizeof(iobuf));
+            if (nread < 0)
+            {
+                butil_log(1, "Can't read file\n");
+                result = -1;
+                break;
+            }
+            if (nread == 0)
+            {
+                butil_log(1, "End of file\n");
+                result = 0;
+                break;
+            }
+            ntook = 0;
+            while ((nread - ntook) > 0)
+            {
+                navail = nread - ntook;
+                result = pwg_slice(&spwg, iobuf + ntook, &navail);
+                if (result)
+                {
+                    break;
+                }
+                //butil_log(5, "slice took %zu of %zu\n", navail, nread - ntook);
+                ntook += navail;
+            }
+            // call once more with no data to drive state if needed
+            navail = 0;
+            result = pwg_slice(&spwg, iobuf, &navail);
+        }
+    }
+    while (! result);
+
     fs->close(fs);
     return result;
 }
@@ -72,7 +118,7 @@ int main(int argc, char **argv)
     program = *argv++;
     argc--;
 
-    if (sizeof(pwg_header_t) != (1796 + 4))
+    if (sizeof(pwg_header_t) != 1796)
     {
         pwg_header_t hdr;
 

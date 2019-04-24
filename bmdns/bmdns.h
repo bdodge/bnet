@@ -172,9 +172,10 @@ mdns_service_protocol_t;
 typedef struct tag_mdns_service
 {
     mdns_interface_t *interface;        ///< Interface service is providing its service on
-    dns_domain_name_t usr_domain_name;  ///< FDQN with user name, in a dns struct (like "My Pages._http._tcp.local")
+    dns_domain_name_t usr_domain_name;  ///< FDQN with srv instance name, in a dns struct (like "My Pages._http._tcp.local")
     dns_domain_name_t srv_domain_name;  ///< FDQN with srv name, in a dns struct (like "_http._tcp.local")
     dns_domain_name_t sub_domain_name;  ///< FDQN with sub srv, in a dns struct (like "_universal._sub._http._tcp.local")
+    dns_domain_name_t sd_domain_name;   ///< FDQN with dns-sd dicovery PTR, in a dns struct (like "_dns-sd._udp.local")
     mdns_service_protocol_t proto;      ///< Protocol (tcp or udp)
     uint16_t                port;       ///< service port (like 80)
     dns_txt_records_t       txt_records;///< service's txt records (like "txtvers=1")

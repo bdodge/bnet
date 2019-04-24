@@ -30,7 +30,7 @@
 
 /// Packet max size (UDP packet payload)
 //
-#define MDNS_IO_SIZE		(1500)
+#define MDNS_IO_SIZE			(1500)
 
 /// Packet pool size
 //
@@ -43,7 +43,7 @@
 /// Max number of answer known-answers we'll compare against
 /// (only answers matching local records will count towards this)
 //
-#define MDNS_MAX_ANSWERS		(4)
+#define MDNS_MAX_ANSWERS		(8)
 
 /// whether to use memory trace or not, modifies small
 /// allocs to use local tracking allocator

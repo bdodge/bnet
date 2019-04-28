@@ -45,30 +45,33 @@ static int pwg_byteswap_header(pwg_header_t *hdr)
     return 0;
 }
 
-int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, size_t *ndata, bool *done)
+int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
 {
-    size_t chunk;
+    int avail;
+    int took;
 
     butil_log(8, "state %u l=%u.%u p=%u %u\n",
             pwg->line_state, pwg->lineno, pwg->line_repeat,
             pwg->pixelno, pwg->color_repeat);
+
     *done = false;
-    if (pwg->bytes_left > 0 && *ndata < 1)
+    if (*ndata < pwg->bytes_left)
     {
-        return -1;
+        // wait for bytes neede
+        *ndata = 0;
+        return 0;
     }
     switch (pwg->line_state)
     {
     case pwgLineLine:
         pwg->pixelno = 0;
-        pwg->line_repeat = 1 + (size_t)*data;
+        pwg->line_repeat = 1 + (uint8_t)*data;
         pwg->line_state = pwgLineRun;
         pwg->bytes_left = 1;
-        pwg->bytes_gotten = 0;
         *ndata = 1;
         break;
     case pwgLineRun:
-        pwg->color_repeat = (size_t)*data;
+        pwg->color_repeat = (uint8_t)*data;
         if (pwg->color_repeat > 127)
         {
             pwg->color_repeat = 257 - pwg->color_repeat;
@@ -80,18 +83,10 @@ int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, size_t *ndata, bool *done
             pwg->line_state = pwgLineRepeatColor;
         }
         pwg->bytes_left = 3;
-        pwg->bytes_gotten = 0;
         *ndata = 1;
         break;
     case pwgLineRepeatColor:
-        if (pwg->bytes_left > 0)
-        {
-            pwg->bytes_left--;
-            pwg->bytes_gotten++;
-            *ndata = 1;
-            break;
-        }
-        *ndata = 0;
+        *ndata = 3;
         pwg->pixelno += pwg->color_repeat;
         if (pwg->pixelno >= pwg->pixels)
         {
@@ -103,54 +98,52 @@ int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, size_t *ndata, bool *done
             pwg->lineno+= pwg->line_repeat;
             pwg->line_state = pwgLineLine;
             pwg->bytes_left = 1;
-            pwg->bytes_gotten = 0;
             break;
         }
         pwg->line_state = pwgLineRun;
         pwg->bytes_left = 1;
-        pwg->bytes_gotten = 0;
         break;
     case pwgLineSoloColor:
-        if (pwg->bytes_left > 0)
+        avail = *ndata;
+        took  = 0;
+        while (avail >= 3 && pwg->color_repeat > 0)
         {
-            pwg->bytes_left--;
-            pwg->bytes_gotten++;
-            *ndata = 1;
-            break;
-        }
-        *ndata = 0;
-        pwg->pixelno++;
-        if (pwg->pixelno >= pwg->pixels)
-        {
-            if (pwg->pixelno != pwg->pixels)
+            took += 3;
+            pwg->color_repeat--;
+            pwg->pixelno++;
+            if (pwg->pixelno >= pwg->pixels)
             {
-                butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                if (pwg->pixelno != pwg->pixels)
+                {
+                    butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                }
+                if (pwg->color_repeat != 0)
+                {
+                    butil_log(2, "Corrupt? more colors: %u\n", pwg->color_repeat);
+                }
+                *done = true;
+                pwg->lineno+= pwg->line_repeat;
+                pwg->line_state = pwgLineLine;
+                pwg->bytes_left = 1;
+                break;
             }
-            *done = true;
-            pwg->lineno+= pwg->line_repeat;
-            pwg->line_state = pwgLineLine;
-            pwg->bytes_left = 1;
-            pwg->bytes_gotten = 0;
-            break;
+            if (pwg->color_repeat == 0)
+            {
+                pwg->line_state = pwgLineRun;
+                pwg->bytes_left = 1;
+                break;
+            }
+            pwg->bytes_left = 3;
         }
-        pwg->color_repeat--;
-        if (pwg->color_repeat == 0)
-        {
-            pwg->line_state = pwgLineRun;
-            pwg->bytes_left = 1;
-            pwg->bytes_gotten = 0;
-            break;
-        }
-        pwg->bytes_left = 3;
-        pwg->bytes_gotten = 0;
+        *ndata = took;
         break;
     }
     return 0;
 }
 
-int pwg_slice(pwg_context_t *pwg, uint8_t *data, size_t *ndata)
+int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
 {
-    size_t chunk;
+    int chunk;
     bool done;
     int result;
 
@@ -212,7 +205,7 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, size_t *ndata)
         {
             break;
         }
-        butil_log(1, "line %zu of %u\n", pwg->lineno, pwg->rows);
+        butil_log(6, "line %zu of %u\n", pwg->lineno, pwg->rows);
         if(pwg->lineno >= pwg->rows)
         {
             butil_log(5, "End of page %u\n", pwg->pageno);

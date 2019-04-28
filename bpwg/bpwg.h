@@ -46,20 +46,20 @@ typedef struct tag_pwg_context
     pwg_state_t     state;
     pwg_line_state_t line_state;
     pwg_header_t    hdr;
-    size_t          pages;
-    size_t          rows;
-    size_t          pixels;
-    size_t          pageno;
-    size_t          lineno;
-    size_t          pixelno;
-    size_t          bytes_left;
-    size_t          bytes_gotten;
-    size_t          line_repeat;
-    size_t          color_repeat;
+    int             pages;
+    int             rows;
+    int             pixels;
+    int             pageno;
+    int             lineno;
+    int             pixelno;
+    int             bytes_left;
+    int             bytes_gotten;
+    int             line_repeat;
+    int             color_repeat;
 }
 pwg_context_t;
 
-int pwg_slice(pwg_context_t *pwg, uint8_t *data, size_t *ndata);
+int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata);
 int pwg_init_context(pwg_context_t *pwg);
 
 #endif

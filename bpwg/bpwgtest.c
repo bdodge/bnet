@@ -16,11 +16,15 @@
 #include "bpwg.h"
 #include "bpwgunits.h"
 
-int pwg_rip_file(const char *fname)
+int pwg_rip_file(const char *fname, int iosize)
 {
     pwg_context_t spwg;
     iostream_t *fs;
-    uint8_t iobuf[256];
+    ioring_t io;
+    int room;
+    int nread;
+    int navail;
+    int ntook;
     int result;
 
     result = pwg_init_context(&spwg);
@@ -35,51 +39,90 @@ int pwg_rip_file(const char *fname)
         butil_log(0, "Can't open %s\n", fname);
         return -1;
     }
+    io.head = 0;
+    io.tail = 0;
+    io.count = 0;
+    io.size = iosize;
+    io.data = (uint8_t*)malloc(iosize);
+    if (! io.data)
+    {
+        butil_log(0, "Can't alloc io\n");
+        return -1;
+    }
     do
     {
-        result = fs->poll(fs, readable, 0, 50000);
-        if (result < 0)
+        room = io.size - io.count;
+        if (room > (io.size / 2))
         {
-            break;
-        }
-        if (result > 0)
-        {
-            size_t nread;
-            size_t navail;
-            size_t ntook;
+            result = fs->poll(fs, readable, 0, 50000);
+            if (result < 0)
+            {
+                break;
+            }
+            if (result > 0)
+            {
+                iostream_normalize_ring(&io, NULL);
+                room = io.size - io.head;
 
-            nread = fs->read(fs, iobuf, sizeof(iobuf));
-            if (nread < 0)
-            {
-                butil_log(1, "Can't read file\n");
-                result = -1;
-                break;
-            }
-            if (nread == 0)
-            {
-                butil_log(1, "End of file\n");
-                result = 0;
-                break;
-            }
-            ntook = 0;
-            while ((nread - ntook) > 0)
-            {
-                navail = nread - ntook;
-                result = pwg_slice(&spwg, iobuf + ntook, &navail);
-                if (result)
+                nread = fs->read(fs, io.data + io.head, room);
+                if (nread < 0)
                 {
+                    butil_log(1, "Can't read file\n");
+                    result = -1;
                     break;
                 }
-                //butil_log(5, "slice took %zu of %zu\n", navail, nread - ntook);
-                ntook += navail;
+                if (nread == 0)
+                {
+                    butil_log(1, "End of file\n");
+                    result = 0;
+                    break;
+                }
+                io.count += nread;
+                io.head += nread;
+                if (io.head >= io.size)
+                {
+                    io.head = 0;
+                }
             }
-            // call once more with no data to drive state if needed
-            navail = 0;
-            result = pwg_slice(&spwg, iobuf, &navail);
+        }
+        while (io.count > 0)
+        {
+            if (io.head > io.tail)
+            {
+                navail = io.head - io.tail;
+            }
+            else
+            {
+                navail = io.size - io.tail;
+            }
+            result = pwg_slice(&spwg, io.data + io.tail, &navail);
+            if (result)
+            {
+                break;
+            }
+            ntook = navail;
+
+            //butil_log(5, "slice took %zu of %zu\n", navail, nread - ntook);
+
+            if (ntook == 0)
+            {
+                break;
+            }
+            io.count -= ntook;
+            io.tail += ntook;
+            if (io.tail >= io.size)
+            {
+                io.tail = 0;
+            }
+        }
+        if (result)
+        {
+            break;
         }
     }
     while (! result);
 
+    free(io.data);
     fs->close(fs);
     return result;
 }
@@ -173,10 +216,15 @@ int main(int argc, char **argv)
         }
         else
         {
+            int iosize;
+
             testfile = *argv++;
             argc--;
 
-            result = pwg_rip_file(testfile);
+            for (result = 0, iosize = 10; iosize < 2000000; iosize += 12345)
+            {
+                result = pwg_rip_file(testfile, iosize);
+            }
         }
     }
     return result;

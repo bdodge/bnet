@@ -235,7 +235,6 @@ const http_user_method_t *http_get_user_method(http_method_t method)
 
 int http_make_user_method_callback(
                             http_client_t *client,
-                            http_method_callback_type_t type,
                             http_method_t method,
                             const char *data
                             )
@@ -252,7 +251,7 @@ int http_make_user_method_callback(
         // this is ok, methods are allowed to ignore us
         return 0;
     }
-    return handler->callback(client, type, method, data, handler->priv);
+    return handler->callback(client, method, data, handler->priv);
 }
 
 static inline uint8_t byte_from_hex(char x)

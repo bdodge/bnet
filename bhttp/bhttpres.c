@@ -138,6 +138,10 @@ int http_file_callback(
     bool isdownload;
     int result;
 
+    if (cbtype == httpRequestHeader)
+    {
+        return 0;
+    }
     switch (client->method)
     {
     case httpGet:
@@ -358,17 +362,17 @@ int http_file_callback(
                 {
                     return -1;
                 }
-                if (*count == 0)
-                {
-                    // terminate upload when file done
-                    client->out_content_length = 0;
-                }
-                return 0;
             }
+            else /* note this */
             #endif
             {
                 result = stream->read(stream, *data, *count);
                 *count = result;
+            }
+            if (*count == 0)
+            {
+                // terminate upload when file done
+                client->out_content_length = 0;
             }
             return (result >= 0) ? 0 : -1;
         }
@@ -459,6 +463,10 @@ int http_canned_callback(
     size_t moved;
     size_t have;
 
+    if (cbtype == httpRequestHeader)
+    {
+        return 0;
+    }
     switch (cbtype)
     {
     case httpRequest:
@@ -556,6 +564,10 @@ int http_outbuffer_callback(
     size_t moved;
     size_t room;
 
+    if (cbtype == httpRequestHeader)
+    {
+        return 0;
+    }
     switch (cbtype)
     {
     case httpRequest:

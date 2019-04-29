@@ -19,6 +19,7 @@
 typedef enum
 {
     httpRequest,        ///< a reguest came in
+    httpRequestHeader,  ///< a header for a request that wasn't handled
     httpDownloadData,   ///< request is sending body data
     httpDownloadDone,   ///< the request body data is in, dispatch
     httpUploadData,     ///< callback is uploading data

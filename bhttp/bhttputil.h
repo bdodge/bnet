@@ -23,16 +23,8 @@
 #define http_log butil_log
 #define http_set_log_level butil_set_log_level
 
-typedef enum
-{
-    httpMethodRequest,
-    httpMethodHeader,
-}
-http_method_callback_type_t;
-
 typedef int (*http_method_callback_t)(
                             struct http_client *client,
-                            http_method_callback_type_t type,
                             const http_method_t method,
                             const char *data,
                             void *priv
@@ -83,7 +75,6 @@ const http_user_method_t *http_get_user_method(
                             );
 int http_make_user_method_callback(
                             struct http_client *client,
-                            http_method_callback_type_t type,
                             http_method_t method,
                             const char *data
                             );

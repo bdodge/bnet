@@ -31,6 +31,10 @@ int echo_callback(
 
     switch (cbtype)
     {
+    case httpRequestHeader:
+        http_log(5, "HDR: %s\n", (data && *data) ? *data : "<nil>");
+        break;
+
     case httpRequest:
 
         http_log(5, "ECB: %d\n", cbtype);
@@ -163,13 +167,12 @@ int cgi_callback(
 
 int on_evil_scheme(
                     http_client_t *client,
-                    http_method_callback_type_t type,
                     const http_method_t method,
                     const char *data,
                     void *priv
                 )
 {
-    http_log(5, "Method cb %d %s: %s\n", type,
+    http_log(5, "Method cb %s: %s\n",
            http_method_name(method), data ? data : "<nil>");
     return 0;
 }

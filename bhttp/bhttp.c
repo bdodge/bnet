@@ -964,25 +964,31 @@ static int http_process_header(http_client_t *client, char *header)
     {
         int result;
 
-        // if the method is a user method, and there's a callback
-        // then pass header to user's callback
+        // if the client has a resource, and callback, tell it about the header
         //
-        if (client->method >= HTTP_FIRST_USER_METHOD)
+        if (client->resource && client->resource->callback)
         {
-            // call user callback and let it know a request is in
-            result = http_make_user_method_callback(
-                                        client,
-                                        httpMethodHeader,
-                                        client->method,
-                                        header
-                                        );
-            if (result == 0)
+            result = client->resource->callback(
+                                            client,
+                                            client->resource,
+                                            httpRequestHeader,
+                                            (uint8_t**)&header,
+                                            NULL
+                                            );
+            if (result)
             {
-                // user method absorbed header
-                return 0;
+                // note we intentionally ignore error returns in header
+                // processing callbacks, the main request callback should
+                // handle any errors then
+                //
+                http_log(3, "Header callback error (ignored)\n");
+                result = 0;
             }
         }
-        http_log(5, "ignore header %s\n", header);
+        else
+        {
+            http_log(5, "ignore header %s\n", header);
+        }
     }
     return 0;
 }
@@ -1445,6 +1451,26 @@ int http_client_slice(http_client_t *client)
         client->resource_open = false;
         client->ctxpriv  = NULL;
 
+        // lookup the resource for requests that need a resource. this just
+        // sets the client resource member. errors are flagged after any
+        // headers are read in
+        //
+        if (!client->isclient && client->method != httpOptions && client->method != httpUnsupported)
+        {
+            client->resource = http_find_resource(
+                                                client->resources,
+                                                client->ws_upgrade ?
+                                                    (client->secure ? schemeWSS : schemeWS) :
+                                                    http_scheme_base(client->scheme),
+                                                client->path,
+                                                client->method
+                                                );
+            if (! client->resource)
+            {
+                http_log(5, "No resource %s for method %s\n", client->path, http_method_name(client->method));
+                // note we read the headers anyway, because this helps flow, and debug
+            }
+        }
         http_get_line(client, httpHeaders);
         break;
 
@@ -1696,33 +1722,8 @@ int http_client_slice(http_client_t *client)
             }
             break;
         }
-        switch (client->method)
+        if (client->method != httpOptions && client->method != httpUnsupported)
         {
-        case httpGet:
-        case httpPut:
-        case httpPost:
-        #if HTTP_SUPPORT_WEBDAV
-        case httpDelete:
-        case httpPropFind:
-        case httpPropPatch:
-        case httpMkCol:
-        case httpCopy:
-        case httpMove:
-        case httpLock:
-        case httpUnlock:
-        #endif
-        case httpUser0: case httpUser1: case httpUser2: case httpUser3:
-        case httpUser4: case httpUser5: case httpUser6: case httpUser7:
-        case httpUser8: case httpUser9: case httpUser10: case httpUser11:
-        case httpUser12: case httpUser13: case httpUser14: case httpUser15:
-            client->resource = http_find_resource(
-                                                client->resources,
-                                                client->ws_upgrade ?
-                                                    (client->secure ? schemeWSS : schemeWS) :
-                                                    http_scheme_base(client->scheme),
-                                                client->path,
-                                                client->method
-                                                );
             if (! client->resource || ! client->resource->callback)
             {
                 result = http_error_reply(client, 404, "Not Found", false);
@@ -1764,6 +1765,7 @@ int http_client_slice(http_client_t *client)
             }
             // tell resource that we are starting a request
             //
+            // NOTE: this callback has already gotten any headers ahead of this call
             // NOTE: this callback can change the client state, set a reply, and setup xfer state
             // NOTE: this callback can change state of compress and open a compression context
             //  the only time a Content-Encoding: gzip is sent is if this callback changes
@@ -1793,17 +1795,11 @@ int http_client_slice(http_client_t *client)
             {
                 client->resource_open = true;
             }
-            break;
-
-        case httpUnsupported:
+        }
+        else
+        {
+            // other methods are handled after body is downloaded in buffer
             result = 0;
-            break;
-
-        case httpOptions:
-        default:
-            // any other methods are handled after body is downloaded in buffer
-            result = 0;
-            break;
         }
         // setup next state to read body or read chunk count unless callback changed our state
         //
@@ -2801,7 +2797,6 @@ int http_client_slice(http_client_t *client)
         // call user callback as long as it wants us to
         result = http_make_user_method_callback(
                                     client,
-                                    httpMethodRequest,
                                     client->method,
                                     NULL
                                     );

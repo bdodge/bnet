@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+BNET_ZLIB=1
 
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
@@ -24,9 +25,16 @@ OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 PROGSOURCES=$(SRCDIR)/bmqttmain.c
 PROGOBJECTS=$(OBJDIR)/bmqttmain.o
 
+ifdef BNET_TLS
+	CFLAGS += -DHTTP_SUPPORT_TLS=$(BNET_TLS)
+endif
+ifdef BNET_ZLIB
+	CFLAGS += -DHTTP_SUPPORT_COMPRESSION=$(BNET_ZLIB)
+endif
+
 CFLAGS+=-I$(HTTP_PATH) -I$(UTIL_PATH) -I$(IO_PATH)
 
-mqtt: $(PROGOBJECTS) $(MQTTLIB) $(HTTPLIB) $(IOLIB) $(UTILLIB) $(TLSDEPS)
+mqtt: $(PROGOBJECTS) $(MQTTLIB) $(HTTPLIB) $(IOLIB) $(UTILLIB) $(TLSDEPS) $(ZLIBDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(MQTTLIB)

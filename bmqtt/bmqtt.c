@@ -756,6 +756,9 @@ static int smqtt_resource(
 
     switch (cbtype)
     {
+    case httpRequestHeader:
+		break;
+
     case httpRequest:
 
         butil_log(5, "MQTT: request\n");

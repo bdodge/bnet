@@ -15,6 +15,10 @@
  */
 #include "bsip.h"
 
+/* test, for example with:
+ * >  pjsua-x86_64-unknown-linux-gnu
+ *      m sip:a@localhost:5050
+ */
 
 static butil_url_scheme_t s_sip_scheme;
 
@@ -102,6 +106,12 @@ int sip_resource_callback(
     }
     switch (cbtype)
     {
+    case httpRequestHeader:
+
+        butil_log(5, "sip header %s\n", (data && *data) ? (char*)*data : "<nil>");
+        result = sip_process_header(sip, *data);
+        break;
+
     case httpRequest:
 
         butil_log(5, "sip resource cb (request)  %s: %s\n",
@@ -213,7 +223,6 @@ int sip_resource_callback(
 
 int sip_method_callback(
                         http_client_t *client,
-                        http_method_callback_type_t type,
                         const http_method_t method,
                         const char *data,
                         void *priv
@@ -229,45 +238,35 @@ int sip_method_callback(
     {
         return 1;
     }
-    if (type == httpMethodHeader)
-    {
-        butil_log(5, "Method cb (header)  %s: %s\n",
-                http_method_name(method), data ? data : "<nil>");
-        result = sip_process_header(sip, data);
-        return result;
-    }
-    if (type == httpMethodRequest)
-    {
-        result = sip_slice(client, sip);
+    result = sip_slice(client, sip);
 
+    if (client->out.count > 0)
+    {
+        iostream_normalize_ring(&client->out, NULL);
+
+        // if slice generated data, go to reply state until
+        // it is sent, then come back to usermethod
+        //
         if (client->out.count > 0)
         {
-            iostream_normalize_ring(&client->out, NULL);
-
-            // if slice generated data, go to reply state until
-            // it is sent, then come back to usermethod
-            //
-            if (client->out.count > 0)
-            {
-                return http_send_out_data(client, httpSendReply, httpUserMethod);
-            }
+            return http_send_out_data(client, httpSendReply, httpUserMethod);
         }
-        else if (result)
+    }
+    else if (result)
+    {
+        client->state = httpDone;
+    }
+    else
+    {
+        // if any input pending for client, go back to read request state
+        // which may (or may not) get back to usermethod state
+        //
+        result = http_client_input(client, 0, 0);
+        if (result == 0 && client->in.count > 0)
         {
-            client->state = httpDone;
-        }
-        else
-        {
-            // if any input pending for client, go back to read request state
-            // which may (or may not) get back to usermethod state
-            //
-            result = http_client_input(client, 0, 0);
-            if (result == 0 && client->in.count > 0)
-            {
-                client->next_state  = httpReadRequest;
-                client->state       = httpReadline;
-                client->line_count  = 0;
-            }
+            client->next_state  = httpReadRequest;
+            client->state       = httpReadline;
+            client->line_count  = 0;
         }
     }
     return 0;
@@ -294,7 +293,7 @@ int sip_phone(int argc, char **argv)
 #else
     signal(SIGPIPE, SIG_IGN);
 #endif
-    http_set_log_level(5);
+    http_set_log_level(7);
 
 #if HTTP_SUPPORT_TLS
     result = iostream_tls_prolog();
@@ -419,7 +418,7 @@ int sip_phone(int argc, char **argv)
     }
     // set use-tls for certain ports
     //
-    result = http_server_init(&server, resources, port, httpUDP, (port == 5061));
+    result = http_server_init(&server, resources, port, httpUDP, 1, (port == 5061));
     if (result)
     {
         BERROR("can't start server");

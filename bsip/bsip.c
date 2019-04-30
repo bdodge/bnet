@@ -348,7 +348,7 @@ static int sip_session_start(sip_server_context_t *sip, sip_session_t *session)
 	struct sockaddr_in rtp_addr;
 	socklen_t addr_len;
 
-	session->rtp_socket = http_create_server_socket(httpUDP, 0);
+	session->rtp_socket = http_create_server_socket(httpUDP, 0, 3);
 	if (session->rtp_socket == INVALID_SOCKET)
 	{
 		BERROR("RTP socket");

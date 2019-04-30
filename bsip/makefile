@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
@@ -23,13 +22,16 @@ SOURCES=$(SRCDIR)/bsipmain.c	\
 HEADERS=$(SOURCES:%.c=%.h) bsipconfig.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-LIBS= $(IOLIB) $(UTILLIB)
+LIBS= $(HTTPLIB) $(IOLIB) $(UTILLIB)
 LIBDIRS= $(IO_PATH) $(UTIL_PATH)
 LIBINCLS= $(LIBDIRS:%=-I%)
 CFLAGS += $(LIBINCLS)
 
 ifdef BNET_TLS
 	CFLAGS += -DHTTP_SUPPORT_TLS=$(BNET_TLS)
+endif
+ifdef BNET_ZLIB
+	CFLAGS += -DHTTP_SUPPORT_COMPRESSION=$(BNET_ZLIB)
 endif
 
 EXTRA_DEFINES += HTTP_SUPPORT_UDP=1
@@ -41,9 +43,8 @@ PROGOBJECTS=$(OBJDIR)/bsiptest.o
 
 CFLAGS+=-I$(HTTP_PATH) -I$(UTIL_PATH) -I$(IO_PATH)
 
-bsip: $(PROGOBJECTS) $(SIPLIB) $(LIBS) $(TLSDEPS)
-	make -C $(HTTP_PATH) EXTRA_DEFINES="$(EXTRA_DEFINES)"
-	$(CC) $(CFLAGS) -o $@ $^ $(HTTPLIB) $(SYSLIBS)
+bsip: $(PROGOBJECTS) $(SIPLIB) $(LIBS) $(TLSDEPS) $(ZLIBDEPS)
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(SIPLIB)
 
@@ -51,6 +52,7 @@ $(SIPLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^
 
 clean:
+	make -C $(HTTP_PATH) EXTRA_DEFINES="$(EXTRA_DEFINES)" clean
 	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
 
 $(OBJDIR)/bsiptest.o: $(SRCDIR)/bsiptest.c $(HEADERS)

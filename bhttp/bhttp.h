@@ -242,6 +242,7 @@ typedef struct http_server
     bool                 aborted;
     http_transport_t     transport;
     uint32_t             connections;
+    uint32_t             max_connections;
     socket_t             socket;
 }
 http_server_t;
@@ -280,13 +281,14 @@ int http_client_request(
                         http_resource_t *resource
                        );
 
-socket_t http_create_server_socket(http_transport_t transport, uint16_t port);
+socket_t http_create_server_socket(http_transport_t transport, uint16_t port, uint32_t max_connections);
 
 int http_server_init(
                         http_server_t *server,
                         http_resource_t *resources,
                         uint16_t port,
                         http_transport_t transport,
+                        uint32_t max_connections,
                         bool secure
                       );
 void http_server_cleanup(http_server_t *server);

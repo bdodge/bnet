@@ -2001,36 +2001,36 @@ int http_client_slice(http_client_t *client)
                 break;
             }
             #endif
-            if (client->keepalive && client->in_content_length == 0)
+            if (! client->isclient)
             {
-                // assume there is no body in request if we're a server
-                // and its a get, otherwise insist on length
+                // we're a server, insist that posts and puts to us have a length
                 //
-                if (client->isclient)
+                if (client->method == httpPut || client->method == httpPost)
                 {
-                    HTTP_ERROR("No content length");
-                    return http_slice_fatal(client, -1);
+                    butil_log(2, "No content length in request\n");
+                    result = http_error_reply(client, 411, "Length Required", false);
+                    if (result)
+                    {
+                        return http_slice_fatal(client, result);
+                    }
                 }
                 else
                 {
-                    if (client->method == httpPut || client->method == httpPost)
-                    {
-                        result = http_error_reply(client, 411, "Length Required", false);
-                        if (result)
-                        {
-                            return http_slice_fatal(client, result);
-                        }
-                        return 0;
-                    }
-                    else
-                    {
-                        client->in_transfer_type = httpLength;
-                    }
+                    // assume there's no entity body with the request
+                    //
+                    client->in_transfer_type = httpLength;
                 }
             }
-            else if (client->isclient || client->method == httpGet || client->method == httpHead)
+            else
             {
-                // keep kicking the can down the road till connection closes
+                // wer're a client, and this is the response to our request, which
+                // doesn't need a content-length if connection will close, but
+                // we DO expect data so read till close
+                //
+                // keep kicking the can down the road till connection closes by assuming
+                // there's more content than we could read in one go so we keep reading
+                // (and find the connection closing)
+                //
                 client->in_content_length = client->in.size + 1;
             }
         }
@@ -3014,7 +3014,7 @@ int http_client_request(
     return 0;
 }
 
-socket_t http_create_server_socket(http_transport_t transport, uint16_t port)
+socket_t http_create_server_socket(http_transport_t transport, uint16_t port, uint32_t max_connections)
 {
     struct sockaddr_in serv_addr;
     socket_t sock;
@@ -3039,7 +3039,7 @@ socket_t http_create_server_socket(http_transport_t transport, uint16_t port)
         // two separate queues for connections giving clients false hopes
         // if you see streams of failed requests consider upping the count
         //
-        result = iostream_listen_socket(sock, HTTP_MAX_CLIENT_CONNECTIONS);
+        result = iostream_listen_socket(sock, max_connections);
         if (result < 0)
         {
             HTTP_ERROR("Can't listen on server socket");
@@ -3112,6 +3112,7 @@ int http_server_init(
                         http_resource_t *resources,
                         uint16_t port,
                         http_transport_t transport,
+                        uint32_t max_connections,
                         bool secure
                       )
 {
@@ -3127,11 +3128,12 @@ int http_server_init(
     server->resources = resources;
     server->clients = NULL;
     server->connections = 0;
+    server->max_connections = max_connections;
     server->aborted = false;
 
     // create server socket
     //
-    server->socket = http_create_server_socket(transport, port);
+    server->socket = http_create_server_socket(transport, port, max_connections);
     if (server->socket == INVALID_SOCKET)
     {
         HTTP_ERROR("Can't make server socket");
@@ -3285,7 +3287,7 @@ int http_server_slice(http_server_t *server, int to_secs, int to_usecs)
     }
     // check for new client connections
     //
-    if (server->connections < HTTP_MAX_CLIENT_CONNECTIONS)
+    if (server->connections < server->max_connections)
     {
         result = http_pending_client_connection(server->socket, to_secs, to_usecs);
         if (result < 0)
@@ -3412,7 +3414,7 @@ int http_wait_for_server_event(http_server_t *servers)
             }
             client_count++;
         }
-        if (server->socket != INVALID_SOCKET && client_count < HTTP_MAX_CLIENT_CONNECTIONS)
+        if (server->socket != INVALID_SOCKET && client_count < server->max_connections)
         {
             // poll server socket for readability (new client connection)
             if (server->socket > nfds)
@@ -3479,7 +3481,7 @@ int http_wait_for_server_event(http_server_t *servers)
         //
         for (server = servers; server; server = server->next)
         {
-            if (server->connections < HTTP_MAX_CLIENT_CONNECTIONS)
+            if (server->connections < server->max_connections)
             {
                 result = http_pending_client_connection(server->socket, to_secs, to_usecs);
                 if (result < 0)

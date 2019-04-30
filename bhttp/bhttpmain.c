@@ -32,7 +32,7 @@ int echo_callback(
     switch (cbtype)
     {
     case httpRequestHeader:
-        http_log(5, "HDR: %s\n", (data && *data) ? *data : "<nil>");
+        http_log(5, "HDR: %s\n", (data && *data) ? (char*)*data : "<nil>");
         break;
 
     case httpRequest:
@@ -430,7 +430,13 @@ int main(int argc, char **argv)
         }
         // set use-tls for certain ports
         //
-        result = http_server_init(&server, resources, port, httpTCP, (port == 443 || port == 4443));
+        result = http_server_init(
+                                    &server,
+                                    resources,
+                                    port,
+                                    httpTCP,
+                                    HTTP_MAX_CLIENT_CONNECTIONS,
+                                    (port == 443 || port == 4443));
         if (result)
         {
             HTTP_ERROR("can't start server");

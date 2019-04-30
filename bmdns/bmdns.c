@@ -180,6 +180,63 @@ static int mdns_enqueue_out(mdns_responder_t *res, mdns_interface_t *iface, mdns
 
         outpkt->next = NULL;
 
+        // if the packet contains a service record, add, as a convenience, the address records
+        // for the service's interface. this is done this late, to avoid having to keep track
+        // of each record's position ever
+        //
+        if (outpkt->added_srv)
+        {
+            mdns_packet_t *adrpkt;
+            size_t room;
+            size_t need;
+
+            // if there isn't room in the packet for address records, make a new packet and append it
+            //
+            room = outpkt->io.size - outpkt->io.count;
+            need = 2 * (DNS_NAME_LENGTH(&iface->hostname) + 64); /* host+ip4, host+ip6, and some extra */
+
+            if (need > room)
+            {
+                butil_log(5, "Adding packet for addr recs\n");
+
+                adrpkt = mdns_pkt_alloc(res);
+                if (! adrpkt)
+                {
+                    BERROR("Can't alloc addr packet");
+                    // this isn't fatal, just skip adding addr
+                }
+                else
+                {
+                    outpkt->next = adrpkt;
+                    adrpkt->next = NULL;
+                }
+            }
+            else
+            {
+                adrpkt = outpkt;
+            }
+            if (adrpkt)
+            {
+                // add address record if added a srv record to match service instance, but in additional section.
+                // note that we don't care about known-answers here, we always add A,AAAA if the SRV was added
+                //
+                if (iface->ipv4addr.addr != 0)
+                {
+                    adrpkt->arcount++;
+                    result = mdns_query_respond(res, iface, &iface->hostname,
+                                        NULL, 0, adrpkt, DNS_RRTYPE_A, DNS_CLASS_IN, iface->ttl, &iface->hostname);
+                }
+                if (iface->ipv6addr.addr[0] != 0)
+                {
+                    adrpkt->arcount++;
+                    result = mdns_query_respond(res, iface, &iface->hostname,
+                                        NULL, 0, adrpkt, DNS_RRTYPE_AAAA, DNS_CLASS_IN, iface->ttl, &iface->hostname);
+                }
+            }
+            // and add NSEC records for the addresses we do NOT have to ensure we claim them as ours
+            //
+            // TODO!!
+        }
         if (! iface->outpkts)
         {
             iface->outpkts = outpkt;
@@ -188,8 +245,16 @@ static int mdns_enqueue_out(mdns_responder_t *res, mdns_interface_t *iface, mdns
         {
             mdns_packet_t *pend;
             mdns_packet_t *prevpend;
+            mdns_packet_t *plastout;
             bool inserted;
 
+            // since outpkt might actually be a list, point to last element in that list
+            // to help link into to-send list
+            //
+            for (plastout = outpkt; plastout->next;)
+            {
+                plastout = plastout->next;
+            }
             for (prevpend = NULL, pend = iface->outpkts, inserted = false; pend->next; pend = pend->next)
             {
                 if (
@@ -199,12 +264,12 @@ static int mdns_enqueue_out(mdns_responder_t *res, mdns_interface_t *iface, mdns
                 {
                     if (! prevpend)
                     {
-                        outpkt->next = iface->outpkts;
+                        plastout->next = iface->outpkts;
                         iface->outpkts = outpkt;
                     }
                     else
                     {
-                        outpkt->next = pend;
+                        plastout->next = pend;
                         prevpend->next = outpkt;
                     }
                     inserted = true;
@@ -676,13 +741,13 @@ int mdns_query_respond(
         prevhead = outpkt->io.head;
         result  = mdns_write_uint16(&outpkt->io, reslen);
         // write priority
-        result |= mdns_write_uint16(&outpkt->io, 55);
+        result |= mdns_write_uint16(&outpkt->io, 0);
         if (result)
         {
             return result;
         }
         // write weight
-        result |= mdns_write_uint16(&outpkt->io, 555);
+        result |= mdns_write_uint16(&outpkt->io, 0);
         if (result)
         {
             return result;
@@ -751,7 +816,6 @@ int mdns_answer_question(
                      )
 {
     mdns_service_t *service;
-    mdns_service_t *added_srv;
     dns_domain_name_t *record_domain;
     void *resource_domain;
     int cmp;
@@ -784,9 +848,9 @@ int mdns_answer_question(
     {
         // just call the individual types by hand
         //
-        result  = mdns_answer_question(res, iface, dname, DNS_RRTYPE_PTR, clas, answers, answer_count, outpkt);
-        result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_TXT, clas, answers, answer_count, outpkt);
         result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_SRV, clas, answers, answer_count, outpkt);
+        result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_PTR, clas, answers, answer_count, outpkt);
+        result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_TXT, clas, answers, answer_count, outpkt);
         result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_A, clas, answers, answer_count, outpkt);
         result |= mdns_answer_question(res, iface, dname, DNS_RRTYPE_AAAA, clas, answers, answer_count, outpkt);
         return result;
@@ -808,6 +872,7 @@ int mdns_answer_question(
         // TODO what is the proper resource domain answer for a hostname qr?
         result = mdns_query_respond(res, iface, &iface->hostname,
                                         answers, answer_count, outpkt, type, clas, iface->ttl, dname);
+        return result;
     }
     cmp = mdns_compare_names(&iface->rev_ipv4, dname);
     if (! cmp)
@@ -823,8 +888,8 @@ int mdns_answer_question(
         }
         result = mdns_query_respond(res, iface, &iface->rev_ipv4,
                                         answers, answer_count, outpkt, type, clas, iface->ttl, &iface->hostname);
+        return result;
     }
-
     cmp = mdns_compare_names(&iface->rev_ipv6, dname);
     if (! cmp)
     {
@@ -839,16 +904,18 @@ int mdns_answer_question(
         }
         result = mdns_query_respond(res, iface, &iface->rev_ipv6,
                                         answers, answer_count, outpkt, type, clas, iface->ttl, &iface->hostname);
+        return result;
     }
-
-    added_srv = NULL;
+    cmp = -1;
 
     for (service = iface->services; service; service = service->next)
     {
+        // the first domain name compare match wins and we stop looking
+        //
         cmp = mdns_compare_names(&service->usr_domain_name, dname);
         if (! cmp)
         {
-            butil_log(lma, "**I==Matched usr service\n");
+            butil_log(lma, "**I==Matched service instance\n");
             record_domain = &service->usr_domain_name;
             switch (type)
             {
@@ -863,83 +930,64 @@ int mdns_answer_question(
                 resource_domain = &service->txt_records;
                 break;
             }
+            break;
+        }
+        cmp = mdns_compare_names(&service->srv_domain_name, dname);
+        if (! cmp)
+        {
+            butil_log(lma, "**V==Matched srv service\n");
+            record_domain = &service->srv_domain_name;
+            resource_domain = &service->usr_domain_name;
+            break;
+        }
+        cmp = mdns_compare_names(&service->sub_domain_name, dname);
+        if (! cmp)
+        {
+            butil_log(lma, "**S==Matched sub service\n");
+            record_domain = &service->sub_domain_name;
+            resource_domain = &service->usr_domain_name;
+            break;
+        }
+        cmp = mdns_compare_names(&service->sd_domain_name, dname);
+        if (! cmp)
+        {
+            butil_log(lma, "**D==Matched dns-sd record\n");
+            record_domain = &service->sd_domain_name;
+            resource_domain = &service->srv_domain_name;
+            break;
+        }
+    }
+    if (! cmp)
+    {
+        int prevcount;
+
+        if (iface->state < MDNS_ANNOUNCE_1)
+        {
+            // during probe, we're answering our own questions to be an authoritative answer
+            //
+            outpkt->nscount++;
         }
         else
         {
-            cmp = mdns_compare_names(&service->srv_domain_name, dname);
-            if (! cmp)
-            {
-                butil_log(lma, "**V==Matched srv service\n");
-                record_domain = &service->srv_domain_name;
-                resource_domain = &service->usr_domain_name;
-            }
-            else
-            {
-                cmp = mdns_compare_names(&service->sub_domain_name, dname);
-                if (! cmp)
-                {
-                    butil_log(lma, "**S==Matched sub service\n");
-                    record_domain = &service->sub_domain_name;
-                    resource_domain = &service->usr_domain_name;
-                }
-                else
-                {
-                    cmp = mdns_compare_names(&service->sd_domain_name, dname);
-                    if (! cmp)
-                    {
-                        butil_log(lma, "**D==Matched dns-sd record\n");
-                        record_domain = &service->sd_domain_name;
-                        resource_domain = &service->srv_domain_name;
-                    }
-                }
-            }
+            // normally, this is just an answer
+            //
+            outpkt->ancount++;
         }
-        if (! cmp)
-        {
-            int prevcount;
+        prevcount = outpkt->io.count;
 
-            if (iface->state < MDNS_ANNOUNCE_1)
-            {
-                outpkt->nscount++;
-            }
-            else
-            {
-                outpkt->ancount++;
-            }
-            prevcount = outpkt->io.count;
+        result = mdns_query_respond(res, iface, record_domain,
+                            answers, answer_count, outpkt, type, clas, service->ttl, resource_domain);
 
-            result = mdns_query_respond(res, iface, record_domain,
-                                answers, answer_count, outpkt, type, clas, service->ttl, resource_domain);
-
-            if (! result && type == DNS_RRTYPE_SRV && iface->state >= MDNS_ANNOUNCE_1 && outpkt->io.count > prevcount)
-            {
-                // for SRV records while running, add the address records for the hostname, but only if
-                // the records wasn't suppressed (by a known answer) which is indicated by outpkt growing or not
-                //
-                added_srv = service;
-            }
-        }
-    }
-    if (added_srv)
-    {
-        // add address record if added a srv record to match service instance, but in additional section.
-        // there could only technically be one matched service on a single interface
-        //
-        if (added_srv->interface->ipv4addr.addr != 0)
+        if (! result && type == DNS_RRTYPE_SRV && iface->state >= MDNS_ANNOUNCE_1 && outpkt->io.count > prevcount)
         {
-            outpkt->arcount++;
-            result = mdns_query_respond(res, iface, &added_srv->interface->hostname,
-                                answers, answer_count, outpkt, DNS_RRTYPE_A, clas, iface->ttl, &iface->hostname);
+            // for SRV records while running, add the address records for the hostname, but only if
+            // the records wasn't suppressed (by a known answer) which is indicated by outpkt growing or not
+            // since address records are added as additional records, this is done only when the packet
+            // is being sent, in case more regular (an/ns) records are still to be added to outpkt
+            // (if there isn't room to add them on output, a new packet is allocated and filled out and sent)
+            //
+            outpkt->added_srv = true;
         }
-        if (added_srv->interface->ipv6addr.addr[0] != 0)
-        {
-            outpkt->arcount++;
-            result = mdns_query_respond(res, iface, &added_srv->interface->hostname,
-                                answers, answer_count, outpkt, DNS_RRTYPE_AAAA, clas, iface->ttl, &iface->hostname);
-        }
-        // and add NSEC records for the addresses we do NOT have to ensure we claim them as ours
-        //
-        // TODO!!
     }
     return result;
 }
@@ -1505,12 +1553,11 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
     mdns_service_t *service;
     mdns_packet_t *outpkt;
     int result;
-
+    size_t room;
+    size_t need;
     result = 0;
 
-    // announce the ptr and txt first, then the srv. it can be done all in one
-    // packet, but txt can be big, and this ensures even with large txt recs
-    // that all the data is sent. plus Apple does it that way is seems
+    // announce the src, ptr and then txt if it fits
     //
     for (service = iface->services; service; service = service->next)
     {
@@ -1527,9 +1574,9 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
 
         butil_log(5, "Announcing service %s\n", mdns_str_for_domain_name(&service->usr_domain_name));
 
-        // service instance record. text record
+        // add service instance record
         //
-        result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_TXT, DNS_CLASS_IN, NULL, 0, outpkt);
+        result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_SRV, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
@@ -1548,41 +1595,68 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
         {
             break;
         }
-        result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 210 : 0);
+        // dns service discovery record. PTR to our service (srv_domain_name)
+        //
+        result = mdns_answer_question(res, iface, &service->sd_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
+        if (result)
+        {
+            return result;
+        }
+        // if there is plenty of rooom for the text records, add them now
+        //
+        room = outpkt->io.size - outpkt->io.count;
+        need = DNS_TXT_LENGTH(&service->txt_records) + DNS_NAME_LENGTH(&service->usr_domain_name) + 16;
+
+        if (need > room)
+        {
+            butil_log(5, "new pkt for txt recs\n");
+
+            result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 210 : 0);
+            if (result)
+            {
+                break;
+            }
+            // create an output packet to store SRV in
+            //
+            outpkt = mdns_pkt_alloc(res);
+            if (! outpkt)
+            {
+                butil_log(3, "Can't announce: no outpkts\n");
+                result = -1;
+                break;
+            }
+            outpkt->id = 0;
+            outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
+        }
+        // text records
+        //
+        result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_TXT, DNS_CLASS_IN, NULL, 0, outpkt);
         if (result)
         {
             break;
         }
-        // create an output packet to store SRV in
-        //
+    }
+    // add iface's reverse address mappings
+    //
+    room = outpkt->io.size - outpkt->io.count;
+    need = DNS_TXT_LENGTH(&iface->rev_ipv4) + DNS_NAME_LENGTH(&iface->hostname) + 16;
+    need += DNS_TXT_LENGTH(&iface->rev_ipv6) + DNS_NAME_LENGTH(&iface->hostname) + 16;
+
+    if (need > room)
+    {
+        butil_log(5, "new pkt for revip recs\n");
+
+        result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 220 : 0);
+
         outpkt = mdns_pkt_alloc(res);
         if (! outpkt)
         {
-            butil_log(3, "Can't announce: no outpkts\n");
-            result = -1;
-            break;
+            butil_log(3, "Can't announce revip: no outpkts\n");
+            return -1;
         }
         outpkt->id = 0;
         outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
-
-        result = mdns_answer_question(res, iface, &service->usr_domain_name, DNS_RRTYPE_SRV, DNS_CLASS_IN, NULL, 0, outpkt);
-        if (result)
-        {
-            break;
-        }
-        result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 220 : 0);
     }
-    outpkt = mdns_pkt_alloc(res);
-    if (! outpkt)
-    {
-        butil_log(3, "Can't announce revip: no outpkts\n");
-        return -1;
-    }
-    outpkt->id = 0;
-    outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
-
-    // add iface's reverse address mappings
-    //
     if (iface->ipv4addr.addr != 0)
     {
         result = mdns_answer_question(res, iface, &iface->rev_ipv4, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
@@ -1599,18 +1673,6 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
             return result;
         }
     }
-    /*
-    for (service = iface->services; service; service = service->next)
-    {
-        // dns service discovery record. PTR to our service (srv_domain_name)
-        //
-        result = mdns_answer_question(res, iface, &service->sd_domain_name, DNS_RRTYPE_PTR, DNS_CLASS_IN, NULL, 0, outpkt);
-        if (result)
-        {
-            return result;
-        }
-    }
-    */
     result = mdns_enqueue_out(res, iface, outpkt, startup_delay ? 220 : 0);
     return result;
 }
@@ -2052,6 +2114,7 @@ int mdns_responder_add_service(
     mdns_init_name(&service->usr_domain_name);
     mdns_init_name(&service->srv_domain_name);
     mdns_init_name(&service->sub_domain_name);
+    mdns_init_name(&service->sd_domain_name);
     mdns_init_name(&service->txt_records);
 
     // create a domain name like "_username._servicename._proto.local"

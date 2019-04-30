@@ -52,24 +52,6 @@ typedef struct tag_dns_domain_name
 }
 dns_domain_name_t, dns_txt_records_t;
 
-#if 0
-typedef struct tag_txt_rec
-{
-    char        *name;                  ///< one text record
-    int         length;                 ///< length of record
-}
-dns_txtr_t;
-
-typedef struct tag_dns_txt_record
-{
-    dns_txtr_t  labels[MDNS_MAX_LABELS];///< list of records
-    int         num_labels;             ///< count of labels
-    int         tot_len;                ///< total length of labels text
-    time_t      last_sent[MDNS_MAX_RRTYPEDEX]; ///< time, in seconds, this domain name output
-}
-dns_txt_records_t;
-#endif
-
 /// DNS RR Record descriptor
 //
 typedef struct tag_rr_rec
@@ -89,6 +71,8 @@ dns_rr_rec_t;
 #define DNS_NAME_LENGTH(d) ((d)->tot_len + (d)->num_labels + 1)
 #define DNS_TXT_LENGTH(d) ((d)->tot_len + (d)->num_labels)
 
+struct tag_mdns_service;
+
 typedef struct tag_dns_packet
 {
     ioring_t    io;                     ///< io ring for parsing data
@@ -102,6 +86,8 @@ typedef struct tag_dns_packet
     uint32_t    tts_secs;               ///< when to send, econds absolute
     uint32_t    tts_usecs;              ///< when to send, microseconds absolute
     bool        unicast;                ///< send unicast
+
+    bool        added_srv;              ///< if there is an SRV record in the packet
 
     /// header
     uint16_t    id;
@@ -132,8 +118,6 @@ typedef enum
     MDNS_DONE
 }
 mdns_state_t;
-
-struct tag_mdns_service;
 
 /// Interface descriptor
 //
@@ -181,6 +165,7 @@ typedef struct tag_mdns_service
     dns_txt_records_t       txt_records;///< service's txt records (like "txtvers=1")
     uint32_t                ttl;        ///< time to live for service answers
     uint32_t                probes;     ///< number of times probed (conflicted)
+    bool                    add_srv;    ///< a SRV record was added to a reponse, append A and AAAA at end
     struct tag_mdns_service *next;      ///< link
 }
 mdns_service_t;

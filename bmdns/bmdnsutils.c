@@ -404,6 +404,8 @@ mdns_packet_t *mdns_pkt_alloc(mdns_responder_t *res)
     pkt->io.size = sizeof(pkt->data);
     pkt->io.data = pkt->data;
 
+    pkt->added_srv = false;
+
     pkt->id = 0;
     pkt->flags = 0;
     pkt->qdcount = 0;

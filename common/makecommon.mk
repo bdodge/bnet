@@ -167,15 +167,15 @@ else
 	JPEGDEPS=
 endif
 ifndef BNET_ZLIB
-	BNET_JPEG=0
+	BNET_ZLIB=0
 endif
 ifneq ($(BNET_ZLIB),0)
-	ZLIBS=$(LIBZ_LIBS:%=-l%)
+	ZLIBLIBS=$(LIBZ_LIBS:%=-l%)
 	ZLIBDEPS=$(LIBZ_LIBS:%=$(OBJDIR)/lib%.a$)
 	CFLAGS+=-I$(LIBZ_PATH) -DBNET_ZLIB=1
 else
-	JPEGLIBS=
-	JPEGDEPS=
+	ZLIBLIBS=
+	ZLIBDEPS=
 endif
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
@@ -201,7 +201,7 @@ $(JSON_PATH)/%.a:
 	make -C $(JSON_PATH) library
 
 $(HTTP_PATH)/%.a:
-	make -C $(HTTP_PATH) library
+	make -C $(HTTP_PATH) EXTRA_DEFINES=$(EXTRA_DEFINES) library
 
 $(XMPP_PATH)/%.a:
 	make -C $(XMPP_PATH) library

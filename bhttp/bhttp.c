@@ -2135,10 +2135,12 @@ int http_client_slice(http_client_t *client)
                     {
                         result |= http_append_reply(client, "Transfer-Encoding: chunked");
                     }
+                    #if HTTP_SUPPORT_COMPRESSION
                     if (client->compress >= httpWillCompress)
                     {
                         result |= http_append_reply(client, "Content-Encoding: gzip");
-                     }
+                    }
+                    #endif
                 }
                 else
                 {
@@ -3149,8 +3151,9 @@ int http_server_init(
         signal(SIGPIPE, http_server_signal);
         #endif
     }
-    else
+    else /* transport == udp */
     {
+        #if HTTP_SUPPORT_UDP
         http_client_t *client;
 
         // udp, create a permanent client and use server socket for it
@@ -3174,7 +3177,11 @@ int http_server_init(
         server->socket = INVALID_SOCKET;
 
         http_log(1, "serving UDP %son %u\n",
-                server->secure ? "secure " : "", server->port);
+                server->secure ? "(secure) " : "", server->port);
+        #else
+        HTTP_ERROR("UDP not supported in build");
+        return -1;
+        #endif
     }
     return 0;
 }

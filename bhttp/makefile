@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-BNET_ZLIB=1
 
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk

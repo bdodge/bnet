@@ -21,13 +21,15 @@ SOURCES=$(SRCDIR)/bgcp.c		\
 		$(SRCDIR)/bgcpio.c		\
 		$(SRCDIR)/bgcpnv.c		\
 		$(SRCDIR)/bgcpcdd.c		\
-		$(SRCDIR)/bgcpxmpp.c
+		$(SRCDIR)/bgcpxmpp.c	\
+		$(SRCDIR)/bgcpprivet.c	\
+		$(SRCDIR)/bgcplocalprt.c
 
 HEADERS=$(SOURCES:%.c=%.h) bgcpconfig.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-LIBS= $(HTTPLIB) $(XMPPLIB) $(SASLLIB) $(JSONLIB) $(XMLLIB) $(IOLIB) $(MEMLIB) $(UTILLIB)
-LIBDIRS= $(IO_PATH) $(MEM_PATH) $(UTIL_PATH)
+LIBS= $(HTTPLIB) $(MDNSLIB) $(XMPPLIB) $(SASLLIB) $(JSONLIB) $(XMLLIB) $(IOLIB) $(MEMLIB) $(UTILLIB)
+LIBDIRS= $(MDNS_PATH) $(IO_PATH) $(MEM_PATH) $(UTIL_PATH)
 LIBINCLS= $(LIBDIRS:%=-I%)
 CFLAGS += $(LIBINCLS)
 
@@ -63,4 +65,6 @@ $(OBJDIR)/bgcpio.o: $(SRCDIR)/bgcpio.c $(HEADERS)
 $(OBJDIR)/bgcpnv.o: $(SRCDIR)/bgcpnv.c $(HEADERS)
 $(OBJDIR)/bgcpcdd.o: $(SRCDIR)/bgcpcdd.c $(HEADERS)
 $(OBJDIR)/bgcpcmpp.o: $(SRCDIR)/bgcpxmpp.c $(HEADERS)
+$(OBJDIR)/bgcpprivet.o: $(SRCDIR)/bgcpprivet.c $(HEADERS)
+$(OBJDIR)/bgcplocalprt.o: $(SRCDIR)/bgcplocalprt.c $(HEADERS)
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "bgcp.h"
+#include "bgcplocalprt.h"
 #include "bgcpnv.h"
 
 static const char *s_regrep_test =
@@ -206,6 +207,7 @@ int gcp_unit_test(gcp_context_t *gcp)
 {
     int result;
     bool done;
+    bool cancel;
 
     result = gcp_init(gcp, "yoproxy", "68ECDD18-8319-42DD-BC73-87D192E900DD");
     if (result)
@@ -230,12 +232,20 @@ int gcp_unit_test(gcp_context_t *gcp)
     {
         butil_log(0, "Fail: prompt claim\n");
     }
-    result = gcp_wait_for_claim(gcp, &done);
-    if (result)
+    do
     {
-        butil_log(0, "Fail: wait claim\n");
+        result = gcp_wait_for_claim(gcp, &done, &cancel);
+        if (result)
+        {
+            butil_log(0, "Fail: wait claim\n");
+        }
+#if GCP_SUPPORT_LOCAL_PRT
+        result = gcp_local_prt_slice(gcp);
+#endif
     }
-    if (done)
+    while (! result && ! done);
+
+    if (cancel)
     {
         butil_log(2, "User cancels claim\n");
     }
@@ -299,7 +309,7 @@ static int usage(const char *program)
     fprintf(stderr, "Use: %s [-lsu]\n", program);
     fprintf(stderr, "     -u    Run unit tests\n");
     fprintf(stderr, "     -l    Set debug log level (default 1: errors/warnings only)\n");
-    fprintf(stderr, "     -s    Use TLS\n");
+    fprintf(stderr, "     -x    Only do local printing\n");
     return 1;
 }
 
@@ -309,7 +319,7 @@ int main(int argc, char **argv)
     uint32_t uval;
     int loglevel;
     bool unit_test;
-    bool secure;
+    bool local_only;
     char *arg;
     int result;
 
@@ -334,7 +344,7 @@ int main(int argc, char **argv)
     butil_set_log_level(loglevel);
 
     unit_test = false;
-    secure = false;
+    local_only = false;
 
     while (argc > 0 && ! result)
     {
@@ -344,7 +354,6 @@ int main(int argc, char **argv)
             switch (arg[1])
             {
             case 'l':
-            case 's':
             {
                 if (arg[2] == '\0')
                 {
@@ -367,10 +376,6 @@ int main(int argc, char **argv)
                 {
                     loglevel = uval;
                 }
-                else if (arg[1] == 's')
-                {
-                    secure = true;
-                }
                 else
                 {
                     return usage(program);
@@ -379,6 +384,9 @@ int main(int argc, char **argv)
             }
             case 'u':
                 unit_test = true;
+                break;
+            case 'x':
+                local_only = true;
                 break;
             default:
                 fprintf(stderr, "Bad Switch: %s\n", arg);
@@ -457,7 +465,14 @@ int main(int argc, char **argv)
         result = gcp_init(&gcp, "yoproxy", "68ECDD18-8319-42DD-BC73-87D192E900DD");
         do
         {
-            result = gcp_slice(&gcp);
+            if (local_only)
+            {
+                result = gcp_local_prt_slice(&gcp);
+            }
+            else
+            {
+                result = gcp_slice(&gcp);
+            }
         }
         while (! result);
 

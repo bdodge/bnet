@@ -16,6 +16,11 @@
 #ifndef BGCPCONFIG_H
 #define BGCPCONFIG_H 1
 
+/// Whether local printing is supported
+//
+#define GCP_SUPPORT_LOCAL_PRT  (1)
+#define GCP_LOCAL_HTTP_PORT    (6006)
+
 /// OAuth2 credentials
 //
 #define GCP_CLIENT_ID     "923224369786-m81b6t3vrehpr8an5uopp1ggeabsh8r8.apps.googleusercontent.com"

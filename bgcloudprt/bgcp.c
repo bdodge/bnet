@@ -16,6 +16,7 @@
 #include "bgcp.h"
 #include "bgcpio.h"
 #include "bgcpxmpp.h"
+#include "bgcplocalprt.h"
 #include "bgcpnv.h"
 #include "bgcpcdd.h"
 
@@ -23,6 +24,23 @@ int gcp_anon_register(gcp_context_t *gcp)
 {
     char verstring[8];
     int result;
+
+    #if GCP_SUPPORT_LOCAL_PRT
+    char localprt[256];
+
+    snprintf(localprt, sizeof(localprt),
+                "{\r\n"
+                " \"current\": {\r\n"
+                "  \"local_discovery\": true,\r\n"
+                "  \"access_token_enabled\": true,\r\n"
+                "  \"printer/local_printing_enabled\": true,\r\n"
+                "  \"printer/conversion_printing_enabled\": true,\r\n"
+                "  \"xmpp_timeout_value\": %u\r\n"
+                " }\r\n"
+                "}\r\n",
+                GCP_XMPP_CLIENT_PING_PERIOD
+                );
+    #endif
 
     if (! gcp)
     {
@@ -54,6 +72,9 @@ int gcp_anon_register(gcp_context_t *gcp)
                 "semantic_state", butil_mime_json, gcp->cds,
                 "use_cdd", butil_mime_text, "true",
                 "capabilities", butil_mime_json, gcp->cdd,
+    #if GCP_SUPPORT_LOCAL_PRT
+                "local_settings", butil_mime_json, localprt,
+    #endif
                 "sentinal", butil_mime_text, NULL
             );
     if (result)
@@ -346,7 +367,7 @@ int gcp_fetch(gcp_context_t *gcp)
         BERROR("wrong state");
         return -1;
     }
-    butil_log(5, "List Printer\n");
+    butil_log(5, "Fetch Jobs\n");
 
     // mime encode the parameters
     //
@@ -417,7 +438,7 @@ int gcp_prompt_for_claim(gcp_context_t *gcp)
                  "%s\n"
                  "\n"
                  "Your registraion token is: %s\n\n"
-                 "Press \'C\' to cancel or any other letter to procede, and then Enter\n\n"
+                 "Press \'C\' to continue or any other letter to cancel\n\n"
                  " > ",
                  gcp->complete_invite_url,
                  gcp->registration_token
@@ -425,19 +446,37 @@ int gcp_prompt_for_claim(gcp_context_t *gcp)
     return 0;
 }
 
-int gcp_wait_for_claim(gcp_context_t *gcp, bool *cancel)
+int gcp_wait_for_claim(gcp_context_t *gcp, bool *done, bool *cancel)
 {
     int ic;
-
-    ic = getchar();
-
-    if (ic == 'c' || ic == 'C')
+#if 1
+    ic = iostream_posix_poll_filedesc(fileno(stdin), readable, 0, 10000);
+    if (ic > 0)
     {
-        *cancel = true;
+        int rc;
+        char ib;
+
+        rc = read(fileno(stdin), &ib, 1);
+        ic = (int)(uint32_t)ib;
     }
     else
     {
+        *done = false;
         *cancel = false;
+        return 0;
+    }
+#else
+    ic = getchar();
+#endif
+
+    *done = true;
+    if (ic == 'c' || ic == 'C')
+    {
+        *cancel = false;
+    }
+    else
+    {
+        *cancel = true;
     }
     return 0;
 }
@@ -495,6 +534,7 @@ int gcp_slice(gcp_context_t *gcp)
 {
     time_t now;
     bool done;
+    bool cancel;
     int result;
 
     if (! gcp)
@@ -566,13 +606,17 @@ int gcp_slice(gcp_context_t *gcp)
         break;
 
     case gcpWaitForClaim:
-        result = gcp_wait_for_claim(gcp, &done);
+        result = gcp_wait_for_claim(gcp, &done, &cancel);
         if (result)
         {
             gcp->state = gcpError;
             break;
         }
-        if (done)
+        if (! done)
+        {
+            return 0;
+        }
+        if (cancel)
         {
             // user wishes to NOT claim printer
             return 1;
@@ -707,12 +751,25 @@ int gcp_slice(gcp_context_t *gcp)
         {
             gcp->state = gcp->nextstate;
         }
-        result = gcp_xmpp_slice(gcp);
-        if (result)
+        if (gcp->bxp)
         {
-            butil_log(1, "XMPP failed\n");
+            result = gcp_xmpp_slice(gcp);
+            if (result)
+            {
+                butil_log(1, "XMPP failed\n");
+            }
         }
-        if (gcp->bxp->state == bxmppDone)
+#if GCP_SUPPORT_LOCAL_PRT
+        if (gcp->responding)
+        {
+            result = gcp_local_prt_slice(gcp);
+            if (result)
+            {
+                butil_log(1, "MDSNR failed\n");
+            }
+        }
+        else
+#endif
         {
             sleep(1);
         }
@@ -799,13 +856,23 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
         BERROR("http client");
         return -1;
     }
-    gcp->http_resources = NULL;
-    result = http_add_func_resource(&gcp->http_resources, schemeHTTPS,  "/", NULL, gcp_resource_func, gcp);
+    // create a resource for http client use to hook the post callback func in
+    //
+    gcp->http_client_resources = NULL;
+    result = http_add_func_resource(&gcp->http_client_resources, schemeHTTPS,  "/", NULL, gcp_resource_func, gcp);
     if (result)
     {
         BERROR("add resource");
         return result;
     }
+    #if GCP_SUPPORT_LOCAL_PRT
+    result = gcp_init_local_prt(gcp);
+    if (result)
+    {
+        BERROR("add local printing");
+        return result;
+    }
+    #endif
     gcp->prevstate = gcpAnonRegister;
     gcp->nextstate = gcpAnonRegister;
     gcp->state = gcpInit;

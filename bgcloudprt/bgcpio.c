@@ -120,6 +120,11 @@ int gcp_resource_func(
 
     switch (cbtype)
     {
+    case httpRequestHeader:
+        http_log(5, "header? %s\n", (data && *data) ? (char*)*data : "<nil>");
+        result = 0;
+        break;
+
     case httpRequest:
         switch (client->method)
         {
@@ -311,7 +316,7 @@ int gcp_request(gcp_context_t *gcp, const char *url, const char *path)
     gcp->http_client->keepalive = false;
     redirects = 0;
 
-    result = http_client_request(gcp->http_client, method, fullurl, httpTCP, false, NULL, gcp->http_resources);
+    result = http_client_request(gcp->http_client, method, fullurl, httpTCP, false, NULL, gcp->http_client_resources);
     if (result)
     {
         butil_log(1, "Failed to request %s\n", path);

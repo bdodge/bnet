@@ -23,6 +23,9 @@
 #include "bxmpp.h"
 #include "bstreamio.h"
 #include "butil.h"
+#if GCP_SUPPORT_LOCAL_PRT
+#include "bmdns.h"
+#endif
 
 #if 0       // define to include memory tracing debug
 #define BMEM_TRACE_ALLOCS 1
@@ -95,7 +98,14 @@ typedef struct tag_gcp_context
     char                access_token[GCP_MAX_TOKEN];
     char                boundary[64];
     http_client_t      *http_client;
-    http_resource_t    *http_resources;
+    http_resource_t    *http_client_resources;
+#if GCP_SUPPORT_LOCAL_PRT
+    http_server_t       http_server;
+    http_resource_t    *http_server_resources;
+    mdns_responder_t    mdns_responder;
+    bool                responding;
+    char                local_access_token[GCP_MAX_TOKEN];
+#endif
     bxmpp_t            *bxp;
     gcp_xmpp_state_t    xmpp_state;
     time_t              xmpp_restart;
@@ -120,7 +130,7 @@ int gcp_slice   (gcp_context_t *gcp);
 // for unit test
 int gcp_anon_register_reply(gcp_context_t *gcp);
 int gcp_prompt_for_claim(gcp_context_t *gcp);
-int gcp_wait_for_claim(gcp_context_t *gcp, bool *cancel);
+int gcp_wait_for_claim(gcp_context_t *gcp, bool *done, bool *cancel);
 int gcp_authorization_reply(gcp_context_t *gcp, bool *done);
 
 #endif

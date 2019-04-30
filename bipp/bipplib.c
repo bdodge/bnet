@@ -100,6 +100,9 @@ int ipp_resource_callback(
     }
     switch (cbtype)
     {
+    case httpRequestHeader:
+        break;
+
     case httpRequest:
 
         butil_log(IPPLHT, "IPP resource cb (request)  %s: %s\n",
@@ -1394,7 +1397,7 @@ int ipp_server(const char *program, uint16_t open_port, uint16_t secure_port, co
                 result = -1;
                 break;
             }
-            result = http_server_init(ipp->open_server, resources, ipp->open_port, httpTCP, false);
+            result = http_server_init(ipp->open_server, resources, ipp->open_port, httpTCP, 3, false);
             if (result)
             {
                 BERROR("can't start server");
@@ -1414,7 +1417,7 @@ int ipp_server(const char *program, uint16_t open_port, uint16_t secure_port, co
                 result = 1;
                 break;
             }
-            result = http_server_init(ipp->secure_server, resources, ipp->secure_port, httpTCP, true);
+            result = http_server_init(ipp->secure_server, resources, ipp->secure_port, httpTCP, 3, true);
             if (result)
             {
                 BERROR("can't start server");

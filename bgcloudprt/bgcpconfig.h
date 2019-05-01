@@ -16,6 +16,14 @@
 #ifndef BGCPCONFIG_H
 #define BGCPCONFIG_H 1
 
+/// Basic printer info - static per manufacturer/model
+//
+#define GCP_PROXY_ID          "yoproxy"
+#define GCP_PRT_UUID          "68ECDD18-8319-42DD-BC73-87D192E900DD"
+
+#define GCP_PRT_MODEL         "IPP"
+#define GCP_PRT_MANUFACTURER  "BNET"
+
 /// Whether local printing is supported
 //
 #define GCP_SUPPORT_LOCAL_PRT  (1)

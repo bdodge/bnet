@@ -462,7 +462,7 @@ int main(int argc, char **argv)
             return result;
         }
 #endif
-        result = gcp_init(&gcp, "yoproxy", "68ECDD18-8319-42DD-BC73-87D192E900DD");
+        result = gcp_init(&gcp, "123-456", "1.0.0");
         do
         {
             if (local_only)

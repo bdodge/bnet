@@ -20,6 +20,15 @@
 #include "bgcpnv.h"
 #include "bgcpcdd.h"
 
+bool gcp_is_registered(gcp_context_t *gcp)
+{
+    if (gcp && gcp->printer_id[0] && gcp->refresh_token[0])
+    {
+        return true;
+    }
+    return false;
+}
+
 int gcp_anon_register(gcp_context_t *gcp)
 {
     char verstring[8];
@@ -31,13 +40,15 @@ int gcp_anon_register(gcp_context_t *gcp)
     snprintf(localprt, sizeof(localprt),
                 "{\r\n"
                 " \"current\": {\r\n"
-                "  \"local_discovery\": true,\r\n"
+                "  \"local_discovery\": %s,\r\n"
                 "  \"access_token_enabled\": true,\r\n"
-                "  \"printer/local_printing_enabled\": true,\r\n"
+                "  \"printer/local_printing_enabled\": %s,\r\n"
                 "  \"printer/conversion_printing_enabled\": true,\r\n"
                 "  \"xmpp_timeout_value\": %u\r\n"
                 " }\r\n"
                 "}\r\n",
+                gcp->responding ? "true" : "false",
+                gcp->local_prt_enabled ? "true" : "false",
                 GCP_XMPP_CLIENT_PING_PERIOD
                 );
     #endif
@@ -799,7 +810,11 @@ int gcp_slice(gcp_context_t *gcp)
     return 0;
 }
 
-int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
+int gcp_init(
+                gcp_context_t *gcp,
+                const char *serial_no,
+                const char *fw_revision
+            )
 {
     int result;
 
@@ -842,11 +857,17 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
         BERROR("Can't init CDS");
         return -1;
     }
-    strncpy(gcp->proxy_id, proxy_id, sizeof(gcp->proxy_id) - 1);
+    strncpy(gcp->proxy_id, GCP_PROXY_ID, sizeof(gcp->proxy_id) - 1);
     gcp->proxy_id[sizeof(gcp->proxy_id) - 1] = '\0';
 
-    strncpy(gcp->uuid, uuid, sizeof(gcp->uuid) - 1);
+    strncpy(gcp->uuid, GCP_PRT_UUID, sizeof(gcp->uuid) - 1);
     gcp->uuid[sizeof(gcp->uuid) - 1] = '\0';
+
+    strncpy(gcp->serial_no, serial_no, sizeof(gcp->serial_no) - 1);
+    gcp->serial_no[sizeof(gcp->serial_no) - 1] = '\0';
+
+    strncpy(gcp->fw_revision, fw_revision, sizeof(gcp->fw_revision) - 1);
+    gcp->fw_revision[sizeof(gcp->fw_revision) - 1] = '\0';
 
     http_generate_boundary(gcp->boundary, sizeof(gcp->boundary));
 
@@ -873,6 +894,8 @@ int gcp_init(gcp_context_t *gcp, const char *proxy_id, const char *uuid)
         return result;
     }
     #endif
+    time(&gcp->start_time);
+
     gcp->prevstate = gcpAnonRegister;
     gcp->nextstate = gcpAnonRegister;
     gcp->state = gcpInit;

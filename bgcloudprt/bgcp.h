@@ -77,6 +77,8 @@ typedef struct tag_gcp_context
     gcp_state_t         nextstate;
     char                uuid[64];
     char                proxy_id[64];
+    char                serial_no[GCP_SHORT_TOKEN];
+    char                fw_revision[GCP_SHORT_TOKEN];
     void               *nvhandle;
     char                user_email[GCP_SHORT_TOKEN];
     char                printer_id[GCP_SHORT_TOKEN];
@@ -93,6 +95,7 @@ typedef struct tag_gcp_context
     time_t              next_poll;
     time_t              next_fetch;
     time_t              next_refresh;
+    time_t              start_time;
     char                authorization_code[GCP_MAX_TOKEN];
     char                refresh_token[GCP_MAX_TOKEN];
     char                access_token[GCP_MAX_TOKEN];
@@ -104,6 +107,7 @@ typedef struct tag_gcp_context
     http_resource_t    *http_server_resources;
     mdns_responder_t    mdns_responder;
     bool                responding;
+    bool                local_prt_enabled;
     char                local_access_token[GCP_MAX_TOKEN];
 #endif
     bxmpp_t            *bxp;
@@ -123,15 +127,16 @@ int gcp_set_error_dbg (const char* fname, int line, gcp_context_t *gcp, int ecod
 #else
 int gcp_set_error     (gcp_context_t *gcp, int ecode);
 #endif
-int gcp_init    (gcp_context_t *gcp, const char *proxy_id, const char *uuid);
-int gcp_deinit  (gcp_context_t *gcp);
-int gcp_slice   (gcp_context_t *gcp);
+bool    gcp_is_registered   (gcp_context_t *gcp);
+int     gcp_init            (gcp_context_t *gcp, const char *serial_no, const char *fw_revision);
+int     gcp_deinit          (gcp_context_t *gcp);
+int     gcp_slice           (gcp_context_t *gcp);
 
-// for unit test
-int gcp_anon_register_reply(gcp_context_t *gcp);
-int gcp_prompt_for_claim(gcp_context_t *gcp);
-int gcp_wait_for_claim(gcp_context_t *gcp, bool *done, bool *cancel);
-int gcp_authorization_reply(gcp_context_t *gcp, bool *done);
+// for unit test only, not public
+int     gcp_anon_register_reply(gcp_context_t *gcp);
+int     gcp_prompt_for_claim(gcp_context_t *gcp);
+int     gcp_wait_for_claim  (gcp_context_t *gcp, bool *done, bool *cancel);
+int     gcp_authorization_reply(gcp_context_t *gcp, bool *done);
 
 #endif
 

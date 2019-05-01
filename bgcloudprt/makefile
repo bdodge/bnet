@@ -56,7 +56,8 @@ $(GCPLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^
 
 clean:
-	rm $(PROGOBJECTS) $(OBJECTS) $(GCPLIB) $(HTTPLIB)
+	make -C $(HTTP_PATH) clean
+	rm -f $(PROGOBJECTS) $(OBJECTS) $(GCPLIB) $(HTTPLIB)
 
 $(OBJDIR)/bgcptest.o: $(SRCDIR)/bgcptest.c $(HEADERS)
 

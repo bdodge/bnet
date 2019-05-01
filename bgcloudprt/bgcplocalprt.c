@@ -21,6 +21,7 @@
 
 static int gcp_local_info(gcp_context_t *gcp)
 {
+    time_t now;
     int len;
     char apitxt[256];
 
@@ -28,18 +29,35 @@ static int gcp_local_info(gcp_context_t *gcp)
     {
         return -1;
     }
-    if (gcp->printer_id[0])
+    time(&now);
+
+    if (gcp_is_registered(gcp))
     {
-        snprintf(apitxt, sizeof(apitxt),
-            "        \"/privet/accesstoken\",\r\n"
-            "        \"/privet/capabilities\",\r\n"
-            "        \"/privet/printer/submitdoc\"\r\n"
-            );
+        if (gcp->local_prt_enabled)
+        {
+            snprintf(apitxt, sizeof(apitxt),
+                "    \"/privet/info\",\r\n"
+                "    \"/privet/accesstoken\",\r\n"
+                "    \"/privet/capabilities\",\r\n"
+                "    \"/privet/printer/submitdoc\",\r\n"
+                "    \"/privet/printer/createjob\",\r\n"
+                "    \"/privet/printer/jobstate\"\r\n"
+                );
+        }
+        else
+        {
+            snprintf(apitxt, sizeof(apitxt),
+                "    \"/privet/info\",\r\n"
+                "    \"/privet/accesstoken\",\r\n"
+                "    \"/privet/capabilities\"\r\n"
+                );
+        }
     }
     else
     {
         snprintf(apitxt, sizeof(apitxt),
-            "        \"/privet/register\"\r\n"
+            "    \"/privet/info\",\r\n"
+            "    \"/privet/register\"\r\n"
             );
     }
     len = snprintf(
@@ -47,35 +65,59 @@ static int gcp_local_info(gcp_context_t *gcp)
         gcp->io.size,
         "{\r\n"
         "\"version\": \"1.0\",\r\n"
-        "\"name\": \"%s\",\r\n" /* printer description */
+        "\"name\": \"%s\",\r\n"                 /* printer description */
         "\"description\": \"Printer connected through Chrome connector\",\r\n"
         "\"url\": \"https://www.google.com/cloudprint\",\r\n"
         "\"type\": [\r\n"
         "        \"printer\"\r\n"
         "],\r\n"
-        "\"id\": \"%s\",\r\n" /* printer id */
-        "\"device_state\": \"%s\",\r\n" /* device state */
-        "\"connection_state\": \"%s\",\r\n" /* connection state */
+        "\"id\": \"%s\",\r\n"                   /* printer id */
+        "\"device_state\": \"%s\",\r\n"         /* device state */
+        "\"connection_state\": \"%s\",\r\n"     /* connection state */
         "\"manufacturer\": \"BNET\",\r\n"
         "\"model\": \"IPP\",\r\n"
-        "\"serial_number\": \"1111-22222-33333-4444\",\r\n"
-        "\"firmware\": \"24.0.1312.52\",\r\n"
-        "\"uptime\": 600,\r\n"
+        "\"serial_number\": \"%s\",\r\n"        /* serial number */
+        "\"firmware\": \"%s\",\r\n"             /* f/w revision */
+        "\"uptime\": %ld,\r\n"                  /* up-time */
         "\"setup_url\": \"http://support.google.com/cloudprint/answer/1686197/?hl=en\",\r\n"
         "\"support_url\": \"http://support.google.com/cloudprint/?hl=en\",\r\n"
         "\"update_url\": \"http://support.google.com/cloudprint/?hl=en\",\r\n"
-        "\"x-privet-token\": \"%s\",\r\n" /* local access token */
+        "\"x-privet-token\": \"%s\",\r\n"       /* local access token */
         "\"api\": [\r\n"
-        "%s" /* API */
+        "%s"                                    /* API */
         "]\r\n"
         "}\r\n",
-        "BNET IPP",
+        GCP_PRT_MODEL,
         gcp->printer_id,
         "idle",
-        "online",
+        (gcp->xmpp_state == gcpxConnected) ? "online" : "offline",
+        gcp->serial_no,
+        gcp->fw_revision,
+        now - gcp->start_time,
         gcp->local_access_token,
         apitxt
     );
+    if (len < 0)
+    {
+        butil_log(0, "result buffer overflow\n");
+        return -1;
+    }
+    gcp->io.tail = 0;
+    gcp->io.count = len;
+    gcp->io.head = len;
+    return 0;
+}
+
+static int gcp_local_capabilities(gcp_context_t *gcp)
+{
+    int len;
+
+    len = snprintf(
+                (char*)gcp->io.data,
+                gcp->io.size,
+                "%s",
+                gcp->cdd
+                );
     if (len < 0)
     {
         butil_log(0, "result buffer overflow\n");
@@ -150,7 +192,22 @@ static int gcp_local_prt_resource_func(
                 }
                 break;
             }
+            if (! strcmp(client->path, "/privet/capabilities"))
+            {
+                result = gcp_local_capabilities(gcp);
+                if (! result)
+                {
+                    client->out_content_length = gcp->io.count;
+                    client->out_content_type = butil_mime_json;
+                    client->out_transfer_type = httpLength;
+                    result += http_append_request(client,
+                            "x-privet-token: %s", gcp->local_access_token);
+                }
+                break;
+            }
             butil_log(5, "Unsupported URL %s\n", client->path);
+            result = http_error_reply(client, 404, "Not found", true);
+            client->out_content_length = 0;
             break;
 
         case httpPost:
@@ -297,6 +354,10 @@ int gcp_init_local_prt(gcp_context_t *gcp)
     {
         butil_log(0, "Can't add http server on port %u\n", (uint32_t)GCP_LOCAL_HTTP_PORT);
         return result;
+    }
+    else
+    {
+        gcp->local_prt_enabled = true;
     }
     return result;
 }

@@ -55,7 +55,7 @@ $(HTTPLIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^
 
 clean:
-	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
+	rm -f $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
 
 $(OBJDIR)/bhttpmain.o: $(SRCDIR)/bhttpmain.c $(HEADERS)
 

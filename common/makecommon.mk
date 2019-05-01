@@ -186,7 +186,7 @@ $(UTIL_PATH)/%.a:
 	make -C $(UTIL_PATH) library
 
 $(IO_PATH)/%.a:
-	make -C $(IO_PATH) library
+	make -C $(IO_PATH) BNET_TLS=$(BNET_TLS) library
 
 $(MEM_PATH)/%.a:
 	make -C $(MEM_PATH) library
@@ -201,7 +201,7 @@ $(JSON_PATH)/%.a:
 	make -C $(JSON_PATH) library
 
 $(HTTP_PATH)/%.a:
-	make -C $(HTTP_PATH) EXTRA_DEFINES=$(EXTRA_DEFINES) library
+	make -C $(HTTP_PATH) BNET_TLS=$(BNET_TLS) BNET_ZLIB=$(BNET_ZLIB) EXTRA_DEFINES=$(EXTRA_DEFINES) library
 
 $(XMPP_PATH)/%.a:
 	make -C $(XMPP_PATH) library
@@ -213,19 +213,19 @@ $(MDNS_PATH)/%.a:
 	make -C $(MDNS_PATH) library
 
 $(SNMP_PATH)/%.a:
-	make -C $(SNMP_PATH) library
+	make -C $(SNMP_PATH) BNET_TLS=$(BNET_TLS) library
 
 $(SIP_PATH)/%.a:
-	make -C $(SIP_PATH) library
+	make -C $(SIP_PATH) BNET_TLS=$(BNET_TLS) library
 
 $(PWG_PATH)/%.a:
 	make -C $(PWG_PATH) library
 
 $(IPP_PATH)/%.a:
-	make -C $(IPP_PATH) library
+	make -C $(IPP_PATH) BNET_TLS=$(BNET_TLS) library
 
 $(GCP_PATH)/%.a:
-	make -C $(GCP_PATH) library
+	make -C $(GCP_PATH) BNET_TLS=$(BNET_TLS) library
 
 $(MBEDTLS_PATH)/library/%.a:
 	make -C $(MBEDTLS_PATH) lib OS=$(OS) BNET_TLS=$(BNET_TLS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)

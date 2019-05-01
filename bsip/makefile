@@ -53,7 +53,7 @@ $(SIPLIB): $(OBJECTS)
 
 clean:
 	make -C $(HTTP_PATH) EXTRA_DEFINES="$(EXTRA_DEFINES)" clean
-	rm $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
+	rm -f $(PROGOBJECTS) $(OBJECTS) $(HTTPLIB)
 
 $(OBJDIR)/bsiptest.o: $(SRCDIR)/bsiptest.c $(HEADERS)
 

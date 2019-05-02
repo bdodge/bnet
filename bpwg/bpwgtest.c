@@ -75,6 +75,7 @@ int pwg_rip_file(const char *fname, int iosize)
                 {
                     butil_log(1, "End of file\n");
                     result = 0;
+                    if (io.count == 0)
                     break;
                 }
                 io.count += nread;

@@ -39,23 +39,35 @@ typedef enum
 }
 pwg_line_state_t;
 
+struct tag_pwg_context;
+
+/// Line decoder function
+//
+typedef int (*pwg_line_decoder_t)(
+                                    struct tag_pwg_context *pwg,
+                                    uint8_t *data,
+                                    int *ndata,
+                                    bool *done
+                                );
+
 /// PWG Context
 //
 typedef struct tag_pwg_context
 {
-    pwg_state_t     state;
-    pwg_line_state_t line_state;
-    pwg_header_t    hdr;
-    int             pages;
-    int             rows;
-    int             pixels;
-    int             pageno;
-    int             lineno;
-    int             pixelno;
-    int             bytes_left;
-    int             bytes_gotten;
-    int             line_repeat;
-    int             color_repeat;
+    pwg_state_t         state;
+    pwg_line_state_t    line_state;
+    pwg_header_t        hdr;
+    pwg_line_decoder_t  decoder;
+    int                 pages;
+    int                 rows;
+    int                 pixels;
+    int                 pageno;
+    int                 lineno;
+    int                 pixelno;
+    int                 bytes_left;
+    int                 bytes_gotten;
+    int                 line_repeat;
+    int                 color_repeat;
 }
 pwg_context_t;
 

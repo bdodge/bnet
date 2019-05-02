@@ -45,14 +45,105 @@ static int pwg_byteswap_header(pwg_header_t *hdr)
     return 0;
 }
 
-int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
+int pwg_decode_1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
 {
     int avail;
     int took;
 
-    butil_log(8, "state %u l=%u.%u p=%u %u\n",
-            pwg->line_state, pwg->lineno, pwg->line_repeat,
-            pwg->pixelno, pwg->color_repeat);
+    *done = false;
+    if (*ndata < pwg->bytes_left)
+    {
+        // wait for bytes neede
+        *ndata = 0;
+        return 0;
+    }
+    switch (pwg->line_state)
+    {
+    case pwgLineLine:
+        pwg->pixelno = 0;
+        pwg->line_repeat = 1 + (uint8_t)*data;
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRun:
+        pwg->color_repeat = (uint8_t)*data;
+        if (pwg->color_repeat > 127)
+        {
+            pwg->color_repeat = 257 - pwg->color_repeat;
+            pwg->line_state = pwgLineSoloColor;
+        }
+        else
+        {
+            pwg->color_repeat += 1;
+            pwg->line_state = pwgLineRepeatColor;
+        }
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRepeatColor:
+        *ndata = 1;
+        pwg->pixelno += 8 * pwg->color_repeat;
+        if (pwg->pixelno >= pwg->pixels)
+        {
+            if (pwg->pixelno != ((pwg->pixels + 7) & ~7))
+            {
+                butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                return -1;
+            }
+            *done = true;
+            pwg->lineno+= pwg->line_repeat;
+            pwg->line_state = pwgLineLine;
+            pwg->bytes_left = 1;
+            break;
+        }
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        break;
+    case pwgLineSoloColor:
+        avail = *ndata;
+        took  = 0;
+        while (took < avail && pwg->color_repeat > 0)
+        {
+            took++;
+            pwg->color_repeat--;
+            pwg->pixelno+= 8;
+            if (pwg->pixelno >= pwg->pixels)
+            {
+                if (pwg->pixelno != ((pwg->pixels + 7) & ~7))
+                {
+                    butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                    return -1;
+                }
+                if (pwg->color_repeat != 0)
+                {
+                    butil_log(2, "Corrupt? more colors: %u\n", pwg->color_repeat);
+                    return -1;
+                }
+                *done = true;
+                pwg->lineno+= pwg->line_repeat;
+                pwg->line_state = pwgLineLine;
+                pwg->bytes_left = 1;
+                break;
+            }
+            if (pwg->color_repeat == 0)
+            {
+                pwg->line_state = pwgLineRun;
+                pwg->bytes_left = 1;
+                break;
+            }
+            pwg->bytes_left = 1;
+        }
+        *ndata = took;
+        break;
+    }
+    return 0;
+}
+
+int pwg_decode_1x8(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
+{
+    int avail;
+    int took;
 
     *done = false;
     if (*ndata < pwg->bytes_left)
@@ -93,6 +184,7 @@ int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
             if (pwg->pixelno != pwg->pixels)
             {
                 butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                return -1;
             }
             *done = true;
             pwg->lineno+= pwg->line_repeat;
@@ -106,7 +198,7 @@ int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
     case pwgLineSoloColor:
         avail = *ndata;
         took  = 0;
-        while (avail >= 3 && pwg->color_repeat > 0)
+        while (took < avail && pwg->color_repeat > 0)
         {
             took += 3;
             pwg->color_repeat--;
@@ -116,10 +208,107 @@ int pwg_decode_line(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
                 if (pwg->pixelno != pwg->pixels)
                 {
                     butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                    return -1;
                 }
                 if (pwg->color_repeat != 0)
                 {
                     butil_log(2, "Corrupt? more colors: %u\n", pwg->color_repeat);
+                    return -1;
+                }
+                *done = true;
+                pwg->lineno+= pwg->line_repeat;
+                pwg->line_state = pwgLineLine;
+                pwg->bytes_left = 1;
+                break;
+            }
+            if (pwg->color_repeat == 0)
+            {
+                pwg->line_state = pwgLineRun;
+                pwg->bytes_left = 1;
+                break;
+            }
+            pwg->bytes_left = 3;
+        }
+        *ndata = took;
+        break;
+    }
+    return 0;
+}
+
+int pwg_decode_3x8(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
+{
+    int avail;
+    int took;
+
+    *done = false;
+    if (*ndata < pwg->bytes_left)
+    {
+        // wait for bytes neede
+        *ndata = 0;
+        return 0;
+    }
+    switch (pwg->line_state)
+    {
+    case pwgLineLine:
+        pwg->pixelno = 0;
+        pwg->line_repeat = 1 + (uint8_t)*data;
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRun:
+        pwg->color_repeat = (uint8_t)*data;
+        if (pwg->color_repeat > 127)
+        {
+            pwg->color_repeat = 257 - pwg->color_repeat;
+            pwg->line_state = pwgLineSoloColor;
+        }
+        else
+        {
+            pwg->color_repeat += 1;
+            pwg->line_state = pwgLineRepeatColor;
+        }
+        pwg->bytes_left = 3;
+        *ndata = 1;
+        break;
+    case pwgLineRepeatColor:
+        *ndata = 3;
+        pwg->pixelno += pwg->color_repeat;
+        if (pwg->pixelno >= pwg->pixels)
+        {
+            if (pwg->pixelno != pwg->pixels)
+            {
+                butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                return -1;
+            }
+            *done = true;
+            pwg->lineno+= pwg->line_repeat;
+            pwg->line_state = pwgLineLine;
+            pwg->bytes_left = 1;
+            break;
+        }
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        break;
+    case pwgLineSoloColor:
+        avail = *ndata;
+        took  = 0;
+        while (((avail - took) > 2) && pwg->color_repeat > 0)
+        {
+            took += 3;
+            pwg->color_repeat--;
+            pwg->pixelno++;
+            if (pwg->pixelno >= pwg->pixels)
+            {
+                if (pwg->pixelno != pwg->pixels)
+                {
+                    butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                    return -1;
+                }
+                if (pwg->color_repeat != 0)
+                {
+                    butil_log(2, "Corrupt? more colors: %u\n", pwg->color_repeat);
+                    return -1;
                 }
                 *done = true;
                 pwg->lineno+= pwg->line_repeat;
@@ -184,13 +373,48 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
             // byte swap all the uint32s in hdr
             pwg_byteswap_header(&pwg->hdr);
             pwg->state = pwgPage;
+            if (pwg->pageno == 0)
+            {
+                pwg->pages = pwg->hdr.TotalPageCount;
+            }
         }
         break;
     case pwgPage:
+        butil_log(5, "Page %d of %d\n", pwg->pageno + 1, pwg->pages);
         pwg_dump_header(&pwg->hdr);
-        pwg->pages = pwg->hdr.TotalPageCount;
         pwg->rows = pwg->hdr.PageSize_Y * pwg->hdr.yres / 72;
         pwg->pixels = pwg->hdr.PageSize_X * pwg->hdr.xres / 72;
+        switch (pwg->hdr.BitsPerColor)
+        {
+        case 1:
+            switch (pwg->hdr.BitsPerPixel)
+            {
+            case 1:
+                pwg->decoder = pwg_decode_1x1;
+                break;
+            default:
+                butil_log(0, "Unhandled format\n");
+                return -1;
+            }
+            break;
+        case 8:
+            switch (pwg->hdr.BitsPerPixel)
+            {
+            case 8:
+                pwg->decoder = pwg_decode_1x8;
+                break;
+            case 24:
+                pwg->decoder = pwg_decode_3x8;
+                break;
+            default:
+                butil_log(0, "Unhandled format\n");
+                return -1;
+            }
+            break;
+        default:
+            butil_log(0, "Unhandled format\n");
+            return -1;
+        }
         pwg->pageno++;
         pwg->lineno = 0;
         pwg->pixels = pwg->hdr.BytesPerLine * 8 / pwg->hdr.BitsPerPixel;
@@ -200,7 +424,15 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
         *ndata = 0;
         break;
     case pwgLine:
-        result = pwg_decode_line(pwg, data, ndata, &done);
+        butil_log(8, "state %u l=%u.%u p=%u %u\n",
+                pwg->line_state, pwg->lineno, pwg->line_repeat,
+                pwg->pixelno, pwg->color_repeat);
+
+        result = pwg->decoder(pwg, data, ndata, &done);
+        if (result)
+        {
+            return result;
+        }
         if (! done)
         {
             break;
@@ -208,7 +440,13 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
         butil_log(6, "line %zu of %u\n", pwg->lineno, pwg->rows);
         if(pwg->lineno >= pwg->rows)
         {
-            butil_log(5, "End of page %u\n", pwg->pageno);
+            butil_log(5, "End of Page %u\n", pwg->pageno);
+            if (pwg->pageno >= pwg->pages)
+            {
+                butil_log(5, "End of Document\n");
+                pwg->state = pwgSync;
+                break;
+            }
             pwg->state = pwgHeader;
             pwg->bytes_left = sizeof(pwg_header_t);
             pwg->bytes_gotten = 0;

@@ -96,16 +96,49 @@ int main(int argc, char **argv)
         else
         {
             image_stream_t *istream;
+            image_stream_t *ostream;
+            image_t outimg;
             mime_content_type_t type;
+            uint32_t y;
+
+            static uint8_t pixels[4096];
 
             type = butil_content_type_for_file(*argv);
-            result = image_open_file(*argv, IMAGE_READ, type, &istream);
+            result = image_open_file_reader(*argv, type, &istream);
             if (result)
             {
                 fprintf(stderr, "Can't open %s\n", *argv);
                 return -1;
             }
+            outimg.width = istream->img->width;
+            outimg.height = istream->img->height;
+            outimg.depth = istream->img->depth;
+            outimg.stride = istream->img->stride;
+            outimg.format = istream->img->format;
+
+            result = image_open_file_writer("out.png", butil_mime_png, &outimg, &ostream);
+            if (result)
+            {
+                fprintf(stderr, "Can't open %s\n", "out.png");
+                return -1;
+            }
+            for (y = 0; y < istream->img->height; y++)
+            {
+                result = istream->read(istream, pixels, sizeof(pixels));
+                if (result)
+                {
+                    fprintf(stderr, "Can't read line %u\n", y);
+                    return -1;
+                }
+                result = ostream->write(ostream, pixels, ostream->img->stride);
+                if (result)
+                {
+                    fprintf(stderr, "Can't write line %u\n", y);
+                    return -1;
+                }
+            }
             istream->close(istream);
+            ostream->close(ostream);
             argv++;
             argc--;
         }

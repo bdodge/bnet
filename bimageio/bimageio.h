@@ -20,24 +20,20 @@
 #include "bstreamio.h"
 #include "butil.h"
 
-typedef enum
-{
-	IMAGE_RAW,
-	IMAGE_JPEG,
-	IMAGE_PNG,
-	IMAGE_BMP,
-	IMAGE_PWG,
-	IMAGE_TIFF
-}
-image_file_format_t;
+#define _IMAGE_GRAY			(0x01)
+#define _IMAGE_RGB  		(0x02)
+#define _IMAGE_CMYK  		(0x04)
+#define _IMAGE_SWAPPED  	(0x40)
+#define _IMAGE_ALPHA	  	(0x80)
 
 typedef enum
 {
-	IMAGE_MONO,
-	IMAGE_RGB,
-	IMAGE_RGBA,
-	IMAGE_ABGR,
-	IMAGE_CMYK,
+	IMAGE_GRAY	= (_IMAGE_GRAY),
+	IMAGE_RGB	= (_IMAGE_RGB),
+	IMAGE_BGR	= (_IMAGE_RGB | _IMAGE_SWAPPED),
+	IMAGE_RGBA	= (_IMAGE_RGB | _IMAGE_ALPHA),
+	IMAGE_ABGR	= (_IMAGE_RGB | _IMAGE_ALPHA | _IMAGE_SWAPPED),
+	IMAGE_CMYK	= (_IMAGE_CMYK),
 }
 image_color_format_t;
 
@@ -87,7 +83,9 @@ typedef struct tag_image_stream
 	iostream_t		   *stream;
 	image_open_intent_t intent;
 	mime_content_type_t file_format;
+	bool				own_img;
 	void               *priv;
+	uint32_t			cur_line;
 	image_open_t		open;
 	image_read_line_t   read;
 	image_write_line_t  write;
@@ -97,10 +95,16 @@ image_stream_t;
 
 int image_close					(image_stream_t *istream);
 
-int image_open_file				(
+int image_open_file_reader		(
 								const char *file,
-								image_open_intent_t intent,
 								mime_content_type_t format,
+								image_stream_t **pistream
+								);
+
+int image_open_file_writer	   (
+								const char *file,
+								mime_content_type_t format,
+								image_t *img,
 								image_stream_t **pistream
 								);
 

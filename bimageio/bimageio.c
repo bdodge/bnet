@@ -23,40 +23,27 @@ int image_close(image_stream_t *istream)
 	{
 		return -1;
 	}
-	if (! istream->stream)
+	if (istream->stream)
 	{
-		return 0;
+		istream->stream->close(istream->stream);
+		istream->stream = NULL;
 	}
-	istream->stream->close(istream->stream);
-	istream->stream = NULL;
+	if (istream->img && istream->own_img)
+	{
+		free(istream->img);
+		istream->img = NULL;
+	}
 	free(istream);
 	return 0;
 }
 
-int image_open_file(
-				const char *file,
-				image_open_intent_t intent,
-				mime_content_type_t format,
-				image_stream_t **pistream
-				)
+static int image_set_format(image_stream_t *istream, mime_content_type_t format)
 {
-	image_stream_t *istream;
-	int result;
-
-	if (! file || ! pistream)
-	{
-		return -1;
-	}
-	istream = (image_stream_t *)malloc(sizeof(image_stream_t));
-	*pistream = istream;
 	if (! istream)
 	{
-		butil_log(0, "Can't alloc image stream\n");
 		return -1;
 	}
-	memset(istream, 0, sizeof(image_stream_t));
 	istream->file_format = format;
-	istream->intent = intent;
 
 	switch (istream->file_format)
 	{
@@ -69,23 +56,119 @@ int image_open_file(
 	default:
 		butil_log(1, "File format %d not supported\n",
 									(int)istream->file_format);
+		return -1;
+	}
+	return 0;
+}
+
+int image_open_file_reader(
+				const char *file,
+				mime_content_type_t format,
+				image_stream_t **pistream
+				)
+{
+	image_stream_t *istream;
+	int result;
+
+	if (! file || ! pistream)
+	{
+		return -1;
+	}
+	*pistream = NULL;
+
+	istream = (image_stream_t *)malloc(sizeof(image_stream_t));
+	if (! istream)
+	{
+		butil_log(0, "Can't alloc image stream\n");
+		return -1;
+	}
+	memset(istream, 0, sizeof(image_stream_t));
+	istream->intent = IMAGE_READ;
+
+	result = image_set_format(istream, format);
+	if (result)
+	{
 		free(istream);
 		return -1;
 	}
-	if (istream->intent == IMAGE_READ)
+	istream->img = (image_t *)malloc(sizeof(image_t));
+	if (! istream->img)
 	{
-		istream->stream = iostream_create_reader_from_file(file);
+		butil_log(0, "Can't alloc image\n");
+		free(istream);
+		return -1;
+	}
+	istream->own_img = true;
+
+	*pistream = istream;
+
+	istream->stream = iostream_create_reader_from_file(file);
+	if (! istream->stream)
+	{
+		butil_log(1, "Can't open %s for read\n", file);
+		free(istream);
+		return -1;
+	}
+	return istream->open(istream, istream->intent);
+}
+
+int image_open_file_writer(
+				const char *file,
+				mime_content_type_t format,
+				image_t *img,
+				image_stream_t **pistream
+				)
+{
+	image_stream_t *istream;
+	int result;
+
+	if (! file || ! pistream)
+	{
+		return -1;
+	}
+	*pistream = NULL;
+
+	istream = (image_stream_t *)malloc(sizeof(image_stream_t));
+	if (! istream)
+	{
+		butil_log(0, "Can't alloc image stream\n");
+		return -1;
+	}
+	memset(istream, 0, sizeof(image_stream_t));
+	istream->file_format = format;
+	istream->intent = IMAGE_WRITE;
+
+	if (! img)
+	{
+		istream->img = (image_t *)malloc(sizeof(image_t));
+		if (! istream->img)
+		{
+			butil_log(0, "Can't alloc image\n");
+			free(istream);
+			return -1;
+		}
+		istream->own_img = true;
 	}
 	else
 	{
-		istream->stream = iostream_create_writer_from_file(file);
+		istream->img = img;
+		istream->own_img = false;
 	}
-	if (! istream->stream)
+	*pistream = istream;
+
+	result = image_set_format(istream, format);
+	if (result)
 	{
-		butil_log(1, "Can't open %s\n", file);
 		free(istream);
 		return -1;
 	}
-	return istream->open(istream, intent);
+	istream->stream = iostream_create_writer_from_file(file);
+	if (! istream->stream)
+	{
+		butil_log(1, "Can't open %s for write\n", file);
+		free(istream);
+		return -1;
+	}
+	return istream->open(istream, istream->intent);
 }
 

@@ -44,5 +44,5 @@ clean:
 
 $(OBJDIR)/bimgtest.o: $(SRCDIR)/bimgtest.c $(HEADERS)
 $(OBJDIR)/bimageio.o: $(SRCDIR)/bimageio.c $(HEADERS)
-$(OBJDIR)/bimgpng.o: $(SRCDIR)/bimgpng.c $(HEADERS)
+$(OBJDIR)/bimgpng.o: $(SRCDIR)/bimgpng.c $(HEADERS) $(PNGDEPS)
 

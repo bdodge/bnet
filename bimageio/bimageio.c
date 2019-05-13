@@ -15,6 +15,8 @@
  */
 #include "bimageio.h"
 #include "bimgpng.h"
+#include "bimgpwg.h"
+#include "bimgjpeg.h"
 #include "butil.h"
 
 int image_close(image_stream_t *istream)
@@ -52,6 +54,18 @@ static int image_set_format(image_stream_t *istream, mime_content_type_t format)
 		istream->read  = image_read_png;
 		istream->write = image_write_png;
 		istream->close = image_close_png;
+		break;
+	case butil_mime_jpeg:
+		istream->open  = image_open_jpeg;
+		istream->read  = image_read_jpeg;
+		istream->write = image_write_jpeg;
+		istream->close = image_close_jpeg;
+		break;
+	case 0x1234:
+		istream->open  = image_open_pwg;
+		istream->read  = image_read_pwg;
+		istream->write = image_write_pwg;
+		istream->close = image_close_pwg;
 		break;
 	default:
 		butil_log(1, "File format %d not supported\n",

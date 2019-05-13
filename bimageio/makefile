@@ -21,7 +21,9 @@ SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
 SOURCES=$(SRCDIR)/bimageio.c		\
-		$(SRCDIR)/bimgpng.c
+		$(SRCDIR)/bimgpng.c			\
+		$(SRCDIR)/bimgpwg.c			\
+		$(SRCDIR)/bimgjpeg.c
 
 HEADERS=$(SOURCES:%.c=%.h) $(SRCROOT)/common/bnetheaders.h
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
@@ -31,7 +33,7 @@ PROGOBJECTS=$(OBJDIR)/bimgtest.o
 
 CFLAGS+=-I$(UTIL_PATH) -I$(IO_PATH) -I$(MEM_PATH) -I$(OBJDIR)
 
-bimg: $(PROGOBJECTS) $(IMGLIB) $(MEMLIB) $(IOLIB) $(UTILLIB)  $(ZLIBDEPS) $(PNGDEPS) #(JPEGDEPS)
+bimg: $(PROGOBJECTS) $(IMGLIB) $(MEMLIB) $(IOLIB) $(UTILLIB)  $(ZLIBDEPS) $(PNGDEPS) $(JPEGDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(IMGLIB)
@@ -45,4 +47,6 @@ clean:
 $(OBJDIR)/bimgtest.o: $(SRCDIR)/bimgtest.c $(HEADERS)
 $(OBJDIR)/bimageio.o: $(SRCDIR)/bimageio.c $(HEADERS)
 $(OBJDIR)/bimgpng.o: $(SRCDIR)/bimgpng.c $(HEADERS) $(PNGDEPS)
+$(OBJDIR)/bimgpwg.o: $(SRCDIR)/bimgpwg.c $(HEADERS)
+$(OBJDIR)/bimgjpeg.o: $(SRCDIR)/bimgjpeg.c $(HEADERS) $(JPEGDEPS)
 

@@ -101,18 +101,20 @@ int main(int argc, char **argv)
             mime_content_type_t type;
             uint32_t y;
 
-            static uint8_t pixels[4096];
+            static uint8_t pixels[4096 * 4];
 
             type = butil_content_type_for_file(*argv);
+            if (strstr(*argv, ".pwg"))
+                type = 0x1234;
             result = image_open_file_reader(*argv, type, &istream);
             if (result)
             {
                 fprintf(stderr, "Can't open %s\n", *argv);
                 return -1;
             }
-            outimg.width = istream->img->width;
+            outimg.width  = istream->img->width;
             outimg.height = istream->img->height;
-            outimg.depth = istream->img->depth;
+            outimg.depth  = istream->img->depth;
             outimg.stride = istream->img->stride;
             outimg.format = istream->img->format;
 

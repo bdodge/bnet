@@ -33,7 +33,7 @@ MDNS_PATH=$(SRCROOT)/bmdns
 SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
 SIP_PATH=$(SRCROOT)/bsip
-PWG_PATH=$(SRCROOT)/bpwg
+MPCL_PATH=$(SRCROOT)/bmpcl
 IPP_PATH=$(SRCROOT)/bipp
 GCP_PATH=$(SRCROOT)/bgcloudprt
 
@@ -144,7 +144,7 @@ MDNSLIB=$(MDNS_PATH)/$(OBJDIR)/libbmdns.a
 SMTPLIB=$(SMTP_PATH)/$(OBJDIR)/libbsmtp.a
 SNMPLIB=$(SNMP_PATH)/$(OBJDIR)/libbsnmp.a
 SIPLIB=$(SIP_PATH)/$(OBJDIR)/libbsip.a
-PWGLIB=$(PWG_PATH)/$(OBJDIR)/libbpwg.a
+MPCLLIB=$(MPCL_PATH)/$(OBJDIR)/libbmpcl.a
 IPPLIB=$(IPP_PATH)/$(OBJDIR)/libbipp.a
 GCPLIB=$(GCP_PATH)/$(OBJDIR)/libbgcp.a
 
@@ -234,8 +234,8 @@ $(SNMP_PATH)/%.a:
 $(SIP_PATH)/%.a:
 	make -C $(SIP_PATH) BNET_TLS=$(BNET_TLS) library
 
-$(PWG_PATH)/%.a:
-	make -C $(PWG_PATH) library
+$(MPCL_PATH)/%.a:
+	make -C $(MPCL_PATH) library
 
 $(IPP_PATH)/%.a:
 	make -C $(IPP_PATH) BNET_TLS=$(BNET_TLS) library

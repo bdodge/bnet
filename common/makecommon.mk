@@ -19,6 +19,7 @@ SRCROOT ?= ..
 # Our libraries
 UTIL_PATH=$(SRCROOT)/butil
 IO_PATH=$(SRCROOT)/bstreamio
+IMG_PATH=$(SRCROOT)/bimageio
 MEM_PATH=$(SRCROOT)/bmem
 XML_PATH=$(SRCROOT)/bxml
 SASL_PATH=$(SRCROOT)/bsasl
@@ -32,7 +33,7 @@ MDNS_PATH=$(SRCROOT)/bmdns
 SMTP_PATH=$(SRCROOT)/bsmtp
 SNMP_PATH=$(SRCROOT)/bsnmp
 SIP_PATH=$(SRCROOT)/bsip
-PWG_PATH=$(SRCROOT)/bpwg
+MPCL_PATH=$(SRCROOT)/bmpcl
 IPP_PATH=$(SRCROOT)/bipp
 GCP_PATH=$(SRCROOT)/bgcloudprt
 
@@ -42,6 +43,9 @@ MBEDTLS_LIBS=mbedtls mbedx509 mbedcrypto
 
 LIBJPEGT_PATH=$(SRCROOT)/libjpeg-turbo
 LIBJPEGT_LIBS=turbojpeg
+
+LIBPNG_PATH=$(SRCROOT)/libpng-1.6.37
+LIBPNG_LIBS=png
 
 LIBZ_PATH=$(SRCROOT)/zlib-1.2.11
 LIBZ_LIBS=z
@@ -126,6 +130,7 @@ OBJDIR=.obj$(OS)$(ARCH)
 
 UTILLIB=$(UTIL_PATH)/$(OBJDIR)/libbutil.a
 IOLIB=$(IO_PATH)/$(OBJDIR)/libbstreamio.a
+IMGLIB=$(IMG_PATH)/$(OBJDIR)/libbimageio.a
 MEMLIB=$(MEM_PATH)/$(OBJDIR)/libbmem.a
 XMLLIB=$(XML_PATH)/$(OBJDIR)/libbxml.a
 SASLLIB=$(SASL_PATH)/$(OBJDIR)/libbsasl.a
@@ -139,7 +144,7 @@ MDNSLIB=$(MDNS_PATH)/$(OBJDIR)/libbmdns.a
 SMTPLIB=$(SMTP_PATH)/$(OBJDIR)/libbsmtp.a
 SNMPLIB=$(SNMP_PATH)/$(OBJDIR)/libbsnmp.a
 SIPLIB=$(SIP_PATH)/$(OBJDIR)/libbsip.a
-PWGLIB=$(PWG_PATH)/$(OBJDIR)/libbpwg.a
+MPCLLIB=$(MPCL_PATH)/$(OBJDIR)/libbmpcl.a
 IPPLIB=$(IPP_PATH)/$(OBJDIR)/libbipp.a
 GCPLIB=$(GCP_PATH)/$(OBJDIR)/libbgcp.a
 
@@ -148,7 +153,7 @@ ifndef BNET_TLS
 endif
 ifneq ($(BNET_TLS),0)
 	TLSLIBS=-L$(MBEDTLS_PATH)/library $(MBEDTLS_LIBS:%=-l%)
-	TLSDEPS=$(MBEDTLS_LIBS:%=$(MBEDTLS_PATH)/library/lib%.a$)
+	TLSDEPS=$(MBEDTLS_LIBS:%=$(MBEDTLS_PATH)/library/lib%.a)
 	CFLAGS+=-I$(MBEDTLS_PATH)/include -DBNET_TLS=1
 else
 	TLSLIBS=
@@ -160,11 +165,19 @@ ifndef BNET_JPEG
 endif
 ifneq ($(BNET_JPEG),0)
 	JPEGLIBS=$(LIBJPEGT_LIBS:%=-l%)
-	JPEGDEPS=$(LIBJPEGT_LIBS:%=$(OBJDIR)/lib%.a$)
+	JPEGDEPS=$(LIBJPEGT_LIBS:%=$(OBJDIR)/lib%.a)
 	CFLAGS+=-I$(LIBJPEGT_PATH) -DBNET_JPEG=1
 else
 	JPEGLIBS=
 	JPEGDEPS=
+endif
+ifneq ($(BNET_PNG),0)
+	PNGLIBS=$(LIBPNG_LIBS:%=-l%)
+	PNGDEPS=$(LIBPNG_LIBS:%=$(OBJDIR)/lib%.a)
+	CFLAGS+=-I$(LIBPNG_PATH) -DBNET_PNG=1
+else
+	PNGLIBS=
+	PNGDEPS=
 endif
 ifndef BNET_ZLIB
 	BNET_ZLIB=0
@@ -187,6 +200,9 @@ $(UTIL_PATH)/%.a:
 
 $(IO_PATH)/%.a:
 	make -C $(IO_PATH) BNET_TLS=$(BNET_TLS) library
+
+$(IMG_PATH)/%.a:
+	make -C $(IMG_PATH) library
 
 $(MEM_PATH)/%.a:
 	make -C $(MEM_PATH) library
@@ -218,8 +234,8 @@ $(SNMP_PATH)/%.a:
 $(SIP_PATH)/%.a:
 	make -C $(SIP_PATH) BNET_TLS=$(BNET_TLS) library
 
-$(PWG_PATH)/%.a:
-	make -C $(PWG_PATH) library
+$(MPCL_PATH)/%.a:
+	make -C $(MPCL_PATH) library
 
 $(IPP_PATH)/%.a:
 	make -C $(IPP_PATH) BNET_TLS=$(BNET_TLS) library
@@ -233,6 +249,10 @@ $(MBEDTLS_PATH)/library/%.a:
 $(OBJDIR)/%turbojpeg.a:
 	mkdir -p $(OBJDIR)
 	make -C $(OBJDIR) -f ../$(SRCROOT)/common/makejpegturbo.mk $@ BLDJPEGT_PATH=$(OBJDIR) LIBJPEGT_PATH=../$(LIBJPEGT_PATH) OS=$(OS) BNET_JPEG=$(BNET_JPEG) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
+
+$(OBJDIR)/%png.a:
+	mkdir -p $(OBJDIR)
+	make -C $(OBJDIR) -f ../$(SRCROOT)/common/makepng.mk $@ BLDPNG_PATH=$(OBJDIR) LIBPNG_PATH=../$(LIBPNG_PATH) OS=$(OS) CC=$(CC) CFLAGS="$(CFLAGS)" AR=$(AR) ARFLAGS=$(ARFLAGS) LD=$(LD)
 
 $(OBJDIR)/%z.a:
 	mkdir -p $(OBJDIR)

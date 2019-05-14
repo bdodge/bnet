@@ -27,6 +27,7 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
     struct sockaddr *dstaddr;
     struct sockaddr_in dst4addr;
     struct sockaddr_in6 dst6addr;
+    socket_t sock;
     mdns_packet_t *pkt;
     uint32_t delay;
     int dstsize;
@@ -41,7 +42,7 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
     {
         pkt = iface->outpkts;
 
-        if (! res || iface->udp_sock == INVALID_SOCKET)
+        if (! res)
         {
             BERROR("bad context");
             return -1;
@@ -54,7 +55,65 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
             // no reason to loop, nothing to send
             return 0;
         }
-        result = iostream_posix_poll_filedesc(iface->udp_sock, writeable, 0, 100000);
+        if (pkt->unicast || (pkt->srcport != MDNS_PORT))
+        {
+            if (pkt->dst_addrt == mdnsIPv6)
+            {
+                memset(&dst6addr, 0, sizeof(dst6addr));
+                dst6addr.sin6_family = AF_INET6;
+                dst6addr.sin6_port = htons(pkt->srcport);
+                memcpy(&dst6addr.sin6_addr, pkt->srcaddr6.addr, sizeof(bipv6addr_t));
+                dst6addr.sin6_flowinfo = 0;
+                dst6addr.sin6_scope_id = 0;
+                dstaddr = (struct sockaddr *)&dst6addr;
+                dstsize = sizeof(dst6addr);
+                sock = iface->udpu6_sock;
+            }
+            else // all, or IPv4
+            {
+                memset(&dst4addr, 0, sizeof(dst4addr));
+                dst4addr.sin_family = AF_INET;
+                dst4addr.sin_port = htons(pkt->srcport);
+                dst4addr.sin_addr.s_addr = pkt->srcaddr4.addr;
+                dstaddr = (struct sockaddr *)&dst4addr;
+                dstsize = sizeof(dst4addr);
+                sock = iface->udpu4_sock;
+            }
+        }
+        else
+        {
+            if (pkt->dst_addrt == mdnsIPv6)
+            {
+                static const uint8_t ipv6_mcast[] = MDNS_MCAST_IP6ADDR;
+
+                memset(&dst6addr, 0, sizeof(dst6addr));
+                dst6addr.sin6_family = AF_INET6;
+                dst6addr.sin6_port = htons(MDNS_PORT);
+                dst6addr.sin6_flowinfo = 0;
+                dst6addr.sin6_scope_id = 0;
+                memcpy(&dst6addr.sin6_addr, ipv6_mcast, sizeof(ipv6_mcast));
+                dstaddr = (struct sockaddr *)&dst6addr;
+                dstsize = sizeof(dst6addr);
+                sock = iface->udpm6_sock;
+            }
+            else // all, or IPv4
+            {
+                memset(&dst4addr, 0, sizeof(dst4addr));
+                dst4addr.sin_family = AF_INET;
+                dst4addr.sin_port = htons(MDNS_PORT);
+                dst4addr.sin_addr.s_addr = inet_addr(MDNS_MCAST_IP4ADDR);
+                dstaddr = (struct sockaddr *)&dst4addr;
+                dstsize = sizeof(dst4addr);
+                sock = iface->udpm4_sock;
+            }
+        }
+        if (sock == INVALID_SOCKET)
+        {
+            butil_log(0, "No socket for ip%s %s\n", (pkt->dst_addrt == mdnsIPv6) ? "6" : "4",
+                                            pkt->unicast ? "unicast" : "multicast");
+            return -1;
+        }
+        result = iostream_posix_poll_filedesc(sock, writeable, 0, 100000);
         if (result < 0)
         {
             BERROR("network error");
@@ -66,52 +125,10 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
             // not writeable keep packet
             return 0;
         }
-        // dequeue packet
-        //
-        iface->outpkts = pkt->next;
-
-        if (pkt->unicast || (pkt->srcport != MDNS_PORT))
-        {
-            if (pkt->isv6addr)
-            {
-                dst6addr.sin6_family = AF_INET6;
-                dst6addr.sin6_port = htons(pkt->srcport);
-                memcpy(&dst6addr.sin6_addr, pkt->srcaddr6.addr, sizeof(bipv6addr_t));
-                dstaddr = (struct sockaddr *)&dst6addr;
-                dstsize = sizeof(dst6addr);
-            }
-            else
-            {
-                dst4addr.sin_family = AF_INET;
-                dst4addr.sin_port = htons(pkt->srcport);
-                dst4addr.sin_addr.s_addr = pkt->srcaddr4.addr;
-                dstaddr = (struct sockaddr *)&dst4addr;
-                dstsize = sizeof(dst4addr);
-            }
-        }
-        else
-        {
-            if (pkt->isv6addr)
-            {
-                dst6addr.sin6_family = AF_INET6;
-                dst6addr.sin6_port = htons(MDNS_PORT);
-                inet_pton(AF_INET6, MDNS_MCAST_IP4ADDR, &dst6addr.sin6_addr);
-                dstaddr = (struct sockaddr *)&dst6addr;
-                dstsize = sizeof(dst6addr);
-            }
-            else
-            {
-                dst4addr.sin_family = AF_INET;
-                dst4addr.sin_port = htons(MDNS_PORT);
-                dst4addr.sin_addr.s_addr = inet_addr(MDNS_MCAST_IP4ADDR);
-                dstaddr = (struct sockaddr *)&dst4addr;
-                dstsize = sizeof(dst4addr);
-            }
-        }
-        count = sendto(iface->udp_sock, pkt->io.data, pkt->io.count,
+        count = sendto(sock, pkt->io.data, pkt->io.count,
                                  0, (struct sockaddr *)dstaddr,  dstsize);
 
-        mdns_pkt_free(res, pkt);
+
         if (pkt->unicast)
         {
             butil_log(6, "TX %d to %s %u  res %d (%d)\n", pkt->io.count,
@@ -121,15 +138,35 @@ int mdns_handle_output(mdns_responder_t *res, mdns_interface_t *iface)
         {
             butil_log(6, "TX %d multicast res %d (%d)\n", pkt->io.count, count, errno);
         }
+        result = 0;
+
         if (count < 0)
         {
             BERROR("cant send\n");
-            return count;
+            result = -1;
         }
         if (count != pkt->io.count)
         {
             butil_log(1, "Partial write of pkt\n");
-            return -1;
+            result = -1;
+        }
+        if (result || pkt->dst_addrt != mdnsIPvALL)
+        {
+            // dequeue packet
+            //
+            iface->outpkts = pkt->next;
+            mdns_pkt_free(res, pkt);
+        }
+        if (result)
+        {
+            return result;
+        }
+        if (pkt->dst_addrt == mdnsIPvALL)
+        {
+            // if the packet is meant to go out ipv4 AND ipv6, do the ipv6 part
+            // in this loop by narrowing the dst addr type
+            //
+            pkt->dst_addrt = mdnsIPv6;
         }
     }
     return 0;
@@ -153,6 +190,32 @@ static int mdns_enqueue_out(mdns_responder_t *res, mdns_interface_t *iface, mdns
     }
     else
     {
+        if (iface->ipv4addr.addr != 0)
+        {
+            if (iface->ipv6addr.addr[0] != 0)
+            {
+                // iface has iv4 and ip6 addresses. send to both for
+                // any packets that are authoritative, but only
+                // to the src addr if just a query response
+                //
+                if (MDNS_FLAG_AA(outpkt->flags) || iface->state < MDNS_ANNOUNCE_1)
+                {
+                    outpkt->dst_addrt = mdnsIPvALL;
+                }
+                else
+                {
+                    outpkt->dst_addrt = outpkt->src_addrt;
+                }
+            }
+            else
+            {
+                outpkt->dst_addrt = mdnsIPv4;
+            }
+        }
+        else
+        {
+            outpkt->dst_addrt = mdnsIPv6;
+        }
         if (delay_ms > 0)
         {
             result = mdns_get_wall_time(&now_secs, &now_usecs);
@@ -179,17 +242,100 @@ static int mdns_enqueue_out(mdns_responder_t *res, mdns_interface_t *iface, mdns
         mdns_dump_packet(">>>>>> TX", outpkt, 6);
 
         outpkt->next = NULL;
+        if (outpkt->added_srvptr)
+        {
+            mdns_service_t *service;
+            mdns_packet_t *adrpkt;
+            size_t room;
+            size_t need;
 
-        // if the packet contains a service record, add, as a convenience, the address records
-        // for the service's interface. this is done this late, to avoid having to keep track
-        // of each record's position ever
-        //
-        if (outpkt->added_srv)
+            // RFC6763 12.1:
+            // if the packet contains a pointer to a service instance, include the SRV and TXT
+            // for that service instance.  Note this also implies, and triggers, 12.2 handling below
+            //
+            for (service = iface->services; service; service = service->next)
+            {
+                if (! mdns_compare_names(&service->usr_domain_name, &outpkt->added_srvname))
+                {
+                    break;
+                }
+            }
+            if (! service)
+            {
+                butil_log(1, "Service %s disappeared?\n", mdns_str_for_domain_name(&outpkt->added_srvname));
+            }
+            else
+            {
+                // if there isn't room in the packet for srv and txt records, make a new packet and append it
+                //
+                room = outpkt->io.size - outpkt->io.count;
+
+                // SRV record is instance domain, hostname, and 6 more
+                // TXT record is instance domain, txt records, and 2 more
+                // A record is hostname, and 6 (2 count and 4 addr)
+                // AAAA record is hostname, and 18 (2 cound and 16 addr)
+                // we round up a little bit
+                //
+                need = (2 * DNS_NAME_LENGTH(&service->usr_domain_name)) +
+                            DNS_NAME_LENGTH(&iface->hostname) + DNS_TXT_LENGTH(&service->txt_records) + 16;
+                need += (2 * DNS_NAME_LENGTH(&iface->hostname)) + 32;
+
+                if (need > room)
+                {
+                    butil_log(5, "Adding packet for srv/txt recs\n");
+
+                    adrpkt = mdns_pkt_alloc(res);
+                    if (! adrpkt)
+                    {
+                        BERROR("Can't alloc addr packet");
+                        // this isn't fatal, just skip adding it, its a SHOULD not a MUST
+                    }
+                    else
+                    {
+                        outpkt->next = adrpkt;
+                        adrpkt->next = NULL;
+                    }
+                }
+                else
+                {
+                    adrpkt = outpkt;
+                }
+                if (adrpkt)
+                {
+                    adrpkt->arcount++;
+                    result = mdns_query_respond(res, iface, &service->usr_domain_name,
+                                        NULL, 0, outpkt, DNS_RRTYPE_SRV, DNS_CLASS_IN, service->ttl, &iface->hostname);
+
+                    adrpkt->arcount++;
+                    result = mdns_query_respond(res, iface, &service->usr_domain_name,
+                                        NULL, 0, outpkt, DNS_RRTYPE_TXT, DNS_CLASS_IN, service->ttl, &service->txt_records);
+
+                    if (iface->ipv4addr.addr != 0)
+                    {
+                        adrpkt->arcount++;
+                        result = mdns_query_respond(res, iface, &iface->hostname,
+                                            NULL, 0, adrpkt, DNS_RRTYPE_A, DNS_CLASS_IN, iface->ttl, &iface->hostname);
+                    }
+                    if (iface->ipv6addr.addr[0] != 0)
+                    {
+                        adrpkt->arcount++;
+                        result = mdns_query_respond(res, iface, &iface->hostname,
+                                            NULL, 0, adrpkt, DNS_RRTYPE_AAAA, DNS_CLASS_IN, iface->ttl, &iface->hostname);
+                    }
+                }
+            }
+        }
+        else if (outpkt->added_srv)
         {
             mdns_packet_t *adrpkt;
             size_t room;
             size_t need;
 
+            // RFC6763 12.2:
+            // if the packet contains a service record, add, as a convenience, the address records
+            // for the service's interface. this is done this late, to avoid having to keep track
+            // of each record's position ever
+            //
             // if there isn't room in the packet for address records, make a new packet and append it
             //
             room = outpkt->io.size - outpkt->io.count;
@@ -290,23 +436,48 @@ int mdns_check_input(mdns_responder_t *res, mdns_interface_t *iface)
 {
     mdns_packet_t *pkt;
     struct sockaddr srcaddr;
+    socket_t sock;
     socklen_t srclen;
     int count;
     int result;
 
-    if (! res || ! iface || iface->udp_sock == INVALID_SOCKET)
+    if (! res)
     {
         BERROR("bad context");
         return -1;
     }
-    result = iostream_posix_poll_filedesc(iface->udp_sock, readable, res->to_secs, res->to_usecs);
-    if (result < 0)
+    result = 0;
+    sock = INVALID_SOCKET;
+
+    if (sock == INVALID_SOCKET)
     {
-        BERROR("socket closed?");
-        res->fatal = true;
-        return result;
+        if (iface->udpm4_sock != INVALID_SOCKET)
+        {
+            result = iostream_posix_poll_filedesc(iface->udpm4_sock, readable, res->to_secs, res->to_usecs);
+            if (result < 0)
+            {
+                BERROR("socket closed?");
+                res->fatal = true;
+                return result;
+            }
+            sock = iface->udpm4_sock;
+        }
     }
-    if (result == 0)
+    if (sock == INVALID_SOCKET)
+    {
+        if (iface->udpm6_sock != INVALID_SOCKET)
+        {
+            result = iostream_posix_poll_filedesc(iface->udpm6_sock, readable, res->to_secs, res->to_usecs);
+            if (result < 0)
+            {
+                BERROR("socket closed?");
+                res->fatal = true;
+                return result;
+            }
+            sock = iface->udpm6_sock;
+        }
+    }
+    if (result == 0 || sock == INVALID_SOCKET)
     {
         return 0;
     }
@@ -319,24 +490,24 @@ int mdns_check_input(mdns_responder_t *res, mdns_interface_t *iface)
         return 0;
     }
     srclen = sizeof(srcaddr);
-    count = recvfrom(iface->udp_sock, pkt->io.data, pkt->io.size,
-                         0, &srcaddr, &srclen);
+    count = recvfrom(sock, pkt->io.data, pkt->io.size, 0, &srcaddr, &srclen);
 
     if (count)
     {
         if (srcaddr.sa_family == AF_INET6)
         {
-            pkt->isv6addr = true;
+            pkt->src_addrt = mdnsIPv6;
             memcpy(&pkt->srcaddr6.addr, &((struct sockaddr_in6 *)&srcaddr)->sin6_addr, sizeof(bipv6addr_t));
             pkt->srcport = htons(((struct sockaddr_in6 *)&srcaddr)->sin6_port);
         }
         else
         {
-            pkt->isv6addr = false;
+            pkt->src_addrt = mdnsIPv4;
             pkt->srcaddr4.addr = ((struct sockaddr_in *)&srcaddr)->sin_addr.s_addr;
             pkt->srcport = htons(((struct sockaddr_in *)&srcaddr)->sin_port);
         }
-        butil_log(6, "\nRX %d from %s %u\n", count, mdns_str_for_pktaddr(pkt), (uint32_t)pkt->srcport);
+        butil_log(6, "\nRX %d from IPv%d %s %u\n", count,
+                    (srcaddr.sa_family == AF_INET6) ? 6 : 4, mdns_str_for_pktaddr(pkt), (uint32_t)pkt->srcport);
 
         pkt->io.count += count;
         pkt->io.head += count;
@@ -730,6 +901,27 @@ int mdns_query_respond(
             outpkt->io.head = lasthead;
             outpkt->io.count = outpkt->io.head - outpkt->io.tail;
         }
+        if (iface->state >= MDNS_RUN)
+        {
+            mdns_service_t *service;
+
+            // RFC6763 12.1 - if adding a PTR to a sevice instance, append the SRV and TXT
+            // records for that service in the additional answers section
+            //
+            for (service = iface->services; service; service = service->next)
+            {
+                if (! mdns_compare_names(resource_domain, &service->usr_domain_name))
+                {
+                    butil_log(5, "PTR to %s, flag additionals\n", mdns_str_for_domain_name(resource_domain));
+                }
+                // note we copy the service instance name and re-look it up later to avoid
+                // referencing a ptr to the service that might not be there later
+                //
+                outpkt->added_srvptr = true;
+                mdns_copy_name(res, &outpkt->added_srvname, resource_domain);
+                break;
+            }
+        }
         break;
     case DNS_RRTYPE_TXT:
         reslen = DNS_TXT_LENGTH(resource_txt);
@@ -783,6 +975,14 @@ int mdns_query_respond(
             outpkt->io.head = prevhead;
             result |= mdns_write_uint16(&outpkt->io, newlen);
             outpkt->io.head = lasthead;
+        }
+        if (iface->state >= MDNS_ANNOUNCE_1)
+        {
+            // for SRV record answers, while running, add on A and AAAA records for the iface
+            // (RFC6763 12.2) as a convenience.
+            // the records are tacked on after all ancount (answer) records are made
+            //
+            outpkt->added_srv = true;
         }
         break;
     case DNS_RRTYPE_A:
@@ -959,8 +1159,6 @@ int mdns_answer_question(
     }
     if (! cmp)
     {
-        int prevcount;
-
         if (iface->state < MDNS_ANNOUNCE_1)
         {
             // during probe, we're answering our own questions to be an authoritative answer
@@ -973,21 +1171,8 @@ int mdns_answer_question(
             //
             outpkt->ancount++;
         }
-        prevcount = outpkt->io.count;
-
         result = mdns_query_respond(res, iface, record_domain,
                             answers, answer_count, outpkt, type, clas, service->ttl, resource_domain);
-
-        if (! result && type == DNS_RRTYPE_SRV && iface->state >= MDNS_ANNOUNCE_1 && outpkt->io.count > prevcount)
-        {
-            // for SRV records while running, add the address records for the hostname, but only if
-            // the records wasn't suppressed (by a known answer) which is indicated by outpkt growing or not
-            // since address records are added as additional records, this is done only when the packet
-            // is being sent, in case more regular (an/ns) records are still to be added to outpkt
-            // (if there isn't room to add them on output, a new packet is allocated and filled out and sent)
-            //
-            outpkt->added_srv = true;
-        }
     }
     return result;
 }
@@ -1499,11 +1684,11 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                     return 0; // todo ?
                 }
                 outpkt->id = inpkt->id;
-                outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
+                outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL) | MDNS_FLAG_AA(MDNS_FLAG_ALL);
                 outpkt->unicast = isunicast;
                 // copy inpkt address for unicast
                 outpkt->srcport = inpkt->srcport;
-                outpkt->isv6addr = inpkt->isv6addr;
+                outpkt->dst_addrt = inpkt->src_addrt;
                 outpkt->srcaddr4.addr = inpkt->srcaddr4.addr;
                 memcpy(&outpkt->srcaddr6.addr, &inpkt->srcaddr6.addr, sizeof(bipv6addr_t));
             }
@@ -1538,12 +1723,13 @@ int mdns_handle_input(mdns_responder_t *res, mdns_interface_t *iface, mdns_packe
                         }
                     }
                 }
-            }
+            }        fprintf(stderr, "Bad Address\n");
+
         }
     }
     if (outpkt)
     {
-        result = mdns_enqueue_out(res, iface, outpkt, 0);
+        result = mdns_enqueue_out(res, iface, outpkt, 240);
     }
     return result;
 }
@@ -1570,7 +1756,7 @@ int mdns_announce(mdns_responder_t *res, mdns_interface_t *iface, bool startup_d
             return -1;
         }
         outpkt->id = 0;
-        outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL);
+        outpkt->flags = MDNS_FLAG_QR(MDNS_FLAG_ALL) | MDNS_FLAG_AA(MDNS_FLAG_ALL);
 
         butil_log(5, "Announcing service %s\n", mdns_str_for_domain_name(&service->usr_domain_name));
 
@@ -1966,18 +2152,268 @@ int mdns_responder_stop(mdns_responder_t *res)
     return 0;
 }
 
+int mdns_create_ipv4_socket(bipv4addr_t *addr, uint16_t port, bool mcast, socket_t *psock)
+{
+    struct sockaddr_in serv_addr;
+    struct ip_mreq mreq;
+    socket_t sock;
+    int iparm;
+    #ifdef Windows
+    unsigned long nonblock;
+    #else
+    uint32_t nonblock;
+    #endif
+    int result;
+
+    if (! psock)
+    {
+        return -1;
+    }
+    *psock = INVALID_SOCKET;
+
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock == INVALID_SOCKET)
+    {
+        butil_log(0, "Can't make socket\n");
+        return -1;
+    }
+    if (mcast)
+    {
+        iparm = 1;
+        result = setsockopt(
+                        sock,
+                        SOL_SOCKET,
+                        SO_REUSEADDR,
+                        (char*)&iparm,
+                        sizeof(iparm)
+                      );
+        if (result < 0)
+        {
+            butil_log(0, "Can't set re-use addr\n");
+            close_socket(sock);
+            return result;
+        }
+    }
+    nonblock = 1;
+    result = ioctl_socket(sock, FIONBIO, &nonblock);
+    if (result < 0)
+    {
+        butil_log(0, "Can't set non-blocking\n");
+        close_socket(sock);
+        return result;
+    }
+    memset((char *)&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(port);
+
+    result = bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+
+    if (result)
+    {
+        butil_log(5, "Can't bind %s:4 sock on port %u\n",
+                mcast ? "multi" : "uni", (uint32_t)htons(serv_addr.sin_port));
+            close_socket(sock);
+            return -1;
+    }
+    butil_log(5, "Bound %s:4 sock on port %u\n",
+            mcast ? "multi" : "uni", (uint32_t)htons(serv_addr.sin_port));
+
+    if (mcast)
+    {
+        // join the multicast group for mdns if mcast socket
+        //
+        memset(&mreq, 0, sizeof(mreq));
+
+        mreq.imr_multiaddr.s_addr = inet_addr(MDNS_MCAST_IP4ADDR);
+        mreq.imr_interface.s_addr = addr->addr;
+
+        result = setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
+        if (result < 0)
+        {
+            butil_log(0, "Can't join mcast group: %d\n", errno);
+            return result;
+        }
+        // and enable multicast on the interface
+        //
+        result = setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF,
+                (char *)&mreq.imr_interface.s_addr, sizeof(mreq.imr_interface.s_addr));
+        if (result < 0)
+        {
+            butil_log(0, "Can't join mcast group: %d\n", errno);
+            return result;
+        }
+        #if 0
+        // disable loopback for the socket, to avoid read loops. the reader discards non-queries, so
+        // this isn't a problem as we only query ourselves at probe time and we can recognize ourselves
+        // as the transmitter by source ip address then.
+        // (this also disables some abilities for client to be on same machine as server)
+        //
+        iparm = 0;
+        result = setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&iparm, sizeof(iparm));
+        if (result < 0)
+        {
+            butil_log(0, "Can't disable loopback: %d\n", errno);
+            return result;
+        }
+        #endif
+        // packet TTL is 255 per spec
+        iparm = 255;
+        result = setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &iparm, sizeof(iparm));
+        if (result)
+        {
+            butil_log(0, "Can't set socket TTL\n");
+            return result;
+        }
+    }
+    iparm = 255;
+    result = setsockopt(sock, IPPROTO_IP, IP_TTL, &iparm, sizeof(iparm));
+    if (result)
+    {
+        butil_log(0, "Can't set socket mcast TTL\n");
+        return result;
+    }
+    *psock = sock;
+    return 0;
+}
+
+int mdns_create_ipv6_socket(bipv6addr_t *addr, uint16_t port, uint32_t iface_index, bool mcast, socket_t *psock)
+{
+    struct sockaddr_in6 serv_addr;
+    struct ipv6_mreq mreq6;
+    socket_t sock;
+    int iparm;
+    #ifdef Windows
+    unsigned long nonblock;
+    #else
+    uint32_t nonblock;
+    #endif
+    int result;
+
+    static const uint8_t ipv6_mcast[] = MDNS_MCAST_IP6ADDR;
+
+    if (! psock)
+    {
+        return -1;
+    }
+    *psock = INVALID_SOCKET;
+
+    sock = socket(AF_INET6, SOCK_DGRAM, 0);
+
+    if (sock == INVALID_SOCKET)
+    {
+        butil_log(0, "Can't make socket\n");
+        return -1;
+    }
+    if (mcast)
+    {
+        iparm = 1;
+        result = setsockopt(
+                        sock,
+                        SOL_SOCKET,
+                        SO_REUSEADDR,
+                        (char*)&iparm,
+                        sizeof(iparm)
+                      );
+        if (result < 0)
+        {
+            butil_log(0, "Can't set re-use addr\n");
+            close_socket(sock);
+            return result;
+        }
+    }
+    nonblock = 1;
+    result = ioctl_socket(sock, FIONBIO, &nonblock);
+    if (result < 0)
+    {
+        butil_log(0, "Can't set non-blocking\n");
+        close_socket(sock);
+        return result;
+    }
+
+    memset((char *)&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin6_family = AF_INET6;
+    serv_addr.sin6_addr = in6addr_any;
+    serv_addr.sin6_port = htons(port);
+    serv_addr.sin6_flowinfo = 0;
+    serv_addr.sin6_scope_id = 0;
+
+    result = bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+
+    if (result)
+    {
+        butil_log(5, "Can't bind %s:6 sock on port %u\n",
+                mcast ? "multi" : "uni", (uint32_t)htons(serv_addr.sin6_port));
+            close_socket(sock);
+            return -1;
+    }
+    butil_log(5, "Bound %s:6 sock on port %u\n",
+            mcast ? "multi" : "uni", (uint32_t)htons(serv_addr.sin6_port));
+
+    if (mcast)
+    {
+        // join the multicast group for mdns if mcast socket
+        //
+        memcpy(&mreq6.ipv6mr_multiaddr, ipv6_mcast, sizeof(ipv6_mcast));
+        mreq6.ipv6mr_interface = iface_index;
+
+        result = setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mreq6, sizeof(mreq6));
+        if (result < 0)
+        {
+            butil_log(0, "Can't join mcast6 group: %d\n", errno);
+            return result;
+        }
+        // and enable multicast on the interface
+        //
+        result = setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+                (char *)&iface_index, sizeof(iface_index));
+        if (result < 0)
+        {
+            butil_log(0, "Can't join mcast group: %d\n", errno);
+            return result;
+        }
+#if 0
+        iparm = 1;
+        result = setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &iparm, sizeof(iparm));
+        if (result)
+        {
+            butil_log(0, "Can't set socket V6 only\n");
+            return result;
+        }
+#endif
+        iparm = 255;
+        result = setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &iparm, sizeof(iparm));
+        if (result)
+        {
+            butil_log(0, "Can't set socket mcast TTL6\n");
+            return result;
+        }
+    }
+    iparm = 255;
+    result = setsockopt(sock, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &iparm, sizeof(iparm));
+    if (result)
+    {
+        butil_log(0, "Can't set socket TTL6\n");
+        return result;
+    }
+    *psock = sock;
+    return 0;
+}
+
+#define MDNS_HIGH_PORT 16534
+
 int mdns_responder_add_interface(
                                 mdns_responder_t *res,
-                                const char *hostname,
-                                bipv4addr_t *ipv4addr,
-                                bipv6addr_t *ipv6addr,
-                                uint32_t ttl
+                                const char       *hostname,
+                                uint32_t          iface_index,
+                                bipv4addr_t      *ipv4addr,
+                                bipv6addr_t      *ipv6addr,
+                                uint32_t          ttl
                                 )
 {
     mdns_interface_t *iface;
-    struct ip_mreq mreq;
     char buffer[MDNS_MAX_DNTEXT];
-    int iparm;
+    struct sockaddr_in ifaceaddr;
     uint16_t port;
     int result;
 
@@ -2015,56 +2451,58 @@ int mdns_responder_add_interface(
     result |= mdns_unflatten_name(res, buffer, &iface->rev_ipv6);
     if (result)
     {
-        butil_log(0, "Can't build rev ipv4\n");
+        butil_log(0, "Can't build rev ipv6\n");
         return -1;
     }
-
     iface->ttl = ttl;
 
-    // create a udp socket on port 5353 to listen
-    //
-    iface->udp_sock = iostream_create_udp_socket();
-    if (iface->udp_sock == INVALID_SOCKET)
-    {
-        butil_log(0, "Can't make udp socket\n");
-        return -1;
-    }
+    iface->udpm4_sock = INVALID_SOCKET;
+    iface->udpm6_sock = INVALID_SOCKET;
+    iface->udpu4_sock = INVALID_SOCKET;
+    iface->udpu6_sock = INVALID_SOCKET;
+
     port = res->unit_testing ? 25353 : MDNS_PORT;
 
-    result = iostream_bind_socket(iface->udp_sock, port);
-    if (result)
+    if (ipv4addr && (ipv4addr->addr != 0))
     {
-        butil_log(0, "Can't bind udp socket on port %u: %d\n",
-               (uint32_t)port, errno);
-        return -1;
-    }
-    // join the multicast group for mdns
-    //
-    memset(&mreq, 0, sizeof(mreq));
-    mreq.imr_multiaddr.s_addr = inet_addr(MDNS_MCAST_IP4ADDR);
-    mreq.imr_interface.s_addr = INADDR_ANY;
+        ((struct sockaddr_in *)&ifaceaddr)->sin_addr.s_addr = ipv4addr->addr;
+        ((struct sockaddr_in *)&ifaceaddr)->sin_port = htons(port);
 
-    result = setsockopt(iface->udp_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
-    if (result < 0)
-    {
-        butil_log(0, "Can't join mcast group: %d\n", errno);
-        return result;
+        // create a udp socket on port 5353 for ipv4 multicast
+        //
+        result = mdns_create_ipv4_socket(ipv4addr, port, true, &iface->udpm4_sock);
+        if (result)
+        {
+            return result;
+        }
+        // and on a high-port for unicast ipv4
+        //
+        result = mdns_create_ipv4_socket(ipv4addr, 0, false, &iface->udpu4_sock);
+        if (result)
+        {
+            close_socket(iface->udpm4_sock);
+            iface->udpm4_sock = INVALID_SOCKET;
+            return result;
+        }
     }
-    // disable loopback for the socket, to avoid read loops
-    //
-    iparm = 0;
-    result = setsockopt(iface->udp_sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&iparm, sizeof(iparm));
-    if (result < 0)
+    if (ipv6addr && (ipv6addr->addr[0]))
     {
-        butil_log(0, "Can't disable loopback: %d\n", errno);
-        return result;
-    }
-    iparm = 1;
-    result = setsockopt(iface->udp_sock, SOL_SOCKET, SO_BROADCAST, (char*)&iparm, sizeof(iparm));
-    if (result < 0)
-    {
-        butil_log(0, "Can't enable bcast: %d\n", errno);
-        return result;
+        // create a udp socket on port 5353 for ipv6 multicast
+        //
+        result = mdns_create_ipv6_socket(ipv6addr, port, iface_index, true, &iface->udpm6_sock);
+        if (result)
+        {
+            return result;
+        }
+        // and on a high-port for unicast ipv6
+        //
+        result = mdns_create_ipv6_socket(ipv6addr, 0, iface_index, false, &iface->udpu6_sock);
+        if (result)
+        {
+            close_socket(iface->udpm6_sock);
+            iface->udpm6_sock = INVALID_SOCKET;
+            return result;
+        }
     }
     iface->inpkts  = NULL;
     iface->outpkts = NULL;
@@ -2344,6 +2782,7 @@ int mdns_responder_deinit(mdns_responder_t *res)
 {
     mdns_interface_t *iface;
     mdns_service_t *service;
+    mdns_service_t *nextservice;
     int answer_num;
 
     if (! res)
@@ -2352,16 +2791,29 @@ int mdns_responder_deinit(mdns_responder_t *res)
     }
     for (iface = res->interfaces; iface; iface = iface->next)
     {
-        if (iface->udp_sock != INVALID_SOCKET)
+        if (iface->udpm4_sock != INVALID_SOCKET)
         {
-            close_socket(iface->udp_sock);
+            close_socket(iface->udpm4_sock);
         }
-        for (service = iface->services; service; service = service->next)
+        if (iface->udpu4_sock != INVALID_SOCKET)
+        {
+            close_socket(iface->udpu4_sock);
+        }
+        if (iface->udpm6_sock != INVALID_SOCKET)
+        {
+            close_socket(iface->udpm6_sock);
+        }
+        if (iface->udpu6_sock != INVALID_SOCKET)
+        {
+            close_socket(iface->udpu6_sock);
+        }
+        for (service = iface->services, nextservice = NULL; service; service = nextservice)
         {
             mdns_clear_name(res, &service->usr_domain_name);
             mdns_clear_name(res, &service->srv_domain_name);
             mdns_clear_name(res, &service->sub_domain_name);
             mdns_clear_name(res, &service->txt_records);
+            nextservice = service->next;
             mdns_service_free(res, service);
         }
         mdns_clear_name(res, &iface->hostname);

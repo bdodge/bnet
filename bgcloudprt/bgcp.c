@@ -623,6 +623,17 @@ int gcp_slice(gcp_context_t *gcp)
             gcp->state = gcpError;
             break;
         }
+#if GCP_SUPPORT_LOCAL_PRT
+        if (gcp->responding)
+        {
+            result = gcp_local_prt_slice(gcp);
+            if (result)
+            {
+                butil_log(1, "MDSNR failed\n");
+            }
+        }
+        else
+#endif
         if (! done)
         {
             return 0;
@@ -762,8 +773,9 @@ int gcp_slice(gcp_context_t *gcp)
         {
             gcp->state = gcp->nextstate;
         }
-        if (gcp->bxp)
+        if (gcp->bxp && gcp_is_registered(gcp))
         {
+            // slice xmpp only for registered printers
             result = gcp_xmpp_slice(gcp);
             if (result)
             {
@@ -813,7 +825,8 @@ int gcp_slice(gcp_context_t *gcp)
 int gcp_init(
                 gcp_context_t *gcp,
                 const char *serial_no,
-                const char *fw_revision
+                const char *fw_revision,
+                const char *location
             )
 {
     int result;
@@ -868,6 +881,9 @@ int gcp_init(
 
     strncpy(gcp->fw_revision, fw_revision, sizeof(gcp->fw_revision) - 1);
     gcp->fw_revision[sizeof(gcp->fw_revision) - 1] = '\0';
+
+    strncpy(gcp->location, location, sizeof(gcp->location) - 1);
+    gcp->location[sizeof(gcp->location) - 1] = '\0';
 
     http_generate_boundary(gcp->boundary, sizeof(gcp->boundary));
 

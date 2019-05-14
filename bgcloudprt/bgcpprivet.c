@@ -19,7 +19,8 @@
 
 #if GCP_SUPPORT_LOCAL_PRT
 
-int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t *myipv6addr)
+
+int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t *myipv6addr, int *iface_index)
 {
 #if defined(Linux) || defined(OSX)
     struct ifaddrs *addrs;
@@ -31,6 +32,8 @@ int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t 
 
     gotv4 = false;
     gotv6 = false;
+
+    *iface_index = 0;
 
     if (gethostname(myhost, nhost))
     {
@@ -55,12 +58,15 @@ int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t 
                     gotv4 = true;
                     sain4 = (struct sockaddr_in *)addr->ifa_addr;
                     myipv4addr->addr = sain4->sin_addr.s_addr;
+                    butil_log(4, "IPv4 on iface %d  %s\n", if_nametoindex(addr->ifa_name), addr->ifa_name);
                 }
                 else if (family == AF_INET6 && ! gotv6)
                 {
                     gotv6 = true;
                     sain6 = (struct sockaddr_in6 *)addr->ifa_addr;
                     memcpy(myipv6addr->addr, &sain6->sin6_addr, sizeof(bipv6addr_t));
+                    *iface_index = if_nametoindex(addr->ifa_name);
+                    butil_log(4, "IPv6 on iface %d  %s\n", *iface_index, addr->ifa_name);
                 }
             }
         }
@@ -95,6 +101,8 @@ int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t 
         return -1;
     }
     memcpy(&myipv4addr->addr, phost->h_addr_list[0], 4);
+    memset(myipv6addr->addr, 0, sizeof(myipv6addr));
+    *iface_index = 0;
 #endif
     return 0;
 }
@@ -120,14 +128,18 @@ int gcp_init_local_disco(gcp_context_t *gcp)
     char hostname[MDNS_MAX_DNTEXT];
     bipv4addr_t myipv4addr;
     bipv6addr_t myipv6addr;
+    char model_str[64];
     char txtrecs[256];
+    int iface_index;
     int result;
 
     if (! gcp)
     {
         return -1;
     }
-    get_host_info(hostname, sizeof(hostname), &myipv4addr, &myipv6addr);
+    get_host_info(hostname, sizeof(hostname), &myipv4addr, &myipv6addr, &iface_index);
+
+    snprintf(model_str, sizeof(model_str), "%s %s", GCP_PRT_MANUFACTURER, GCP_PRT_MODEL);
 
     // mdns responder for discovery
     //
@@ -135,14 +147,16 @@ int gcp_init_local_disco(gcp_context_t *gcp)
     //
     snprintf(txtrecs, sizeof(txtrecs),
                 "txtvers=1,"
+                "ty=%s,"
+                "note=%s,"
                 "url=https://www.google.com/cloudprint,"
-                "note=Quail Run,"
-                "ty=BNET IPP,"
                 "type=printer,"
                 "id=%s,"
                 "cs=%s",
+                model_str,
+                gcp->location,
                 gcp->printer_id,
-                gcp->printer_id[0] ? "online" : "not-configured"
+                gcp->printer_id[0] ? "online" : "not_configured"
             );
 
     result = mdns_responder_init(&gcp->mdns_responder);
@@ -150,7 +164,7 @@ int gcp_init_local_disco(gcp_context_t *gcp)
     {
         return result;
     }
-    result = mdns_responder_add_interface(&gcp->mdns_responder, hostname, &myipv4addr, &myipv6addr, 75);
+    result = mdns_responder_add_interface(&gcp->mdns_responder, hostname, iface_index, &myipv4addr, &myipv6addr, 75);
     if (result)
     {
         butil_log(0, "Can't add interface\n");
@@ -158,7 +172,7 @@ int gcp_init_local_disco(gcp_context_t *gcp)
     result = mdns_responder_add_service(
                                         &gcp->mdns_responder,
                                         gcp->mdns_responder.interfaces,
-                                        "Privet",
+                                        model_str,
                                          "_privet",
                                          "_printer",
                                          MDNS_SRVPROTO_TCP,

@@ -73,31 +73,42 @@ dns_rr_rec_t;
 
 struct tag_mdns_service;
 
+typedef enum
+{
+    mdnsIPv4,
+    mdnsIPv6,
+    mdnsIPvALL
+}
+mdns_addrt_t;
+
 typedef struct tag_dns_packet
 {
-    ioring_t    io;                     ///< io ring for parsing data
-    uint8_t     data[MDNS_IO_SIZE];     ///< the packet itself
+    ioring_t            io;                     ///< io ring for parsing data
+    uint8_t             data[MDNS_IO_SIZE];     ///< the packet itself
 
-    bool        isv6addr;               ///< what type of src addr
-    bipv4addr_t srcaddr4;               ///< source address of packet (if ipv4)
-    bipv6addr_t srcaddr6;               ///< source address of packet (if ipv6)
-    uint16_t    srcport;                ///< source port of packet
+    mdns_addrt_t        dst_addrt;              ///< what type of ip to send pkt to (v4, v6, both)
+    mdns_addrt_t        src_addrt;              ///< what type of ip pkt came from (v4, v6)
+    bipv4addr_t         srcaddr4;               ///< source address of packet (if ipv4)
+    bipv6addr_t         srcaddr6;               ///< source address of packet (if ipv6)
+    uint16_t            srcport;                ///< source port of packet
 
-    uint32_t    tts_secs;               ///< when to send, econds absolute
-    uint32_t    tts_usecs;              ///< when to send, microseconds absolute
-    bool        unicast;                ///< send unicast
+    uint32_t            tts_secs;               ///< when to send, econds absolute
+    uint32_t            tts_usecs;              ///< when to send, microseconds absolute
+    bool                unicast;                ///< send unicast
 
-    bool        added_srv;              ///< if there is an SRV record in the packet
+    bool                added_srv;              ///< if there is an SRV record in the packet
+    bool                added_srvptr;           ///< if there is a PTR to SRV record in the packet
+    dns_domain_name_t   added_srvname;    ///< the domain name for service instance if added_srvptr
 
     /// header
-    uint16_t    id;
-    uint16_t    flags;
-    uint16_t    qdcount;
-    uint16_t    ancount;
-    uint16_t    nscount;
-    uint16_t    arcount;
+    uint16_t            id;
+    uint16_t            flags;
+    uint16_t            qdcount;
+    uint16_t            ancount;
+    uint16_t            nscount;
+    uint16_t            arcount;
 
-    uint32_t    ttl;                    ///< TTL in seconds in cache for answer
+    uint32_t            ttl;                    ///< TTL in seconds in cache for answer
 
     struct tag_dns_packet *next;        ///< link
 }
@@ -135,7 +146,10 @@ typedef struct tag_in_interface
     dns_domain_name_t   rev_ipv6;       ///< Rerverse domain mapping of ipv6 address
 
     uint32_t            ttl;            ///< time to live
-    socket_t            udp_sock;       ///< udp listenter bound to MDNS port 5353
+    socket_t            udpm4_sock;     ///< udp listenter bound to MDNS port 5353 (IPv4)
+    socket_t            udpm6_sock;     ///< udp listenter bound to MDNS port 5353 (IPv6)
+    socket_t            udpu4_sock;     ///< udp unicast bound to random high port (IPv4)
+    socket_t            udpu6_sock;     ///< udp unicast bound to random high port (IPv6)
     mdns_packet_t      *inpkts;         ///< list of packets to look at from input
     mdns_packet_t      *outpkts;        ///< list of packets to send, sorted by delay
 
@@ -238,6 +252,7 @@ int mdns_responder_stop         (mdns_responder_t *res);
 int mdns_responder_add_interface(
                                 mdns_responder_t *responder,
                                 const char *hostname,
+                                uint32_t     iface_index,
                                 bipv4addr_t *ipv4addr,
                                 bipv6addr_t *ipv6addr,
                                 uint32_t ttl

@@ -16,67 +16,6 @@
 #include "bimgpwg.h"
 #include "bimageio.h"
 
-#define PWG_IO_SIZE 1024
-
-#define PWG_SYNC_WORD (0x52615332)
-#define PWG_SYNC_STRING "Ras2"
-
-typedef struct tag_pwg_header
-{
-    char        /*0-63 CString */           PwgRaster[64];
-    char        /*64-127 CString*/          MediaColor[64];
-    char        /*128-191 CString*/         MediaType[64];
-    char        /*192-255 CString*/         PrintContentOptimize[64];
-    uint8_t     /*256-267 Reserved*/        Reserved_1[12];
-    uint32_t    /*268-271 WhenEnum*/        CutMedia;
-    uint32_t    /*272-275 Boolean*/         Duplex;
-    uint32_t    /*276-283 UnsignedInteger x 2 HWResolution*/ xres;
-    uint32_t    /*276-283 UnsignedInteger x 2 HWResolution*/ yres;
-    uint8_t     /*284-299 Reserved*/        Reserved_2[16];
-    uint32_t    /*300-303 Boolean*/         InsertSheet;
-    uint32_t    /*304-307 WhenEnum*/        Jog;
-    uint32_t    /*308-311 EdgeEnum*/        LeadingEdge;
-    uint8_t     /*312-323 Reserved*/        Reserved_3[12];
-    uint32_t    /*324-327 MediaPositionEnum*/ MediaPosition;
-    uint32_t    /*328-331 UnsignedInteger*/ MediaWeightMetric;
-    uint8_t     /*332-339 Reserved*/        Reserved_4[8];
-    uint32_t    /*340-343 UnsignedInteger*/ NumCopies;
-    uint32_t    /*344-347 OrientationEnum*/ Orientation;
-    uint8_t     /*348-351 Reserved*/        Reserved_5[4];
-    uint32_t    /*352-359 UnsignedInteger x 2*/ PageSize_X;
-    uint32_t    /*352-359 UnsignedInteger x 2*/ PageSize_Y;
-    uint8_t     /*360-367 Reserved*/        Reserved_6[8];
-    uint32_t    /*368-371 Boolean*/         Tumble;
-    uint32_t    /*372-375 UnsignedInteger*/ Width;
-    uint32_t    /*376-379 UnsignedInteger*/ Height;
-    uint8_t     /*380-383 Reserved*/        Reserved_7[4];
-    uint32_t    /*384-387 UnsignedInteger*/ BitsPerColor;
-    uint32_t    /*388-391 UnsignedInteger*/ BitsPerPixel;
-    uint32_t    /*392-395 UnsignedInteger*/ BytesPerLine;
-    uint32_t    /*396-399 ColorOrderEnum*/  ColorOrder;
-    uint32_t    /*400-403 ColorSpaceEnum*/  ColorSpace;
-    uint8_t     /*404-419 Reserved*/        Reserved[16];
-    uint32_t    /*420-423 UnsignedInteger*/ NumColors;
-    uint8_t     /*424-451 Reserved*/        Reserved_8[28];
-    uint32_t    /*452-455 UnsignedInteger*/ TotalPageCount;
-    uint32_t    /*456-459 Integer*/         CrossFeedTransform;
-    uint32_t    /*460-463 Integer*/         FeedTransform;
-    uint32_t    /*464-467 UnsignedInteger*/ ImageBoxLeft;
-    uint32_t    /*468-471 UnsignedInteger*/ ImageBoxTop;
-    uint32_t    /*472-475 UnsignedInteger*/ ImageBoxRight;
-    uint32_t    /*476-479 UnsignedInteger*/ ImageBoxBottom;
-    uint32_t    /*480-483 SrgbColor*/       AlternatePrimary;
-    uint32_t    /*484-487 PrintQualityEnum*/PrintQuality;
-    uint8_t     /*488-507 Reserved*/        Reserved_9[20];
-    uint32_t    /*508-511 UnsignedInteger*/ VendorIdentifier;
-    uint32_t    /*512-515 UnsignedInteger*/ VendorLength;
-    uint8_t     /*516-1603 VendorData*/     VendorData[1088];
-    uint8_t     /*1604-1667 Reserved*/      Reserved_10[64];
-    char        /*1668-1731 CString*/       RenderingIntent[64];
-    char        /*1732-1795 CString*/       PageSizeName[64];
-}
-pwg_header_t;
-
 typedef enum
 {
     pwgSync,
@@ -121,6 +60,8 @@ typedef struct tag_pwg_context
     int                 bytes_gotten;
     int                 line_repeat;
     int                 color_repeat;
+    int                 out_depth;
+    int                 out_components;
     uint8_t             iobuf[PWG_IO_SIZE];
     ioring_t            io;
     uint8_t            *line;
@@ -193,6 +134,7 @@ int pwg_decode_1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         break;
     case pwgLineRepeatColor:
         *ndata = 1;
+        *pwg->pp++ = data[0];
         pwg->pixelno += 8 * pwg->color_repeat;
         if (pwg->pixelno >= pwg->pixels)
         {
@@ -215,6 +157,329 @@ int pwg_decode_1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         took  = 0;
         while (took < avail && pwg->color_repeat > 0)
         {
+            *pwg->pp++ = data[0];
+            took++;
+            pwg->color_repeat--;
+            pwg->pixelno+= 8;
+            if (pwg->pixelno >= pwg->pixels)
+            {
+                if (pwg->pixelno != ((pwg->pixels + 7) & ~7))
+                {
+                    butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                    return -1;
+                }
+                if (pwg->color_repeat != 0)
+                {
+                    butil_log(2, "Corrupt? more colors: %u\n", pwg->color_repeat);
+                    return -1;
+                }
+                *done = true;
+                pwg->lineno+= pwg->line_repeat;
+                pwg->line_state = pwgLineDone;
+                pwg->bytes_left = 1;
+                break;
+            }
+            if (pwg->color_repeat == 0)
+            {
+                pwg->line_state = pwgLineRun;
+                pwg->bytes_left = 1;
+                break;
+            }
+            pwg->bytes_left = 1;
+        }
+        *ndata = took;
+        break;
+    case pwgLineDone:
+        pwg->line_state = pwgLineLine;
+        *ndata = 0;
+        break;
+    }
+    return 0;
+}
+
+int pwg_decode_1x1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
+{
+    int avail;
+    int took;
+
+    *done = false;
+    if (*ndata < pwg->bytes_left)
+    {
+        // wait for bytes neede
+        *ndata = 0;
+        return 0;
+    }
+    switch (pwg->line_state)
+    {
+    case pwgLineLine:
+        pwg->pixelno = 0;
+        pwg->line_repeat = 1 + (uint8_t)*data;
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRun:
+        pwg->color_repeat = (uint8_t)*data;
+        if (pwg->color_repeat > 127)
+        {
+            pwg->color_repeat = 257 - pwg->color_repeat;
+            pwg->line_state = pwgLineSoloColor;
+        }
+        else
+        {
+            pwg->color_repeat += 1;
+            pwg->line_state = pwgLineRepeatColor;
+        }
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRepeatColor:
+        *ndata = 1;
+        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        pwg->pixelno += 8 * pwg->color_repeat;
+        if (pwg->pixelno >= pwg->pixels)
+        {
+            if (pwg->pixelno != ((pwg->pixels + 7) & ~7))
+            {
+                butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                return -1;
+            }
+            *done = true;
+            pwg->lineno+= pwg->line_repeat;
+            pwg->line_state = pwgLineDone;
+            pwg->bytes_left = 1;
+            break;
+        }
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        break;
+    case pwgLineSoloColor:
+        avail = *ndata;
+        took  = 0;
+        while (took < avail && pwg->color_repeat > 0)
+        {
+            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            took++;
+            pwg->color_repeat--;
+            pwg->pixelno+= 8;
+            if (pwg->pixelno >= pwg->pixels)
+            {
+                if (pwg->pixelno != ((pwg->pixels + 7) & ~7))
+                {
+                    butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                    return -1;
+                }
+                if (pwg->color_repeat != 0)
+                {
+                    butil_log(2, "Corrupt? more colors: %u\n", pwg->color_repeat);
+                    return -1;
+                }
+                *done = true;
+                pwg->lineno+= pwg->line_repeat;
+                pwg->line_state = pwgLineDone;
+                pwg->bytes_left = 1;
+                break;
+            }
+            if (pwg->color_repeat == 0)
+            {
+                pwg->line_state = pwgLineRun;
+                pwg->bytes_left = 1;
+                break;
+            }
+            pwg->bytes_left = 1;
+        }
+        *ndata = took;
+        break;
+    case pwgLineDone:
+        pwg->line_state = pwgLineLine;
+        *ndata = 0;
+        break;
+    }
+    return 0;
+}
+
+int pwg_decode_1x1x3(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
+{
+    int avail;
+    int took;
+
+    *done = false;
+    if (*ndata < pwg->bytes_left)
+    {
+        // wait for bytes neede
+        *ndata = 0;
+        return 0;
+    }
+    switch (pwg->line_state)
+    {
+    case pwgLineLine:
+        pwg->pixelno = 0;
+        pwg->line_repeat = 1 + (uint8_t)*data;
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRun:
+        pwg->color_repeat = (uint8_t)*data;
+        if (pwg->color_repeat > 127)
+        {
+            pwg->color_repeat = 257 - pwg->color_repeat;
+            pwg->line_state = pwgLineSoloColor;
+        }
+        else
+        {
+            pwg->color_repeat += 1;
+            pwg->line_state = pwgLineRepeatColor;
+        }
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRepeatColor:
+        *ndata = 1;
+        if (1)
+        {
+        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+        }
+        else
+        {
+        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        }
+        pwg->pixelno += 8 * pwg->color_repeat;
+        if (pwg->pixelno >= pwg->pixels)
+        {
+            if (pwg->pixelno != ((pwg->pixels + 7) & ~7))
+            {
+                butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                return -1;
+            }
+            *done = true;
+            pwg->lineno+= pwg->line_repeat;
+            pwg->line_state = pwgLineDone;
+            pwg->bytes_left = 1;
+            break;
+        }
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        break;
+    case pwgLineSoloColor:
+        avail = *ndata;
+        took  = 0;
+        while (took < avail && pwg->color_repeat > 0)
+        {
+            if (1)
+            {
+            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+            }
+            else
+            {
+            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            }
             took++;
             pwg->color_repeat--;
             pwg->pixelno+= 8;
@@ -258,6 +523,7 @@ int pwg_decode_1x8(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
 {
     int avail;
     int took;
+    int i;
 
     *done = false;
     if (*ndata < pwg->bytes_left)
@@ -291,7 +557,11 @@ int pwg_decode_1x8(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         *ndata = 1;
         break;
     case pwgLineRepeatColor:
-        *ndata = 3;
+        *ndata = 1;
+        for (i = 0; i < pwg->color_repeat; i++)
+        {
+            *pwg->pp++ = data[0];
+        }
         pwg->pixelno += pwg->color_repeat;
         if (pwg->pixelno >= pwg->pixels)
         {
@@ -314,7 +584,117 @@ int pwg_decode_1x8(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         took  = 0;
         while (took < avail && pwg->color_repeat > 0)
         {
-            took += 3;
+            *pwg->pp++ = data[0];
+            took += 1;
+            pwg->color_repeat--;
+            pwg->pixelno++;
+            if (pwg->pixelno >= pwg->pixels)
+            {
+                if (pwg->pixelno != pwg->pixels)
+                {
+                    butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                    return -1;
+                }
+                if (pwg->color_repeat != 0)
+                {
+                    butil_log(2, "Corrupt? more colors: %u\n", pwg->color_repeat);
+                    return -1;
+                }
+                *done = true;
+                pwg->lineno+= pwg->line_repeat;
+                pwg->line_state = pwgLineDone;
+                pwg->bytes_left = 1;
+                break;
+            }
+            if (pwg->color_repeat == 0)
+            {
+                pwg->line_state = pwgLineRun;
+                pwg->bytes_left = 1;
+                break;
+            }
+            pwg->bytes_left = 3;
+        }
+        *ndata = took;
+        break;
+    case pwgLineDone:
+        pwg->line_state = pwgLineLine;
+        *ndata = 0;
+        break;
+    }
+    return 0;
+}
+
+int pwg_decode_1x8x3(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
+{
+    int avail;
+    int took;
+    int i;
+
+    *done = false;
+    if (*ndata < pwg->bytes_left)
+    {
+        // wait for bytes neede
+        *ndata = 0;
+        return 0;
+    }
+    switch (pwg->line_state)
+    {
+    case pwgLineLine:
+        pwg->pixelno = 0;
+        pwg->line_repeat = 1 + (uint8_t)*data;
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        *ndata = 1;
+        break;
+    case pwgLineRun:
+        pwg->color_repeat = (uint8_t)*data;
+        if (pwg->color_repeat > 127)
+        {
+            pwg->color_repeat = 257 - pwg->color_repeat;
+            pwg->line_state = pwgLineSoloColor;
+        }
+        else
+        {
+            pwg->color_repeat += 1;
+            pwg->line_state = pwgLineRepeatColor;
+        }
+        pwg->bytes_left = 3;
+        *ndata = 1;
+        break;
+    case pwgLineRepeatColor:
+        *ndata = 1;
+        for (i = 0; i < pwg->color_repeat; i++)
+        {
+            *pwg->pp++ = data[0];
+            *pwg->pp++ = data[0];
+            *pwg->pp++ = data[0];
+        }
+        pwg->pixelno += pwg->color_repeat;
+        if (pwg->pixelno >= pwg->pixels)
+        {
+            if (pwg->pixelno != pwg->pixels)
+            {
+                butil_log(2, "Corrupt? line len is %u\n", pwg->pixelno);
+                return -1;
+            }
+            *done = true;
+            pwg->lineno+= pwg->line_repeat;
+            pwg->line_state = pwgLineDone;
+            pwg->bytes_left = 1;
+            break;
+        }
+        pwg->line_state = pwgLineRun;
+        pwg->bytes_left = 1;
+        break;
+    case pwgLineSoloColor:
+        avail = *ndata;
+        took  = 0;
+        while (took < avail && pwg->color_repeat > 0)
+        {
+            *pwg->pp++ = data[0];
+            *pwg->pp++ = data[0];
+            *pwg->pp++ = data[0];
+            took += 1;
             pwg->color_repeat--;
             pwg->pixelno++;
             if (pwg->pixelno >= pwg->pixels)
@@ -525,13 +905,37 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
         pwg_dump_header(&pwg->hdr);
         pwg->rows = pwg->hdr.PageSize_Y * pwg->hdr.yres / 72;
         pwg->pixels = pwg->hdr.PageSize_X * pwg->hdr.xres / 72;
+
+        if (pwg->out_depth == 0)
+        {
+            pwg->out_depth = pwg->hdr.BitsPerPixel;
+            pwg->out_components =  pwg->hdr.BitsPerPixel / pwg->hdr.BitsPerColor;
+        }
         switch (pwg->hdr.BitsPerColor)
         {
         case 1:
             switch (pwg->hdr.BitsPerPixel)
             {
             case 1:
-                pwg->decoder = pwg_decode_1x1;
+                if (pwg->out_depth == 8)
+                {
+                    switch (pwg->out_components)
+                    {
+                    case 1:
+                        pwg->decoder = pwg_decode_1x1x1;
+                        break;
+                    case 3:
+                        pwg->decoder = pwg_decode_1x1x3;
+                        break;
+                    default:
+                        butil_log(0, "Unhandled format\n");
+                        return -1;
+                    }
+                }
+                else
+                {
+                    pwg->decoder = pwg_decode_1x1;
+                }
                 break;
             default:
                 butil_log(0, "Unhandled format\n");
@@ -542,7 +946,14 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
             switch (pwg->hdr.BitsPerPixel)
             {
             case 8:
-                pwg->decoder = pwg_decode_1x8;
+                if (pwg->out_components == 3)
+                {
+                    pwg->decoder = pwg_decode_1x8x3;
+                }
+                else
+                {
+                    pwg->decoder = pwg_decode_1x8;
+                }
                 break;
             case 24:
                 pwg->decoder = pwg_decode_3x8;
@@ -788,6 +1199,18 @@ int image_open_pwg_reader(image_stream_t *istream)
     }
     pwg_init_context(info);
 
+    if (img->depth > 0)
+    {
+        // want our own output depth
+        //
+        info->out_depth = img->depth;
+        info->out_components = (img->format & _IMAGE_RGB) ? 3 : 1;
+    }
+    else
+    {
+        info->out_depth = 0;
+        info->out_components = 0;
+    }
     // set our image stream object into client info
     istream->priv = info;
 
@@ -800,8 +1223,8 @@ int image_open_pwg_reader(image_stream_t *istream)
     }
     img->width = info->hdr.Width;
     img->height = info->hdr.Height;
-    img->depth = info->hdr.BitsPerColor;
-    img->components = info->hdr.BitsPerPixel / info->hdr.BitsPerColor;
+    img->depth = info->out_depth;
+    img->components = info->out_components;
     img->stride = info->hdr.BytesPerLine;
     img->format = (img->components > 1) ? IMAGE_RGB : IMAGE_GRAY;
 

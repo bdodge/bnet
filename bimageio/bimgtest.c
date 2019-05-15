@@ -106,7 +106,7 @@ int main(int argc, char **argv)
             type = butil_content_type_for_file(*argv);
             if (strstr(*argv, ".pwg"))
                 type = 0x1234;
-            result = image_open_file_reader(*argv, type, &istream);
+            result = image_open_file_reader(*argv, type, 8, IMAGE_RGB, &istream);
             if (result)
             {
                 fprintf(stderr, "Can't open %s\n", *argv);

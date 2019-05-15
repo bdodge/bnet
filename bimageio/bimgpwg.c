@@ -100,6 +100,7 @@ int pwg_decode_1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
 {
     int avail;
     int took;
+    int i;
 
     *done = false;
     if (*ndata < pwg->bytes_left)
@@ -134,7 +135,10 @@ int pwg_decode_1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         break;
     case pwgLineRepeatColor:
         *ndata = 1;
-        *pwg->pp++ = data[0];
+        for (i = 0; i < pwg->color_repeat; i++)
+        {
+            *pwg->pp++ = data[0];
+        }
         pwg->pixelno += 8 * pwg->color_repeat;
         if (pwg->pixelno >= pwg->pixels)
         {
@@ -157,7 +161,7 @@ int pwg_decode_1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         took  = 0;
         while (took < avail && pwg->color_repeat > 0)
         {
-            *pwg->pp++ = data[0];
+            *pwg->pp++ = data[took];
             took++;
             pwg->color_repeat--;
             pwg->pixelno+= 8;
@@ -201,6 +205,7 @@ int pwg_decode_1x1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
 {
     int avail;
     int took;
+    int i;
 
     *done = false;
     if (*ndata < pwg->bytes_left)
@@ -235,14 +240,17 @@ int pwg_decode_1x1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         break;
     case pwgLineRepeatColor:
         *ndata = 1;
-        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+        for (i = 0; i < pwg->color_repeat; i++)
+        {
+            *pwg->pp++ = (data[0] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x1) ? 0x00 : 0xFF;
+        }
         pwg->pixelno += 8 * pwg->color_repeat;
         if (pwg->pixelno >= pwg->pixels)
         {
@@ -265,14 +273,14 @@ int pwg_decode_1x1x1(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         took  = 0;
         while (took < avail && pwg->color_repeat > 0)
         {
-            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[took] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x1) ? 0x00 : 0xFF;
             took++;
             pwg->color_repeat--;
             pwg->pixelno+= 8;
@@ -316,11 +324,12 @@ int pwg_decode_1x1x3(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
 {
     int avail;
     int took;
+    int i;
 
     *done = false;
     if (*ndata < pwg->bytes_left)
     {
-        // wait for bytes neede
+        // wait for bytes needed
         *ndata = 0;
         return 0;
     }
@@ -350,59 +359,32 @@ int pwg_decode_1x1x3(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         break;
     case pwgLineRepeatColor:
         *ndata = 1;
-        if (1)
+        for (i = 0; i < pwg->color_repeat; i++)
         {
-        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-        }
-        else
-        {
-        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-        *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
+            *pwg->pp++ = (data[0] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x1) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x1) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[0] & 0x1) ? 0x00 : 0xFF;
         }
         pwg->pixelno += 8 * pwg->color_repeat;
         if (pwg->pixelno >= pwg->pixels)
@@ -426,60 +408,31 @@ int pwg_decode_1x1x3(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         took  = 0;
         while (took < avail && pwg->color_repeat > 0)
         {
-            if (1)
-            {
-            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-            }
-            else
-            {
-            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x80) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x40) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x20) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x10) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x8) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x4) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x2) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-            *pwg->pp++ = (data[0] & 0x1) ? 0xFF : 0x00;
-            }
+            *pwg->pp++ = (data[took] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x80) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x40) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x20) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x10) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x8) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x4) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x2) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x1) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x1) ? 0x00 : 0xFF;
+            *pwg->pp++ = (data[took] & 0x1) ? 0x00 : 0xFF;
+
             took++;
             pwg->color_repeat--;
             pwg->pixelno+= 8;
@@ -658,7 +611,7 @@ int pwg_decode_1x8x3(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
             pwg->color_repeat += 1;
             pwg->line_state = pwgLineRepeatColor;
         }
-        pwg->bytes_left = 3;
+        pwg->bytes_left = 1;
         *ndata = 1;
         break;
     case pwgLineRepeatColor:
@@ -691,9 +644,9 @@ int pwg_decode_1x8x3(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
         took  = 0;
         while (took < avail && pwg->color_repeat > 0)
         {
-            *pwg->pp++ = data[0];
-            *pwg->pp++ = data[0];
-            *pwg->pp++ = data[0];
+            *pwg->pp++ = data[took];
+            *pwg->pp++ = data[took];
+            *pwg->pp++ = data[took];
             took += 1;
             pwg->color_repeat--;
             pwg->pixelno++;
@@ -1043,10 +996,10 @@ static int pwg_process_input(iostream_t *stream, pwg_context_t *pwg)
             }
             if (nread == 0)
             {
-                butil_log(1, "End of file\n");
                 result = 0;
                 if (pwg->io.count == 0)
                 {
+                    butil_log(1, "End of file\n");
                     return 0;
                 }
             }
@@ -1136,7 +1089,7 @@ static int pwg_read_line(iostream_t *stream, pwg_context_t *pwg, uint8_t *line)
     pwg->line = line;
     pwg->pp = line;
 
-    if (pwg->state == pwgLine && pwg->line_state == pwgLineDone)
+    if (pwg->line_state == pwgLineDone)
     {
         if (pwg->line_repeat > 1)
         {
@@ -1225,7 +1178,7 @@ int image_open_pwg_reader(image_stream_t *istream)
     img->height = info->hdr.Height;
     img->depth = info->out_depth;
     img->components = info->out_components;
-    img->stride = info->hdr.BytesPerLine;
+    img->stride = (info->out_depth * info->out_components * img->width + 7) / 8; //info->hdr.BytesPerLine;
     img->format = (img->components > 1) ? IMAGE_RGB : IMAGE_GRAY;
 
     istream->cur_line = 0;

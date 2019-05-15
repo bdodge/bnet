@@ -349,7 +349,7 @@ const char *mdns_str_for_pktaddr(mdns_packet_t *pkt)
     {
         return "<nil>";
     }
-    if (pkt->isv6addr)
+    if (pkt->src_addrt == mdnsIPv6)
     {
         return str_for_ipv6(&pkt->srcaddr6);
     }
@@ -405,6 +405,8 @@ mdns_packet_t *mdns_pkt_alloc(mdns_responder_t *res)
     pkt->io.data = pkt->data;
 
     pkt->added_srv = false;
+    pkt->added_srvptr = false;
+    mdns_init_name(&pkt->added_srvname);
 
     pkt->id = 0;
     pkt->flags = 0;
@@ -416,9 +418,11 @@ mdns_packet_t *mdns_pkt_alloc(mdns_responder_t *res)
     pkt->tts_secs = 0;
     pkt->tts_usecs = 0;
     pkt->unicast = false;
-    pkt->isv6addr = false;
+    pkt->src_addrt = mdnsIPv4;
+    pkt->dst_addrt = mdnsIPv4;
 
     pkt->srcaddr4.addr = 0;
+    pkt->srcaddr6.addr[0] = 0;
     pkt->srcport = MDNS_PORT;
 
     pkt->next = NULL;
@@ -525,6 +529,8 @@ mdns_interface_t *mdns_interface_alloc(mdns_responder_t *res, const char *hostna
         BERROR("Alloc iface");
         return NULL;
     }
+    memset(iface, 0, sizeof(mdns_interface_t));
+
     result = mdns_assemble_name(name, sizeof(name), 2, hostname, "local");
     if (result)
     {

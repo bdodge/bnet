@@ -316,6 +316,9 @@ int gcp_init_local_prt(gcp_context_t *gcp)
     {
         return -1;
     }
+    snprintf(gcp->local_access_token, sizeof(gcp->local_access_token),
+                                                "%s", "bnet-access-token");
+
     // create a /privet resource for access to the google api on this printer
     //
     gcp->http_server_resources = NULL;

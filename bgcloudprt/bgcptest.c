@@ -209,7 +209,7 @@ int gcp_unit_test(gcp_context_t *gcp)
     bool done;
     bool cancel;
 
-    result = gcp_init(gcp, "yoproxy", "68ECDD18-8319-42DD-BC73-87D192E900DD");
+    result = gcp_init(gcp, "yoproxy", "abcdefg", "hijklmnop");
     if (result)
     {
         butil_log(0, "Fail: gcp init\n");
@@ -462,7 +462,7 @@ int main(int argc, char **argv)
             return result;
         }
 #endif
-        result = gcp_init(&gcp, "123-456", "1.0.0");
+        result = gcp_init(&gcp, "123-456", "1.0.0", "living room");
         do
         {
             if (local_only)

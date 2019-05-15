@@ -17,7 +17,7 @@
 #include "bmdnsutils.h"
 #include "bmdnsunits.h"
 
-int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t *myipv6addr)
+int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t *myipv6addr, int *iface_index)
 {
 #if defined(Linux) || defined(OSX)
     struct ifaddrs *addrs;
@@ -29,6 +29,8 @@ int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t 
 
     gotv4 = false;
     gotv6 = false;
+
+    *iface_index = 0;
 
     if (gethostname(myhost, nhost))
     {
@@ -53,12 +55,15 @@ int get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t 
                     gotv4 = true;
                     sain4 = (struct sockaddr_in *)addr->ifa_addr;
                     myipv4addr->addr = sain4->sin_addr.s_addr;
+                    butil_log(4, "IPv4 on iface %d  %s\n", if_nametoindex(addr->ifa_name), addr->ifa_name);
                 }
                 else if (family == AF_INET6 && ! gotv6)
                 {
                     gotv6 = true;
                     sain6 = (struct sockaddr_in6 *)addr->ifa_addr;
                     memcpy(myipv6addr->addr, &sain6->sin6_addr, sizeof(bipv6addr_t));
+                    *iface_index = if_nametoindex(addr->ifa_name);
+                    butil_log(4, "IPv6 on iface %d  %s\n", *iface_index, addr->ifa_name);
                 }
             }
         }
@@ -103,6 +108,8 @@ static int usage (const char *program)
     fprintf(stderr, "     -l    Set debug log level to N (default 1: errors/warnings only)\n");
     fprintf(stderr, "     -s    Stop after N seconds to test BYE\n");
     fprintf(stderr, "     -t    Set TTL to N for iface/services\n");
+    fprintf(stderr, "     -4    Use only IPv4\n");
+    fprintf(stderr, "     -6    Use only IPv6\n");
     fprintf(stderr, "     -u    Run unit tests\n");
     fprintf(stderr, "     -U    Run unit tests and exit\n");
     return 1;
@@ -114,6 +121,7 @@ int main(int argc, char **argv)
     char hostname[MDNS_MAX_DNTEXT];
     bipv4addr_t myipv4addr;
     bipv6addr_t myipv6addr;
+    uint32_t iface_index;
     char *txtrecs;
     char *arg;
     char *program;
@@ -124,6 +132,8 @@ int main(int argc, char **argv)
     int loglevel;
     bool unit_test;
     bool only_unit_test;
+    bool ipv4only;
+    bool ipv6only;
     int result;
 
 #ifdef Windows
@@ -142,6 +152,8 @@ int main(int argc, char **argv)
     runtime = 0;
     butil_set_log_level(loglevel);
     unit_test = false;
+    ipv4only = false;
+    ipv6only = false;
 
     program = *argv++;
     argc--;
@@ -199,6 +211,14 @@ int main(int argc, char **argv)
                 unit_test = true;
                 only_unit_test = true;
                 break;
+            case '4':
+                ipv4only = true;
+                ipv6only = false;
+                break;
+            case '6':
+                ipv6only = true;
+                ipv4only = false;
+                break;
             default:
                 fprintf(stderr, "Bad Switch: %s\n", arg);
                 break;
@@ -253,9 +273,17 @@ int main(int argc, char **argv)
             return result;
         }
     }
-    get_host_info(hostname, sizeof(hostname), &myipv4addr, &myipv6addr);
+    get_host_info(hostname, sizeof(hostname), &myipv4addr, &myipv6addr, &iface_index);
 
-    result = mdns_responder_add_interface(&responder, hostname, &myipv4addr, &myipv6addr, ttl);
+    if (ipv4only)
+    {
+        myipv6addr.addr[0] = 0;
+    }
+    if (ipv6only)
+    {
+        myipv4addr.addr = 0;
+    }
+    result = mdns_responder_add_interface(&responder, hostname, iface_index, &myipv4addr, &myipv6addr, ttl);
     if (result)
     {
         butil_log(0, "Can't add interface\n");

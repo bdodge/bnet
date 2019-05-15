@@ -77,6 +77,7 @@ typedef struct tag_gcp_context
     gcp_state_t         nextstate;
     char                uuid[64];
     char                proxy_id[64];
+    char                location[GCP_SHORT_TOKEN];
     char                serial_no[GCP_SHORT_TOKEN];
     char                fw_revision[GCP_SHORT_TOKEN];
     void               *nvhandle;
@@ -128,7 +129,7 @@ int gcp_set_error_dbg (const char* fname, int line, gcp_context_t *gcp, int ecod
 int gcp_set_error     (gcp_context_t *gcp, int ecode);
 #endif
 bool    gcp_is_registered   (gcp_context_t *gcp);
-int     gcp_init            (gcp_context_t *gcp, const char *serial_no, const char *fw_revision);
+int     gcp_init            (gcp_context_t *gcp, const char *serial_no, const char *fw_revision, const char *location);
 int     gcp_deinit          (gcp_context_t *gcp);
 int     gcp_slice           (gcp_context_t *gcp);
 

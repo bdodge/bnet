@@ -15,6 +15,34 @@
  */
 #include "bhttp.h"
 
+static const char *http_state_name(http_state_t state)
+{
+    switch (state)
+    {
+    case httpServeInit:         return "Init(server)";
+    case httpClientInit:        return "Init(client)";
+    case httpReadline:          return "Readline";
+    case httpReadRequest:       return "Request (read)";
+    case httpReadReply:         return "Reply (read)";
+    case httpSendRequest:       return "Request (send)";
+    case httpHeaders:           return "Headers";
+    case httpMultipartHeaders:  return "Headers (multipart)";
+    case httpTLSsocketUpgrade:  return "TLS Upgrade";
+    case httpWebSocketUpgrade:  return "WebSocket Upgrade";
+    case httpHandleReadRequest: return "Handle Request (read)";
+    case httpHandleSendRequest: return "Handle Request (send)";
+    case httpReadChunkCount:    return "Chunk Count (read)";
+    case httpBodyDownload:      return "Body (read)";
+    case httpBodyUpload:        return "Body (send)";
+    case httpSendReply:         return "Reply (send)";
+    case httpPropFindEnumerate: return "Enumerate (find)";
+    case httpUserMethod:        return "User Method";
+    case httpKeepAlive:         return "KeepAlive";
+    case httpDone:              return "Done";
+    default:                    return "- bad state -";
+    }
+}
+
 http_client_t *http_client_create(http_resource_t *resources, bool isclient)
 {
     http_client_t *client;
@@ -282,8 +310,21 @@ int http_client_input(http_client_t *client, int to_secs, int to_usecs)
             }
             if (result > 0)
             {
-                len = client->stream->read(client->stream,
-                       client->in.data + client->in.head, room);
+                if (client->transport == httpTCP)
+                {
+                   len = client->stream->read(client->stream,
+                               client->in.data + client->in.head, room);
+                }
+                else
+                {
+                    #if HTTP_SUPPORT_UDP
+                    len = iostream_socket_recvfrom(client->stream,
+                                client->in.data + client->in.head, room,
+                                client->out_host, &client->out_port);
+                    #else
+                    return -1;
+                    #endif
+                }
                 if (len <= 0)
                 {
                     if (client->in.count)
@@ -315,6 +356,16 @@ int http_client_input(http_client_t *client, int to_secs, int to_usecs)
         }
         if ((now - client->last_in_time) > client->long_timeout)
         {
+            // for udp transports in an init state, never timeout, since the
+            // client is permanent as long a the server is alive
+            //
+            if (client->transport == httpUDP)
+            {
+                butil_log(4, "cl:%u UDP timeout in state %s\n",
+                        client->id, http_state_name(client->state));
+                client->last_in_time = now;
+                return 0;
+            }
             http_log(3, "cl:%u read timeout\n", client->id);
             return -1;
         }
@@ -1066,34 +1117,6 @@ static void http_get_line(http_client_t *client, http_state_t next_state)
     client->state       = httpReadline;
     client->line_count  = 0;
     client->reported_line_error = false;
-}
-
-static const char *http_state_name(http_state_t state)
-{
-    switch (state)
-    {
-    case httpServeInit:         return "Init(server)";
-    case httpClientInit:        return "Init(client)";
-    case httpReadline:          return "Readline";
-    case httpReadRequest:       return "Request (read)";
-    case httpReadReply:         return "Reply (read)";
-    case httpSendRequest:       return "Request (send)";
-    case httpHeaders:           return "Headers";
-    case httpMultipartHeaders:  return "Headers (multipart)";
-    case httpTLSsocketUpgrade:  return "TLS Upgrade";
-    case httpWebSocketUpgrade:  return "WebSocket Upgrade";
-    case httpHandleReadRequest: return "Handle Request (read)";
-    case httpHandleSendRequest: return "Handle Request (send)";
-    case httpReadChunkCount:    return "Chunk Count (read)";
-    case httpBodyDownload:      return "Body (read)";
-    case httpBodyUpload:        return "Body (send)";
-    case httpSendReply:         return "Reply (send)";
-    case httpPropFindEnumerate: return "Enumerate (find)";
-    case httpUserMethod:        return "User Method";
-    case httpKeepAlive:         return "KeepAlive";
-    case httpDone:              return "Done";
-    default:                    return "- bad state -";
-    }
 }
 
 static int http_slice_fatal(http_client_t *client, int result)

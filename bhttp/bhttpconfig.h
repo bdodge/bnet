@@ -94,7 +94,7 @@
 /// Is HTTP on UDP supported (needed for SIP, for example)
 //
 #ifndef HTTP_SUPPORT_UDP
-#define HTTP_SUPPORT_UDP (0)
+#define HTTP_SUPPORT_UDP (1)
 #endif
 
 /// Is TLS supported

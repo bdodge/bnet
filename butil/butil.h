@@ -198,5 +198,16 @@ mime_content_type_t butil_content_type_for_file(const char *path);
 const char *butil_mime_string_for_content_type(mime_content_type_t type);
 mime_content_type_t butil_content_type_for_mime_string(const char *mime);
 
+const char *butil_str_for_ipv4(uint32_t ipv4addr, char *ipbuf, size_t nipbuf);
+const char *butil_str_for_ipv6(bipv6addr_t *ipv6addr, char *ipbuf, size_t nipbuf);
+
+int butil_get_host_info     (
+                            char* myhost,
+                            int nhost,
+                            bipv4addr_t *myipv4addr,
+                            bipv6addr_t *myipv6addr,
+                            int *iface_index
+                            );
+
 #endif
 

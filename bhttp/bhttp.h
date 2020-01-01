@@ -294,6 +294,7 @@ int http_server_init(
 void http_server_cleanup(http_server_t *server);
 int http_server_abort(http_server_t *server);
 
+int http_wait_for_server_event(http_server_t *servers);
 int http_server_slice(http_server_t *server, int to_secs, int to_usecs);
 int http_serve(http_server_t *servers, http_idle_callback_t on_idle, void *priv);
 

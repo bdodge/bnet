@@ -26,6 +26,7 @@ SASL_PATH=$(SRCROOT)/bsasl
 JSON_PATH=$(SRCROOT)/bjson
 OSAL_PATH=$(SRCROOT)/bosal
 HTTP_PATH=$(SRCROOT)/bhttp
+UPNP_PATH=$(SRCROOT)/bupnp
 FTP_PATH=$(SRCROOT)/bftp
 XMPP_PATH=$(SRCROOT)/bxmpp
 MQTT_PATH=$(SRCROOT)/bmqtt
@@ -137,6 +138,7 @@ SASLLIB=$(SASL_PATH)/$(OBJDIR)/libbsasl.a
 OSALLIB=$(OSAL_PATH)/$(OBJDIR)/libbosal.a
 JSONLIB=$(JSON_PATH)/$(OBJDIR)/libbjson.a
 HTTPLIB=$(HTTP_PATH)/$(OBJDIR)/libbhttp.a
+UPNPLIB=$(UPNP_PATH)/$(OBJDIR)/libupnp.a
 FTPLIB=$(FTP_PATH)/$(OBJDIR)/libbftp.a
 XMPPLIB=$(XMPP_PATH)/$(OBJDIR)/libbxmpp.a
 MQTTLIB=$(MQTT_PATH)/$(OBJDIR)/libbmqtt.a
@@ -218,6 +220,9 @@ $(JSON_PATH)/%.a:
 
 $(HTTP_PATH)/%.a:
 	make -C $(HTTP_PATH) BNET_TLS=$(BNET_TLS) BNET_ZLIB=$(BNET_ZLIB) EXTRA_DEFINES=$(EXTRA_DEFINES) library
+
+$(UPNP_PATH)/%.a:
+	make -C $(UPNP_PATH) BNET_TLS=$(BNET_TLS) EXTRA_DEFINES=$(EXTRA_DEFINES) library
 
 $(XMPP_PATH)/%.a:
 	make -C $(XMPP_PATH) library

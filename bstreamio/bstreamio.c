@@ -463,6 +463,52 @@ int iostream_socket_sendto(iostream_t *stream, uint8_t *buf, int len, const char
     return sendto(socket, buf, len, 0, (struct sockaddr *)&server_addr, addr_len);
 }
 
+int iostream_socket_recvfrom(iostream_t *stream, uint8_t *buf, int len, char *host, uint16_t *port)
+{
+    socket_t socket;
+    struct sockaddr_in server_addr;
+    const char *ipaddr;
+    socklen_t addr_len;
+    int result;
+
+    if (host)
+    {
+        host[0] = '\0';
+    }
+    if (port)
+    {
+        *port = 0;
+    }
+    if (! stream)
+    {
+        BERROR("Bad stream");
+        return -1;
+    }
+    socket = (socket_t)(intptr_t)stream->priv;
+    if (socket < 0)
+    {
+        BERROR("Bad socket");
+        return -1;
+    }
+    addr_len = sizeof(server_addr);
+
+    result = recvfrom(socket, buf, len, 0, (struct sockaddr *)&server_addr, &addr_len);
+
+    if (host)
+    {
+        ipaddr = inet_ntoa(server_addr.sin_addr);
+        if (ipaddr)
+        {
+            strcpy(host, ipaddr);
+        }
+    }
+    if (port)
+    {
+       *port = htons(server_addr.sin_port);
+    }
+    return result;
+}
+
 iostream_t *iostream_create_from_tcp_connection(
                                                 const char *host,
                                                 uint16_t port

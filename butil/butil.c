@@ -596,6 +596,34 @@ int butil_parse_url(
     return 0;
 }
 
+
+const char *butil_str_for_ipv4(uint32_t ipv4addr, char *ipbuf, size_t nipbuf)
+{
+    snprintf(ipbuf, nipbuf, "%d:%d:%d:%d",
+                (ipv4addr & 0xFF),
+                ((ipv4addr >> 8) & 0xFF),
+                ((ipv4addr >> 16) & 0xFF),
+                ((ipv4addr >> 24) & 0xFF)
+            );
+    return ipbuf;
+}
+
+const char *butil_str_for_ipv6(bipv6addr_t *ipv6addr, char *ipbuf, size_t nipbuf)
+{
+    uint16_t addr[8];
+    uint16_t *sa;
+    int i;
+
+    sa = ipv6addr->addr;
+    for (i = 0; i < 8; i++)
+    {
+        addr[i] = htons(sa[i]);
+    }
+    snprintf(ipbuf, nipbuf, "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x",
+                addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7]);
+    return ipbuf;
+}
+
 int butil_paste_url(
                    char               *url,
                    size_t              nurl,
@@ -1067,5 +1095,90 @@ mime_content_type_t butil_content_type_for_mime_string(const char *mime)
         }
     }
     return butil_mime_bin;
+}
+
+int butil_get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6addr_t *myipv6addr, int *iface_index)
+{
+#if defined(Linux) || defined(OSX)
+    struct ifaddrs *addrs;
+    struct ifaddrs *addr;
+    struct sockaddr_in *sain4;
+    struct sockaddr_in6 *sain6;
+    bool gotv4;
+    bool gotv6;
+
+    gotv4 = false;
+    gotv6 = false;
+
+    *iface_index = 0;
+
+    if (gethostname(myhost, nhost))
+    {
+        BERROR("gethostname fails");
+        return -1;
+    }
+    getifaddrs(&addrs);
+
+    for (addr = addrs; addr && ! (gotv4 && gotv6); addr = addr->ifa_next)
+    {
+        if (addr->ifa_addr)
+        {
+            int family = addr->ifa_addr->sa_family;
+            unsigned flags = addr->ifa_flags;
+
+            // look only at interfaces up and not loopback
+            //
+            if ((flags & IFF_UP) && ! (flags & IFF_LOOPBACK))
+            {
+                if (family == AF_INET && ! gotv4)
+                {
+                    gotv4 = true;
+                    sain4 = (struct sockaddr_in *)addr->ifa_addr;
+                    myipv4addr->addr = sain4->sin_addr.s_addr;
+                    butil_log(4, "IPv4 on iface %d  %s\n", if_nametoindex(addr->ifa_name), addr->ifa_name);
+                }
+                else if (family == AF_INET6 && ! gotv6)
+                {
+                    gotv6 = true;
+                    sain6 = (struct sockaddr_in6 *)addr->ifa_addr;
+                    memcpy(myipv6addr->addr, &sain6->sin6_addr, sizeof(bipv6addr_t));
+                    *iface_index = if_nametoindex(addr->ifa_name);
+                    butil_log(4, "IPv6 on iface %d  %s\n", *iface_index, addr->ifa_name);
+                }
+            }
+        }
+    }
+    freeifaddrs(addrs);
+
+    if (! gotv4)
+    {
+        myipv4addr->addr = 0;
+    }
+    if (! gotv6)
+    {
+        memset(&myipv6addr->addr, 0, sizeof(bipv6addr_t));
+    }
+    if (! gotv4 && ! gotv6)
+    {
+        BERROR("no IP addr");
+        return -1;
+    }
+#else
+    struct hostent *phost;
+
+    if (gethostname(myhost, nhost))
+    {
+        BERROR("gethostname fails");
+        return -1;
+    }
+    phost = gethostbyname(myhost);
+    if (! phost)
+    {
+        BERROR("gethostbyname fails");
+        return -1;
+    }
+    memcpy(&myipv4addr->addr, phost->h_addr_list[0], 4);
+#endif
+    return 0;
 }
 

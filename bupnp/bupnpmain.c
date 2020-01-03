@@ -23,103 +23,11 @@ static char s_device_description[];
 static char s_content_directory_scpd[];
 static char s_connection_manager_scpd[];
 
-static http_method_t s_method_SUBSCRIBE;
-
-int on_content_dir_http(
-                        http_client_t       *client,
-                        http_resource_t     *resource,
-                        http_callback_type_t cbtype,
-                        uint8_t            **data,
-                        size_t              *count
-                     )
+int content_directory_action(upnp_server_t *server, upnp_service_t *service, const char *action)
 {
-    upnp_server_t *server;
-    char *header;
-    char *value;
-    int result;
-
-    server = (upnp_server_t *)resource->priv;
-    if (! server)
-    {
-        return -1;
-    }
-
-    result = 0;
-
-    butil_log(5, "ContentDirectoryCB %d %s to %s\n", cbtype, http_method_name(client->method), client->path);
-
-    switch (cbtype)
-    {
-    case httpRequest:
-
-        if (client->method == s_method_SUBSCRIBE)
-        {
-            butil_log(4, "SUBSCRIBE %s\n", client->path);
-            return 0;
-        }
-        else
-        {
-            butil_log(1, "Can't do method \"%s\" on UPnP\n",
-                   http_method_name(client->method));
-            return -1;
-        }
-        break;
-
-    case httpRequestHeader:
-
-        header = (char*)*data;
-        value = header;
-        if (! header)
-        {
-            break;
-        }
-
-        while (*value != ' ' && *value != '\t' && *value)
-        {
-            value++;
-        }
-
-        while (*value == ' ' || *value == '\t')
-        {
-            value++;
-        }
-
-        if (! http_ncasecmp(*data, "st:"))
-        {
-            strncpy(server->search_header, value, sizeof(server->search_header));
-            break;
-        }
-        break;
-
-    case httpDownloadData:
-        http_log(4, "Download %s", *data);
-        break;
-
-    case httpDownloadDone:
-        break;
-
-    case httpUploadData:
-        *count = 0;
-        break;
-
-    case httpComplete:
-        break;
-
-    default:
-        return -1;
-    }
-    return result;
-}
-
-int on_connection_http(
-                        http_client_t       *client,
-                        http_resource_t     *resource,
-                        http_callback_type_t cbtype,
-                        uint8_t            **data,
-                        size_t              *count
-                     )
-{
-    return on_content_dir_http(client, resource, cbtype, data, count);
+    butil_log(3, "ContentDirectory Action: %s\n", action);
+    butil_log(3, server->soap.data);
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -214,15 +122,9 @@ int main(int argc, char **argv)
     {
         upnp_server_t server;
 
-        result = http_register_method("SUBSCRIBE", NULL, NULL, &s_method_SUBSCRIBE);
-        if (result)
-        {
-            UPNP_ERROR("can't register subscribe method");
-            return result;
-        }
-
         result = upnp_server_init(
                                     &server,
+                                    65536,
                                     port,
                                     uuid_device,
                                     "/device_description",
@@ -248,10 +150,11 @@ int main(int argc, char **argv)
         result = upnp_add_service(
                                     &server,
                                     server.root_device,
-                                    NULL, //on_content_directory,
+                                    content_directory_action,
                                     "ContentDirectory",
                                     1,
                                     "/content_scpd",
+                                    s_content_directory_scpd,
                                     "/content_control",
                                     "/content_event"
                                  );
@@ -259,29 +162,6 @@ int main(int argc, char **argv)
         if (result)
         {
             UPNP_ERROR("can't add content service");
-            return result;
-        }
-
-        // and the associated urls to the http server
-        //
-        result = upnp_add_text_url(&server, "/content_scpd", butil_mime_xml, s_content_directory_scpd);
-        if (result)
-        {
-            UPNP_ERROR("can't add content scpd url");
-            return result;
-        }
-
-        result = upnp_add_func_url(&server, "/conman_control", on_content_dir_http, &server);
-        if (result)
-        {
-            UPNP_ERROR("can't add content control url");
-            return result;
-        }
-
-        result = upnp_add_func_url(&server, "/content_event", on_content_dir_http, &server);
-        if (result)
-        {
-            UPNP_ERROR("can't add content event url");
             return result;
         }
 
@@ -294,6 +174,7 @@ int main(int argc, char **argv)
                                     "ConnectionManager",
                                     1,
                                     "/conman_scpd",
+                                    s_connection_manager_scpd,
                                     "/conman_control",
                                     "/conman_event"
                                  );
@@ -301,29 +182,6 @@ int main(int argc, char **argv)
         if (result)
         {
             UPNP_ERROR("can't add conman service");
-            return result;
-        }
-
-        // and the associated urls to the http server
-        //
-        result = upnp_add_text_url(&server, "/conman_scpd", butil_mime_xml, s_connection_manager_scpd);
-        if (result)
-        {
-            UPNP_ERROR("can't add conman scpd url");
-            return result;
-        }
-
-        result = upnp_add_func_url(&server, "/conman_control", on_connection_http, &server);
-        if (result)
-        {
-            UPNP_ERROR("can't add conman control url");
-            return result;
-        }
-
-        result = upnp_add_func_url(&server, "/conman_event", on_connection_http, &server);
-        if (result)
-        {
-            UPNP_ERROR("can't add conman event url");
             return result;
         }
 
@@ -850,17 +708,15 @@ static char s_content_directory_scpd[] =
 "</argument>\n"
 "</argumentList>\n"
 "</action>\n"
-"Declarations for other actions added by UPnP vendor\n"
-"(if any) go here\n"
 "</actionList>\n"
 "<serviceStateTable>\n"
 "<stateVariable sendEvents=\"no\">\n"
 "<name>SearchCapabilities</name>\n"
-"<dataType>string</dataType>\n"
+"<dataType>xstring</dataType>\n"
 "</stateVariable>\n"
 "<stateVariable sendEvents=\"no\">\n"
 "<name>SortCapabilities</name>\n"
-"<dataType>string</dataType>\n"
+"<dataType>ystring</dataType>\n"
 "</stateVariable>\n"
 "<stateVariable sendEvents=\"no\">\n"
 "<name>SortExtensionCapabilities</name>\n"
@@ -952,8 +808,6 @@ static char s_content_directory_scpd[] =
 "<name>A_ARG_TYPE_URI</name>\n"
 "<dataType>uri</dataType>\n"
 "</stateVariable>\n"
-"Declarations for other state variables added by\n"
-"UPnP vendor (if any) go here\n"
 "</serviceStateTable>\n"
 "</scpd>\n";
 

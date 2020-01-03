@@ -17,6 +17,8 @@
 
 static http_method_t s_method_MSEARCH;
 static http_method_t s_method_NOTIFY;
+http_method_t s_method_SUBSCRIBE;
+http_method_t s_method_UNSUBSCRIBE;
 
 time_t upnp_rate_fudge(time_t rate)
 {
@@ -963,6 +965,7 @@ int upnp_server_slice(upnp_server_t *server, int to_secs, int to_usecs)
 
 int upnp_server_init(
                         upnp_server_t   *server,
+                        const size_t     max_request,
                         const uint16_t   port,
                         const uuid_t     root_udn,
                         const char      *description_url,
@@ -989,6 +992,18 @@ int upnp_server_init(
     server->http_resources = NULL;
 
     server->root_device = NULL;
+
+    // allocate buffer for soap
+    //
+    server->soap.size = max_request;
+    if (server->soap.size < 1024)
+    {
+        server->soap.size = 1024;
+    }
+    server->soap.data = (char*)malloc(server->soap.size);
+    server->soap.head = 0;
+    server->soap.tail = 0;
+    server->soap.count = 0;
 
     // init reply queue pool
     //
@@ -1052,6 +1067,13 @@ int upnp_server_init(
         {
             UPNP_ERROR("can't register notify method");
             break;
+        }
+
+        result = http_register_method("SUBSCRIBE", NULL, NULL, &s_method_SUBSCRIBE);
+        if (result)
+        {
+            UPNP_ERROR("can't register subscribe method");
+            return result;
         }
 
         // and add any url going to the upnp server as handled here

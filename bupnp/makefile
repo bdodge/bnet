@@ -17,13 +17,13 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-SOURCES=$(SRCDIR)/bupnp.c $(SRCDIR)/bupnpservice.c
+SOURCES=$(SRCDIR)/bupnp.c $(SRCDIR)/bupnpservice.c $(SRCDIR)/bupnpsoap.c
 
 HEADERS=$(SOURCES:%.c=%.h)
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-LIBS= $(HTTPLIB) $(IOLIB) $(UTILLIB)
-LIBDIRS= $(HTTP_PATH) $(IO_PATH) $(UTIL_PATH)
+LIBS= $(HTTPLIB) $(XMLLIB) $(IOLIB) $(UTILLIB)
+LIBDIRS= $(HTTP_PATH) $(XML_PATH) $(IO_PATH) $(UTIL_PATH)
 LIBINCLS= $(LIBDIRS:%=-I%)
 CFLAGS += $(LIBINCLS)
 
@@ -51,4 +51,6 @@ $(OBJDIR)/bupnpmain.o: $(SRCDIR)/bupnpmain.c $(HEADERS)
 $(OBJDIR)/bupnp.o: $(SRCDIR)/bupnp.c $(HEADERS)
 
 $(OBJDIR)/bupnpservice.o: $(SRCDIR)/bupnpservice.c $(HEADERS)
+
+$(OBJDIR)/bupnpsoap.o: $(SRCDIR)/bupnpsoap.c $(HEADERS)
 

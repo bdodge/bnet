@@ -26,6 +26,7 @@
 #define UPNP_MAX_URL HTTP_MAX_URL
 
 #include "bupnpservice.h"
+#include "bupnpsoap.h"
 
 #define UPNP_ERROR BERROR
 
@@ -89,18 +90,26 @@ typedef struct upnp_server
     upnp_replyq_t       q_pool[UPNP_MAX_QUEUED_REPLIES];
     upnp_replyq_t      *q_free;
     upnp_replyq_t      *replyq;
+
     upnp_subscription_t *subscriptions;
 
     char                search_header[UPNP_MAX_URL];
     char                man_header[UPNP_MAX_URL];
     uint32_t            mx_header;
+
+    char                soap_header[UPNP_MAX_URL];
+    ioring_t            soap;
 }
 upnp_server_t;
+
+extern http_method_t s_method_SUBSCRIBE;
+extern http_method_t s_method_UNSUBSCRIBE;
 
 typedef int (*upnp_idle_callback_t)(void *priv);
 
 int             upnp_server_init(
                         upnp_server_t    *server,
+                        const size_t      max_request,
                         const uint16_t    port,
                         const uuid_t      root_udn,
                         const char       *description_url,
@@ -143,7 +152,8 @@ int             upnp_add_service(
                     upnp_callback_t     callback,
                     const char         *service_type,
                     const uint32_t      service_version,
-                    const char         *service_url,
+                    const char         *scpd_url,
+                    const char         *scpd_content,
                     const char         *control_url,
                     const char         *event_url
                 );

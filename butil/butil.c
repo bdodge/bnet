@@ -1135,7 +1135,7 @@ int butil_get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6a
                     gotv4 = true;
                     sain4 = (struct sockaddr_in *)addr->ifa_addr;
                     myipv4addr->addr = sain4->sin_addr.s_addr;
-                    butil_log(4, "IPv4 on iface %d  %s\n", if_nametoindex(addr->ifa_name), addr->ifa_name);
+                    //butil_log(4, "IPv4 on iface %d  %s\n", if_nametoindex(addr->ifa_name), addr->ifa_name);
                 }
                 else if (family == AF_INET6 && ! gotv6)
                 {
@@ -1143,7 +1143,7 @@ int butil_get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6a
                     sain6 = (struct sockaddr_in6 *)addr->ifa_addr;
                     memcpy(myipv6addr->addr, &sain6->sin6_addr, sizeof(bipv6addr_t));
                     *iface_index = if_nametoindex(addr->ifa_name);
-                    butil_log(4, "IPv6 on iface %d  %s\n", *iface_index, addr->ifa_name);
+                    //butil_log(4, "IPv6 on iface %d  %s\n", *iface_index, addr->ifa_name);
                 }
             }
         }

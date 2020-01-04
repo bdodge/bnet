@@ -62,7 +62,7 @@ static int upnp_add_var_to_service(upnp_service_t *service, const char *name, co
 	}
 
 	strcpy(var->name, name);
-
+	var->alloced = false;
 	var->type  = upnp_type_string_to_type(type);
 
 	var->next = service->state_vars;
@@ -80,6 +80,21 @@ upnp_var_t *upnp_state_var_from_name(upnp_service_t *service, const char *var_na
 		if (! strcmp(var->name, var_name))
 		{
 			return var;
+		}
+	}
+
+	return NULL;
+}
+
+upnp_arglist_t *upnp_arg_from_name(upnp_action_t *action, const char *arg_name)
+{
+	upnp_arglist_t *args;
+
+	for (args = action->args; args; args = args->next)
+	{
+		if (! strcmp(args->name, arg_name))
+		{
+			return args;
 		}
 	}
 
@@ -146,6 +161,7 @@ static int upnp_add_arg_to_action(
 
 	strcpy(arg->name, arg_name);
 
+	arg->var = var;
 	arg->inOUT = upnp_dir_is_out(direction);
 
 	arg->next = action->args;
@@ -372,6 +388,8 @@ int upnp_add_device(
 	{
 		return -1;
 	}
+	memset(device, 0, sizeof(upnp_device_t));
+
 	strncpy(device->desc_url, description_url, sizeof(device->desc_url));
 	strncpy(device->upnp_device_type, device_name, sizeof(device->upnp_device_type));
 	device->upnp_device_version = device_version;
@@ -379,6 +397,7 @@ int upnp_add_device(
 	device->adv_rate = advertising_rate;
 	device->next_adv = 0;
 	uuid_copy(device->udn, udn);
+	device->services = NULL;
 	device->next = NULL;
 
 	if (! server->root_device)

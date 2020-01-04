@@ -121,7 +121,7 @@ static int upnp_reply_st_usn(
     char location[UPNP_MAX_URL];
     bipv4addr_t myipv4addr;
     bipv6addr_t myipv6addr;
-    uint32_t iface_index;
+    int iface_index;
     int result;
 
     if (! server || ! server->upnp_http_server.clients)
@@ -283,7 +283,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
         }
         if (match_uuid || match_all)
         {
-            match == match_all || (! http_ncasecmp(server->search_header, uuid_string));
+            match = (match_all || (! http_ncasecmp(server->search_header, uuid_string)));
 
             if (match)
             {
@@ -473,19 +473,19 @@ int upnp_handle_url(
             value++;
         }
 
-        if (! http_ncasecmp(*data, "st:"))
+        if (! http_ncasecmp((char*)*data, "st:"))
         {
             strncpy(server->search_header, value, sizeof(server->search_header));
             break;
         }
 
-        if (! http_ncasecmp(*data, "man:"))
+        if (! http_ncasecmp((char*)*data, "man:"))
         {
             strncpy(server->man_header, value, sizeof(server->man_header));
             break;
         }
 
-        if (! http_ncasecmp(*data, "mx:"))
+        if (! http_ncasecmp((char*)*data, "mx:"))
         {
             server->mx_header = strtoul(value, NULL, 10);
             break;
@@ -582,7 +582,7 @@ static int upnp_notify(upnp_server_t *server)
     char location[UPNP_MAX_URL];
     bipv4addr_t myipv4addr;
     bipv6addr_t myipv6addr;
-    uint32_t iface_index;
+    int iface_index;
     int result;
 
     if (! server || ! server->upnp_http_server.clients)
@@ -851,7 +851,7 @@ int upnp_add_text_url(
                         path,
                         NULL,
                         type,
-                        value,
+                        (uint8_t*)value,
                         strlen(value)
                         );
     if (! result)
@@ -1000,7 +1000,7 @@ int upnp_server_init(
     {
         server->soap.size = 1024;
     }
-    server->soap.data = (char*)malloc(server->soap.size);
+    server->soap.data = (uint8_t *)malloc(server->soap.size);
     server->soap.head = 0;
     server->soap.tail = 0;
     server->soap.count = 0;

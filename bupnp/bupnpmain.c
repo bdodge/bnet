@@ -25,8 +25,46 @@ static char s_connection_manager_scpd[];
 
 int content_directory_action(upnp_server_t *server, upnp_service_t *service, const char *action)
 {
+    uint32_t objID;
+    int startIndex;
+    int requestedCount;
+    int result;
+
     butil_log(3, "ContentDirectory Action: %s\n", action);
-    butil_log(3, server->soap.data);
+    butil_log(3, (char*)server->soap.data);
+
+    if (! strcmp(action, "Browse"))
+    {
+        // parse input arguments
+        //
+        result = upnp_get_arg_value_as_int(service, action, "ObjectID", (int*)&objID);
+        if (result)
+        {
+            butil_log(2, "Missing ObjectID in Browse\n");
+            return -1;
+        }
+
+        result = upnp_get_arg_value_as_int(service, action, "StartingIndex", &startIndex);
+        if (result)
+        {
+            butil_log(2, "Missing StartingIndex in Browse\n");
+            return -1;
+        }
+
+        result = upnp_get_arg_value_as_int(service, action, "RequestedCount", &requestedCount);
+        if (result)
+        {
+            butil_log(4, "Missing RequestedCount in Browse\n");
+            requestedCount = 0xFFFFFFFF;
+            result = 0;
+        }
+
+        butil_log(3, "Browse ID:%08X start=%u count=%u\n", objID, startIndex, requestedCount);
+
+        // set output argument state vars
+        //
+       // upnp_set_arg_value_as_int(service, action, "
+    }
     return 0;
 }
 
@@ -712,11 +750,11 @@ static char s_content_directory_scpd[] =
 "<serviceStateTable>\n"
 "<stateVariable sendEvents=\"no\">\n"
 "<name>SearchCapabilities</name>\n"
-"<dataType>xstring</dataType>\n"
+"<dataType>string</dataType>\n"
 "</stateVariable>\n"
 "<stateVariable sendEvents=\"no\">\n"
 "<name>SortCapabilities</name>\n"
-"<dataType>ystring</dataType>\n"
+"<dataType>string</dataType>\n"
 "</stateVariable>\n"
 "<stateVariable sendEvents=\"no\">\n"
 "<name>SortExtensionCapabilities</name>\n"

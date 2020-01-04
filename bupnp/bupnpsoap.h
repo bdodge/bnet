@@ -16,6 +16,24 @@
 #ifndef BUPNPSOAP_H
 #define BUPNPSOAP_H 1
 
+int upnp_set_state_var(upnp_var_t *var, const char *value);
+
+int upnp_get_state_var_as_int(upnp_var_t *var, int *value);
+
+int upnp_get_arg_value(
+                        upnp_service_t *service,
+                        const char *action_name,
+                        const char *arg_name,
+                        upnp_var_t **pvar
+                        );
+
+int upnp_get_arg_value_as_int(
+                        upnp_service_t *service,
+                        const char *action_name,
+                        const char *arg_name,
+                        int *pval
+                        );
+
 int upnp_handle_control_url(
                         http_client_t       *client,
                         http_resource_t     *resource,

@@ -69,6 +69,15 @@ typedef struct upnp_var
 {
     char               *name;
     upnp_vartype_t      type;
+    bool                alloced;
+    union
+    {
+        char    *sval;
+        uint32_t uval;
+        int32_t  ival;
+        double   fval;
+    }
+                        val;
     struct upnp_var    *next;
 }
 upnp_var_t;
@@ -77,6 +86,7 @@ typedef struct upnp_arglist
 {
     char               *name;
     bool                inOUT;
+    bool                isset;
     upnp_var_t         *var;
     struct upnp_arglist *next;
 }
@@ -84,7 +94,7 @@ upnp_arglist_t;
 
 typedef struct upnp_action
 {
-    const char         *name;
+    char               *name;
     upnp_arglist_t     *args;
     struct upnp_action *next;
 }
@@ -139,7 +149,14 @@ typedef struct upnp_subscription
 }
 upnp_subscription_t;
 
+int upnp_get_arg_value_as_int(
+                        upnp_service_t *service,
+                        const char *action_name,
+                        const char *arg_name,
+                        int *pval
+                      );
 upnp_var_t *upnp_state_var_from_name(upnp_service_t *service, const char *var_name);
+upnp_arglist_t *upnp_arg_from_name(upnp_action_t *action, const char *arg_name);
 upnp_action_t *upnp_action_from_name(upnp_service_t *service, const char *action_name);
 
 #endif

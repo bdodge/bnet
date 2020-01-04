@@ -16,6 +16,210 @@
 #include "bupnp.h"
 #include "bxml.h"
 
+int upnp_set_state_var(upnp_var_t *var, const char *value)
+{
+	if (! var || ! value)
+	{
+		return -1;
+	}
+
+	if (var->alloced)
+	{
+		free(var->val.sval);
+		var->val.sval = NULL;
+		var->alloced = false;
+	}
+
+	switch (var->type)
+	{
+	default:
+	case upnp_dt_unknown:
+	case upnp_dt_function:
+		butil_log(2, "Unimplemented type\n");
+		break;
+	case upnp_dt_ui1:
+	case upnp_dt_ui2:
+	case upnp_dt_ui4:
+		var->val.uval = strtoul(value, NULL, 0);
+		break;
+	case upnp_dt_i1:
+	case upnp_dt_12:
+	case upnp_dt_i4:
+	case upnp_dt_int:
+		var->val.ival = strtol(value, NULL, 0);
+		break;
+	case upnp_dt_r4:
+	case upnp_dt_r8:
+	case upnp_dt_number:
+	case upnp_dt_fixed14:
+		butil_log(2, "Unimplemented type\n");
+		break;
+	case upnp_dt_float:
+		butil_log(2, "Unimplemented type\n");
+		break;
+	case upnp_dt_char:
+		var->val.ival = value[0];
+		break;
+	case upnp_dt_string:
+	case upnp_dt_uri:
+	case upnp_dt_uuid:
+	case upnp_dt_base64:
+	case upnp_dt_data:
+	case upnp_dt_datetime:
+	case upnp_dt_datetimetz:
+	case upnp_dt_time:
+	case upnp_dt_timetz:
+	case upnp_dt_hex:
+		var->val.sval = (char*)malloc(strlen(value) + 1);
+		if (! var->val.sval)
+		{
+			return -1;
+		}
+		var->alloced = true;
+		strcpy(var->val.sval, value);
+		break;
+	case upnp_dt_bool:
+		var->val.ival = 0;
+		if (! strcasecmp(value, "true"))
+		{
+			var->val.ival = 1;
+		}
+		if (! strcasecmp(value, "yes"))
+		{
+			var->val.ival = 1;
+		}
+		break;
+	}
+	return 0;
+}
+
+int upnp_get_state_var_as_int(upnp_var_t *var, int *value)
+{
+	if (! var || ! value)
+	{
+		return -1;
+	}
+
+	*value = 0;
+
+	switch (var->type)
+	{
+	default:
+	case upnp_dt_unknown:
+	case upnp_dt_function:
+		return -1;
+	case upnp_dt_ui1:
+	case upnp_dt_ui2:
+	case upnp_dt_ui4:
+		*value = (int)var->val.uval;
+		break;
+	case upnp_dt_i1:
+	case upnp_dt_12:
+	case upnp_dt_i4:
+	case upnp_dt_int:
+		*value = (int)var->val.ival;
+		break;
+	case upnp_dt_r4:
+	case upnp_dt_r8:
+	case upnp_dt_number:
+	case upnp_dt_fixed14:
+		butil_log(2, "Unimplemented type\n");
+		break;
+	case upnp_dt_float:
+		butil_log(2, "Unimplemented type\n");
+		break;
+	case upnp_dt_char:
+		*value = (int)(char)var->val.ival;
+		break;
+	case upnp_dt_string:
+	case upnp_dt_uri:
+	case upnp_dt_uuid:
+	case upnp_dt_base64:
+	case upnp_dt_data:
+	case upnp_dt_datetime:
+	case upnp_dt_datetimetz:
+	case upnp_dt_time:
+	case upnp_dt_timetz:
+	case upnp_dt_hex:
+		// if sval is ONLY numbers, no problem
+		if (! var->val.sval)
+		{
+			return -1;
+		}
+		*value = (int)strtoul(var->val.sval, NULL, 0);
+		break;
+	case upnp_dt_bool:
+		*value = var->val.ival != 0;
+		break;
+	}
+	return 0;
+}
+
+int upnp_get_arg_value(
+						upnp_service_t *service,
+						const char *action_name,
+						const char *arg_name,
+						upnp_var_t **pvar
+					  )
+{
+	upnp_action_t *action;
+	upnp_arglist_t *arg;
+
+	if (! service || ! action_name || ! arg_name || ! pvar)
+	{
+		return -1;
+	}
+	*pvar = NULL;
+
+	action = upnp_action_from_name(service, action_name);
+	if (! action)
+	{
+		return -1;
+	}
+
+	arg = upnp_arg_from_name(action, arg_name);
+	if (! arg)
+	{
+		return -1;
+	}
+
+	if (! arg->isset)
+	{
+		butil_log(4, "Argument %s not set in call %s\n",
+					arg_name, action_name);
+		return -1;
+	}
+
+	*pvar = arg->var;
+	return 0;
+}
+
+int upnp_get_arg_value_as_int(
+						upnp_service_t *service,
+						const char *action_name,
+						const char *arg_name,
+						int *pval
+					  )
+{
+	upnp_var_t *var;
+	int result;
+
+	if (! pval)
+	{
+		return -1;
+	}
+	*pval = 0;
+
+	result = upnp_get_arg_value(service, action_name, arg_name, &var);
+	if (result)
+	{
+		return result;
+	}
+
+	result = upnp_get_state_var_as_int(var, pval);
+	return result;
+}
+
 int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const char *action_name)
 {
 	bxml_parser_t body_parser;
@@ -32,7 +236,7 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
 	}
 	butil_log(5, "Action %s on service %s\n", action_name, service->usn);
 
-	pxpb = bxml_parser_create(&body_parser, server->soap.data);
+	pxpb = bxml_parser_create(&body_parser, (char*)server->soap.data);
 	if (! pxpb)
 	{
 		butil_log(1, "Can't make soap xml parser\n");
@@ -83,6 +287,8 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
 						continue;
 					}
 
+					arg->isset = false;
+
 					// for each action argument, extract arg from action element
 					//
 					result = bxml_find_and_copy_element(
@@ -98,10 +304,17 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
 					if (! result)
 					{
 						butil_log(3, "Arg %s value=%s=\n", arg->name, argval);
+
+						arg->isset = true;
+
+						if (arg->var)
+						{
+							result = upnp_set_state_var(arg->var, argval);
+						}
 					}
 					else
 					{
-						butil_log(2, "No argument %s in action %s\n", arg->name, action_name);
+						butil_log(2, "Argument %s missing in action %s\n", arg->name, action_name);
 					}
 				}
 			}
@@ -188,7 +401,7 @@ int upnp_handle_control_url(
             value++;
         }
 
-        if (! http_ncasecmp(*data, "soapaction:"))
+        if (! http_ncasecmp(header, "soapaction:"))
         {
             // save action header,
 			strncpy(server->soap_header, value, sizeof(server->soap_header));
@@ -377,7 +590,7 @@ int upnp_handle_event_url(
             value++;
         }
 
-        if (! http_ncasecmp(*data, "soapaction:"))
+        if (! http_ncasecmp(header, "soapaction:"))
         {
             // decode SOAP header
             break;

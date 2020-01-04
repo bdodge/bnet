@@ -111,6 +111,33 @@ int bxml_decode_entity(const char *entity, size_t inlen, size_t *outlen, uint16_
 	return bxml_not_found;
 }
 
+int bxml_format_header(
+				char *buf,
+				size_t nbuf,
+				size_t *nout,
+				const char *version,
+				const char *encoding
+				)
+{
+	int nfmt;
+
+	if (! buf || ! nbuf || ! nout)
+	{
+		return -1;
+	}
+
+	nfmt = snprintf(buf, nbuf, "<?xml version=\"%s\" encoding=\"%s\"?>",
+			version ? version : "1.0", encoding ? encoding : "utf-8");
+	*nout = nfmt;
+
+	if (nfmt < nbuf && nfmt > 0)
+	{
+		return -1;
+	}
+
+	return 0;
+}
+
 int bxml_format_element(
 				char *buf,
 				size_t nbuf,
@@ -132,13 +159,24 @@ int bxml_format_element(
 		return -1;
 	}
 	nmade = 0;
-	nfmt = snprintf(buf, nbuf, "%s<%s",
-		start ? "<?xml version='1.0'?>" : "",
-		tag);
+	if (start)
+	{
+		nfmt = bxml_format_header(buf, nbuf, &nmade, NULL, NULL);
+		if (nfmt < 0)
+		{
+			return nfmt;
+		}
+		nbuf -= nmade;
+		buf += nmade;
+	}
+
+	nfmt = snprintf(buf, nbuf, "<%s", tag);
+
 	if (nfmt < 0 || nfmt >= nbuf)
 	{
 		return -1;
 	}
+
 	nmade += nfmt;
 	nbuf -= nfmt;
 	buf += nfmt;
@@ -207,4 +245,3 @@ int bxml_format_endtag(
 
 	return 0;
 }
-

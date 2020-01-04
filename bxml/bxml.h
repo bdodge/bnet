@@ -52,6 +52,30 @@ typedef struct
 }
 bxml_parser_t;
 
+/// Format an xml header
+///
+/// @param buf      [out] result of formatting
+/// @param nbuf     [in] size of buf, in bytes
+/// @param nout     [out] bytes written to buf
+/// @param version  [in] version string to use, if NULL, assume "1.0"
+/// @param encoding [in] encoding to use, if NULL, assume utf8
+///
+/// Examples:
+///   bxml_format_header(buf, sizeof(buf), &outcount, NULL, NULL);
+///       creates in buf "<?xml version="1.0" encoding="utf-8"?>"
+///   bxml_format_header(buf, sizeof(buf), &outcount, "hi", "bye");
+///       creates in buf "<?xml version="hi" encoding="byte"?>"
+///
+/// @returns non-0 on error (like buffer overflow would happen)
+///
+int bxml_format_header(
+                char *buf,
+                size_t nbuf,
+                size_t *nout,
+                const char *version,
+                const char *encoding
+                );
+
 /// Format an element from tag and optional value and attributes
 ///
 /// @param buf      [out] result of formatting
@@ -95,7 +119,7 @@ int bxml_format_element(
 /// @param tag [in] the tag that started the element
 ///
 /// Examples:
-///   bxml_format_element(buf, sizeof(buf), &outcount, "hi");
+///   bxml_format_endtag(buf, sizeof(buf), &outcount, "hi");
 ///       creates in buf "</hi>"
 ///
 /// @returns non-0 on error

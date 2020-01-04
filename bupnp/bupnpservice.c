@@ -151,6 +151,9 @@ static int upnp_add_arg_to_action(
 	arg->var = var;
 	arg->inOUT = upnp_dir_is_out(direction);
 	arg->isset = false;
+	arg->istype = !strncmp(arg_name, "A_ARG_TYPE_", 11);
+	// inherit type from related statevar
+    arg->val.type = var->val.type;
 	arg->val.alloclen = 0;
 	arg->val.value.uval = 0;
 	arg->next = action->args;

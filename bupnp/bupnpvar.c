@@ -42,9 +42,9 @@ upnp_vartype_t upnp_type_string_to_type(const char *typestr)
 	{
 		return upnp_dt_i1;
 	}
-    if (! strcmp(typestr, "12"))
+    if (! strcmp(typestr, "i2"))
 	{
-		return upnp_dt_12;
+		return upnp_dt_i2;
 	}
     if (! strcmp(typestr, "i4"))
 	{
@@ -126,21 +126,56 @@ upnp_vartype_t upnp_type_string_to_type(const char *typestr)
 	return upnp_dt_int;
 }
 
-int upnp_set_state_var(upnp_var_t *var, const char *value)
+bool upnp_type_is_string_type(const upnp_vartype_t type)
 {
-	if (! var || ! value)
+	switch (type)
+	{
+	case upnp_dt_unknown:
+	case upnp_dt_function:
+	case upnp_dt_ui1:
+	case upnp_dt_ui2:
+	case upnp_dt_ui4:
+	case upnp_dt_i1:
+	case upnp_dt_i2:
+	case upnp_dt_i4:
+	case upnp_dt_int:
+	case upnp_dt_r4:
+	case upnp_dt_r8:
+	case upnp_dt_number:
+	case upnp_dt_fixed14:
+	case upnp_dt_float:
+	case upnp_dt_char:
+	case upnp_dt_bool:
+		return false;
+	case upnp_dt_string:
+	case upnp_dt_uri:
+	case upnp_dt_uuid:
+	case upnp_dt_base64:
+	case upnp_dt_data:
+	case upnp_dt_datetime:
+	case upnp_dt_datetimetz:
+	case upnp_dt_time:
+	case upnp_dt_timetz:
+	case upnp_dt_hex:
+		return true;
+	}
+	return true;
+}
+
+int upnp_set_val_value_from_string(upnp_val_t *val, const char *value)
+{
+	if (! val || ! value)
 	{
 		return -1;
 	}
-
-	if (var->val.alloclen > 0)
+	if (val->alloclen > 0)
 	{
-		free(var->val.value.sval);
-		var->val.value.sval = NULL;
-		var->val.alloclen = 0;
+		free(val->value.sval);
+		val->value.sval = NULL;
+		val->alloclen = 0;
 	}
 
-	switch (var->val.type)
+	switch (val->type)
 	{
 	default:
 	case upnp_dt_unknown:
@@ -150,13 +185,13 @@ int upnp_set_state_var(upnp_var_t *var, const char *value)
 	case upnp_dt_ui1:
 	case upnp_dt_ui2:
 	case upnp_dt_ui4:
-		var->val.value.uval = strtoul(value, NULL, 0);
+		val->value.uval = strtoul(value, NULL, 0);
 		break;
 	case upnp_dt_i1:
-	case upnp_dt_12:
+	case upnp_dt_i2:
 	case upnp_dt_i4:
 	case upnp_dt_int:
-		var->val.value.ival = strtol(value, NULL, 0);
+		val->value.ival = strtol(value, NULL, 0);
 		break;
 	case upnp_dt_r4:
 	case upnp_dt_r8:
@@ -168,7 +203,7 @@ int upnp_set_state_var(upnp_var_t *var, const char *value)
 		butil_log(2, "Unimplemented type\n");
 		break;
 	case upnp_dt_char:
-		var->val.value.ival = value[0];
+		val->value.ival = value[0];
 		break;
 	case upnp_dt_string:
 	case upnp_dt_uri:
@@ -180,40 +215,107 @@ int upnp_set_state_var(upnp_var_t *var, const char *value)
 	case upnp_dt_time:
 	case upnp_dt_timetz:
 	case upnp_dt_hex:
-		var->val.alloclen = strlen(value) + 1;
-		var->val.value.sval = (char*)malloc(var->val.alloclen);
-		if (! var->val.value.sval)
+		val->alloclen = strlen(value) + 1;
+		val->value.sval = (char*)malloc(val->alloclen);
+		if (! val->value.sval)
 		{
-			var->val.alloclen = 0;
+			val->alloclen = 0;
 			return -1;
 		}
-		strcpy(var->val.value.sval, value);
+		strcpy(val->value.sval, value);
 		break;
 	case upnp_dt_bool:
-		var->val.value.ival = 0;
+		val->value.ival = 0;
 		if (! strcasecmp(value, "true"))
 		{
-			var->val.value.ival = 1;
+			val->value.ival = 1;
 		}
 		if (! strcasecmp(value, "yes"))
 		{
-			var->val.value.ival = 1;
+			val->value.ival = 1;
 		}
 		break;
 	}
 	return 0;
 }
 
-int upnp_get_state_var_as_int(upnp_var_t *var, int *value)
+int upnp_set_val_value_from_uint(upnp_val_t *val, const uint32_t value)
+{
+	char buf[32];
+
+	if (! val)
+	{
+		return -1;
+	}
+
+	if (upnp_type_is_string_type(val->type))
+	{
+		snprintf(buf, sizeof(buf), "%u", value);
+		return upnp_set_val_value_from_string(val, buf);
+	}
+	else
+	{
+		val->value.uval = value;
+	}
+	return 0;
+}
+
+int upnp_set_val_value_from_int(upnp_val_t *val, const int value)
+{
+	char buf[32];
+
+	if (! val)
+	{
+		return -1;
+	}
+
+	if (upnp_type_is_string_type(val->type))
+	{
+		snprintf(buf, sizeof(buf), "%d", value);
+		return upnp_set_val_value_from_string(val, buf);
+	}
+	else
+	{
+		val->value.ival = value;
+	}
+	return 0;
+}
+
+int upnp_set_var_value_from_uint(upnp_var_t *var, const uint32_t value)
+{
+	if (! var)
+	{
+		return -1;
+	}
+
+	return upnp_set_val_value_from_uint(&var->val, value);
+}
+
+int upnp_set_var_value_from_int(upnp_var_t *var, const int value)
+{
+	if (! var)
+	{
+		return -1;
+	}
+
+	return upnp_set_val_value_from_int(&var->val, value);
+}
+
+int upnp_set_var_value_from_string(upnp_var_t *var, const char *value)
 {
 	if (! var || ! value)
 	{
 		return -1;
 	}
 
+	return upnp_set_val_value_from_string(&var->val, value);
+}
+
+int upnp_get_val_value_as_uint(upnp_val_t *val, uint32_t *value)
+{
 	*value = 0;
 
-	switch (var->val.type)
+	switch (val->type)
 	{
 	default:
 	case upnp_dt_unknown:
@@ -222,13 +324,13 @@ int upnp_get_state_var_as_int(upnp_var_t *var, int *value)
 	case upnp_dt_ui1:
 	case upnp_dt_ui2:
 	case upnp_dt_ui4:
-		*value = (int)var->val.value.uval;
+		*value = val->value.uval;
 		break;
 	case upnp_dt_i1:
-	case upnp_dt_12:
+	case upnp_dt_i2:
 	case upnp_dt_i4:
 	case upnp_dt_int:
-		*value = (int)var->val.value.ival;
+		*value = (uint32_t)val->value.ival;
 		break;
 	case upnp_dt_r4:
 	case upnp_dt_r8:
@@ -240,7 +342,7 @@ int upnp_get_state_var_as_int(upnp_var_t *var, int *value)
 		butil_log(2, "Unimplemented type\n");
 		break;
 	case upnp_dt_char:
-		*value = (int)(char)var->val.value.ival;
+		*value = (uint32_t)(char)val->value.ival;
 		break;
 	case upnp_dt_string:
 	case upnp_dt_uri:
@@ -253,16 +355,175 @@ int upnp_get_state_var_as_int(upnp_var_t *var, int *value)
 	case upnp_dt_timetz:
 	case upnp_dt_hex:
 		// if sval is ONLY numbers, no problem
-		if (! var->val.value.sval)
+		if (! val->value.sval)
 		{
 			return -1;
 		}
-		*value = (int)strtoul(var->val.value.sval, NULL, 0);
+		*value = (uint32_t)strtoul(val->value.sval, NULL, 0);
 		break;
 	case upnp_dt_bool:
-		*value = var->val.value.ival != 0;
+		*value = val->value.ival != 0;
 		break;
 	}
 	return 0;
+}
+
+int upnp_get_val_value_as_int(upnp_val_t *val, int *value)
+{
+	*value = 0;
+
+	switch (val->type)
+	{
+	default:
+	case upnp_dt_unknown:
+	case upnp_dt_function:
+		return -1;
+	case upnp_dt_ui1:
+	case upnp_dt_ui2:
+	case upnp_dt_ui4:
+		*value = (int)val->value.uval;
+		break;
+	case upnp_dt_i1:
+	case upnp_dt_i2:
+	case upnp_dt_i4:
+	case upnp_dt_int:
+		*value = val->value.ival;
+		break;
+	case upnp_dt_r4:
+	case upnp_dt_r8:
+	case upnp_dt_number:
+	case upnp_dt_fixed14:
+		butil_log(2, "Unimplemented type\n");
+		break;
+	case upnp_dt_float:
+		butil_log(2, "Unimplemented type\n");
+		break;
+	case upnp_dt_char:
+		*value = (uint32_t)(char)val->value.ival;
+		break;
+	case upnp_dt_string:
+	case upnp_dt_uri:
+	case upnp_dt_uuid:
+	case upnp_dt_base64:
+	case upnp_dt_data:
+	case upnp_dt_datetime:
+	case upnp_dt_datetimetz:
+	case upnp_dt_time:
+	case upnp_dt_timetz:
+	case upnp_dt_hex:
+		// if sval is ONLY numbers, no problem
+		if (! val->value.sval)
+		{
+			return -1;
+		}
+		*value = strtol(val->value.sval, NULL, 0);
+		break;
+	case upnp_dt_bool:
+		*value = val->value.ival != 0;
+		break;
+	}
+	return 0;
+}
+
+int upnp_get_var_value_as_uint(upnp_var_t *var, uint32_t *value)
+{
+	if (! var || ! value)
+	{
+		return -1;
+	}
+
+	return upnp_get_val_value_as_uint(&var->val, value);
+}
+
+int upnp_get_var_value_as_int(upnp_var_t *var, int *value)
+{
+	if (! var || ! value)
+	{
+		return -1;
+	}
+
+	return upnp_get_val_value_as_int(&var->val, value);
+}
+
+
+int upnp_get_val_value_as_string(upnp_val_t *val, char *buf, size_t nbuf, const char **value, size_t *slen)
+{
+	if (! val || ! value || ! slen)
+	{
+		return -1;
+	}
+
+	if (upnp_type_is_string_type(val->type) && value)
+	{
+		*value = val->value.sval;
+
+		if (slen)
+		{
+			*slen = val->slen;
+		}
+	}
+	else
+	{
+		int nfmt;
+
+		switch (val->type)
+		{
+		default:
+		case upnp_dt_unknown:
+		case upnp_dt_function:
+			snprintf(buf, nbuf, "???");
+			break;
+		case upnp_dt_ui1:
+			snprintf(buf, nbuf, "%u", (uint8_t)val->value.uval);
+			break;
+		case upnp_dt_ui2:
+			snprintf(buf, nbuf, "%u", (uint16_t)val->value.uval);
+			break;
+		case upnp_dt_ui4:
+			snprintf(buf, nbuf, "%u", (uint32_t)val->value.uval);
+			break;
+		case upnp_dt_i1:
+			snprintf(buf, nbuf, "%d", (uint8_t)val->value.ival);
+			break;
+		case upnp_dt_i2:
+			snprintf(buf, nbuf, "%d", (uint16_t)val->value.ival);
+			break;
+		case upnp_dt_i4:
+		case upnp_dt_int:
+			snprintf(buf, nbuf, "%d", (uint32_t)val->value.ival);
+			break;
+		case upnp_dt_r4:
+		case upnp_dt_r8:
+		case upnp_dt_number:
+		case upnp_dt_fixed14:
+			butil_log(2, "Unimplemented type\n");
+			break;
+		case upnp_dt_float:
+			snprintf(buf, nbuf, "%f", val->value.fval);
+			break;
+		case upnp_dt_char:
+			snprintf(buf, nbuf, "%c", (char)val->value.uval);
+			break;
+		case upnp_dt_bool:
+			snprintf(buf, nbuf, "%s", (val->value.uval != 0) ? "TRUE" : "FALSE");
+			break;
+		}
+
+		if (value)
+		{
+			*value = buf;
+		}
+
+		if (slen)
+		{
+			*slen = strlen(buf);
+		}
+	}
+	return 0;
+}
+
+int upnp_get_var_value_as_string(upnp_var_t *var, char *buf, size_t nbuf, const char **value, size_t *slen)
+{
+	return upnp_get_val_value_as_string(&var->val, buf, nbuf, value, slen);
 }
 

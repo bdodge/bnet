@@ -61,9 +61,10 @@ int content_directory_action(upnp_server_t *server, upnp_service_t *service, con
 
         butil_log(3, "Browse ID:%08X start=%u count=%u\n", objID, startIndex, requestedCount);
 
-        // set output argument state vars
+        // set output arguments
         //
-       // upnp_set_arg_value_as_int(service, action, "
+        upnp_set_arg_value_from_int(service, action, "NumberReturned", 0);
+        upnp_set_arg_value_from_int(service, action, "TotalMatches", 0);
     }
     return 0;
 }

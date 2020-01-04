@@ -20,7 +20,7 @@ int upnp_get_arg_value(
                         upnp_service_t *service,
                         const char *action_name,
                         const char *arg_name,
-                        upnp_var_t **pvar
+                        upnp_val_t **pval
                         );
 
 int upnp_get_arg_value_as_int(
@@ -28,6 +28,20 @@ int upnp_get_arg_value_as_int(
                         const char *action_name,
                         const char *arg_name,
                         int *pval
+                        );
+
+int upnp_get_arg_value_from_int(
+                        upnp_service_t *service,
+                        const char *action_name,
+                        const char *arg_name,
+                        int *pval
+                        );
+
+int upnp_set_arg_value_from_int(
+                        upnp_service_t *service,
+                        const char *action_name,
+                        const char *arg_name,
+                        int ival
                         );
 
 int upnp_handle_control_url(

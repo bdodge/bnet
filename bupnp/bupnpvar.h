@@ -24,7 +24,7 @@ typedef enum
     upnp_dt_ui2,
     upnp_dt_ui4,
     upnp_dt_i1,
-    upnp_dt_12,
+    upnp_dt_i2,
     upnp_dt_i4,
     upnp_dt_int,
     upnp_dt_r4,
@@ -51,6 +51,7 @@ typedef struct upnp_val
 {
     upnp_vartype_t  type;
     bool            alloclen;
+    size_t          slen;
     union
     {
         char    *sval;
@@ -71,9 +72,22 @@ typedef struct upnp_var
 upnp_var_t;
 
 upnp_vartype_t upnp_type_string_to_type(const char *typestr);
-int upnp_set_state_var(upnp_var_t *var, const char *value);
-int upnp_get_state_var_as_int(upnp_var_t *var, int *value);
-int upnp_set_state_var(upnp_var_t *var, const char *value);
+bool upnp_type_is_string_type(const upnp_vartype_t type);
+
+int upnp_set_val_value_from_uint(upnp_val_t *val, const uint32_t value);
+int upnp_set_val_value_from_int(upnp_val_t *val, const int value);
+int upnp_set_var_value_from_uint(upnp_var_t *var, const uint32_t value);
+int upnp_set_var_value_from_int(upnp_var_t *var, const int value);
+int upnp_set_val_value_from_string(upnp_val_t *val, const char *value);
+int upnp_set_var_value_from_string(upnp_var_t *var, const char *value);
+
+int upnp_get_val_valus_as_uint(upnp_val_t *val, uint32_t *value);
+int upnp_get_val_value_as_int(upnp_val_t *val, int *value);
+int upnp_get_var_valus_as_uint(upnp_var_t *var, uint32_t *value);
+int upnp_get_var_value_as_int(upnp_var_t *var, int *value);
+int upnp_get_val_value_as_string(upnp_val_t *val, char *buf, size_t nbuf, const char **value, size_t *slen);
+int upnp_get_var_value_as_string(upnp_var_t *var, char *buf, size_t nbuf, const char **value, size_t *slen);
 
 
 #endif
+

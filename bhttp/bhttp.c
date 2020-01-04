@@ -3319,11 +3319,18 @@ int http_server_slice(http_server_t *server, int to_secs, int to_usecs)
     //
     if (server->connections < server->max_connections)
     {
-        result = http_pending_client_connection(server->socket, to_secs, to_usecs);
-        if (result < 0)
+        if (server->socket != INVALID_SOCKET)
         {
-            HTTP_ERROR("server socket broken");
-            return result;
+            result = http_pending_client_connection(server->socket, to_secs, to_usecs);
+            if (result < 0)
+            {
+                HTTP_ERROR("server socket broken");
+                return result;
+            }
+        }
+        else
+        {
+            result = 0;
         }
         if (result > 0)
         {

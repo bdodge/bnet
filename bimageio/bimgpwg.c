@@ -62,6 +62,7 @@ typedef struct tag_pwg_context
     int                 color_repeat;
     int                 out_depth;
     int                 out_components;
+    bool                at_eof;
     uint8_t             iobuf[PWG_IO_SIZE];
     ioring_t            io;
     uint8_t            *line;
@@ -804,8 +805,58 @@ int pwg_decode_3x8(pwg_context_t *pwg, uint8_t *data, int *ndata, bool *done)
     return 0;
 }
 
-int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
+static int pwg_process_input(pwg_context_t *pwg, iostream_t *stream)
 {
+    int room;
+    int nread;
+    int result;
+
+    room = pwg->io.size - pwg->io.count;
+    if (room > (pwg->io.size / 2))
+    {
+        result = stream->poll(stream, readable, 0, 50000);
+        if (result < 0)
+        {
+            return result;
+        }
+        if (result > 0)
+        {
+            iostream_normalize_ring(&pwg->io, NULL);
+            room = pwg->io.size - pwg->io.head;
+
+            nread = stream->read(stream, pwg->io.data + pwg->io.head, room);
+            if (nread < 0)
+            {
+                butil_log(1, "Can't read file\n");
+                result = -1;
+                return result;
+            }
+            if (nread == 0)
+            {
+                pwg->at_eof = true;
+                result = 0;
+                if (pwg->io.count == 0)
+                {
+                    butil_log(1, "End of file\n");
+                    return 0;
+                }
+            }
+            pwg->io.count += nread;
+            pwg->io.head += nread;
+            if (pwg->io.head >= pwg->io.size)
+            {
+                pwg->io.head = 0;
+            }
+        }
+    }
+    return 0;
+}
+
+int pwg_slice(pwg_context_t *pwg, iostream_t *stream)
+{
+    uint8_t *data;
+    int ndata;
+    int ntook;
     int chunk;
     bool done;
     int result;
@@ -814,26 +865,40 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
     {
         return -1;
     }
+    ntook = 0;
+    ndata = pwg->io.count;
+    data  = pwg->io.data + pwg->io.tail;
+
+    if (pwg->io.count < pwg->bytes_left && pwg->at_eof)
+    {
+        butil_log(0, "EOF before end of page\n");
+        return -1;
+    }
+    if (pwg->io.count < pwg->bytes_left)
+    {
+        result = pwg_process_input(pwg, stream);
+        if (result)
+        {
+            return result;
+        }
+    }
     switch (pwg->state)
     {
     case pwgSync:
-        if (*ndata < 4)
+        if (strncmp((char*)data, PWG_SYNC_STRING, 4))
         {
-            return 0;
-            *ndata = 0;
+            // ignore bytes until sync word
+            ntook = 1;
+            break;
         }
-        if (strcmp((char*)data, PWG_SYNC_STRING))
-        {
-            *ndata = 1;
-        }
-        *ndata = 4;
+        ntook = 4;
         pwg->pageno = 0;
         pwg->state = pwgHeader;
         pwg->bytes_left = sizeof(pwg_header_t);
         pwg->bytes_gotten = 0;
         break;
     case pwgHeader:
-        chunk = *ndata;
+        chunk = ndata;
         if (chunk > pwg->bytes_left)
         {
             chunk = pwg->bytes_left;
@@ -841,7 +906,7 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
         memcpy((char*)&pwg->hdr + pwg->bytes_gotten, data, chunk);
         pwg->bytes_left -= chunk;
         pwg->bytes_gotten += chunk;
-        *ndata = chunk;
+        ntook = chunk;
         if (pwg->bytes_left == 0)
         {
             // byte swap all the uint32s in hdr
@@ -926,18 +991,18 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
         pwg->state = pwgLine;
         pwg->bytes_left = 1;
         pwg->bytes_gotten = 0;
-        *ndata = 0;
         break;
     case pwgLine:
         butil_log(8, "state %u l=%u.%u p=%u %u\n",
                 pwg->line_state, pwg->lineno, pwg->line_repeat,
                 pwg->pixelno, pwg->color_repeat);
 
-        result = pwg->decoder(pwg, data, ndata, &done);
+        result = pwg->decoder(pwg, data, &ndata, &done);
         if (result)
         {
             return result;
         }
+        ntook = ndata;
         if (! done)
         {
             break;
@@ -961,101 +1026,16 @@ int pwg_slice(pwg_context_t *pwg, uint8_t *data, int *ndata)
         pwg->bytes_gotten = 0;
         break;
     }
-    return 0;
-}
-
-static int pwg_process_input(iostream_t *stream, pwg_context_t *pwg)
-{
-    pwg_state_t prevstate;
-    pwg_line_state_t prevlinestate;
-    int room;
-    int nread;
-    int navail;
-    int ntook;
-    int result;
-
-    room = pwg->io.size - pwg->io.count;
-    if (room > (pwg->io.size / 2))
+    if (ntook > 0)
     {
-        result = stream->poll(stream, readable, 0, 50000);
-        if (result < 0)
-        {
-            return result;
-        }
-        if (result > 0)
-        {
-            iostream_normalize_ring(&pwg->io, NULL);
-            room = pwg->io.size - pwg->io.head;
-
-            nread = stream->read(stream, pwg->io.data + pwg->io.head, room);
-            if (nread < 0)
-            {
-                butil_log(1, "Can't read file\n");
-                result = -1;
-                return result;
-            }
-            if (nread == 0)
-            {
-                result = 0;
-                if (pwg->io.count == 0)
-                {
-                    butil_log(1, "End of file\n");
-                    return 0;
-                }
-            }
-            pwg->io.count += nread;
-            pwg->io.head += nread;
-            if (pwg->io.head >= pwg->io.size)
-            {
-                pwg->io.head = 0;
-            }
-        }
-    }
-    while (pwg->io.count > 0)
-    {
-        if (pwg->io.head > pwg->io.tail)
-        {
-            navail = pwg->io.head - pwg->io.tail;
-        }
-        else
-        {
-            navail = pwg->io.size - pwg->io.tail;
-        }
-        prevstate = pwg->state;
-        prevlinestate = pwg->line_state;
-
-        result = pwg_slice(pwg, pwg->io.data + pwg->io.tail, &navail);
-        if (result)
-        {
-            return result;
-        }
-        ntook = navail;
-
-        //butil_log(5, "slice took %zu of %zu\n", navail, nread - ntook);
-
-        if (ntook == 0)
-        {
-            return 0;
-        }
         pwg->io.count -= ntook;
         pwg->io.tail += ntook;
         if (pwg->io.tail >= pwg->io.size)
         {
             pwg->io.tail = 0;
         }
-        if (pwg->state != prevstate)
-        {
-            // exit loop on each state change or end of each line
-            // to allow upper levels to note progress
-            //
-            return 0;
-        }
-        if (pwg->line_state == pwgLineDone)
-        {
-            return 0;
-        }
     }
-    return result;
+    return 0;
 }
 
 static int pwg_read_header(iostream_t *stream, pwg_context_t *pwg)
@@ -1068,7 +1048,7 @@ static int pwg_read_header(iostream_t *stream, pwg_context_t *pwg)
     }
     while (pwg->state != pwgPage)
     {
-        result = pwg_process_input(stream, pwg);
+        result = pwg_slice(pwg, stream);
         if (result)
         {
             butil_log(1, "PWG processing failed\n");
@@ -1099,7 +1079,7 @@ static int pwg_read_line(iostream_t *stream, pwg_context_t *pwg, uint8_t *line)
     }
     do
     {
-        result = pwg_process_input(stream, pwg);
+        result = pwg_slice(pwg, stream);
         if (result)
         {
             butil_log(1, "PWG processing failed\n");
@@ -1112,7 +1092,6 @@ static int pwg_read_line(iostream_t *stream, pwg_context_t *pwg, uint8_t *line)
         }
     }
     while (pwg->line_state != pwgLineDone);
-
     return 0;
 }
 
@@ -1125,6 +1104,8 @@ int pwg_init_context(pwg_context_t *pwg)
     memset(pwg, 0, sizeof(pwg_context_t));
     pwg->io.data = pwg->iobuf;
     pwg->io.size = sizeof(pwg->iobuf);
+    pwg->bytes_left = 4;
+    pwg->state = pwgSync;
     return 0;
 }
 

@@ -22,7 +22,7 @@
 #define PWG_IO_SIZE 1024
 
 #define PWG_SYNC_WORD (0x52615332)
-#define PWG_SYNC_STRING "Ras2"
+#define PWG_SYNC_STRING "RaS2"
 
 typedef struct tag_pwg_header
 {

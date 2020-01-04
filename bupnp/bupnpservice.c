@@ -16,20 +16,6 @@
 #include "bupnp.h"
 #include "bxml.h"
 
-static upnp_vartype_t upnp_type_string_to_type(const char *typestr)
-{
-	if (! strcmp(typestr, "string"))
-	{
-		return upnp_dt_string;
-	}
-	if (! strcmp(typestr, "int"))
-	{
-		return upnp_dt_int;
-	}
-	butil_log(2, "Unhandled type %s\n", typestr);
-	return upnp_dt_int;
-}
-
 static bool upnp_dir_is_out(const char *direction)
 {
 	if (! strcmp(direction, "out"))
@@ -62,8 +48,9 @@ static int upnp_add_var_to_service(upnp_service_t *service, const char *name, co
 	}
 
 	strcpy(var->name, name);
-	var->alloced = false;
-	var->type  = upnp_type_string_to_type(type);
+	var->val.alloclen = 0;
+	var->val.value.uval = 0;
+	var->val.type = upnp_type_string_to_type(type);
 
 	var->next = service->state_vars;
 	service->state_vars = var;
@@ -163,7 +150,9 @@ static int upnp_add_arg_to_action(
 
 	arg->var = var;
 	arg->inOUT = upnp_dir_is_out(direction);
-
+	arg->isset = false;
+	arg->val.alloclen = 0;
+	arg->val.value.uval = 0;
 	arg->next = action->args;
 	action->args = arg;
 

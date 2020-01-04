@@ -34,60 +34,14 @@ struct upnp_service;
 
 typedef int (*upnp_callback_t)(struct upnp_server *server, struct upnp_service *service, const char *action);
 
-typedef enum
-{
-    upnp_dt_unknown,
-    upnp_dt_function,
-    upnp_dt_ui1,
-    upnp_dt_ui2,
-    upnp_dt_ui4,
-    upnp_dt_i1,
-    upnp_dt_12,
-    upnp_dt_i4,
-    upnp_dt_int,
-    upnp_dt_r4,
-    upnp_dt_r8,
-    upnp_dt_number,
-    upnp_dt_fixed14,
-    upnp_dt_float,
-    upnp_dt_char,
-    upnp_dt_string,
-    upnp_dt_data,
-    upnp_dt_datetime,
-    upnp_dt_datetimetz,
-    upnp_dt_time,
-    upnp_dt_timetz,
-    upnp_dt_bool,
-    upnp_dt_base64,
-    upnp_dt_hex,
-    upnp_dt_uri,
-    upnp_dt_uuid
-}
-upnp_vartype_t;
-
-typedef struct upnp_var
-{
-    char               *name;
-    upnp_vartype_t      type;
-    bool                alloced;
-    union
-    {
-        char    *sval;
-        uint32_t uval;
-        int32_t  ival;
-        double   fval;
-    }
-                        val;
-    struct upnp_var    *next;
-}
-upnp_var_t;
-
 typedef struct upnp_arglist
 {
     char               *name;
+    upnp_val_t          val;
+    upnp_var_t         *var;
     bool                inOUT;
     bool                isset;
-    upnp_var_t         *var;
+    bool                istype;
     struct upnp_arglist *next;
 }
 upnp_arglist_t;
@@ -96,6 +50,7 @@ typedef struct upnp_action
 {
     char               *name;
     upnp_arglist_t     *args;
+    upnp_arglist_t     *results;
     struct upnp_action *next;
 }
 upnp_action_t;
@@ -149,12 +104,6 @@ typedef struct upnp_subscription
 }
 upnp_subscription_t;
 
-int upnp_get_arg_value_as_int(
-                        upnp_service_t *service,
-                        const char *action_name,
-                        const char *arg_name,
-                        int *pval
-                      );
 upnp_var_t *upnp_state_var_from_name(upnp_service_t *service, const char *var_name);
 upnp_arglist_t *upnp_arg_from_name(upnp_action_t *action, const char *arg_name);
 upnp_action_t *upnp_action_from_name(upnp_service_t *service, const char *action_name);

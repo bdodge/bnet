@@ -25,6 +25,7 @@
 
 #define UPNP_MAX_URL HTTP_MAX_URL
 
+#include "bupnpvar.h"
 #include "bupnpservice.h"
 #include "bupnpsoap.h"
 

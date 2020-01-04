@@ -17,7 +17,10 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-SOURCES=$(SRCDIR)/bupnp.c $(SRCDIR)/bupnpservice.c $(SRCDIR)/bupnpsoap.c
+SOURCES=$(SRCDIR)/bupnp.c	\
+		$(SRCDIR)/bupnpservice.c \
+		$(SRCDIR)/bupnpsoap.c	\
+		$(SRCDIR)/bupnpvar.c
 
 HEADERS=$(SOURCES:%.c=%.h)
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)

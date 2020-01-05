@@ -23,6 +23,8 @@
 #include "bhttpconfig.h"
 #include "bhttp.h"
 
+#define UPNP_MAX_CONCURRENT_CLIENTS 5
+
 #define UPNP_MAX_URL HTTP_MAX_URL
 
 #include "bupnpvar.h"

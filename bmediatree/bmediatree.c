@@ -71,6 +71,72 @@ void media_tree_dump(media_tree_t *tree, media_obj_t *pm)
     while(pz);
 }
 
+size_t media_child_count(media_obj_t *pm)
+{
+    size_t count = 0;
+
+    if (! pm)
+    {
+        return 0;
+    }
+
+    if (! pm->child)
+    {
+        return 0;
+    }
+
+    for (pm = pm->child; pm; pm = pm->sibling)
+    {
+        count++;
+    }
+
+    return count;
+}
+
+size_t media_tree_count(media_tree_t *tree)
+{
+    media_obj_t *px;
+    media_obj_t *pz;
+    size_t count = 0;
+
+    pz = tree->root;
+    if(! pz)
+    {
+        return 0;
+    }
+
+    do
+    {
+        px = pz;
+        count++;
+
+        if(pz->child)
+        {
+            pz = pz->child;
+        }
+        else if(pz->sibling)
+        {
+            pz = pz->sibling;
+        }
+        else
+        {
+            do
+            {
+                pz = pz->parent;
+                if(pz && pz->sibling)
+                {
+                    pz = pz->sibling;
+                    break;
+                }
+            }
+            while(pz);
+        }
+    }
+    while(pz);
+
+    return count;
+}
+
 media_tree_t *media_tree_create(void)
 {
 	media_tree_t *tree;
@@ -630,7 +696,7 @@ media_obj_t *media_set_current_object(media_tree_t *tree, media_obj_t *pm)
     return tree->current = pm;
 }
 
-media_obj_t *media_get_object_by_id(media_tree_t *tree, const char *id)
+media_obj_t *media_get_obj_by_id(media_tree_t *tree, const char *id)
 {
     media_obj_t *pm;
 
@@ -649,7 +715,7 @@ media_obj_t *media_get_object_by_id(media_tree_t *tree, const char *id)
     return NULL;
 }
 
-media_obj_t *media_get_object_by_name(media_tree_t *tree, const char *name)
+media_obj_t *media_get_obj_by_name(media_tree_t *tree, const char *name)
 {
     media_obj_t *pm;
 

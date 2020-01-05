@@ -49,6 +49,7 @@ static int upnp_add_var_to_service(upnp_service_t *service, const char *name, co
 
 	strcpy(var->name, name);
 	var->val.alloclen = 0;
+	var->val.slen = 0;
 	var->val.value.uval = 0;
 	var->val.type = upnp_type_string_to_type(type);
 
@@ -151,13 +152,29 @@ static int upnp_add_arg_to_action(
 	arg->var = var;
 	arg->inOUT = upnp_dir_is_out(direction);
 	arg->isset = false;
-	arg->istype = !strncmp(arg_name, "A_ARG_TYPE_", 11);
+	arg->istype = !strncmp(var->name, "A_ARG_TYPE_", 11);
 	// inherit type from related statevar
     arg->val.type = var->val.type;
 	arg->val.alloclen = 0;
+	arg->val.slen = 0;
 	arg->val.value.uval = 0;
-	arg->next = action->args;
-	action->args = arg;
+	arg->next = NULL;
+
+	if (! action->args)
+	{
+		action->args = arg;
+	}
+	else
+	{
+		upnp_arglist_t *pa;
+
+		for (pa = action->args; pa->next;)
+		{
+			pa = pa->next;
+		}
+
+		pa->next = arg;
+	}
 
 	return 0;
 }
@@ -191,6 +208,85 @@ static int upnp_add_action_to_service(upnp_service_t *service, const char *name)
 
 	return 0;
 }
+
+#if UPNP_HANDLE_CANNED_URLS
+int upnp_handle_scpd_url(
+                        http_client_t       *client,
+                        http_resource_t     *resource,
+                        http_callback_type_t cbtype,
+                        uint8_t            **data,
+                        size_t              *count
+                     )
+{
+	const char *payload = (const char*)resource->priv;
+	int paylen = strlen(payload);
+    size_t offset = (size_t)(intptr_t)client->ctxpriv;
+    size_t moved;
+    size_t have;
+
+    switch (cbtype)
+    {
+    case httpRequestHeader:
+		break;
+
+    case httpRequest:
+        client->ctxpriv = (void*)(intptr_t)0;
+		client->keepalive = false;
+
+        switch (client->method)
+        {
+        case httpGet:
+            client->out_content_length = paylen;
+            client->out_content_type   = butil_mime_xml;
+            break;
+
+        default:
+            BERROR("Bad method for scpd data");
+            return -1;
+        }
+        break;
+
+    case httpDownloadData:
+        // pretend like we took it all
+        return 0;
+
+    case httpDownloadDone:
+        return 0;
+
+    case httpUploadData:
+        moved = *count;
+        have  = paylen - offset;
+
+        if (have < moved)
+        {
+            moved = have;
+        }
+        butil_log(5, "move %u of %u at %u\n", moved, have, offset);
+        if (moved > 0)
+        {
+            if (*data)
+            {
+                memcpy(*data, (uint8_t*)payload + offset, moved);
+            }
+            else
+            {
+                *data = (uint8_t*)payload + offset;
+            }
+            offset += moved;
+            client->ctxpriv = (void *)(intptr_t)offset;
+        }
+        *count = moved;
+        break;;
+
+    case httpComplete:
+        break;
+
+    default:
+        return -1;
+    }
+    return 0;
+}
+#endif
 
 static int upnp_parse_scpd(upnp_server_t *server, upnp_service_t *service, const char *scpd)
 {
@@ -459,7 +555,11 @@ int upnp_add_service(
 	            break;
 			}
 
+#if UPNP_HANDLE_CANNED_URLS
+	        result = upnp_add_func_url(server, scpd_url, upnp_handle_scpd_url, (void*)scpd_content);
+#else
 	        result = upnp_add_text_url(server, scpd_url, butil_mime_xml, scpd_content);
+#endif
 	        if (result)
 	        {
 	            UPNP_ERROR("can't add scpd url");

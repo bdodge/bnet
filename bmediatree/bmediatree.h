@@ -115,6 +115,8 @@ typedef int (*media_sorter_t)(media_obj_t *a, media_obj_t *b);
 media_tree_t *media_tree_create		(void);
 void		media_tree_destroy		(media_tree_t *tree);
 void 		media_tree_dump			(media_tree_t *tree, media_obj_t *pm);
+size_t 		media_child_count		(media_obj_t *pm);
+size_t 		media_tree_count		(media_tree_t *tree);
 
 media_obj_t *media_create			(const char *id, int kidnum, media_obj_type_t type, const char *name);
 media_obj_t *media_create_in_tree	(const char *id, int kidnum, media_obj_type_t type, const char *name, media_tree_t *tree, media_obj_t *parent);
@@ -126,8 +128,8 @@ media_obj_t *media_insert_in_tree	(media_tree_t *tree, media_obj_t *pm, media_ob
 
 int			media_recover_memory	(media_tree_t *tree, media_obj_t *pnode);
 
-media_obj_t *media_get_by_id		(media_tree_t *tree, const char *id);
-media_obj_t *media_get_by_name		(media_tree_t *tree, const char *name);
+media_obj_t *media_get_obj_by_id	(media_tree_t *tree, const char *id);
+media_obj_t *media_get_obj_by_name	(media_tree_t *tree, const char *name);
 
 media_obj_t *media_get_current_obj	(media_tree_t *tree);
 media_obj_t *media_set_current_obj	(media_tree_t *tree, media_obj_t *pm);

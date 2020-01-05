@@ -50,7 +50,7 @@ upnp_vartype_t;
 typedef struct upnp_val
 {
     upnp_vartype_t  type;
-    bool            alloclen;
+    size_t          alloclen;
     size_t          slen;
     union
     {

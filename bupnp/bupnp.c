@@ -20,6 +20,10 @@ static http_method_t s_method_NOTIFY;
 http_method_t s_method_SUBSCRIBE;
 http_method_t s_method_UNSUBSCRIBE;
 
+// remove proper delays in serch replies to make response faster
+//
+#define UPNP_NO_JITTERS 1
+
 time_t upnp_rate_fudge(time_t rate)
 {
     time_t rn;
@@ -64,9 +68,12 @@ static int upnp_queue_reply(
 
     server->q_free = reply->next;
 
+#ifndef UPNP_NO_JITTERS
     time(&reply->when);
     reply->when += when;
-
+#else
+    reply->when = 0;
+#endif
     strncpy(reply->reply_to_host, to_host, sizeof(reply->reply_to_host));
     reply->reply_to_port = to_port;
     strncpy(reply->st, st, sizeof(reply->st));
@@ -190,11 +197,12 @@ static int upnp_reply_st_usn(
     http_begin_reply(phttp, 200, "OK");
     http_append_reply(phttp, "HOST:239.255.255.250:1900");
     http_append_reply(phttp, "ST:%s", st);
-    http_append_reply(phttp, "Ext:");
     http_append_reply(phttp, "Location:%s", location);
     http_append_reply(phttp, "USN:%s", usn);
     http_append_reply(phttp, "Cache-Control: max-age=%d", rate);
     http_append_reply(phttp, "Server:bnet/1.0, UPnP/1.0, bnet/1.0");
+    http_append_reply(phttp, "Content-Length:0");
+    http_append_reply(phttp, "Ext:");
     http_append_reply(phttp, "");
 
     result = http_send_out_data(phttp, phttp->state, phttp->state);
@@ -497,6 +505,7 @@ int upnp_handle_url(
         break;
 
     case httpDownloadDone:
+        // use connection: close
         break;
 
     case httpUploadData:
@@ -561,8 +570,9 @@ static int upnp_notify_nt_usn(
     http_append_request(phttp, "NTS:ssdp:%s", (state == upnpServiceOnline) ? "alive" : "byebye");
     http_append_request(phttp, "Location:%s", location);
     http_append_request(phttp, "USN:%s", usn);
-    http_append_request(phttp, "Cache-Control: max-age=%d", rate);
+    http_append_request(phttp, "Cache-Control:max-age=%d", rate);
     http_append_request(phttp, "Server:bnet/1.0, UPnP/1.0, bnet/1.0");
+    http_append_request(phttp, "Content-Length:0");
     http_append_request(phttp, "");
 
     result = http_send_out_data(phttp, phttp->state, phttp->state);
@@ -949,8 +959,8 @@ int upnp_server_slice(upnp_server_t *server, int to_secs, int to_usecs)
 
         // process events
         //
-        result  = http_server_slice(&server->doc_http_server, 0, 0);
-        result |= http_server_slice(&server->upnp_http_server, 0, 0);
+        result  = http_server_slice(&server->doc_http_server, 0, 2000);
+        result |= http_server_slice(&server->upnp_http_server, 0, 2000);
         break;
 
     case upnpDone:
@@ -1037,7 +1047,8 @@ int upnp_server_init(
 
         // Setup HTTP Document Server
         //
-        result = http_server_init(&server->doc_http_server, server->http_resources, port, httpTCP, 3, false);
+        result = http_server_init(&server->doc_http_server,
+                        server->http_resources, port, httpTCP, UPNP_MAX_CONCURRENT_CLIENTS, false);
         if (result)
         {
             UPNP_ERROR("Can't make http doc server");

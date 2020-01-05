@@ -16,6 +16,13 @@
 #include "bupnp.h"
 #include "bxml.h"
 
+typedef struct soap_context
+{
+    char    soap_header[UPNP_MAX_URL];
+    char    callback_url[UPNP_MAX_URL];
+}
+soap_context_t;
+
 int upnp_get_arg_value(
                         upnp_service_t *service,
                         const char *action_name,
@@ -55,6 +62,28 @@ int upnp_get_arg_value(
     return 0;
 }
 
+int upnp_get_arg_value_as_string(
+                        upnp_service_t *service,
+                        const char *action_name,
+                        const char *arg_name,
+                        char *buf,
+                        size_t nbuf,
+                        const char **value,
+                        size_t *slen
+                      )
+{
+    upnp_val_t *val;
+    int result;
+
+    result = upnp_get_arg_value(service, action_name, arg_name, &val);
+    if (result)
+    {
+        return result;
+    }
+
+    return upnp_get_val_value_as_string(val, buf, nbuf, value, slen);
+}
+
 int upnp_get_arg_value_as_int(
                         upnp_service_t *service,
                         const char *action_name,
@@ -80,7 +109,7 @@ int upnp_get_arg_value_as_int(
     return upnp_get_val_value_as_int(val, pval);
 }
 
-int upnp_set_arg_value_as_string(
+int upnp_set_arg_value_from_string(
                         upnp_service_t *service,
                         const char *action_name,
                         const char *arg_name,
@@ -257,6 +286,9 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
             }
             else
             {
+                // just reference the string in the incoming soap
+                // to avoid large allocs or buffering
+                //
                 result = bxml_find_element(
                                                 pxpa,
                                                 arg->name, '.',
@@ -282,8 +314,26 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
             }
             if (! result)
             {
-                butil_log(3, "Arg %s value=%s=\n", arg->name, argval);
+                if (1)
+                {
+                    if (is_string_type)
+                    {
+                        int len = arg->val.slen;
 
+                        if (len > sizeof(argval) - 1)
+                        {
+                            len - sizeof(argval) - 1;
+                        }
+                        strncpy(argval, arg->val.value.sval, len);
+                        argval[sizeof(argval) - 1] = '\0';
+
+                        butil_log(3, "Arg %s value=%s=\n", arg->name, argval);
+                    }
+                    else
+                    {
+                        butil_log(3, "Arg %s value=%s=\n", arg->name, argval);
+                    }
+                }
                 arg->isset = true;
             }
             else
@@ -305,11 +355,11 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
     iostream_reset_ring(&server->soap);
 
     bxml_format_header(server->soap.data, server->soap.size, &made, "1.0", "utf-8");
-    server->soap.tail += made;
+    server->soap.head += made;
     server->soap.count += made;
 
     result = bxml_format_element(
-                        server->soap.data + server->soap.tail,
+                        server->soap.data + server->soap.head,
                         server->soap.size - server->soap.count,
                         &made,
                         false,
@@ -321,11 +371,11 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
                         "xmlns:s",
                         "http://schemas.xmlsoap.org/soap/envelope/"
                       );
-    server->soap.tail += made;
+    server->soap.head += made;
     server->soap.count += made;
 
     result = bxml_format_element(
-                        server->soap.data + server->soap.tail,
+                        server->soap.data + server->soap.head,
                         server->soap.size - server->soap.count,
                         &made,
                         false,
@@ -333,7 +383,21 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
                         NULL,
                         0
                       );
-    server->soap.tail += made;
+    server->soap.head += made;
+    server->soap.count += made;
+
+    snprintf(argval, sizeof(argval), "u:%sResponse", action_name);
+    result = bxml_format_element(
+                        server->soap.data + server->soap.head,
+                        server->soap.size - server->soap.count,
+                        &made,
+                        false,
+                        argval,
+                        NULL,
+                        1,
+                        "xmlns:u", "urn:schemas-upnp-org:service:ContentDirectory:1"
+                      );
+    server->soap.head += made;
     server->soap.count += made;
 
     // for each set out argument, add it and its value to the body
@@ -358,7 +422,7 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
             if (! result)
             {
                 result = bxml_format_element(
-                                    server->soap.data + server->soap.tail,
+                                    server->soap.data + server->soap.head,
                                     server->soap.size - server->soap.count,
                                     &made,
                                     false,
@@ -366,31 +430,41 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, const cha
                                     ptag,
                                     0
                                   );
-                server->soap.tail += made;
+                server->soap.head += made;
                 server->soap.count += made;
             }
         }
     }
 
+    snprintf(argval, sizeof(argval), "u:%sResponse", action_name);
     result = bxml_format_endtag(
-                        server->soap.data + server->soap.tail,
+                        server->soap.data + server->soap.head,
+                        server->soap.size - server->soap.count,
+                        &made,
+                        argval
+                      );
+    server->soap.head += made;
+    server->soap.count += made;
+
+    result = bxml_format_endtag(
+                        server->soap.data + server->soap.head,
                         server->soap.size - server->soap.count,
                         &made,
                         "s:Body"
                       );
-    server->soap.tail += made;
+    server->soap.head += made;
     server->soap.count += made;
 
     result = bxml_format_endtag(
-                        server->soap.data + server->soap.tail,
+                        server->soap.data + server->soap.head,
                         server->soap.size - server->soap.count,
                         &made,
                         "s:Envelope"
                       );
-    server->soap.tail += made;
+    server->soap.head += made;
     server->soap.count += made;
 
-    butil_log(3, "REPLY=\n%s\n=\n", server->soap.data);
+    //butil_log(3, "REPLY=\n%s\n=\n", server->soap.data);
 
     return result;
 }
@@ -403,6 +477,7 @@ int upnp_handle_control_url(
                         size_t              *count
                         )
 {
+    soap_context_t *context;
     upnp_server_t *server;
     upnp_device_t *device;
     upnp_service_t *service;
@@ -413,12 +488,25 @@ int upnp_handle_control_url(
     char *pact;
     char *psrc;
     int len;
+    int moved;
     int result;
 
     server = (upnp_server_t *)resource->priv;
     if (! server)
     {
         return -1;
+    }
+
+    context = (soap_context_t *)client->ctxpriv;
+    if (! context)
+    {
+        context = (soap_context_t *)malloc(sizeof(soap_context_t));
+        if (! context)
+        {
+            return -1;
+        }
+        context->soap_header[0] = '\0';
+        client->ctxpriv = context;
     }
 
     result = 0;
@@ -467,7 +555,8 @@ int upnp_handle_control_url(
         if (! http_ncasecmp(header, "soapaction:"))
         {
             // save action header,
-            strncpy(server->soap_header, value, sizeof(server->soap_header));
+            strncpy(context->soap_header, value, sizeof(context->soap_header) - 1);
+            context->soap_header[sizeof(context->soap_header) - 1] = '\0';
             break;
         }
         break;
@@ -499,11 +588,11 @@ int upnp_handle_control_url(
 
     case httpDownloadDone:
 
-        butil_log(3, "ControlCB: SOAP %s %u bytes\n", server->soap_header, server->soap.count);
+        butil_log(3, "ControlCB: SOAP %s %u bytes\n", context->soap_header, server->soap.count);
 
         // figure out which service this control is intended for by comparing usn's
         //
-        pusn = server->soap_header;
+        pusn = context->soap_header;
 
         // incoming usn is between " and #, so extract it
         if (*pusn == '\"')
@@ -565,20 +654,61 @@ int upnp_handle_control_url(
             butil_log(4, "No service \"%s\" on any device\n", usn);
             break;
         }
-        server->soap_header[0] = '\0';
+        context->soap_header[0] = '\0';
 
         // extract parameters and call the service's callback with the action
         // if there's a reply, set the content length and upload it next
         //
         result = upnp_dispatch_soap(server, service, pact);
 
+        // if there is anything in the soap buffer, assume its a reply
+        //
+        if (! result)
+        {
+            if (server->soap.count > 0)
+            {
+                server->soap.tail = 0;
+                client->out_content_length = server->soap.count;
+                client->out_content_type   = butil_mime_xml;
+            }
+            else
+            {
+                client->out_content_length = 0;
+            }
+            // do the reply headers ourselves here, as they're a bit different from
+            // the http defaults
+            //
+            result = http_begin_reply(client, 200, "OK");
+            result |= http_append_reply(client, "Content-Type: %s", butil_mime_string_for_content_type(client->out_content_type));
+            result |= http_append_reply(client, "Content-Length: %d", client->out_content_length);
+            result |= http_append_reply(client, "Connection: close");
+            result |= http_append_reply(client, "Ext: ");
+            result |= http_append_reply(client, "Server: bnet/1.0, UPnP/1.0, bnet/1.0");
+            result |= http_append_reply(client, "");
+            client->state = httpBodyUpload; // this bypasses http system building its own reply
+        }
         break;
 
     case httpUploadData:
-        *count = 0;
+
+        moved = *count; // what client has space for
+        if (moved > server->soap.count)
+        {
+            moved = server->soap.count;
+        }
+
+        butil_log(3, "Move %d at off %d\n", moved, server->soap.tail);
+        memcpy(*data, server->soap.data + server->soap.tail, moved);
+        server->soap.tail += moved;
+        server->soap.count -= moved;
+        *count = moved;
         break;
 
     case httpComplete:
+        if (context)
+        {
+            free(context);
+        }
         break;
 
     default:
@@ -615,6 +745,7 @@ int upnp_handle_event_url(
     case httpRequest:
 
         client->keepalive = false;
+        client->out_content_length = 0;
 
         if (client->method == s_method_SUBSCRIBE)
         {
@@ -653,9 +784,13 @@ int upnp_handle_event_url(
             value++;
         }
 
-        if (! http_ncasecmp(header, "soapaction:"))
+        if (! http_ncasecmp(header, "callback"))
         {
-            // decode SOAP header
+
+            break;
+        }
+        else if (! http_ncasecmp(header, "timeout"))
+        {
             break;
         }
         break;

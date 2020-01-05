@@ -23,6 +23,16 @@ int upnp_get_arg_value(
                         upnp_val_t **pval
                         );
 
+int upnp_get_arg_value_as_string(
+                        upnp_service_t *service,
+                        const char *action_name,
+                        const char *arg_name,
+                        char *buf,
+                        size_t nbuf,
+                        const char **value,
+                        size_t *slen
+                        );
+
 int upnp_get_arg_value_as_int(
                         upnp_service_t *service,
                         const char *action_name,
@@ -30,11 +40,11 @@ int upnp_get_arg_value_as_int(
                         int *pval
                         );
 
-int upnp_get_arg_value_from_int(
+int upnp_set_arg_value_from_string(
                         upnp_service_t *service,
                         const char *action_name,
                         const char *arg_name,
-                        int *pval
+                        const char *sval
                         );
 
 int upnp_set_arg_value_from_int(

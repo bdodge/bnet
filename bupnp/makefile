@@ -25,8 +25,8 @@ SOURCES=$(SRCDIR)/bupnp.c	\
 HEADERS=$(SOURCES:%.c=%.h)
 OBJECTS=$(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-LIBS= $(HTTPLIB) $(XMLLIB) $(IOLIB) $(UTILLIB)
-LIBDIRS= $(HTTP_PATH) $(XML_PATH) $(IO_PATH) $(UTIL_PATH)
+LIBS= $(HTTPLIB) $(XMLLIB) $(MEDIALIB) $(IOLIB) $(UTILLIB)
+LIBDIRS= $(HTTP_PATH) $(XML_PATH) $(MEDIA_PATH) $(IO_PATH) $(UTIL_PATH)
 LIBINCLS= $(LIBDIRS:%=-I%)
 CFLAGS += $(LIBINCLS)
 
@@ -35,10 +35,10 @@ ifdef BNET_TLS
 endif
 CFLAGS += $(EXTRA_DEFINES:%=-D%) -Wno-format-truncation
 
-PROGSOURCES=$(SRCDIR)/bupnpmain.c
-PROGOBJECTS=$(OBJDIR)/bupnpmain.o
+PROGSOURCES=$(SRCDIR)/bupnpmediaserver.c
+PROGOBJECTS=$(OBJDIR)/bupnpmediaserver.o
 
-bupnp: $(PROGOBJECTS) $(UPNPLIB) $(LIBS) $(TLSDEPS)
+bupnpms: $(PROGOBJECTS) $(UPNPLIB) $(LIBS) $(TLSDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(UPNPLIB)
@@ -56,4 +56,6 @@ $(OBJDIR)/bupnp.o: $(SRCDIR)/bupnp.c $(HEADERS)
 $(OBJDIR)/bupnpservice.o: $(SRCDIR)/bupnpservice.c $(HEADERS)
 
 $(OBJDIR)/bupnpsoap.o: $(SRCDIR)/bupnpsoap.c $(HEADERS)
+
+$(OBJDIR)/bupnpvar.o: $(SRCDIR)/bupnpvar.c $(HEADERS)
 

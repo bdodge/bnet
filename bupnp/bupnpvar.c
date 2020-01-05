@@ -168,11 +168,13 @@ int upnp_set_val_value_from_string(upnp_val_t *val, const char *value)
 	{
 		return -1;
 	}
+
 	if (val->alloclen > 0)
 	{
 		free(val->value.sval);
 		val->value.sval = NULL;
 		val->alloclen = 0;
+		val->slen = 0;
 	}
 
 	switch (val->type)
@@ -215,11 +217,13 @@ int upnp_set_val_value_from_string(upnp_val_t *val, const char *value)
 	case upnp_dt_time:
 	case upnp_dt_timetz:
 	case upnp_dt_hex:
-		val->alloclen = strlen(value) + 1;
+		val->slen = strlen(value);
+		val->alloclen = val->slen + 1;
 		val->value.sval = (char*)malloc(val->alloclen);
 		if (! val->value.sval)
 		{
 			val->alloclen = 0;
+			val->slen = 0;
 			return -1;
 		}
 		strcpy(val->value.sval, value);
@@ -448,18 +452,42 @@ int upnp_get_var_value_as_int(upnp_var_t *var, int *value)
 
 int upnp_get_val_value_as_string(upnp_val_t *val, char *buf, size_t nbuf, const char **value, size_t *slen)
 {
-	if (! val || ! value || ! slen)
+	if (! val)
 	{
 		return -1;
 	}
 
-	if (upnp_type_is_string_type(val->type) && value)
+	if (upnp_type_is_string_type(val->type))
 	{
-		*value = val->value.sval;
+		// return a pointer to actual string if wanted
+		//
+		if (value)
+		{
+			*value = val->value.sval;
+		}
 
 		if (slen)
 		{
 			*slen = val->slen;
+		}
+
+		// and, if a caller supplied a buffer, copy what we can into it
+		//
+		if (buf)
+		{
+			int ncpy;
+
+			if (val->slen >= nbuf)
+			{
+				ncpy = nbuf - 1;
+			}
+			else
+			{
+				ncpy = val->slen;
+			}
+
+			strncpy(buf, val->value.sval, ncpy);
+			buf[ncpy] = 0;
 		}
 	}
 	else

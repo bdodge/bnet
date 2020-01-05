@@ -501,7 +501,7 @@ int http_canned_callback(
         {
             moved = have;
         }
-        http_log(3, "move %u of %u at %u\n", moved, have, offset);
+        http_log(5, "move %u of %u at %u\n", moved, have, offset);
         if (moved > 0)
         {
             if (*data)

@@ -160,16 +160,13 @@ static int upnp_reply_st_usn(
         return result;
     }
 
-    if (! hostname[0])
+    if (myipv4addr.addr != 0)
     {
-        if (myipv4addr.addr != 0)
-        {
-            butil_str_for_ipv4(myipv4addr.addr, hostname, sizeof(hostname));
-        }
-        else
-        {
-            butil_str_for_ipv6(&myipv6addr, hostname, sizeof(hostname));
-        }
+        butil_str_for_ipv4(myipv4addr.addr, hostname, sizeof(hostname));
+    }
+    else
+    {
+        butil_str_for_ipv6(&myipv6addr, hostname, sizeof(hostname));
     }
 
     result = butil_paste_url(
@@ -195,12 +192,11 @@ static int upnp_reply_st_usn(
     phttp->out_port = to_port;
 
     http_begin_reply(phttp, 200, "OK");
-    http_append_reply(phttp, "HOST:239.255.255.250:1900");
     http_append_reply(phttp, "ST:%s", st);
     http_append_reply(phttp, "Location:%s", location);
     http_append_reply(phttp, "USN:%s", usn);
     http_append_reply(phttp, "Cache-Control: max-age=%d", rate);
-    http_append_reply(phttp, "Server:bnet/1.0, UPnP/1.0, bnet/1.0");
+    http_append_reply(phttp, "Server:bnet/1.0 UPnP/1.0 bnet/1.0");
     http_append_reply(phttp, "Content-Length:0");
     http_append_reply(phttp, "Ext:");
     http_append_reply(phttp, "");
@@ -571,7 +567,7 @@ static int upnp_notify_nt_usn(
     http_append_request(phttp, "Location:%s", location);
     http_append_request(phttp, "USN:%s", usn);
     http_append_request(phttp, "Cache-Control:max-age=%d", rate);
-    http_append_request(phttp, "Server:bnet/1.0, UPnP/1.0, bnet/1.0");
+    http_append_request(phttp, "Server:bnet/1.0 UPnP/1.0 bnet/1.0");
     http_append_request(phttp, "Content-Length:0");
     http_append_request(phttp, "");
 
@@ -624,16 +620,13 @@ static int upnp_notify(upnp_server_t *server)
         return result;
     }
 
-    if (! hostname[0])
+    if (myipv4addr.addr != 0)
     {
-        if (myipv4addr.addr != 0)
-        {
-            butil_str_for_ipv4(myipv4addr.addr, hostname, sizeof(hostname));
-        }
-        else
-        {
-            butil_str_for_ipv6(&myipv6addr, hostname, sizeof(hostname));
-        }
+        butil_str_for_ipv4(myipv4addr.addr, hostname, sizeof(hostname));
+    }
+    else
+    {
+        butil_str_for_ipv6(&myipv6addr, hostname, sizeof(hostname));
     }
 
     result = butil_paste_url(

@@ -447,15 +447,14 @@ static char s_device_description[] =
 "<manufacturer>Brian Dodge</manufacturer>\n"
 "<manufacturerURL>http://www.hell.org/</manufacturerURL>\n"
 "<modelDescription>Test of Bnet UPnP server system</modelDescription>\n"
-"<modelName>bnet</modelName>\n"
+"<modelName> Windows Media Connect compatible (BnetDLNA)</modelName>\n"
 "<modelNumber>42</modelNumber>\n"
 "<modelURL>http://www.hell.org/</modelURL>\n"
 "<serialNumber>12345</serialNumber>\n"
 "<UDN>uuid:" UUID_STRING "</UDN>\n"
-
-//"<presentationURL>canned.html</presentationURL>\n"
+"<dlna:X_DLNADOC xmlns:dlna=\"urn:schemas-dlna-org:device-1-0\">DMS-1.50</dlna:X_DLNADOC>\n"
+"<presentationURL>/icon128.png</presentationURL>\n"
 //"<UPC>Universal Product Code</UPC>\n"
-
 "<iconList>\n"
 "<icon>\n"
 "<mimetype>image/png</mimetype>\n"
@@ -465,21 +464,20 @@ static char s_device_description[] =
 "<url>/icon128.png</url>\n"
 "</icon>\n"
 "</iconList>\n"
-
 "<serviceList>\n"
 "<service>\n"
 "<serviceType>urn:schemas-upnp-org:service:ContentDirectory:1</serviceType>\n"
 "<serviceId>urn:upnp-org:serviceId:ContentDirectory</serviceId>\n"
-"<SCPDURL>content_scpd</SCPDURL>\n"
-"<controlURL>content_control</controlURL>\n"
-"<eventSubURL>content_event</eventSubURL>\n"
+"<controlURL>/content_control</controlURL>\n"
+"<eventSubURL>/content_event</eventSubURL>\n"
+"<SCPDURL>/content_scpd</SCPDURL>\n"
 "</service>\n"
 "<service>\n"
 "<serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>\n"
 "<serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>\n"
-"<SCPDURL>conman_scpd</SCPDURL>\n"
-"<controlURL>conman_control</controlURL>\n"
-"<eventSubURL>conman_event</eventSubURL>\n"
+"<controlURL>/conman_control</controlURL>\n"
+"<eventSubURL>/conman_event</eventSubURL>\n"
+"<SCPDURL>/conman_scpd</SCPDURL>\n"
 "</service>\n"
 /*
 "<service>\n"
@@ -488,6 +486,16 @@ static char s_device_description[] =
 "<SCPDURL>transport_scpd</SCPDURL>\n"
 "<controlURL>transport_control</controlURL>\n"
 "<eventSubURL>transport_event</eventSubURL>\n"
+"</service>\n"
+*/
+/*
+"<service>\n"
+"<serviceType>urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1</serviceType>\n"
+"<serviceId>urn:microsoft.com:serviceId:X_MS_MediaReceiverRegistrar</serviceId>\n"
+"<controlURL>/ctl/X_MS_MediaReceiverRegistrar</controlURL>\n"
+"<eventSubURL>/evt/X_MS_MediaReceiverRegistrar</eventSubURL>\n"
+//"<SCPDURL>/X_MS_MediaReceiverRegistrar.xml</SCPDURL>\n"
+"<SCPDURL>/conman_scpd</SCPDURL>\n"
 "</service>\n"
 */
 "</serviceList>\n"
@@ -528,7 +536,7 @@ static char s_content_directory_scpd[] =
 "</argument>\n"
 "</argumentList>\n"
 "</action>\n"
-
+/*
 "<action>\n"
 "<name>GetSortExtensionCapabilities</name>\n"
 "<argumentList>\n"
@@ -554,7 +562,7 @@ static char s_content_directory_scpd[] =
 "</argument>\n"
 "</argumentList>\n"
 "</action>\n"
-
+*/
 "<action>\n"
 "<name>GetSystemUpdateID</name>\n"
 "<argumentList>\n"
@@ -719,7 +727,7 @@ static char s_content_directory_scpd[] =
 "</argument>\n"
 "</argumentList>\n"
 "</action>\n"
-
+/*
 "<action>\n"
 "<name>CreateObject</name>\n"
 "<argumentList>\n"
@@ -766,7 +774,7 @@ static char s_content_directory_scpd[] =
 "</argument>\n"
 "</argumentList>\n"
 "</action>\n"
-
+*/
 "<action>\n"
 "<name>UpdateObject</name>\n"
 "<argumentList>\n"
@@ -793,7 +801,7 @@ static char s_content_directory_scpd[] =
 "</argument>\n"
 "</argumentList>\n"
 "</action>\n"
-
+/*
 "<action>\n"
 "<name>MoveObject</name>\n"
 "<argumentList>\n"
@@ -961,6 +969,7 @@ static char s_content_directory_scpd[] =
 "</argument>\n"
 "</argumentList>\n"
 "</action>\n"
+*/
 "</actionList>\n"
 "<serviceStateTable>\n"
 "<stateVariable sendEvents=\"no\">\n"
@@ -971,26 +980,32 @@ static char s_content_directory_scpd[] =
 "<name>SortCapabilities</name>\n"
 "<dataType>string</dataType>\n"
 "</stateVariable>\n"
+/*
 "<stateVariable sendEvents=\"no\">\n"
 "<name>SortExtensionCapabilities</name>\n"
 "<dataType>string</dataType>\n"
 "</stateVariable>\n"
+*/
 "<stateVariable sendEvents=\"yes\">\n"
 "<name>SystemUpdateID</name>\n"
 "<dataType>ui4</dataType>\n"
 "</stateVariable>\n"
+/*
 "<stateVariable sendEvents=\"yes\">\n"
 "<name>ContainerUpdateIDs</name>\n"
 "<dataType>string</dataType>\n"
 "</stateVariable>\n"
+*/
 "<stateVariable sendEvents=\"yes\">\n"
 "<name>TransferIDs</name>\n"
 "<dataType>string</dataType>\n"
 "</stateVariable>\n"
+/*
 "<stateVariable sendEvents=\"no\">\n"
 "<name>FeatureList</name>\n"
 "<dataType>string</dataType>\n"
 "</stateVariable>\n"
+*/
 "<stateVariable sendEvents=\"no\">\n"
 "<name>A_ARG_TYPE_ObjectID</name>\n"
 "<dataType>string</dataType>\n"
@@ -1035,6 +1050,7 @@ static char s_content_directory_scpd[] =
 "<name>A_ARG_TYPE_TransferID</name>\n"
 "<dataType>ui4</dataType>\n"
 "</stateVariable>\n"
+/*
 "<stateVariable sendEvents=\"no\">\n"
 "<name>A_ARG_TYPE_TransferStatus</name>\n"
 "<dataType>string</dataType>\n"
@@ -1053,14 +1069,17 @@ static char s_content_directory_scpd[] =
 "<name>A_ARG_TYPE_TransferTotal</name>\n"
 "<dataType>string</dataType>\n"
 "</stateVariable>\n"
+*/
 "<stateVariable sendEvents=\"no\">\n"
 "<name>A_ARG_TYPE_TagValueList</name>\n"
 "<dataType>string</dataType>\n"
 "</stateVariable>\n"
+/*
 "<stateVariable sendEvents=\"no\">\n"
 "<name>A_ARG_TYPE_URI</name>\n"
 "<dataType>uri</dataType>\n"
 "</stateVariable>\n"
+*/
 "</serviceStateTable>\n"
 "</scpd>\n";
 

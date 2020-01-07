@@ -724,6 +724,10 @@ static int http_process_header(http_client_t *client, char *header)
         {
             client->keepalive = true;
         }
+        else if (! http_ncasecmp(value, "close"))
+        {
+            client->keepalive = false;
+        }
     }
     else if (! http_ncasecmp(header, "if-modified-since:"))
     {

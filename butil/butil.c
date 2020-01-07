@@ -599,7 +599,7 @@ int butil_parse_url(
 
 const char *butil_str_for_ipv4(uint32_t ipv4addr, char *ipbuf, size_t nipbuf)
 {
-    snprintf(ipbuf, nipbuf, "%d:%d:%d:%d",
+    snprintf(ipbuf, nipbuf, "%d.%d.%d.%d",
                 (ipv4addr & 0xFF),
                 ((ipv4addr >> 8) & 0xFF),
                 ((ipv4addr >> 16) & 0xFF),
@@ -933,7 +933,7 @@ static butil_mime_entry_t s_mimetab[] =
     { butil_mime_text, ".txt",   "text/plain" },
     { butil_mime_tiff, ".tif",   "image/tiff" },
     { butil_mime_tiff, ".tiff",  "image/tiff" },
-    { butil_mime_xml,  ".xml",   "application/xml" },
+    { butil_mime_xml,  ".xml",   "text/xml" },
     { butil_mime_xwwwformurl,".www", "application/x-www-form-urlencoded" },
 #if BUTIL_SUPPORT_MULTIPART
     { butil_mime_multi,".",      "multipart/form-data" },

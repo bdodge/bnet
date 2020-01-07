@@ -126,6 +126,14 @@ int             upnp_server_abort(upnp_server_t *server);
 int             upnp_server_slice(upnp_server_t *server, int to_secs, int to_usecs);
 int             upnp_serve(upnp_server_t *servers, upnp_idle_callback_t on_idle, void *priv);
 
+int             upnp_add_file_url(
+                     upnp_server_t  *server,
+                     const char     *path,
+                     const mime_content_type_t type,
+                     const uint8_t  *payload,
+                     size_t          paylen
+                );
+
 int             upnp_add_text_url(
                      upnp_server_t    *server,
                      const char       *path,

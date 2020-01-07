@@ -841,16 +841,17 @@ int upnp_send_pending_replies(upnp_server_t *server, time_t now)
 }
 
 
-int upnp_add_text_url(
-                     upnp_server_t    *server,
-                     const char       *path,
+int upnp_add_file_url(
+                     upnp_server_t  *server,
+                     const char     *path,
                      const mime_content_type_t type,
-                     const char       *value
+                     const uint8_t  *payload,
+                     size_t          paylen
                 )
 {
     int result;
 
-    if (! server || ! path || ! value)
+    if (! server || ! path || ! payload || ! paylen)
     {
         return -1;
     }
@@ -861,8 +862,8 @@ int upnp_add_text_url(
                         path,
                         NULL,
                         type,
-                        (uint8_t*)value,
-                        strlen(value)
+                        payload,
+                        paylen
                         );
     if (! result)
     {
@@ -870,6 +871,21 @@ int upnp_add_text_url(
     }
 
     return result;
+}
+
+int upnp_add_text_url(
+                     upnp_server_t    *server,
+                     const char       *path,
+                     const mime_content_type_t type,
+                     const char       *value
+                )
+{
+    if (! value)
+    {
+        return -1;
+    }
+
+    return upnp_add_file_url(server, path, type, (uint8_t*)value, strlen(value));
 }
 
 int upnp_add_func_url(

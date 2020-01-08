@@ -1012,18 +1012,6 @@ int upnp_server_init(
 
     server->root_device = NULL;
 
-    // allocate buffer for soap
-    //
-    server->soap.size = max_request;
-    if (server->soap.size < 1024)
-    {
-        server->soap.size = 1024;
-    }
-    server->soap.data = (uint8_t *)malloc(server->soap.size);
-    server->soap.head = 0;
-    server->soap.tail = 0;
-    server->soap.count = 0;
-
     // init reply queue pool
     //
     for (iparm = 0; iparm < UPNP_MAX_QUEUED_REPLIES - 1; iparm++)

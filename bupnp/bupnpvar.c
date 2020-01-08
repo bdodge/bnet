@@ -486,7 +486,7 @@ int upnp_get_val_value_as_string(upnp_val_t *val, char *buf, size_t nbuf, const 
 				ncpy = val->slen;
 			}
 
-			strncpy(buf, val->value.sval, ncpy);
+			memcpy(buf, val->value.sval, ncpy);
 			buf[ncpy] = 0;
 		}
 	}

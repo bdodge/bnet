@@ -24,6 +24,7 @@
 #include "bhttp.h"
 
 #define UPNP_MAX_CONCURRENT_CLIENTS 5
+#define UPNP_MAX_SOAP (65536 * 2)
 
 #define UPNP_MAX_URL HTTP_MAX_URL
 
@@ -101,7 +102,6 @@ typedef struct upnp_server
     uint32_t            mx_header;
 
     char                soap_header[UPNP_MAX_URL];
-    ioring_t            soap;
 }
 upnp_server_t;
 

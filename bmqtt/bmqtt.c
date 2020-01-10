@@ -752,7 +752,7 @@ static int smqtt_resource(
     int result;
     size_t bytes;
 
-    mqx = (mqcontext_t *)client->ctxpriv;
+    mqx = (mqcontext_t *)resource->priv;
 
     switch (cbtype)
     {
@@ -764,6 +764,7 @@ static int smqtt_resource(
         butil_log(5, "MQTT: request\n");
 
         mqx->state = mqsTransportInit;
+        client->ws_upgrade = true;
         break;
 
     case httpUploadData:
@@ -782,6 +783,11 @@ static int smqtt_resource(
         {
         case mqsInit:
         case mqsTransportInit:
+			if (! client->ws_stream)
+			{
+				break;
+			}
+
 			// setup outgoing websocket format and mask
 			//
 			result = http_websocket_set_format(client, wsdfBinary, true, "mask");
@@ -1530,7 +1536,7 @@ mqcontext_t *mqtt_client_create(
 #if MQTT_SUPPORT_WEBSOCKET
         result = http_add_func_resource(&mqx->resources,
 						(transport == mqtWSS) ? schemeWSS : schemeWS,
-						"/mqtt", NULL, smqtt_resource, NULL);
+						"/mqtt", NULL, smqtt_resource, mqx);
         if (result)
         {
             BERROR("Can't make resource");
@@ -1549,7 +1555,6 @@ mqcontext_t *mqtt_client_create(
         }
         butil_log(3, "MQTT Client to %s\n", mqx->url);
 
-        mqx->client->ctxpriv = mqx;
         mqx->client->keepalive = false;
         mqx->client->ws_upgrade = true;
         snprintf(mqx->client->ws_proto, sizeof(mqx->client->ws_proto), "mqttv3.1");

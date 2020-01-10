@@ -472,50 +472,48 @@ int http_canned_callback(
     case httpRequest:
         client->ctxpriv = (void*)(intptr_t)0;
 
-        switch (client->method)
-        {
-        case httpGet:
-            http_log(7, "get canned %s\n", resource->resource.canned_data.content);
-            client->out_content_length = resource->resource.canned_data.count;
-            client->out_content_type   = resource->resource.canned_data.content_type;
-            break;
-
-        default:
-            HTTP_ERROR("Bad method for canned data");
-            return -1;
-        }
+        http_log(7, "%s canned %s\n", http_method_name(client->method), resource->resource.canned_data.content);
+        client->out_content_length = resource->resource.canned_data.count;
+        client->out_content_type   = resource->resource.canned_data.content_type;
         break;
 
     case httpDownloadData:
-        // pretend like we took it all
+        *count = 0; // just take remote data and discard
         return 0;
 
     case httpDownloadDone:
         return 0;
 
     case httpUploadData:
-        moved = *count;
-        have  = resource->resource.canned_data.count - offset;
+        if (client->out_content_length == 0)
+        {
+            *count = 0; // nothing to send
+        }
+        else
+        {
+            moved = *count;
+            have  = resource->resource.canned_data.count - offset;
 
-        if (have < moved)
-        {
-            moved = have;
-        }
-        http_log(5, "move %u of %u at %u\n", moved, have, offset);
-        if (moved > 0)
-        {
-            if (*data)
+            if (have < moved)
             {
-                memcpy(*data, (uint8_t*)resource->resource.canned_data.content + offset, moved);
+                moved = have;
             }
-            else
+            http_log(5, "move %u of %u at %u\n", moved, have, offset);
+            if (moved > 0)
             {
-                *data = (uint8_t*)resource->resource.canned_data.content + offset;
+                if (*data)
+                {
+                    memcpy(*data, (uint8_t*)resource->resource.canned_data.content + offset, moved);
+                }
+                else
+                {
+                    *data = (uint8_t*)resource->resource.canned_data.content + offset;
+                }
+                offset += moved;
+                client->ctxpriv = (void *)(intptr_t)offset;
             }
-            offset += moved;
-            client->ctxpriv = (void *)(intptr_t)offset;
+            *count = moved;
         }
-        *count = moved;
         break;;
 
     case httpComplete:

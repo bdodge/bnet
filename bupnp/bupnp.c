@@ -16,7 +16,7 @@
 #include "bupnp.h"
 
 static http_method_t s_method_MSEARCH;
-static http_method_t s_method_NOTIFY;
+http_method_t s_method_NOTIFY;
 http_method_t s_method_SUBSCRIBE;
 http_method_t s_method_UNSUBSCRIBE;
 
@@ -192,12 +192,12 @@ static int upnp_reply_st_usn(
     phttp->out_port = to_port;
 
     http_begin_reply(phttp, 200, "OK");
-    http_append_reply(phttp, "ST:%s", st);
-    http_append_reply(phttp, "Location:%s", location);
-    http_append_reply(phttp, "USN:%s", usn);
+    http_append_reply(phttp, "ST: %s", st);
+    http_append_reply(phttp, "Location: %s", location);
+    http_append_reply(phttp, "USN: %s", usn);
     http_append_reply(phttp, "Cache-Control: max-age=%d", rate);
-    http_append_reply(phttp, "Server:bnet/1.0 UPnP/1.0 bnet/1.0");
-    http_append_reply(phttp, "Content-Length:0");
+    http_append_reply(phttp, "Server: net/1.0 UPnP/1.0 bnet/1.0");
+    http_append_reply(phttp, "Content-Length: 0");
     http_append_reply(phttp, "Ext:");
     http_append_reply(phttp, "");
 
@@ -414,7 +414,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
     return 0;
 }
 
-int upnp_handle_url(
+static int upnp_handle_udp_url(
                         http_client_t       *client,
                         http_resource_t     *resource,
                         http_callback_type_t cbtype,
@@ -436,6 +436,7 @@ int upnp_handle_url(
     result = 0;
 
     butil_log(5, "UPnP %d %s to %s\n", cbtype, http_method_name(client->method), client->path);
+
     switch (cbtype)
     {
     case httpRequest:
@@ -497,11 +498,9 @@ int upnp_handle_url(
         break;
 
     case httpDownloadData:
-        http_log(4, "Download %s", *data);
         break;
 
     case httpDownloadDone:
-        // use connection: close
         break;
 
     case httpUploadData:
@@ -970,6 +969,59 @@ int upnp_server_slice(upnp_server_t *server, int to_secs, int to_usecs)
         //
         result  = http_server_slice(&server->doc_http_server, 0, 2000);
         result |= http_server_slice(&server->upnp_http_server, 0, 2000);
+
+        if (server->event_http_client && server->event_http_client->state != httpDone)
+        {
+            // there is an active notification being sent out, do that
+            //
+            result = http_client_slice(server->event_http_client);
+        }
+        else
+        {
+            // for each subscription marked dirty, notify the subscriber
+            //
+            if (server->subscriptions)
+            {
+                upnp_subscription_t *sub;
+                upnp_device_t *device;
+                upnp_service_t *service;
+
+                for (sub = server->subscriptions; sub; sub = sub->next)
+                {
+                    if (sub->dirty)
+                    {
+                        sub->dirty = false;
+
+                        break; // only do one notification at a a time
+                    }
+                }
+
+                if (sub)
+                {
+                    upnp_notify_subscribers(server, sub->service);
+
+                    // if this is the only/last dirty subscription to this
+                    // service, mark the service's state vars clean;
+                    //
+                    service = sub->service;
+
+                    for (sub = server->subscriptions; sub; sub = sub->next)
+                    {
+                        if (sub->dirty && sub->service == service)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (! sub)
+                    {
+                        // no more dirty subs to this service so clean vars
+                        //
+                        upnp_mark_var_dirty(service, NULL, false);
+                    }
+                }
+            }
+        }
         break;
 
     case upnpDone:
@@ -1021,6 +1073,16 @@ int upnp_server_init(
     server->q_pool[iparm].next = NULL;
     server->q_free = &server->q_pool[0];
     server->replyq = NULL;
+
+    // init subscription pool
+    //
+    for (iparm = 0; iparm < UPNP_MAX_SUBSCRIPTIONS - 1; iparm++)
+    {
+        server->subs_pool[iparm].next = &server->subs_pool[iparm + 1];
+    }
+    server->subs_pool[iparm].next = NULL;
+    server->subs_free = &server->subs_pool[0];
+    server->subscriptions = NULL;
 
     result = 0;
 
@@ -1084,9 +1146,16 @@ int upnp_server_init(
             return result;
         }
 
+        result = http_register_method("UNSUBSCRIBE", NULL, NULL, &s_method_UNSUBSCRIBE);
+        if (result)
+        {
+            UPNP_ERROR("can't register unsubscribe method");
+            return result;
+        }
+
         // and add any url going to the upnp server as handled here
         //
-        result = http_add_func_resource(&server->upnp_resources, schemeHTTP, "*", NULL, upnp_handle_url, server);
+        result = http_add_func_resource(&server->upnp_resources, schemeHTTP, "*", NULL, upnp_handle_udp_url, server);
         if (result)
         {
             UPNP_ERROR("can't make upnp resource");
@@ -1160,6 +1229,23 @@ int upnp_server_init(
         //
         server->upnp_http_server.next = &server->doc_http_server;
         server->doc_http_server.next = NULL;
+
+        // create an http client for eventing
+        //
+        server->event_http_client = http_client_create(NULL, true);
+        if (! server->event_http_client)
+        {
+            butil_log(0, "Can't make event http client\n");
+            result = -1;
+            break;
+        }
+
+        result = http_add_func_resource(&server->event_resources, schemeHTTP, "*", NULL, upnp_handle_notify, server);
+        if (result)
+        {
+            UPNP_ERROR("can't make upnp resource");
+            break;
+        }
     }
     while (0); // catch
 
@@ -1181,6 +1267,12 @@ void upnp_server_cleanup(upnp_server_t *server)
     }
     http_server_cleanup(&server->doc_http_server);
     http_server_cleanup(&server->upnp_http_server);
+
+    if (server->event_http_client)
+    {
+        http_client_free(server->event_http_client);
+        server->event_http_client = NULL;
+    }
 }
 
 int upnp_server_abort(upnp_server_t *server)

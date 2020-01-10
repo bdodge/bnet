@@ -47,6 +47,17 @@ typedef enum
 }
 upnp_vartype_t;
 
+typedef enum
+{
+    vdsNone,
+    vdsDirty,
+    vdsNeverDirty
+}
+upnp_varstate_t;
+
+#define upnp_get_var_dirty(v)       ((v)->dirty == vdsDirty)
+#define upnp_set_var_dirty(v, d)    ((v)->dirty = (((v)->dirty == vdsNeverDirty) ? vdsNeverDirty : ((d) ? vdsDirty : vdsNone)))
+
 typedef struct upnp_val
 {
     upnp_vartype_t  type;
@@ -66,6 +77,7 @@ upnp_val_t;
 typedef struct upnp_var
 {
     char               *name;
+    upnp_varstate_t     dirty;
     upnp_val_t          val;
     struct upnp_var    *next;
 }

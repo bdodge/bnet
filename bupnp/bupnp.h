@@ -23,13 +23,15 @@
 #include "bhttpconfig.h"
 #include "bhttp.h"
 
-#define UPNP_MAX_CONCURRENT_CLIENTS 5
-#define UPNP_MAX_SOAP (65536 * 2)
+#define UPNP_MAX_CONCURRENT_CLIENTS (5)
+#define UPNP_MAX_SOAP               (65536 * 2)
+#define UPNP_MAX_SUBSCRIPTIONS      (16)
 
 #define UPNP_MAX_URL HTTP_MAX_URL
 
 #include "bupnpvar.h"
 #include "bupnpservice.h"
+#include "bupnpevent.h"
 #include "bupnpsoap.h"
 
 #define UPNP_ERROR BERROR
@@ -40,7 +42,7 @@
 
 #define UPNP_MCAST_IPV4ADDR     "239.255.255.250"
 
-#define UPNP_MAX_QUEUED_REPLIES 16
+#define UPNP_MAX_QUEUED_REPLIES (16)
 
 typedef enum
 {
@@ -53,13 +55,13 @@ upnp_state_t;
 
 typedef struct upnp_replyq
 {
-    char                    reply_to_host[UPNP_MAX_URL];
-    uint16_t                reply_to_port;
-    time_t                  when;
-    char                    st[UPNP_MAX_URL];
-    char                    usn[UPNP_MAX_URL];
-    time_t                  rate;
-    struct upnp_replyq     *next;
+    char                reply_to_host[UPNP_MAX_URL];
+    uint16_t            reply_to_port;
+    time_t              when;
+    char                st[UPNP_MAX_URL];
+    char                usn[UPNP_MAX_URL];
+    time_t              rate;
+    struct upnp_replyq *next;
 }
 upnp_replyq_t;
 
@@ -84,10 +86,12 @@ typedef struct upnp_server
     upnp_state_t        next_state;
     uint16_t            port;
     bool                aborted;
-    http_resource_t     *upnp_resources;    ///< Resources for UPnP HTTP server
+    http_resource_t    *upnp_resources;     ///< Resources for UPnP HTTP server
     http_server_t       upnp_http_server;   ///< HTTP UDP server for UPnP
-    http_resource_t     *http_resources;    ///< Resources for Document HTTP server
+    http_resource_t    *http_resources;     ///< Resources for Document HTTP server
     http_server_t       doc_http_server;    ///< HTTP TCP server for serving clients
+    http_client_t      *event_http_client;  ///< HTTP TCP Client for event notification
+    http_resource_t    *event_resources;    ///< Resources for notifier client
 
     upnp_device_t      *root_device;
 
@@ -95,6 +99,8 @@ typedef struct upnp_server
     upnp_replyq_t      *q_free;
     upnp_replyq_t      *replyq;
 
+    upnp_subscription_t subs_pool[UPNP_MAX_SUBSCRIPTIONS];
+    upnp_subscription_t *subs_free;
     upnp_subscription_t *subscriptions;
 
     char                search_header[UPNP_MAX_URL];
@@ -107,6 +113,7 @@ upnp_server_t;
 
 extern http_method_t s_method_SUBSCRIBE;
 extern http_method_t s_method_UNSUBSCRIBE;
+extern http_method_t s_method_NOTIFY;
 
 typedef int (*upnp_idle_callback_t)(void *priv);
 
@@ -146,27 +153,6 @@ int             upnp_add_func_url(
                      const char       *path,
                      http_resource_function_t func,
                      void             *priv
-                );
-
-int             upnp_add_device(
-                     upnp_server_t    *server,
-                     const uuid_t      udn,
-                     const char       *description_url,
-                     const char       *device_type,
-                     const uint32_t    device_version,
-                     const uint32_t    advertising_rate
-                );
-
-int             upnp_add_service(
-                    upnp_server_t      *server,
-                    upnp_device_t      *device,
-                    upnp_callback_t     callback,
-                    const char         *service_type,
-                    const uint32_t      service_version,
-                    const char         *scpd_url,
-                    const char         *scpd_content,
-                    const char         *control_url,
-                    const char         *event_url
                 );
 
 #endif

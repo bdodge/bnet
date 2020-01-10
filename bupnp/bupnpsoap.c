@@ -18,8 +18,8 @@
 
 typedef struct soap_context
 {
+    uint16_t ecode;
     char     soap_header[UPNP_MAX_URL];
-    char     callback_url[UPNP_MAX_URL];
     ioring_t soap;
     uint8_t  soap_buffer[UPNP_MAX_SOAP];
 }
@@ -510,6 +510,7 @@ int upnp_handle_control_url(
             return -1;
         }
 
+        context->ecode = 200;
         context->soap.size = UPNP_MAX_SOAP;
         context->soap.data = context->soap_buffer;
         iostream_reset_ring(&context->soap);
@@ -634,7 +635,7 @@ int upnp_handle_control_url(
         *psrc = '\0';
 
         service = NULL;
-        for (device = server->root_device; device; device = device->next)
+        for (device = server->root_device; device && ! service; device = device->next)
         {
             for (service = device->services; service; service = service->next)
             {
@@ -695,7 +696,7 @@ int upnp_handle_control_url(
             result |= http_append_reply(client, "Content-Length: %d", client->out_content_length);
             result |= http_append_reply(client, "Connection: close");
             result |= http_append_reply(client, "Ext: ");
-            result |= http_append_reply(client, "Server: bnet/1.0, UPnP/1.0, bnet/1.0");
+            result |= http_append_reply(client, "Server: bnet/1.0 UPnP/1.0 bnet/1.0");
             result |= http_append_reply(client, "");
             client->state = httpBodyUpload; // this bypasses http system building its own reply
         }
@@ -721,6 +722,7 @@ int upnp_handle_control_url(
         {
             free(context);
         }
+        client->ctxpriv = NULL;
         break;
 
     default:
@@ -738,8 +740,12 @@ int upnp_handle_event_url(
                      )
 {
     upnp_server_t *server;
+    upnp_device_t *device;
+    upnp_service_t *service;
+    upnp_subscription_t *sub;
     char *header;
     char *value;
+    uint16_t ecode;
     int result;
 
     server = (upnp_server_t *)resource->priv;
@@ -748,9 +754,33 @@ int upnp_handle_event_url(
         return -1;
     }
 
+    sub = (upnp_subscription_t *)client->ctxpriv;
+    if (! sub)
+    {
+        sub = server->subs_free;
+        if (! sub)
+        {
+            UPNP_ERROR("Cant alloc subscription");
+            // TODO - format error reply
+            return -1;
+        }
+
+        // alloc a subscription record from pool to use as http data context
+        //
+        server->subs_free = sub->next;
+
+        sub->next = NULL;
+        sub->expiry = 0;
+        sub->loc[0] = '\0';
+        sub->sid[0] = '\0';
+        sub->seq = 0;
+
+        client->ctxpriv = sub;
+    }
+
     result = 0;
 
-    butil_log(5, "ControlCB %d %s to %s\n", cbtype, http_method_name(client->method), client->path);
+    butil_log(5, "EventCB %d %s to %s\n", cbtype, http_method_name(client->method), client->path);
 
     switch (cbtype)
     {
@@ -759,22 +789,6 @@ int upnp_handle_event_url(
         client->keepalive = false;
         client->out_content_length = 0;
 
-        if (client->method == s_method_SUBSCRIBE)
-        {
-            butil_log(4, "SUBSCRIBE %s\n", client->path);
-            return 0;
-        }
-        else if (client->method == s_method_UNSUBSCRIBE)
-        {
-            butil_log(4, "UNSUBSCRIBE %s\n", client->path);
-            return 0;
-        }
-        else
-        {
-            butil_log(1, "Can't do method \"%s\" on UPnP\n",
-                   http_method_name(client->method));
-            return -1;
-        }
         break;
 
     case httpRequestHeader:
@@ -798,20 +812,113 @@ int upnp_handle_event_url(
 
         if (! http_ncasecmp(header, "callback"))
         {
+            if (value[0] == '<')
+            {
+                int vlen;
 
+                value++;
+                vlen = strlen(value);
+                if (vlen > 1)
+                {
+                    if (value[vlen - 1] == '>')
+                    {
+                        value[vlen - 1] = '\0';
+                    }
+                }
+            }
+            strncpy(sub->loc, value, sizeof(sub->loc) - 1);
+            sub->loc[sizeof(sub->loc) - 1] = '\0';
+            break;
+        }
+        else if (! http_ncasecmp(header, "sid"))
+        {
+            if (! http_ncasecmp(value, "uuid:"))
+            {
+                value += 5;
+            }
+            strncpy(sub->sid, value, sizeof(sub->sid) - 1);
+            sub->sid[sizeof(sub->sid) - 1] = '\0';
             break;
         }
         else if (! http_ncasecmp(header, "timeout"))
         {
+            if (! http_ncasecmp(value, "second-"))
+            {
+                value += strlen("second-");
+            }
+            sub->expiry = time(NULL) + strtoul(value, NULL, 0);
             break;
         }
         break;
 
     case httpDownloadData:
-        http_log(4, "Download %s", *data);
         break;
 
     case httpDownloadDone:
+
+        service = NULL;
+        for (device = server->root_device; device && ! service; device = device->next)
+        {
+            for (service = device->services; service; service = service->next)
+            {
+                butil_log(3, "Compare =%s= to our =%s=\n", client->path, service->event_url);
+
+                if (! strcmp(client->path, service->event_url))
+                {
+                    break;
+                }
+            }
+        }
+        if (! service)
+        {
+            butil_log(4, "No service with url \"%s\" on any device\n", client->path);
+            ecode = 404;
+            result = -1;
+        }
+        else
+        {
+            sub->service = service;
+
+            if (client->method == s_method_SUBSCRIBE)
+            {
+                butil_log(4, "SUBSCRIBE %s\n", client->path);
+                result = upnp_subscribe(server, sub, &ecode);
+            }
+            else if (client->method == s_method_UNSUBSCRIBE)
+            {
+                butil_log(4, "UNSUBSCRIBE %s\n", client->path);
+                result = upnp_unsubscribe(server, sub, &ecode);
+            }
+            else
+            {
+                butil_log(1, "Can't do method \"%s\" on UPnP\n",
+                       http_method_name(client->method));
+                ecode = 401;
+                result = -1;
+            }
+        }
+        if (! result)
+        {
+            // do the reply headers ourselves here, as they're a bit different from
+            // the http defaults
+            //
+            result = http_begin_reply(client, 200, "OK");
+            result |= http_append_reply(client, "Content-Type: %s", butil_mime_string_for_content_type(butil_mime_xml));
+            result |= http_append_reply(client, "Content-Length: %d", 0);
+            result |= http_append_reply(client, "Connection: close");
+            if (client->method == s_method_SUBSCRIBE)
+            {
+                result |= http_append_reply(client, "SID: uuid:%s", sub->sid);
+                result |= http_append_reply(client, "Timeout: Second-%u", sub->expiry - time(NULL));
+            }
+            result |= http_append_reply(client, "Server: bnet/1.0 UPnP/1.0 bnet/1.0");
+            result |= http_append_reply(client, "Ext: ");
+            result |= http_append_reply(client, "");
+            client->state = httpBodyUpload; // this bypasses http system building its own reply
+        }
+        else
+        {
+        }
         break;
 
     case httpUploadData:
@@ -819,6 +926,11 @@ int upnp_handle_event_url(
         break;
 
     case httpComplete:
+        if (sub)
+        {
+            sub->next = server->subs_free;
+            server->subs_free = sub;
+        }
         break;
 
     default:
@@ -826,5 +938,4 @@ int upnp_handle_event_url(
     }
     return result;
 }
-
 

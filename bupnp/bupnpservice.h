@@ -74,6 +74,7 @@ typedef struct upnp_service
 {
     uuid_t              usn;
     char                scpd_url[UPNP_MAX_URL];
+    char                event_url[UPNP_MAX_URL];
     char                upnp_service_type[UPNP_MAX_URL];
     uint32_t            upnp_service_version;
     upnp_callback_t     callback;
@@ -88,24 +89,60 @@ upnp_service_t;
 
 typedef struct upnp_subscription
 {
-    char                udn     [UPNP_MAX_URL];
-    char                loc     [UPNP_MAX_URL];
-    char                url     [UPNP_MAX_URL];
-
-    char                sid     [UPNP_MAX_URL];
-
-    time_t              lastping;
-    time_t              rate;
-
-    unsigned long       seq;
-
+    upnp_service_t     *service;
+    char                loc[UPNP_MAX_URL];
+    char                sid[UPNP_MAX_URL];
+    time_t              expiry;
+    uint32_t            seq;
+    bool                dirty;
     upnp_callback_t     callback;
     struct upnp_subscription *next;
 }
 upnp_subscription_t;
 
-upnp_var_t *upnp_state_var_from_name(upnp_service_t *service, const char *var_name);
-upnp_arglist_t *upnp_arg_from_name(upnp_action_t *action, const char *arg_name);
-upnp_action_t *upnp_action_from_name(upnp_service_t *service, const char *action_name);
+upnp_var_t      *upnp_state_var_from_name(
+                    upnp_service_t      *service,
+                    const char          *var_name
+                );
+
+upnp_arglist_t  *upnp_arg_from_name(
+                    upnp_action_t       *action,
+                    const char          *arg_name
+                );
+
+upnp_action_t   *upnp_action_from_name(
+                    upnp_service_t      *service,
+                    const char          *action_name
+                );
+
+int             upnp_mark_var_dirty(
+                    upnp_service_t      *service,
+                    const char          *var_name,
+                    bool                isdirty
+                );
+
+bool            upnp_any_var_dirty(upnp_service_t *service);
+
+int             upnp_add_device(
+                     struct upnp_server *server,
+                     const uuid_t       udn,
+                     const char        *description_url,
+                     const char        *device_type,
+                     const uint32_t     device_version,
+                     const uint32_t     advertising_rate
+                );
+
+int             upnp_add_service(
+                    struct upnp_server *server,
+                    upnp_device_t      *device,
+                    upnp_callback_t     callback,
+                    const char         *service_type,
+                    const uint32_t      service_version,
+                    const char         *scpd_url,
+                    const char         *scpd_content,
+                    const char         *control_url,
+                    const char         *event_url
+                );
+
 
 #endif

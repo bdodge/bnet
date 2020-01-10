@@ -20,6 +20,7 @@ include $(SRCROOT)/common/makecommon.mk
 SOURCES=$(SRCDIR)/bupnp.c	\
 		$(SRCDIR)/bupnpservice.c \
 		$(SRCDIR)/bupnpsoap.c	\
+		$(SRCDIR)/bupnpevent.c	\
 		$(SRCDIR)/bupnpvar.c
 
 HEADERS=$(SOURCES:%.c=%.h)
@@ -33,12 +34,15 @@ CFLAGS += $(LIBINCLS)
 ifdef BNET_TLS
 	CFLAGS += -DHTTP_SUPPORT_TLS=$(BNET_TLS)
 endif
+ifdef BNET_ZLIB
+	CFLAGS += -DHTTP_SUPPORT_COMPRESSION=$(BNET_ZLIB)
+endif
 CFLAGS += $(EXTRA_DEFINES:%=-D%) -Wno-format-truncation
 
 PROGSOURCES=$(SRCDIR)/bupnpmediaserver.c
 PROGOBJECTS=$(OBJDIR)/bupnpmediaserver.o
 
-bupnpms: $(PROGOBJECTS) $(UPNPLIB) $(LIBS) $(TLSDEPS)
+bupnpms: $(PROGOBJECTS) $(UPNPLIB) $(LIBS) $(TLSDEPS) $(ZLIBDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(UPNPLIB)
@@ -56,6 +60,8 @@ $(OBJDIR)/bupnp.o: $(SRCDIR)/bupnp.c $(HEADERS)
 $(OBJDIR)/bupnpservice.o: $(SRCDIR)/bupnpservice.c $(HEADERS)
 
 $(OBJDIR)/bupnpsoap.o: $(SRCDIR)/bupnpsoap.c $(HEADERS)
+
+$(OBJDIR)/bupnpevent.o: $(SRCDIR)/bupnpevent.c $(HEADERS)
 
 $(OBJDIR)/bupnpvar.o: $(SRCDIR)/bupnpvar.c $(HEADERS)
 

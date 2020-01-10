@@ -560,7 +560,7 @@ int butil_parse_url(
     {
         // port is specified
         portnum = (uint16_t)strtoul(ps + 1, (char **)&pe, 10);
-        len = pe - ps;
+        len = pe - ps - 1;
         if (len > BUTIL_MAX_PORTSPEC)
         {
             BERROR("Malformed port number");

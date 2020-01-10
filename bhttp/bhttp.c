@@ -68,8 +68,8 @@ http_client_t *http_client_create(http_resource_t *resources, bool isclient)
     }
     else
     {
-        // this is a client context
-        client->state = httpClientInit;
+        // this is a client context, don't init until stream is set
+        client->state = httpDone;
     }
     client->prev_state = httpDone;
     client->long_timeout = HTTP_LONG_TIMEOUT;
@@ -1235,14 +1235,43 @@ int http_client_slice(http_client_t *client)
         // setup to send the request
         //
         result = http_begin_request(client);
-        result |= http_append_request(client, "Host: %s", client->host);
+        result |= http_append_request(client, "Host: %s:%u", client->host, client->port);
         client->expect100 = false;
         if (client->use100)
         {
             client->expect100 = true;
             result |= http_append_request(client, "Expect: 100-continue");
         }
-    #if HTTP_SUPPORT_WEBSOCKET
+        // get content-type, etc. from resource if present (post/put)
+        //
+        if (client->resource && client->resource->callback)
+        {
+            // tell resource the request is starting
+            //
+            // NOTE: this callback can change client state, setup xfer state, etc.
+            //
+            result = client->resource->callback(
+                                        client,
+                                        client->resource,
+                                        httpRequest,
+                                        NULL,
+                                        NULL
+                                        );
+            if (result)
+            {
+                HTTP_ERROR("Send request callback cancels");
+                return http_slice_fatal(client, -1);
+            }
+            client->resource_open = true;
+
+            // if client changed state on purpose, assume they don't want our headers
+            //
+            if (client->state != httpClientInit)
+            {
+                break;
+            }
+        }
+        #if HTTP_SUPPORT_WEBSOCKET
         if (client->ws_upgrade)
         {
             result |= http_websocket_create_key(client->ws_key, sizeof(client->ws_key));
@@ -1252,90 +1281,54 @@ int http_client_slice(http_client_t *client)
             result |= http_append_request(client, "Sec-WebSocket-Protocol: %s", client->ws_proto);
             result |= http_append_request(client, "Sec-WebSocket-Version: %u", client->ws_version);
         }
-    #endif
-        // get content-type, etc. from resource if present (post/put)
-        //
-        switch (client->method)
+        else
         {
-        case httpPut:
-        case httpPost:
-            if (client->resource && client->resource->callback)
-            {
-                // tell resource the request is starting
-                //
-                // NOTE: this callback can change client state, setup xfer state, etc.
-                //
-                result = client->resource->callback(
-                                            client,
-                                            client->resource,
-                                            httpRequest,
-                                            NULL,
-                                            NULL
-                                            );
-                if (result)
-                {
-                    HTTP_ERROR("Send request callback cancels");
-                    return http_slice_fatal(client, -1);
-                }
-                client->resource_open = true;
-            }
-            result |= http_append_connection_to_request(client, false);
+        #endif
+        result |= http_append_connection_to_request(client, false);
 
-            if (client->out_content_length)
+        if (client->out_content_length)
+        {
+            if (client->out_transfer_type != httpChunked)
             {
-                if (client->out_transfer_type != httpChunked)
-                {
-                    result |= http_append_request(client, "Content-Length: %d",
-                                client->out_content_length);
-                }
-                else
-                {
-                    result |= http_append_request(client, "Transfer-Encoding: chunked");
-                }
-                if (client->out_content_type == butil_mime_multi)
-                {
-                    result |= http_append_request(client, "Content-Type: %s;boundary=%s",
-                                butil_mime_string_for_content_type(client->out_content_type),
-                                client->boundary);
-                }
-                else
-                {
-                    result |= http_append_request(client, "Content-Type: %s",
-                                butil_mime_string_for_content_type(client->out_content_type));
-                }
+                result |= http_append_request(client, "Content-Length: %d",
+                            client->out_content_length);
             }
             else
             {
-                result |= http_append_request(client, "Content-Length: 0");
+                result |= http_append_request(client, "Transfer-Encoding: chunked");
             }
-            if (
-                        (client->out_transfer_type != httpChunked)
-                ||      ! (client->resource && client->out_content_length)
-            )
+            if (client->out_content_type == butil_mime_multi)
             {
-                // first chunk output will insert empty line so only do this for non-chunked
-                // (or for chunked xfer where there won't be any chunks)
-                //
-                result |= http_append_request(client, "");
+                result |= http_append_request(client, "Content-Type: %s;boundary=%s",
+                            butil_mime_string_for_content_type(client->out_content_type),
+                            client->boundary);
             }
-            break;
-
-        default:
-            #if HTTP_SUPPORT_WEBSOCKET
-            if (! client->ws_upgrade)
+            else
             {
-            #endif
-            result |= http_append_connection_to_request(client, false);
-            #if HTTP_SUPPORT_WEBSOCKET
+                result |= http_append_request(client, "Content-Type: %s",
+                            butil_mime_string_for_content_type(client->out_content_type));
             }
-            #endif
+        }
+        else
+        {
             result |= http_append_request(client, "Content-Length: 0");
-            result |= http_append_request(client, "Accept: */*");
-            #if HTTP_SUPPORT_COMPRESSION
-            result |= http_append_request(client, "Accept-Encoding: gzip");
-            #endif
+        }
+        result |= http_append_request(client, "Accept: */*");
+        #if HTTP_SUPPORT_COMPRESSION
+        result |= http_append_request(client, "Accept-Encoding: gzip");
+        #endif
+        #if HTTP_SUPPORT_WEBSOCKET
+        }
+        #endif
+        if (
+                    (client->out_transfer_type != httpChunked)
+            ||      ! (client->resource && client->out_content_length)
+        )
+        {
+            // first chunk output will insert empty line so only do this for non-chunked
+            // (or for chunked xfer where there won't be any chunks)
+            //
             result |= http_append_request(client, "");
-            break;
         }
         if (result)
         {
@@ -1346,7 +1339,7 @@ int http_client_slice(http_client_t *client)
         // to allow combining of request/headers with body to save
         // writes to the remote server
         //
-        if (client->use100)
+        if (client->use100 || client->ws_upgrade)
         {
             client->state = httpSendRequest;
         }

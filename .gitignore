@@ -3,9 +3,14 @@ bftp/fromremote.jpg
 bhttp/bhttp
 bhttp/media/
 bhttp/.obj*
+bupnp/bupnpms
+bupnp/dlna*
+bupnp/test/
+bupnp/.obj*
 bjson/bjsontest
 bmem/bmemtest
 bmqtt/mqtt
+bmqtt/.obj*
 bmdns/mdnsr
 bosal/bosaltest
 bsasl/bsasltest
@@ -18,12 +23,17 @@ bsnmp/bmibc/bmibc
 bsnmp/bmibc/crap.*
 bsmtp/bsmtptest
 bsip/bsip
+bsip/.obj*
 bipp/bipp
 bipp/printout
 bipp/ianaimport/bianaimp
 bipp/.obj*
+bgcloudprt/bgcpnv.json
 bgcloudprt/bgcp
 bgcloudprt/.obj*
+bimageio/bimg
+bimageio/.obj*
+bmediatree/bmediatest
 
 # Prerequisites
 *.d

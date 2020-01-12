@@ -274,15 +274,49 @@ int build_media_tree(upnp_server_t *server, const char *rootdir)
     media_obj_t *subdir;
     media_obj_t *child;
     struct dirent *ent;
+    char hostname[UPNP_MAX_URL];
+    char location[UPNP_MAX_URL];
+    bipv4addr_t myipv4addr;
+    bipv6addr_t myipv6addr;
+    int iface_index;
+
     char path[UPNP_MAX_URL];
     char idstring[64];
-    int  pathstack[UPNP_MAX_DIR_DEPTH];
-    DIR *dirstack[UPNP_MAX_DIR_DEPTH];
-    media_obj_t *treestack[UPNP_MAX_DIR_DEPTH];
-    int  pathtop;
-    int  itemno;
+
+    struct {
+        int  offset;
+        DIR *dir;
+        media_obj_t *tree;
+        int itemno;
+    }
+    stack[UPNP_MAX_DIR_DEPTH];
+    int  top;
+
+    int  result;
 
     butil_log(2, "Generating media tree from %s\n", rootdir);
+
+    result = butil_get_host_info(
+                                hostname,
+                                sizeof(hostname),
+                                &myipv4addr,
+                                &myipv6addr,
+                                &iface_index
+                                );
+    if (result)
+    {
+        butil_log(1, "Can't get interface data\n");
+        return result;
+    }
+
+    if (myipv4addr.addr != 0)
+    {
+        butil_str_for_ipv4(myipv4addr.addr, hostname, sizeof(hostname));
+    }
+    else
+    {
+        butil_str_for_ipv6(&myipv6addr, hostname, sizeof(hostname));
+    }
 
     // make sure the dir has a slash
     //
@@ -291,22 +325,22 @@ int build_media_tree(upnp_server_t *server, const char *rootdir)
 
     // point to end of current dir path as place to appendd subdirs
     //
-    pathtop = 0;
-    pathstack[pathtop] = strlen(path);
-    if (pathstack[pathtop] >= (sizeof(path) - 2))
+    top = 0;
+    stack[top].offset = strlen(path);
+    if (stack[top].offset >= (sizeof(path) - 2))
     {
         butil_log(1, "Start-path too long\n");
         return -1;
     }
     else
     {
-        if (pathstack[pathtop] > 0)
+        if (stack[top].offset > 0)
         {
-            if (path[pathstack[pathtop] - 1] != '/')
+            if (path[stack[top].offset - 1] != '/')
             {
-                path[pathstack[pathtop]] = '/';
-                pathstack[pathtop]++;
-                path[pathstack[pathtop]] = '\0';
+                path[stack[top].offset] = '/';
+                stack[top].offset++;
+                path[stack[top].offset] = '\0';
             }
         }
     }
@@ -318,10 +352,10 @@ int build_media_tree(upnp_server_t *server, const char *rootdir)
         return -1;
     }
 
-    dirstack[pathtop] = opendir(path);
-    if (! dirstack[pathtop])
+    stack[top].dir = opendir(path);
+    if (! stack[top].dir)
     {
-        butil_log(0, "Can't open directory %s\n", pathstack[pathtop]);
+        butil_log(0, "Can't open directory %s\n", stack[top].offset);
         media_tree_destroy(tree);
         return -1;
     }
@@ -332,32 +366,32 @@ int build_media_tree(upnp_server_t *server, const char *rootdir)
     if (! root)
     {
         butil_log(0, "Can't create root item\n");
-        closedir(dirstack[pathtop]);
+        closedir(stack[top].dir);
         media_tree_destroy(tree);
         return -1;
     }
 
-    treestack[pathtop] = root;
+    stack[top].itemno = 0;
+    stack[top].tree = root;
     s_media_tree = tree;
 
-    itemno = 0;
-
-    // enumerate entries in the current (dirstack[pathtop]) directory and
+    // enumerate entries in the current (stack[top].dir) directory and
     // explore subdirs. I do this with my own stack to avoid recursion since
     // recursing with a max-path array in each call gets really large on the stack
     //
     do
     {
-        ent = readdir(dirstack[pathtop]);
+        ent = readdir(stack[top].dir);
         if (! ent)
         {
             // end of subdir, pop to previous level
             //
-            pathtop--;
-            if (pathtop >= 0)
+            closedir(stack[top].dir);
+            top--;
+            if (top >= 0)
             {
-                butil_log(5, "End of dir %s\n", path + pathstack[pathtop]);
-                path[pathstack[pathtop]] = '\0';
+                butil_log(5, "End of dir %s\n", path + stack[top].offset);
+                path[stack[top].offset] = '\0';
             }
             else
             {
@@ -370,48 +404,52 @@ int build_media_tree(upnp_server_t *server, const char *rootdir)
             {
                 if (strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."))
                 {
-                    if (pathtop >= UPNP_MAX_DIR_DEPTH - 1)
+                    if (top >= UPNP_MAX_DIR_DEPTH - 1)
                     {
                         butil_log(1, "Max depth exceeded\n");
                     }
                     else
                     {
-                        strncpy(path + pathstack[pathtop], ent->d_name, sizeof(path) - pathstack[pathtop] - 1);
-                        pathtop++;
-                        pathstack[pathtop] = strlen(path);
-                        if (pathstack[pathtop] >= (sizeof(path) - 2))
+                        strncpy(path + stack[top].offset, ent->d_name, sizeof(path) - stack[top].offset - 1);
+                        top++;
+                        stack[top].offset = strlen(path);
+                        if (stack[top].offset >= (sizeof(path) - 2))
                         {
                             butil_log(1, "Sub-path too long\n");
-                            pathtop--;
+                            top--;
                         }
                         else
                         {
-                            if (pathstack[pathtop] > 0)
+                            if (stack[top].offset > 0)
                             {
-                                if (path[pathstack[pathtop] - 1] != '/')
+                                if (path[stack[top].offset - 1] != '/')
                                 {
-                                    path[pathstack[pathtop]] = '/';
-                                    pathstack[pathtop]++;
-                                    path[pathstack[pathtop]] = '\0';
+                                    path[stack[top].offset] = '/';
+                                    stack[top].offset++;
+                                    path[stack[top].offset] = '\0';
                                 }
                             }
 
-                            dirstack[pathtop] = opendir(path);
-                            if (! dirstack[pathtop])
+                            stack[top].itemno = 0;
+                            stack[top].dir = opendir(path);
+
+                            if (! stack[top].dir)
                             {
                                 butil_log(0, "Can't open directory %s\n", path);
-                                pathtop--;
+                                top--;
                             }
                             else
                             {
-                                snprintf(idstring, sizeof(idstring), "%p-%u", treestack[pathtop - 1], itemno);
-                                itemno++;
+                                snprintf(idstring, sizeof(idstring), "%s-%x",
+                                       stack[top - 1].tree->id, stack[top - 1].itemno/*, stack[top].itemno*/);
+                                stack[top - 1].itemno++;
                                 butil_log(4, "Add folder item %s at id %s\n", ent->d_name, idstring);
-                                treestack[pathtop] = media_create_in_tree(idstring, 0, mtFOLDER, ent->d_name, tree, treestack[pathtop - 1]);
-                                if (! treestack[pathtop])
+
+                                stack[top].tree = media_create_in_tree(idstring, 0, mtFOLDER, ent->d_name, tree, stack[top - 1].tree);
+                                if (! stack[top].tree)
                                 {
                                     butil_log(1, "Can't make item for folder %s\n", ent->d_name);
-                                    pathtop--;
+                                    top--;
                                 }
                             }
                         }
@@ -420,18 +458,40 @@ int build_media_tree(upnp_server_t *server, const char *rootdir)
             }
             else
             {
-                snprintf(idstring, sizeof(idstring), "%p-%u", treestack[pathtop], itemno);
-                itemno++;
+                snprintf(idstring, sizeof(idstring), "%s-%x", stack[top].tree->id, stack[top].itemno);
+                stack[top].itemno++;
                 butil_log(4, "Add file item %s at id %s\n", ent->d_name, idstring);
-                child = media_create_in_tree(idstring, 0, mtSONG, ent->d_name, tree, treestack[pathtop]);
+
+                child = media_create_in_tree(idstring, 0, mtSONG, ent->d_name, tree, stack[top].tree);
                 if (! child)
                 {
                     butil_log(1, "Can't make item for %s\n", ent->d_name);
                 }
+                // form url of item
+                //
+                snprintf(path + stack[top].offset, sizeof(path) - stack[top].offset - 1, "%s", ent->d_name);
+                result = butil_paste_url(
+                                            location,
+                                            sizeof(location),
+                                            schemeHTTP,
+                                            hostname,
+                                            server->port,
+                                            path + stack[0].offset /* dont include root of path */
+                                        );
+                path[stack[top].offset] = '\0';
+                if (result)
+                {
+                    butil_log(1, "Can't paste url\n");
+                }
+                else
+                {
+                    butil_log(3, "Item url=%s\n", location);
+                    media_set_url(child, location);
+                }
            }
         }
     }
-    while (pathtop >= 0);
+    while (top >= 0);
 
     return 0;
 }
@@ -565,17 +625,6 @@ int main(int argc, char **argv)
 
     butil_set_log_level(loglevel);
 
-    if (! s_media_root_dir)
-    {
-        // generate a little media tree to server
-        //
-        result = build_sample_media_tree(&server);
-    }
-    else
-    {
-        result = build_media_tree(&server, s_media_root_dir);
-    }
-
     result = upnp_server_init(
                                 &server,
                                 port,
@@ -590,6 +639,17 @@ int main(int argc, char **argv)
     {
         UPNP_ERROR("can't init server");
         return result;
+    }
+
+    if (! s_media_root_dir)
+    {
+        // generate a little media tree to server
+        //
+        result = build_sample_media_tree(&server);
+    }
+    else
+    {
+        result = build_media_tree(&server, s_media_root_dir);
     }
 
     s_reply.size = 32768;
@@ -610,6 +670,16 @@ int main(int argc, char **argv)
     {
         UPNP_ERROR("can't add icon");
         return result;
+    }
+
+    if (s_media_root_dir)
+    {
+        result = upnp_add_directory_url(&server, s_media_root_dir);
+        if (result)
+        {
+            UPNP_ERROR("can't add media directory");
+            return result;
+        }
     }
 
     // add a content directory service

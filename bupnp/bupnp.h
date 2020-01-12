@@ -156,5 +156,9 @@ int             upnp_add_func_url(
                      void             *priv
                 );
 
+int             upnp_add_directory_url(
+                     upnp_server_t  *server,
+                     const char     *path
+                );
 #endif
 

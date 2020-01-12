@@ -924,6 +924,33 @@ int upnp_add_func_url(
     return result;
 }
 
+int upnp_add_directory_url(
+                     upnp_server_t  *server,
+                     const char     *path
+                )
+{
+    int result;
+
+    if (! server || ! path)
+    {
+        return -1;
+    }
+
+    result = http_add_file_resource(&server->http_resources, schemeHTTP, "*", path, NULL);
+    if (result)
+    {
+        UPNP_ERROR("can't add directory resource");
+        return result;
+    }
+
+    if (! result)
+    {
+        server->doc_http_server.resources = server->http_resources;
+    }
+
+    return result;
+}
+
 static const char *upnp_state_name(upnp_state_t state)
 {
     switch (state)

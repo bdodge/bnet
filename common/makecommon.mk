@@ -62,7 +62,7 @@ LD=ld
 
 CFLAGS += -I$(SRCROOT) -I$(SRCROOT)/common
 
-SYLIBS=
+SYSLIBS=
 
 ifeq ($(OS),Windows_NT)
     CFLAGS += -DWIN32

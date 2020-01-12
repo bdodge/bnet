@@ -17,7 +17,7 @@
 SRCROOT=..
 include $(SRCROOT)/common/makecommon.mk
 
-LIBS+=-lpthread
+SYSLIBS+=-lpthread
 
 SOURCES=$(SRCDIR)/bosal.c $(SRCDIR)/bosal_sem.c $(SRCDIR)/bosal_msgq.c
 HEADERS=$(SOURCES:%.c=%.h) $(SRCROOT)/common/bnetheaders.h

@@ -281,7 +281,7 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, ioring_t 
                 //
                 if (arg->var && ! arg->istype)
                 {
-                    butil_log(3, "Setting statevar %s from arg\n", arg->var->name);
+                    butil_log(4, "Setting statevar %s from arg\n", arg->var->name);
 
                     result = upnp_set_var_value_from_string(arg->var, argval);
                 }
@@ -316,7 +316,7 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, ioring_t 
             }
             if (! result)
             {
-                if (1)
+                if (butil_get_log_level() >= 5)
                 {
                     if (is_string_type)
                     {
@@ -330,18 +330,18 @@ int upnp_dispatch_soap(upnp_server_t *server, upnp_service_t *service, ioring_t 
                         memcpy(argval, arg->val.value.sval, len);
                         argval[sizeof(argval) - 1] = '\0';
 
-                        butil_log(3, "Arg %s value=%s=\n", arg->name, argval);
+                        butil_log(5, "Arg %s value=%s=\n", arg->name, argval);
                     }
                     else
                     {
-                        butil_log(3, "Arg %s value=%s=\n", arg->name, argval);
+                        butil_log(5, "Arg %s value=%s=\n", arg->name, argval);
                     }
                 }
                 arg->isset = true;
             }
             else
             {
-                butil_log(2, "Argument %s missing in action %s\n", arg->name, action_name);
+                butil_log(4, "Argument %s missing in action %s\n", arg->name, action_name);
             }
         }
     }
@@ -598,7 +598,7 @@ int upnp_handle_control_url(
 
     case httpDownloadDone:
 
-        butil_log(3, "ControlCB %d: SOAP %s body of %u bytes\n", client->id, context->soap_header, context->soap.count);
+        butil_log(4, "ControlCB %d: SOAP %s body of %u bytes\n", client->id, context->soap_header, context->soap.count);
 
         // figure out which service this control is intended for by comparing usn's
         //
@@ -710,7 +710,7 @@ int upnp_handle_control_url(
             moved = context->soap.count;
         }
 
-        butil_log(3, "Move %d (can take %d) at off %d\n", moved, *count, context->soap.tail);
+        butil_log(5, "Move %d (can take %d) at off %d\n", moved, *count, context->soap.tail);
         memcpy(*data, context->soap.data + context->soap.tail, moved);
         context->soap.tail += moved;
         context->soap.count -= moved;
@@ -861,7 +861,7 @@ int upnp_handle_event_url(
         {
             for (service = device->services; service; service = service->next)
             {
-                butil_log(3, "Compare =%s= to our =%s=\n", client->path, service->event_url);
+                butil_log(6, "Compare =%s= to our =%s=\n", client->path, service->event_url);
 
                 if (! strcmp(client->path, service->event_url))
                 {

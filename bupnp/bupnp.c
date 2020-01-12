@@ -20,11 +20,7 @@ http_method_t s_method_NOTIFY;
 http_method_t s_method_SUBSCRIBE;
 http_method_t s_method_UNSUBSCRIBE;
 
-// remove proper delays in serch replies to make response faster
-//
-#define UPNP_NO_JITTERS 1
-
-time_t upnp_rate_fudge(time_t rate)
+time_t upnp_rate_fudge(upnp_server_t *server, time_t rate)
 {
     time_t rn;
 
@@ -34,18 +30,32 @@ time_t upnp_rate_fudge(time_t rate)
     }
     rate /= 2;
 
-    rn = rand();
+    if (! server->no_jitter)
+    {
+        rn = rand();
+    }
+    else
+    {
+        rn = 0;
+    }
 
     // randomize advertising rate a bit (up to 1/4 less)
     //
     return rate - ((rn * (rate / 4)) / RAND_MAX);
 }
 
-time_t upnp_mx_fudge(time_t mx)
+time_t upnp_mx_fudge(upnp_server_t *server, time_t mx)
 {
     // randomize mx to between 0 and mx
     //
-    return mx - (((rand() * mx) + (RAND_MAX / 2)) / RAND_MAX);
+    if (! server->no_jitter)
+    {
+        return mx - (((rand() * mx) + (RAND_MAX / 2)) / RAND_MAX);
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 static int upnp_queue_reply(
@@ -68,12 +78,16 @@ static int upnp_queue_reply(
 
     server->q_free = reply->next;
 
-#ifndef UPNP_NO_JITTERS
-    time(&reply->when);
-    reply->when += when;
-#else
-    reply->when = 0;
-#endif
+    if (! server->no_jitter)
+    {
+        time(&reply->when);
+        reply->when += when;
+    }
+    else
+    {
+        reply->when = 0;
+    }
+
     strncpy(reply->reply_to_host, to_host, sizeof(reply->reply_to_host));
     reply->reply_to_port = to_port;
     strncpy(reply->st, st, sizeof(reply->st));
@@ -81,7 +95,7 @@ static int upnp_queue_reply(
     reply->rate = rate;
     reply->next = NULL;
 
-    butil_log(4, "Q reply to %s %d from now\n", to_host, when);
+    butil_log(5, "Q reply to %s %d from now\n", to_host, when);
 
     if (! server->replyq)
     {
@@ -225,7 +239,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
     bool match_urn  = false;
     bool match;
 
-    butil_log(4, "M-SEARCH %s\n", client->path);
+    butil_log(5, "M-SEARCH %s\n", client->path);
 
     // if the search target matches one of our devices or services, reply
     //
@@ -249,13 +263,13 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
         }
         else
         {
-            butil_log(4, "Ignore search targer \"%s\"\n", server->search_header);
+            butil_log(5, "Ignore search target \"%s\"\n", server->search_header);
             return 0;
         }
     }
     else
     {
-        butil_log(3, "Ignore Man hdr \"%s\"\n", server->man_header);
+        butil_log(5, "Ignore Man hdr \"%s\"\n", server->man_header);
         return 0;
     }
 
@@ -276,7 +290,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
 
                 result = upnp_queue_reply(
                                         server,
-                                        upnp_mx_fudge(server->mx_header),
+                                        upnp_mx_fudge(server, server->mx_header),
                                         client->out_host,
                                         client->out_port,
                                         server->search_header,
@@ -293,7 +307,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
             {
                 result = upnp_queue_reply(
                                         server,
-                                        upnp_mx_fudge(server->mx_header),
+                                        upnp_mx_fudge(server, server->mx_header),
                                         client->out_host,
                                         client->out_port,
                                         server->search_header,
@@ -312,7 +326,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
             {
                 // compare to search target
                 //
-                butil_log(3, "Compare =%s= to our =%s=\n", server->search_header, usn);
+                butil_log(6, "Compare =%s= to our =%s=\n", server->search_header, usn);
 
                 if (! http_ncasecmp(server->search_header, usn))
                 {
@@ -342,7 +356,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
 
                 result = upnp_queue_reply(
                                         server,
-                                        upnp_mx_fudge(server->mx_header),
+                                        upnp_mx_fudge(server, server->mx_header),
                                         client->out_host,
                                         client->out_port,
                                         server->search_header,
@@ -366,7 +380,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
                 {
                     // compare to search target
                     //
-                    butil_log(5, "Compare =%s= to our =%s=\n", server->search_header, usn);
+                    butil_log(6, "Compare =%s= to our =%s=\n", server->search_header, usn);
 
                     if (! http_ncasecmp(server->search_header, usn))
                     {
@@ -396,7 +410,7 @@ int upnp_respond_to_search(upnp_server_t *server, http_client_t *client)
 
                     result = upnp_queue_reply(
                                             server,
-                                            upnp_mx_fudge(server->mx_header),
+                                            upnp_mx_fudge(server, server->mx_header),
                                             client->out_host,
                                             client->out_port,
                                             server->search_header,
@@ -435,7 +449,7 @@ static int upnp_handle_udp_url(
 
     result = 0;
 
-    butil_log(5, "UPnP %d %s to %s\n", cbtype, http_method_name(client->method), client->path);
+    butil_log(6, "UPnP %d %s to %s\n", cbtype, http_method_name(client->method), client->path);
 
     switch (cbtype)
     {
@@ -784,7 +798,7 @@ int upnp_send_pending_replies(upnp_server_t *server, time_t now)
     {
         if (reply->when <= now)
         {
-            butil_log(4, "S reply to %s\n", reply->reply_to_host);
+            butil_log(5, "S reply to %s\n", reply->reply_to_host);
 
             // send the reply now
             result = upnp_reply_st_usn(
@@ -956,7 +970,7 @@ int upnp_server_slice(upnp_server_t *server, int to_secs, int to_usecs)
             //
             if (server->root_device && server->root_device->next_adv < now)
             {
-                server->root_device->next_adv = now + upnp_rate_fudge(server->root_device->adv_rate);
+                server->root_device->next_adv = now + upnp_rate_fudge(server, server->root_device->adv_rate);
                 upnp_notify(server);
             }
         }
@@ -967,8 +981,8 @@ int upnp_server_slice(upnp_server_t *server, int to_secs, int to_usecs)
 
         // process events
         //
-        result  = http_server_slice(&server->doc_http_server, 0, 2000);
-        result |= http_server_slice(&server->upnp_http_server, 0, 2000);
+        result  = http_server_slice(&server->doc_http_server, 0, 0);
+        result |= http_server_slice(&server->upnp_http_server, 0, 0);
 
         if (server->event_http_client && server->event_http_client->state != httpDone)
         {
@@ -1035,14 +1049,14 @@ int upnp_server_slice(upnp_server_t *server, int to_secs, int to_usecs)
 }
 
 int upnp_server_init(
-                        upnp_server_t   *server,
-                        const size_t     max_request,
-                        const uint16_t   port,
-                        const uuid_t     root_udn,
-                        const char      *description_url,
-                        const char      *device_name,
-                        const uint32_t   device_version,
-                        const uint32_t   advertising_rate
+                        upnp_server_t  *server,
+                        const uint16_t  port,
+                        bool            no_jitter,
+                        const uuid_t    root_udn,
+                        const char     *description_url,
+                        const char     *device_name,
+                        const uint32_t  device_version,
+                        const uint32_t  advertising_rate
                       )
 {
     struct ip_mreq mreq;
@@ -1058,6 +1072,7 @@ int upnp_server_init(
     }
     server->state = upnpServeInit;
     server->port = port;
+    server->no_jitter = no_jitter;
     server->aborted = false;
     server->upnp_resources = NULL;
     server->http_resources = NULL;
@@ -1306,7 +1321,7 @@ int upnp_serve(upnp_server_t *server, upnp_idle_callback_t on_idle, void *priv)
     }
     while (! result);
 
-    butil_log(4, "UPNP Server ends\n");
+    butil_log(3, "UPNP Server ends\n");
     return result;
 }
 

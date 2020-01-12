@@ -3,9 +3,10 @@ bftp/fromremote.jpg
 bhttp/bhttp
 bhttp/media/
 bhttp/.obj*
-bupnp/bupnpms
+bupnp/bdlnaserver
 bupnp/dlna*
 bupnp/test/
+bupnp/media/
 bupnp/.obj*
 bjson/bjsontest
 bmem/bmemtest

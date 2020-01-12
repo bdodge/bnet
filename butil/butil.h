@@ -110,6 +110,7 @@ mime_content_type_t;
 
 void butil_log              (uint32_t level, const char *fmt, ...);
 void butil_set_log_level    (uint32_t level);
+uint32_t butil_get_log_level(void);
 
 int butil_hextou            (char digit, uint8_t *val);
 int butil_is_white          (char ch);

@@ -484,7 +484,7 @@ static int upnp_parse_scpd(upnp_server_t *server, upnp_service_t *service, const
                 if (! result)
                 {
                     result = upnp_add_var_to_service(service, name, type, eventable);
-                    butil_log(3, "Adding sv %3d =%s= =%s= eventable=%s\n", index, name, type, eventable ? "yes" : "no");
+                    butil_log(4, "Adding sv %3d =%s= =%s= eventable=%s\n", index, name, type, eventable ? "yes" : "no");
                     index++;
                 }
             }
@@ -493,7 +493,7 @@ static int upnp_parse_scpd(upnp_server_t *server, upnp_service_t *service, const
     }
     while (! result);
 
-    butil_log(3, "Added %d state variables for service\n", index);
+    butil_log(4, "Added %d state variables for service\n", index);
 
     // iterate over action list
     index = 0;
@@ -537,7 +537,7 @@ static int upnp_parse_scpd(upnp_server_t *server, upnp_service_t *service, const
                 break;
             }
 
-            butil_log(3, "Adding action %3d =%s=\n", index, action_name);
+            butil_log(4, "Adding action %3d =%s=\n", index, action_name);
             index++;
 
             argdex = 0;
@@ -584,7 +584,7 @@ static int upnp_parse_scpd(upnp_server_t *server, upnp_service_t *service, const
     }
     while (! result);
 
-    butil_log(3, "Added %d actions for service\n", index);
+    butil_log(4, "Added %d actions for service\n", index);
 
     bxml_parser_destroy(pxp);
     return 0;
@@ -613,7 +613,7 @@ int upnp_add_device(
     }
     else
     {
-        butil_log(5, "Adding embedded device %s\n", device_name);
+        butil_log(4, "Adding embedded device %s\n", device_name);
     }
 
     device = (upnp_device_t *)malloc(sizeof(upnp_device_t));

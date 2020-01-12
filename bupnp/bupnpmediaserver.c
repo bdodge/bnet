@@ -16,6 +16,8 @@
 #include "bupnp.h"
 #include "bmediatree.h"
 
+#define UPNP_MAX_DIR_DEPTH 64
+
 #define UUID_STRING "01020304-0506-0708-0900-010203040506"
 
 static uuid_t uuid_device = { 1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6 };
@@ -27,9 +29,11 @@ static const uint8_t s_icon128[];
 extern const size_t s_icon128z;
 
 static int s_update_id = 0;
-
+static const char *s_media_root_dir;
 static media_tree_t *s_media_tree;
 static ioring_t s_reply;
+
+static bool s_nojitter = false;
 
 static const char s_didl_header[] =
     "&lt;DIDL-Lite "
@@ -70,7 +74,7 @@ int content_directory_action(upnp_server_t *server, upnp_service_t *service, con
     int result;
     int made;
 
-    butil_log(3, "ContentDirectory Action: %s\n", action);
+    butil_log(4, "ContentDirectory Action: %s\n", action);
     //butil_log(3, (char*)server->soap.data);
 
     if (! strcmp(action, "Browse"))
@@ -106,7 +110,7 @@ int content_directory_action(upnp_server_t *server, upnp_service_t *service, con
             result = 0;
         }
 
-        butil_log(3, "\nBrowse %s ID:%s start=%u count=%u\n", browseFlag, objID, startIndex, requestedCount);
+        butil_log(4, "\nBrowse %s ID:%s start=%u count=%u\n", browseFlag, objID, startIndex, requestedCount);
 
         iostream_reset_ring(&s_reply);
 
@@ -150,7 +154,7 @@ int content_directory_action(upnp_server_t *server, upnp_service_t *service, con
                 s_reply.head += made;
                 s_reply.count += made;
 
-                butil_log(3, "Add metadata node %s:%d:%s\n", pm->id, pm->kid_num, pm->title ? pm->title : "");
+                butil_log(4, "Add metadata node %s:%d:%s\n", pm->id, pm->kid_num, pm->title ? pm->title : "");
 
                 numReturned++;
             }
@@ -166,7 +170,7 @@ int content_directory_action(upnp_server_t *server, upnp_service_t *service, con
 
                 for (pm = pm->child; pm && numReturned < requestedCount; pm = pm->sibling)
                 {
-                    butil_log(3, "Add item node %s:%d:%s\n", pm->id, pm->kid_num, pm->title ? pm->title : "");
+                    butil_log(4, "Add item node %s:%d:%s\n", pm->id, pm->kid_num, pm->title ? pm->title : "");
 
                     if (pm->type == mtFOLDER)
                     {
@@ -219,7 +223,7 @@ int content_directory_action(upnp_server_t *server, upnp_service_t *service, con
     return 0;
 }
 
-int build_media_tree(upnp_server_t *server)
+int build_sample_media_tree(upnp_server_t *server)
 {
     media_tree_t *tree;
     media_obj_t *root;
@@ -263,12 +267,190 @@ int build_media_tree(upnp_server_t *server)
     return 0;
 }
 
+int build_media_tree(upnp_server_t *server, const char *rootdir)
+{
+    media_tree_t *tree;
+    media_obj_t *root;
+    media_obj_t *subdir;
+    media_obj_t *child;
+    struct dirent *ent;
+    char path[UPNP_MAX_URL];
+    char idstring[64];
+    int  pathstack[UPNP_MAX_DIR_DEPTH];
+    DIR *dirstack[UPNP_MAX_DIR_DEPTH];
+    media_obj_t *treestack[UPNP_MAX_DIR_DEPTH];
+    int  pathtop;
+    int  itemno;
+
+    butil_log(2, "Generating media tree from %s\n", rootdir);
+
+    // make sure the dir has a slash
+    //
+    strncpy(path, rootdir, sizeof(path) - 1);
+    path[sizeof(path) - 1] = '\0';
+
+    // point to end of current dir path as place to appendd subdirs
+    //
+    pathtop = 0;
+    pathstack[pathtop] = strlen(path);
+    if (pathstack[pathtop] >= (sizeof(path) - 2))
+    {
+        butil_log(1, "Start-path too long\n");
+        return -1;
+    }
+    else
+    {
+        if (pathstack[pathtop] > 0)
+        {
+            if (path[pathstack[pathtop] - 1] != '/')
+            {
+                path[pathstack[pathtop]] = '/';
+                pathstack[pathtop]++;
+                path[pathstack[pathtop]] = '\0';
+            }
+        }
+    }
+
+    tree = media_tree_create();
+    if (! tree)
+    {
+        BERROR("Can't make tree");
+        return -1;
+    }
+
+    dirstack[pathtop] = opendir(path);
+    if (! dirstack[pathtop])
+    {
+        butil_log(0, "Can't open directory %s\n", pathstack[pathtop]);
+        media_tree_destroy(tree);
+        return -1;
+    }
+
+    root = media_create_in_tree("0", 0, mtFOLDER, "media", tree, NULL);
+    tree->root = tree->current = root;
+
+    if (! root)
+    {
+        butil_log(0, "Can't create root item\n");
+        closedir(dirstack[pathtop]);
+        media_tree_destroy(tree);
+        return -1;
+    }
+
+    treestack[pathtop] = root;
+    s_media_tree = tree;
+
+    itemno = 0;
+
+    // enumerate entries in the current (dirstack[pathtop]) directory and
+    // explore subdirs. I do this with my own stack to avoid recursion since
+    // recursing with a max-path array in each call gets really large on the stack
+    //
+    do
+    {
+        ent = readdir(dirstack[pathtop]);
+        if (! ent)
+        {
+            // end of subdir, pop to previous level
+            //
+            pathtop--;
+            if (pathtop >= 0)
+            {
+                butil_log(5, "End of dir %s\n", path + pathstack[pathtop]);
+                path[pathstack[pathtop]] = '\0';
+            }
+            else
+            {
+                butil_log(5, "End of dir %s\n", path);
+            }
+        }
+        else
+        {
+            if (ent->d_type == DT_DIR)
+            {
+                if (strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."))
+                {
+                    if (pathtop >= UPNP_MAX_DIR_DEPTH - 1)
+                    {
+                        butil_log(1, "Max depth exceeded\n");
+                    }
+                    else
+                    {
+                        strncpy(path + pathstack[pathtop], ent->d_name, sizeof(path) - pathstack[pathtop] - 1);
+                        pathtop++;
+                        pathstack[pathtop] = strlen(path);
+                        if (pathstack[pathtop] >= (sizeof(path) - 2))
+                        {
+                            butil_log(1, "Sub-path too long\n");
+                            pathtop--;
+                        }
+                        else
+                        {
+                            if (pathstack[pathtop] > 0)
+                            {
+                                if (path[pathstack[pathtop] - 1] != '/')
+                                {
+                                    path[pathstack[pathtop]] = '/';
+                                    pathstack[pathtop]++;
+                                    path[pathstack[pathtop]] = '\0';
+                                }
+                            }
+
+                            dirstack[pathtop] = opendir(path);
+                            if (! dirstack[pathtop])
+                            {
+                                butil_log(0, "Can't open directory %s\n", path);
+                                pathtop--;
+                            }
+                            else
+                            {
+                                snprintf(idstring, sizeof(idstring), "%p-%u", treestack[pathtop - 1], itemno);
+                                itemno++;
+                                butil_log(4, "Add folder item %s at id %s\n", ent->d_name, idstring);
+                                treestack[pathtop] = media_create_in_tree(idstring, 0, mtFOLDER, ent->d_name, tree, treestack[pathtop - 1]);
+                                if (! treestack[pathtop])
+                                {
+                                    butil_log(1, "Can't make item for folder %s\n", ent->d_name);
+                                    pathtop--;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                snprintf(idstring, sizeof(idstring), "%p-%u", treestack[pathtop], itemno);
+                itemno++;
+                butil_log(4, "Add file item %s at id %s\n", ent->d_name, idstring);
+                child = media_create_in_tree(idstring, 0, mtSONG, ent->d_name, tree, treestack[pathtop]);
+                if (! child)
+                {
+                    butil_log(1, "Can't make item for %s\n", ent->d_name);
+                }
+           }
+        }
+    }
+    while (pathtop >= 0);
+
+    return 0;
+}
+
+static void useage(const char *program, int l)
+{
+    butil_log(l, "Usage: %s -lpjh\n", program);
+    butil_log(l, "  -l [level] - set the log level\n");
+    butil_log(l, "  -p [port]  - set HTTP document server port\n");
+    butil_log(l, "  -j         - don't add random jitter to SSDP\n");
+    butil_log(l, "  -h         - help with usage\n");
+}
+
 int main(int argc, char **argv)
 {
     upnp_server_t server;
     uint16_t port;
     const char *program, *arg;
-    int loglevel = 5;
+    int loglevel = 3;
     int result;
 
 #ifdef Windows
@@ -298,58 +480,106 @@ int main(int argc, char **argv)
 
     loglevel = 3;
 
-    port = 8080;
+    port = 8810;
+    s_media_root_dir = NULL;
+
     result = 0;
 
     while (argc > 0 && ! result)
     {
-        arg = *argv++;
-        argc--;
+        arg = *argv;
         if (arg[0] == '-')
         {
             switch (arg[1])
             {
-            case 'p':
-                if (argc > 0)
+            case 'p': case 'P':
+                if ((*argv)[2])
                 {
-                    port = strtoul(*argv, NULL, 0);
+                    port = strtoul(*argv + 2, NULL, 0);
+                }
+                else if (argc > 1)
+                {
                     argv++;
                     argc--;
+                    port = strtoul(*argv, NULL, 0);
                 }
                 else
                 {
-                    butil_log(0, "Use: -p [port]");
+                    useage(program, 0);
+                    return -1;
                 }
                 break;
-            case 'l':
-                if (argc > 0)
+            case 'l': case 'L':
+                if ((*argv)[2])
                 {
-                    loglevel = strtoul(*argv, NULL, 0);
+                    loglevel = strtoul(*argv + 2, NULL, 0);
+                }
+                else if (argc > 1)
+                {
                     argv++;
                     argc--;
+                    loglevel = strtoul(*argv, NULL, 0);
                 }
                 else
                 {
-                    http_log(0, "Use: -l [level]");
+                    useage(program, 0);
+                    return -1;
+                }
+                break;
+            case 'j': case 'J':
+                s_nojitter = true;
+                break;
+            case 'h': case 'H':
+                useage(program, 1);
+                return 0;
+            case 'd': case 'D':
+                if ((*argv)[2])
+                {
+                    s_media_root_dir = *argv + 2;
+                }
+                else if (argc > 1)
+                {
+                    argv++;
+                    argc--;
+                    s_media_root_dir = *argv;
+                }
+                else
+                {
+                    useage(program, 0);
+                    return -1;
                 }
                 break;
             default:
-                butil_log(0, "Bad Switch: %s\n", arg);
-                break;
+                useage(program, 0);
+                return -1;
             }
         }
+        else if (! s_media_root_dir)
+        {
+            useage(program, 0);
+            return -1;
+        }
+        argv++;
+        argc--;
     }
 
     butil_set_log_level(loglevel);
 
-    // generate a little media tree to server
-    //
-    result = build_media_tree(&server);
+    if (! s_media_root_dir)
+    {
+        // generate a little media tree to server
+        //
+        result = build_sample_media_tree(&server);
+    }
+    else
+    {
+        result = build_media_tree(&server, s_media_root_dir);
+    }
 
     result = upnp_server_init(
                                 &server,
-                                65536,
                                 port,
+                                s_nojitter,
                                 uuid_device,
                                 "/device_description",
                                 "MediaServer",

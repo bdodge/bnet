@@ -85,6 +85,7 @@ typedef struct upnp_server
     upnp_state_t        prev_state;
     upnp_state_t        next_state;
     uint16_t            port;
+    bool                no_jitter;
     bool                aborted;
     http_resource_t    *upnp_resources;     ///< Resources for UPnP HTTP server
     http_server_t       upnp_http_server;   ///< HTTP UDP server for UPnP
@@ -118,14 +119,14 @@ extern http_method_t s_method_NOTIFY;
 typedef int (*upnp_idle_callback_t)(void *priv);
 
 int             upnp_server_init(
-                        upnp_server_t    *server,
-                        const size_t      max_request,
-                        const uint16_t    port,
-                        const uuid_t      root_udn,
-                        const char       *description_url,
-                        const char       *device_name,
-                        const uint32_t    device_version,
-                        const uint32_t    advertising_rate
+                        upnp_server_t  *server,
+                        const uint16_t  port,
+                        bool            nojitter,
+                        const uuid_t    root_udn,
+                        const char     *description_url,
+                        const char     *device_name,
+                        const uint32_t  device_version,
+                        const uint32_t  advertising_rate
                       );
 void            upnp_server_cleanup(upnp_server_t *server);
 int             upnp_server_abort(upnp_server_t *server);

@@ -35,6 +35,11 @@ void butil_set_log_level(uint32_t newlevel)
     s_log_level = newlevel;
 }
 
+uint32_t butil_get_log_level(void)
+{
+    return s_log_level;
+}
+
 int butil_hextou(char digit, uint8_t *val)
 {
     if (digit >= 'a' && digit <= 'f')

@@ -42,7 +42,7 @@ CFLAGS += $(EXTRA_DEFINES:%=-D%) -Wno-format-truncation
 PROGSOURCES=$(SRCDIR)/bupnpmediaserver.c
 PROGOBJECTS=$(OBJDIR)/bupnpmediaserver.o
 
-bupnpms: $(PROGOBJECTS) $(UPNPLIB) $(LIBS) $(TLSDEPS) $(ZLIBDEPS)
+bdlnaserver: $(PROGOBJECTS) $(UPNPLIB) $(LIBS) $(TLSDEPS) $(ZLIBDEPS)
 	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS)
 
 library: $(UPNPLIB)

@@ -33,6 +33,7 @@ bgcloudprt/bgcp
 bgcloudprt/.obj*
 bimageio/bimg
 bimageio/.obj*
+bimageio/test/
 bmediatree/bmediatest
 
 # Prerequisites

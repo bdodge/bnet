@@ -163,12 +163,12 @@ int content_directory_action(upnp_server_t *server, upnp_service_t *service, con
                 media_obj_t *px;
                 int numSkipped = 0;
 
-                for (px = pm->child; px && numSkipped < startIndex; px = px->sibling)
+                for (px = pm->child; px && (numSkipped < startIndex); px = px->sibling)
                 {
                     numSkipped++;
                 }
 
-                for (pm = pm->child; pm && numReturned < requestedCount; pm = pm->sibling)
+                for (pm = px; pm && numReturned < requestedCount; pm = pm->sibling)
                 {
                     butil_log(4, "Add item node %s:%d:%s\n", pm->id, pm->kid_num, pm->title ? pm->title : "");
 
@@ -488,6 +488,11 @@ int build_media_tree(upnp_server_t *server, const char *rootdir)
                     butil_log(3, "Item url=%s\n", location);
                     media_set_url(child, location);
                 }
+
+                // Get meta-data of item  and set that TODO
+                //
+                media_set_title(child, ent->d_name);
+
            }
         }
     }

@@ -127,29 +127,15 @@ static int serve_client(ptp_t *ptp, ptp_connection_t *ptpx, bool secure)
         }
         // check on input, event, and output sockets, in that order
         //
-        if (ptpx->state == ptpReadCommandPayload)
+        if (ptpx->state == ptpReadCommandPayload || ptpx->state == ptpReadDataPayload)
         {
             tos = (ptpx->cmdin.count == 0) ? 2 : 0;
+            tous = (ptpx->cmdin.count == 0) ? 0 : 4000;
         }
         else
         {
-            tos = 0;
-        }
-
-        if (
-                ptpx->cmdin.count == 0
-            &&  ptpx->cmdout.count == 0
-            &&  ptpx->evtin.count == 0
-            &&  ptpx->evtout.count == 0
-        )
-        {
-            // all quiet, poll slowly for input and event
-            tous = 5000;
-        }
-        else
-        {
-            // busy, put a minimal wait in
-            tous = 2000;
+			tos = 0;
+            tous = 0;
         }
 
 		// maybe poll client and event socket together?
@@ -167,12 +153,12 @@ static int serve_client(ptp_t *ptp, ptp_connection_t *ptpx, bool secure)
 	        if (ptpx->state == ptpReadEventPayload)
 	        {
 	            tos = (ptpx->evtin.count == 0) ? 2 : 0;
-				tous = (ptpx->evtin.count == 0) ? 0 : 2000;
+				tous = (ptpx->evtin.count == 0) ? 0 : 4000;
 	        }
 	        else
 	        {
 	            tos = 0;
-	            tous = 0;
+	            tous = 2000;
 	        }
 
 	        result = ptp_fill_in(ptpx->event_sock, &ptpx->evtin, tos, tous);
@@ -372,7 +358,7 @@ static int serve_client(ptp_t *ptp, ptp_connection_t *ptpx, bool secure)
             break;
 
         case ptpRun:
-            // todo - timeout of iocount < datalen
+            // todo - timeout if iocount < datalen
             if (ptpx->cmdin.count >= 8)
             {
                 result = ptp_read(&ptpx->cmdin, (uint8_t*)&length, 4);
@@ -401,7 +387,7 @@ static int serve_client(ptp_t *ptp, ptp_connection_t *ptpx, bool secure)
             break;
 
         case ptpReadCommandPayload:
-            // todo - timeout of iocount < datalen
+            // todo - timeout if iocount < cmdlen
             if (ptpx->cmdin.size < ptpx->cmdlen)
             {
                 // for data and end-data packets, just
@@ -458,22 +444,25 @@ static int serve_client(ptp_t *ptp, ptp_connection_t *ptpx, bool secure)
                 length = ptpx->datalen - ptpx->lenread;
             }
 
-            // feed data to ptp layer, this function must
-            // take all data, returns status
+            // feed data to ptp layer, this function must take all datalen data, returns status
+			//
             result = ptp_rx_data(ptpx, &ptpx->cmdin, length, ptpx->datalen);
             if (result < 0)
             {
                 connected = false;
                 break;
             }
+
             ptpx->cmdlen -= length;
             ptpx->lenread += length;
+
             if (ptpx->cmdlen == 0)
             {
                 if (butil_get_log_level() > 1)
                 {
-                    butil_log(3, "end of data packet\n");
+                    butil_log(3, "end of data packet %u uf %u\n", length, ptpx->datalen);
                 }
+
                 ptpx->state = ptpRun;
             }
 
@@ -481,7 +470,7 @@ static int serve_client(ptp_t *ptp, ptp_connection_t *ptpx, bool secure)
             {
                 if (butil_get_log_level()  > 1)
                 {
-                    butil_log(3, "end of all data\n");
+                    butil_log(3, "end of all data of %u\n", ptpx->datalen);
                 }
 
                 if (ptpx->state != ptpRun)

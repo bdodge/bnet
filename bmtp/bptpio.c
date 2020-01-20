@@ -139,6 +139,13 @@ uint32_t ptp_read(ioring_t *input, uint8_t *buf, size_t count)
             }
         }
         input->count -= count;
+
+        if (input->count == 0)
+        {
+            input->head = 0;
+            input->tail = 0;
+        }
+
         return count;
     }
 
@@ -164,6 +171,13 @@ uint32_t ptp_consume(ioring_t *input, size_t count)
             }
         }
         input->count -= count;
+
+        if (input->count == 0)
+        {
+            input->head = 0;
+            input->tail = 0;
+        }
+
         return count;
     }
 

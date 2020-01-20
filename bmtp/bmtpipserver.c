@@ -28,6 +28,7 @@ extern const size_t s_icon128z;
 
 static const char *s_media_root_dir;
 static ioring_t s_reply;
+static uint8_t s_replybuf[512];
 
 static bool s_nojitter = false;
 
@@ -196,8 +197,8 @@ int main(int argc, char **argv)
         return result;
     }
 
-    s_reply.size = 4096;
-    s_reply.data = (uint8_t*)malloc(s_reply.size);
+    s_reply.size = sizeof(s_replybuf);
+    s_reply.data = s_replybuf;
     s_reply.head = 0;
     s_reply.tail = 0;
     s_reply.count = 0;

@@ -137,11 +137,10 @@ typedef struct ptp_connection
     uint32_t  active_trans_id;              // active transaction id
     uint32_t  cancelflag;                   // set non-0 to indicate xfer canceled
 
-    size_t    datahead;                     // place to insert new data
-    size_t    datacount;                    // data read in so far
-    size_t    datatotal;                    // data expected total
-    size_t    datasize;                     // size of data area
-    uint8_t   *data;                        // data block
+	size_t    dataexpected;					// how much data we get in dataphase
+	size_t    datareceived;                 // how much have gotten so far
+	ioring_t  data;							// object data
+	uint8_t   databuf[PTP_IO_SIZE];
 
     uint32_t  opcode;                       // response code
     uint32_t  cmdparms[PTP_MAX_PARMS];      // list of returned parameters

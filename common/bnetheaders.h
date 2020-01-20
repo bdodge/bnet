@@ -72,4 +72,16 @@ typedef struct tag_ipv6addr { uint16_t addr[8]; } bipv6addr_t;
 #define BERROR(m) \
     fprintf(stderr, "%s %d: " m "\n", __FUNCTION__, __LINE__)
 
+#define UUID_LENGTH (16)
+
+typedef uint8_t buuid_t[UUID_LENGTH];
+
+#define uuid_clear(a) memset((a), 0, UUID_LENGTH)
+#define uuid_compare(a, b) memcmp((a), (b), UUID_LENGTH)
+#define uuid_copy(dst, src) memcpy((dst), (src), UUID_LENGTH)
+
+#define uuid_format(a, dst, ndst) \
+ snprintf(dst, ndst, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",  \
+   a[0],a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15])
+
 #endif

@@ -7,7 +7,9 @@ bupnp/bdlnaserver
 bupnp/dlna*
 bupnp/test/
 bupnp/media/
-bupnp/.obj*
+bmtp/.obj*
+bmtp/bmtpipserver
+bmtp/store
 bjson/bjsontest
 bmem/bmemtest
 bmqtt/mqtt

@@ -27,6 +27,7 @@ JSON_PATH=$(SRCROOT)/bjson
 OSAL_PATH=$(SRCROOT)/bosal
 HTTP_PATH=$(SRCROOT)/bhttp
 UPNP_PATH=$(SRCROOT)/bupnp
+UI_PATH=$(SRCROOT)/bui
 MTP_PATH=$(SRCROOT)/bmtp
 MEDIA_PATH=$(SRCROOT)/bmediatree
 FTP_PATH=$(SRCROOT)/bftp
@@ -141,6 +142,7 @@ OSALLIB=$(OSAL_PATH)/$(OBJDIR)/libbosal.a
 JSONLIB=$(JSON_PATH)/$(OBJDIR)/libbjson.a
 HTTPLIB=$(HTTP_PATH)/$(OBJDIR)/libbhttp.a
 UPNPLIB=$(UPNP_PATH)/$(OBJDIR)/libupnp.a
+UILIB=$(UI_PATH)/$(OBJDIR)/libui.a
 MTPLIB=$(MTP_PATH)/$(OBJDIR)/libmtp.a
 MEDIALIB=$(MEDIA_PATH)/$(OBJDIR)/libmedia.a
 FTPLIB=$(FTP_PATH)/$(OBJDIR)/libbftp.a
@@ -190,7 +192,7 @@ ifndef BNET_ZLIB
 endif
 ifneq ($(BNET_ZLIB),0)
 	ZLIBLIBS=$(LIBZ_LIBS:%=-l%)
-	ZLIBDEPS=$(LIBZ_LIBS:%=$(OBJDIR)/lib%.a$)
+	ZLIBDEPS=$(LIBZ_LIBS:%=$(OBJDIR)/lib%.a)
 	CFLAGS+=-I$(LIBZ_PATH) -DBNET_ZLIB=1
 else
 	ZLIBLIBS=
@@ -227,6 +229,9 @@ $(HTTP_PATH)/%.a:
 
 $(UPNP_PATH)/%.a:
 	make -C $(UPNP_PATH) BNET_TLS=$(BNET_TLS) EXTRA_DEFINES=$(EXTRA_DEFINES) library
+
+$(UI_PATH)/%.a:
+	make -C $(UI_PATH) BNET_TLS=$(BNET_TLS) EXTRA_DEFINES=$(EXTRA_DEFINES) library
 
 $(MTP_PATH)/%.a:
 	make -C $(MTP_PATH) BNET_TLS=$(BNET_TLS) EXTRA_DEFINES=$(EXTRA_DEFINES) library

@@ -14,6 +14,10 @@ all:
 	make -C bxmpp
 	make -C bftp
 	make -C bhttp
+	make -C bdavserver
+	make -C bupnp
+	make -C bui
+	make -C bmtp
 	make -C bsip
 	make -C bmdns
 	make -C bmqtt
@@ -22,5 +26,4 @@ all:
 	make -C bmqtt
 	make -C bmqtt
 	make -C bsnmp
-	make -C bupnp
 

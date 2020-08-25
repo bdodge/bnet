@@ -508,8 +508,8 @@ iostream_t *iostream_tls_create_from_iostream(iostream_t *instream, bool isclien
     do {
         result = mbedtls_ssl_handshake(&tls->ssl);
         if (
-                result
-            &&  result != MBEDTLS_ERR_SSL_WANT_READ
+               result
+            && result != MBEDTLS_ERR_SSL_WANT_READ
             && result != MBEDTLS_ERR_SSL_WANT_WRITE
         )
         {
@@ -565,6 +565,8 @@ int iostream_tls_prolog(void)
     }
     // init and parse our certificate
     //
+    mbedtls_x509_crt_init(&s_tls_our_certificate);
+
     result = mbedtls_x509_crt_parse(&s_tls_our_certificate,
                 ht_domain_crt, ht_domain_crt_len);
     if (result)
@@ -575,6 +577,8 @@ int iostream_tls_prolog(void)
     }
     // init and parse the private key
     //
+    mbedtls_pk_init(&s_tls_private_key);
+
     result = mbedtls_pk_parse_key(&s_tls_private_key,
                  ht_domain_key, ht_domain_key_len, NULL, 0);
     if (result)

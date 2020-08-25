@@ -1,6 +1,7 @@
 bftp/bftptest
 bftp/fromremote.jpg
 bhttp/bhttp
+bdavserver/bdavserver
 bhttp/media/
 bhttp/.obj*
 bupnp/bdlnaserver
@@ -38,6 +39,7 @@ bimageio/bimg
 bimageio/.obj*
 bimageio/test/
 bmediatree/bmediatest
+bui/buitest
 
 # Prerequisites
 *.d

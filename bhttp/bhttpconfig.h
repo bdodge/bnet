@@ -139,7 +139,7 @@
 #define HTTP_SUPPORT_WEBDAV (1)
 #endif
 
-/// Is compression supported
+/// Is compression supported (needs ZLIB)
 //
 #ifndef HTTP_SUPPORT_COMPRESSION
 #define HTTP_SUPPORT_COMPRESSION (0)

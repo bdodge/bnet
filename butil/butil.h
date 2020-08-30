@@ -117,6 +117,7 @@ int butil_is_white          (char ch);
 int butil_is_number         (char ch);
 
 size_t butil_utf8_encode    (uint32_t unicode, uint8_t utfbuf[5]);
+size_t butil_utf8_decode    (uint8_t *utfbuf, size_t nutf, uint32_t *unicode);
 
 int butil_base64_decode     (
                             uint8_t        *out,
@@ -135,6 +136,7 @@ int butil_base64_encode     (
 
 typedef enum
 {
+    schemeFILE,
     schemeFTP,
     schemeSFTP,
     schemeHTTP,
@@ -144,6 +146,8 @@ typedef enum
     schemeSIP,
     schemeSIPS,
     schemeMAILTO,
+    schemeSSH,
+    schemeDAV,
     schemeUSER1,
     schemeUSER2,
     schemeUSER3,

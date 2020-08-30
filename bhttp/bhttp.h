@@ -179,6 +179,7 @@ typedef struct http_client
     size_t              boundary_length;
     #endif
     #if HTTP_SUPPORT_AUTH
+    bool                is_authorized;
     http_auth_type_t    auth_type;
     char                auth_creds[HTTP_MAX_AUTH_STRING];
     #endif

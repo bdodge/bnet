@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     dav_creds.pass = "bbb";
     dav_creds.type = httpAuthBasic;
 #endif
-    result = http_add_dav_resource(&resources, "/dav", root, &dav_creds);
+    result = http_add_dav_resource(&resources, "/", root, &dav_creds);
     if (result)
     {
         return error(progname, "Can't make resource");

@@ -102,6 +102,88 @@ size_t butil_utf8_encode(uint32_t unicode, uint8_t utfbuf[5])
     return j;
 }
 
+size_t butil_utf8_decode(uint8_t *utfbuf, size_t nutf, uint32_t *unicode)
+{
+    uint32_t b, c;
+    int i;
+    
+    i = 0;
+    b = (uint32_t)utfbuf[i++];
+    nutf--;
+    
+    if(b & 0x80)
+    {
+        if(b & 0x20)
+        {
+            if(b & 0x10)
+            {
+                b &= 0x7;
+                b <<= 18;
+                if (nutf < 1)
+                {
+                    // dangling utf8?
+                    return 0;
+                }
+                c = (uint32_t)utfbuf[i++];
+                nutf--;                    
+                b |= (c & 0x3f) << 12;
+                if (nutf < 1)
+                {
+                    // dangling utf8?
+                    return 0;
+                }                    
+                c = (uint32_t)utfbuf[i++];
+                nutf--;                    
+                b |= (c & 0x3f) << 6;
+                if (nutf < 1)
+                {
+                    // dangling utf8?
+                    return 0;
+                }                    
+                c = (uint32_t)utfbuf[i++];
+                nutf--;                    
+                b |= (c & 0x3f);
+            }
+            else
+            {
+                b &= 0xf;
+                b <<= 12;
+                if (nutf < 1)
+                {
+                    // dangling utf8?
+                    return 0;
+                }                    
+                c = (uint32_t)utfbuf[i++];
+                nutf--;                    
+                b |= (c & 0x3f) << 6;
+                if (nutf < 1)
+                {
+                    // dangling utf8?
+                    return 0;
+                }                    
+                c = (uint32_t)utfbuf[i++];
+                nutf--;                    
+                b |= (c & 0x3f);
+            }
+        }
+        else
+        {
+            b &= 0x1f;
+            b <<= 6;
+            if (nutf < 1)
+            {
+                // dangling utf8?
+                return -1;
+            }                    
+            c = (uint32_t)utfbuf[i++];
+            nutf--;                    
+            b |= c & 0x3f;
+        }
+    }
+    *unicode = b;
+    return i;
+}
+
 int butil_base64_decode(uint8_t *out, size_t outsize, const char *src)
 {
     uint8_t *base = out;
@@ -354,15 +436,18 @@ const char *butil_scheme_name(butil_url_scheme_t scheme)
 
     switch (scheme)
     {
-    case schemeFTP:     return "FTP";
-    case schemeSFTP:    return "SFTP";
-    case schemeHTTP:    return "HTTP";
-    case schemeHTTPS:   return "HTTPS";
-    case schemeWS:      return "WS";
-    case schemeWSS:     return "WSS";
-    case schemeSIP:     return "SIP";
-    case schemeSIPS:    return "SIPS";
-    case schemeMAILTO:  return "MAILTO";
+    case schemeDAV:     return "dav";
+    case schemeFILE:    return "file";
+    case schemeFTP:     return "ftp";
+    case schemeSFTP:    return "sftp";
+    case schemeHTTP:    return "http";
+    case schemeHTTPS:   return "https";
+    case schemeWS:      return "ws";
+    case schemeWSS:     return "wss";
+    case schemeSIP:     return "sip";
+    case schemeSIPS:    return "sips";
+    case schemeSSH:     return "ssh";
+    case schemeMAILTO:  return "mailto";
     default:
         scheme_num = scheme - BUTIL_FIRST_USER_SCHEME;
         if (scheme_num < BUTIL_NUM_USER_SCHEMES)
@@ -380,6 +465,21 @@ int butil_scheme_from_name(const char *name, butil_url_scheme_t *scheme)
 {
     size_t scheme_num;
 
+    if (! strcasecmp(name, "dav"))
+    {
+        *scheme = schemeDAV;
+        return 0;
+    }
+    if (! strcasecmp(name, "file"))
+    {
+        *scheme = schemeFILE;
+        return 0;
+    }
+    if (! strcasecmp(name, "ssh"))
+    {
+        *scheme = schemeSSH;
+        return 0;
+    }
     if (! strcasecmp(name, "https"))
     {
         *scheme = schemeHTTPS;
@@ -537,53 +637,56 @@ int butil_parse_url(
         portnum = 80;
         break;
     }
-    // extract hostname
     ps = pe;
-    pe = strchr(ps, ':');
-    if (! pe)
+    if (*scheme != schemeFILE)
     {
-        pe = strchr(ps, '/');
+        // extract hostname
+        pe = strchr(ps, ':');
         if (! pe)
         {
-            // remainder of string is hostname
-            pe = ps + strlen(ps);
+            pe = strchr(ps, '/');
+            if (! pe)
+            {
+                // remainder of string is hostname
+                pe = ps + strlen(ps);
+            }
         }
-    }
-    len = pe - ps;
-    if (len >= nhost)
-    {
-        BERROR("Hostname too long");
-        return -1;
-    }
-    if (host)
-    {
-        strncpy(host, ps, len);
-        host[len] = '\0';
-    }
-    ps = pe;
-    if (*ps == ':')
-    {
-        // port is specified
-        portnum = (uint16_t)strtoul(ps + 1, (char **)&pe, 10);
-        len = pe - ps - 1;
-        if (len > BUTIL_MAX_PORTSPEC)
+        len = pe - ps;
+        if (len >= nhost && host)
         {
-            BERROR("Malformed port number");
+            BERROR("Hostname too long");
             return -1;
         }
+        if (host)
+        {
+            strncpy(host, ps, len);
+            host[len] = '\0';
+        }
         ps = pe;
-    }
-    if (port)
-    {
-        *port = portnum;
-    }
-    if (*ps != '/' && *ps)
-    {
-        BERROR("Malformed path");
-        return -1;
+        if (*ps == ':')
+        {
+            // port is specified
+            portnum = (uint16_t)strtoul(ps + 1, (char **)&pe, 10);
+            len = pe - ps - 1;
+            if (len > BUTIL_MAX_PORTSPEC)
+            {
+                BERROR("Malformed port number");
+                return -1;
+            }
+            ps = pe;
+        }
+        if (port)
+        {
+            *port = portnum;
+        }
+        if (*ps != '/' && *ps)
+        {
+            BERROR("Malformed path");
+            return -1;
+        }
     }
     len = strlen(ps);
-    if (len >= npath)
+    if (len >= npath && path)
     {
         BERROR("Path too long");
         return -1;

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "bhttp.h"
+#include "bxml.h"
 
 static const char *s_multistatus_header =
     "\r\n%04X\r\n"
@@ -27,7 +28,7 @@ static const char *s_multistatus_footer =
 static const char *s_directory_entry =
     "\r\n0000\r\n"
     "<d:response>\n"
-    "  <d:href>%s%s</d:href>\n"   // url to directory
+    "  <d:href>%s</d:href>\n"   // url to directory
     "  <d:propstat>\n"
     "    <d:status>HTTP/1.1 200 OK</d:status>\n"
     "    <d:prop>\n"
@@ -39,10 +40,12 @@ static const char *s_directory_entry =
     "          <d:lockscope><d:exclusive/></d:lockscope>\n"
     "          <d:locktype><d:write/></d:locktype>\n"
     "        </d:lockentry>\n"
+#if 1 // no shared locks supported
     "        <d:lockentry>\n"
     "          <d:lockscope><d:shared/></d:lockscope>\n"
     "          <d:locktype><d:write/></d:locktype>\n"
     "        </d:lockentry>\n"
+#endif
     "      </d:supportedlock>\n"
     "%s"                        // lock info
     "    </d:prop>\n"
@@ -52,7 +55,7 @@ static const char *s_directory_entry =
 static const char *s_file_entry =
     "\r\n0000\r\n"
     "<d:response>\n"
-    "  <d:href>%s%s</d:href>\n"   // url to file
+    "  <d:href>%s</d:href>\n"   // url to file
     "  <d:propstat>\n"
     "    <d:status>HTTP/1.1 200 OK</d:status>\n"
     "    <d:prop>\n"
@@ -80,11 +83,44 @@ static const char *s_no_such_file_entry =
     "  </d:propstat>\n"
     "</d:response>\n";
 
+static const char *s_lock_entry = 
+    "\r\n0000\r\n"
+    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
+    "  <d:prop xmlns:d=\"DAV:\">\n"
+    "%s" // active lock element
+    "  </d:prop>";
+
+static const char *s_activelock_element =
+    "  <d:lockdiscovery>\n"
+    "   <d:activelock>\n"
+    "    <d:locktype><d:write/></d:locktype>\n"
+    "    <d:lockscope><d:%s/></d:lockscope>\n"  // fill in lock type (about 10 chars)
+    "    <d:depth>%s</d:depth>\n"               // fill in lock depth (about 12 chars)
+    "    <d:owner>\n"
+    "      <d:href>%s</d:href>\n"               // fill in owner (uri)
+    "    </d:owner>\n"
+    "    <d:timeout>Second-%u</d:timeout>\n"    // fill in time-remaining (about 8 digits)
+    "    <d:locktoken>\n"
+    "      <d:href>%s</d:href>\n"               // fill in lock token (uuid+8)
+    "    </d:locktoken>\n"
+#if 0
+    "    <d:lockroot>\n"
+    "      <d:href>\n"
+    "        %s\n    "          // fill in url of lock top
+    "      </d:href>\n"
+    "    </d:lockroot>\n"
+#endif
+    "   </d:activelock>\n"
+    "  </d:lockdiscovery>\n";
+
+static const char *s_nolock_element =
+    "  <d:lockdiscovery/>\n";
+
 typedef struct
 {
-    char        path[HTTP_MAX_PATH * 2];
-    bool        isdir;
-    size_t      size;
+    char     path[HTTP_MAX_PATH * 2];
+    bool     isdir;
+    size_t   size;
     time_t   create_time;
     time_t   mod_time;
 }
@@ -123,7 +159,7 @@ void http_webdav_findstate_init(http_client_t *client)
         }
         snprintf(client->dav_findpath, sizeof(client->dav_findpath), "%s%s",
                 client->resource->resource.file_data.root,
-                (client->resource->resource.file_data.root[0] == '/') ? "" : "/");
+                (client->resource->resource.file_data.root[len] == '/') ? "" : "/");
     }
     else
     {
@@ -267,6 +303,302 @@ static int webdav_file_info(webdav_file_info_t *info)
     return 0;
 }
 
+/// UUID base of DAV locks
+//
+#ifndef HTTP_MAX_WEBDAV_LOCK_UUID
+#define HTTP_MAX_WEBDAV_LOCK_UUID "d12b33a8-ea05-11ea-adc1-0242ac120002"
+#endif
+
+#define HTTP_LOCK_TOKEN "opaquelocktoken:" HTTP_MAX_WEBDAV_LOCK_UUID
+
+// lock length includes token, time, and nonce
+#define HTTP_LOCK_LEN (64)
+
+typedef struct tag_reslock
+{
+    char    token[HTTP_LOCK_LEN];   // generated lock token
+    char    path[HTTP_MAX_PATH];    // path being locked
+    char    owner[HTTP_MAX_URL];    // owner of lock
+    uint8_t depth;                  // depth of lock (0 this item, 1 item and all under)
+    uint8_t scope;                  // lock scope (0 shared, 1 exclusive)
+    time_t  expiry;                 // time lock is good for
+}
+webdav_lock_t;
+
+static webdav_lock_t s_webdav_locks[HTTP_MAX_WEBDAV_LOCKS];
+static bool s_locks_initialized = false;
+static uint32_t s_lock_nonce = 0x01010203;
+
+static webdav_lock_t *http_webdav_find_lock_by_path(const char *path)
+{
+    int i;
+    time_t now;
+    
+    if (! s_locks_initialized)
+    {
+        return NULL;
+    }
+    if (! path || ! path[0])
+    {
+        return NULL;
+    }
+    time(&now);
+
+    for (i = 0; i < HTTP_MAX_WEBDAV_LOCKS; i++)
+    {
+        if (! strcmp(s_webdav_locks[i].path, path))
+        {
+            if (s_webdav_locks[i].expiry > now)
+            {
+                // a lock matching path, not expired
+                //
+                return &s_webdav_locks[i];
+            }
+            else
+            {
+                // expired lock, retire it
+                //
+                s_webdav_locks[i].expiry = 0;
+            }
+        }
+    }
+    return NULL;
+}
+
+static webdav_lock_t *http_webdav_find_lock_by_token(const char *token)
+{
+    int i;
+    time_t now;
+    
+    if (! token || ! token[0])
+    {
+        return NULL;
+    }
+    if (! s_locks_initialized)
+    {
+        return NULL;
+    }
+    for (i = 0; i < HTTP_MAX_WEBDAV_LOCKS; i++)
+    {
+        if (! strcmp(s_webdav_locks[i].token, token))
+        {
+            return &s_webdav_locks[i];
+        }
+    }
+    return NULL;
+}
+
+static const char *http_webdav_lockbody(
+                                        webdav_lock_t *lock,
+                                        char *buffer,
+                                        size_t nbuf
+                                        )
+{
+    time_t now;
+    size_t len;
+    
+    if (lock)
+    {
+        time(&now);
+        len = snprintf(buffer, nbuf, s_activelock_element,
+                lock->scope == 0 ? "exclusive" : "shared",
+                lock->depth == 0 ? "0" : "Infinity",
+                lock->owner,
+                lock->expiry - now,
+                lock->token
+                /*, pl->path*/
+                );
+    }
+    else
+    {
+        len = snprintf(buffer, nbuf, "%s", s_nolock_element);
+    }
+    if (len >= nbuf || len < 0)
+    {
+        http_log(1, "Lock entry overflow\n");
+    }
+    return buffer;
+}
+
+static int http_webdav_lock(http_client_t *client)
+{
+    webdav_lock_t *lock;
+    time_t now;
+    char lockbuf[sizeof(s_activelock_element) + 3*HTTP_MAX_URL];
+    char token[HTTP_LOCK_LEN];
+    size_t len;
+    int i;
+    int result;
+
+    // make sure output buffer is rotated left to allow max contig room
+    //
+    iostream_normalize_ring(&client->out, NULL);
+    
+    if (! s_locks_initialized)
+    {
+        //  one-time init of lock database
+        //
+        memset(s_webdav_locks, 0, sizeof(s_webdav_locks));
+        s_locks_initialized = true;
+    }
+    time(&now);
+    
+    // allocate a lock. if no room in database, fail
+    //
+    for (i = 0; i < HTTP_MAX_WEBDAV_LOCKS; i++)
+    {
+        // pick the first non-in-use lock entry
+        if (s_webdav_locks[i].expiry == 0)
+        {
+            break;
+        }
+    }
+    if (i >= HTTP_MAX_WEBDAV_LOCKS)
+    {
+        for (i = 0; i < HTTP_MAX_WEBDAV_LOCKS; i++)
+        {
+            // also pick expired locks
+            if (s_webdav_locks[i].expiry < now)
+            {
+                s_webdav_locks[i].expiry = 0;
+                break;
+            }
+        }
+    }
+    if (i >= HTTP_MAX_WEBDAV_LOCKS)
+    {
+        http_log(1, "no locks avail\n");
+        http_error_reply(client, 500, "No Locks Available", false);
+        return 0;
+    }
+    
+    lock = &s_webdav_locks[i];
+
+    if (client->dav_token[0] == '\0')
+    {
+        http_log(5, "Trying to lock %s\n", client->path);
+        
+        // if lock exists for this url, reject this request
+        //
+        if (http_webdav_find_lock_by_path(client->path))
+        {
+            http_log(3, "Attempt to lock path %s already locked\n", client->path);
+            http_error_reply(client, 423, "Locked", false);
+            return 0;
+        }
+        // this is an initial lock request, so build it up
+        //
+        lock->expiry = now + HTTP_WEBDAV_LOCK_TIMEOUT;
+        lock->depth = (client->dav_depth_in < 0) ? 1 : 0; // infinity or 0
+        lock->scope = 0; // exclusive
+        strncpy(lock->path, client->path, sizeof(lock->path) - 1);
+        lock->path[sizeof(lock->path) - 1] = '\0';
+        // format new lock token
+        snprintf(lock->token, sizeof(lock->token), "%s", HTTP_LOCK_TOKEN);
+        snprintf(lock->token + strlen(lock->token) - 8, 9, "%08X", s_lock_nonce++);
+        
+        // make sure input buffer is rotated left to allow xml parsing
+        //
+        iostream_normalize_ring(&client->in, NULL);
+        
+        // use an xml parser on the request body to extract owner
+        //
+        // make sure xml in body is 0 terminated
+        //client->in.data[client->in.head] = '\0';
+        
+        //http_log(3, "BODY of lock request=%s=\n", client->in.data + client->in.tail);
+
+        result = bxml_find_and_copy_nth_element(
+                                client->in.data + client->in.tail,
+                                "lockinfo$owner$href",
+                                '$',
+                                0,
+                                lock->owner,
+                                sizeof(lock->owner),
+                                false,
+                                false
+                                );
+        if (result)
+        {
+            lock->expiry = 0;
+            http_log(3, "Lock request has no owner, bad request\n");
+            http_error_reply(client, 400, "No owner in LOCK request", false);
+            return 0;
+        }
+        http_log(5, "%s is locked\n", client->path);
+    }
+    else
+    {
+        // this is a "refresh" lock request
+        //
+        http_log(5, "Lock refresh for %s\n", client->path);
+    }
+    
+    // make sure output buffer is rotated left
+    // to allow maximum room (it really is already most likely)
+    //
+    iostream_normalize_ring(&client->out, NULL);
+
+    result  = http_begin_reply(client, 200, "OK");
+    result |= http_append_reply(client, "Lock-Token: <%s>", lock->token);
+    result |= http_append_reply(client, "Content-Type: text/xml");
+    result |= http_append_reply(client, "Transfer-Encoding: chunked");
+    result |= http_append_connection_to_reply(client, false);
+    
+    if (result)
+    {
+        lock->expiry = 0;
+        return result;
+    }
+    // format lock response
+    len = snprintf((char *)(client->out.data + client->out.head),
+            client->out.size - client->out.count - 1,
+            s_lock_entry,
+            http_webdav_lockbody(lock, lockbuf, sizeof(lockbuf)));
+
+    if (len < 0)
+    {
+        lock->expiry = 0;
+        return len;
+    }
+    // back annotate chunk count
+    snprintf((char*)client->out.data + client->out.head + 2, 6, "%04X", (int)len - 8);
+    client->out.data[client->out.head + 6] = '\r';
+
+    client->out.head += len;
+    client->out.count += len;
+
+    if (client->out.size < (client->out.count + 8))
+    {
+        lock->expiry = 0;
+        return -1;
+    }
+    len = snprintf((char*)client->out.data + client->out.head, 8, "\r\n0\r\n\r\n");
+    client->out.head += len;
+    client->out.count += len;
+    
+    // start sending out the data, and get next request
+    //
+    return http_send_out_data(client, httpSendReply, httpKeepAlive);
+}
+
+static int http_webdav_unlock(http_client_t *client)
+{
+    webdav_lock_t *lock;
+    
+    lock = http_webdav_find_lock_by_token(client->dav_token);
+    if (! lock)
+    {
+        return http_error_reply(client, 404, "No such lock", false);
+    }
+    http_log(5, "Unlocking: %s for token:%s\n", lock->path, lock->token);
+    lock->token[0] = '\0';
+    lock->path[0] = '\0';
+    lock->owner[0] = '\0';
+    lock->expiry = 0;
+    return http_quick_reply(client, 204, "OK, No Content", false);
+}
+
 static int webdav_get_dir_entry(http_client_t *client, webdav_file_info_t *info)
 {
     if (client->dav_depth_at < 0 || client->dav_depth_at >= HTTP_MAX_WEBDAV_DEPTH)
@@ -301,6 +633,8 @@ static int http_webdav_add_dir_entry(http_client_t *client, webdav_file_info_t *
 {
     const char *purl;
     const char *pdroot;
+    char urlpath[HTTP_MAX_URL];
+    char lockbuf[sizeof(s_activelock_element) + 3*HTTP_MAX_URL];
     int result;
     int room;
     int len;
@@ -330,12 +664,17 @@ static int http_webdav_add_dir_entry(http_client_t *client, webdav_file_info_t *
     }
     else
     {
-        pdroot = "";
+        pdroot = "/";
     }
+    // join base and path to get what the effective url of this file would be
+    // (also takes care of de-re-dedup-slashes)
+    http_join_path(urlpath, sizeof(urlpath), pdroot, NULL, purl);
+
     // format xml
     //
     len = snprintf((char*)client->out.data + client->out.head, room,
-                        s_directory_entry, pdroot, purl, "", "");
+                        s_directory_entry, urlpath, "",
+                        http_webdav_lockbody(http_webdav_find_lock_by_path(urlpath), lockbuf, sizeof(lockbuf)));
     if (len < 0 || len >= room)
     {
         HTTP_ERROR("dir entry len");
@@ -356,6 +695,8 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
     const char *pdroot;
     const char *pname;
     const char *pmime;
+    char lockbuf[sizeof(s_activelock_element) + 3*HTTP_MAX_URL];
+    char urlpath[HTTP_MAX_URL];
     char cdate[64];
     char mdate[64];
     int result;
@@ -364,8 +705,6 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
 
     // insist buffer is normalized, it should have been done in header formatting
     //
-    // insist buffer is normalized
-    //
     if (client->out.tail != 0)
     {
         HTTP_ERROR("Un-normalized ring");
@@ -373,7 +712,7 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
     }
     room = client->out.size - client->out.count;
 
-    // point to path component in info past root
+    // point to path component in info past the document root to get the path portion of url
     len = client->dav_find_state[0].pathpos;
     if (len > 0)
     {
@@ -383,6 +722,7 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
     {
         purl = "/";
     }
+    // get the base url of the resource
     if (client->resource && client->resource->urlbase && client->resource->urlbase[0])
     {
         pdroot = client->resource->urlbase;
@@ -391,6 +731,10 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
     {
         pdroot = "";
     }
+    // join base and path to get what the effective url of this file would be
+    // (also takes care of de-re-dedup-slashes)
+    http_join_path(urlpath, sizeof(urlpath), pdroot, NULL, purl);
+    
     // by default, name is last component of path
     pname = purl + strlen(purl);
     while (pname >= purl)
@@ -408,11 +752,14 @@ static int http_webdav_add_file_entry(http_client_t *client, webdav_file_info_t 
     // format times to strings
     butil_time_to_rfc2616_date(info->mod_time, mdate, sizeof(mdate));
     butil_time_to_rfc2616_date(info->create_time, cdate, sizeof(mdate));
-
+    
+    //http_log(1, "FileInfo for %s\n", urlpath);
+    
     // format xml
     //
     len = snprintf((char *)client->out.data + client->out.head, room,
-                        s_file_entry, pdroot, purl, pname, info->size, pmime, cdate, mdate, "");
+                        s_file_entry, urlpath, pname, info->size, pmime, cdate, mdate,
+                        http_webdav_lockbody(http_webdav_find_lock_by_path(urlpath), lockbuf, sizeof(lockbuf)));
     if (len < 0 || len >= room)
     {
         HTTP_ERROR("file entry len");
@@ -699,7 +1046,11 @@ int http_webdav_request(http_client_t *client)
         break;
 
     case httpLock:
+        result = http_webdav_lock(client);
+        break;
     case httpUnlock:
+        result = http_webdav_unlock(client);
+        break;
     case httpPropPatch:
     default:
         http_log(1, "Bad DAV request: %s\n", http_method_name(client->method));

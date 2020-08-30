@@ -37,7 +37,19 @@ const butil_url_scheme_t http_scheme_base(const butil_url_scheme_t scheme)
 
 const char *http_scheme_base_name(const butil_url_scheme_t scheme)
 {
-    return butil_scheme_name(http_scheme_base(scheme));
+    static char scheme_name_buffer[HTTP_MAX_SCHEME];
+    char *pn;
+    
+    snprintf(scheme_name_buffer, sizeof(scheme_name_buffer), "%s",
+            butil_scheme_name(http_scheme_base(scheme)));
+    for (pn = scheme_name_buffer; *pn; pn++)
+    {
+        if (*pn >= 'a' && *pn <= 'z')
+        {
+            *pn -= ('a' - 'A');
+        }
+    }
+    return scheme_name_buffer;
 }
 
 http_user_method_t s_user_methods[HTTP_NUM_USER_METHODS] =

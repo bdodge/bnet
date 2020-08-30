@@ -288,6 +288,22 @@ int http_file_callback(
             }
             http_log(3, "download file %s\n", path);
 
+            #if 0
+            // dont create files of 0 content, put/post require content length so we know for sure
+            //
+            if (client->in_content_length == 0)
+            {
+                http_log(3, "not making a 0-length file\n", path);
+                result  = http_begin_reply(client, 204, "No Content");
+                result |= http_append_connection_to_reply(client, false);
+                result |= http_append_reply(client, "Content-Length: 0");
+                result |= http_append_reply(client, "");
+                client->out_content_length = 0;
+                client->state = httpBodyUpload;
+                return 0;
+            }
+            #endif
+                    
             stream = iostream_create_writer_from_file(path);
             if (! stream)
             {

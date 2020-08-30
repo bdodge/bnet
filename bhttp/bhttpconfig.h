@@ -139,6 +139,18 @@
 #define HTTP_SUPPORT_WEBDAV (1)
 #endif
 
+/// Number of locks supported
+//
+#ifndef HTTP_MAX_WEBDAV_LOCKS
+#define HTTP_MAX_WEBDAV_LOCKS (32)
+#endif
+
+/// default lock expiration time
+//
+#ifndef HTTP_WEBDAV_LOCK_TIMOUT
+#define HTTP_WEBDAV_LOCK_TIMEOUT (3600)
+#endif
+
 /// Is compression supported (needs ZLIB)
 //
 #ifndef HTTP_SUPPORT_COMPRESSION

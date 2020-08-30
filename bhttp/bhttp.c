@@ -170,6 +170,7 @@ void http_client_reinit(http_client_t *client, bool newstream)
     client->boundary_length = 0;
     #endif
     #if HTTP_SUPPORT_AUTH
+    client->is_authorized = true;
     client->auth_type = httpAuthNone;
     client->auth_creds[0] = '\0';
     #endif
@@ -587,15 +588,15 @@ int http_error_reply(http_client_t *client, uint16_t code, const char *msg, bool
     return result;
 }
 
-int http_client_authorized(http_client_t *client, http_resource_t *resource, bool *isauthorized)
+int http_client_authorized(http_client_t *client, http_resource_t *resource)
 {
-    if (! client || ! resource || ! isauthorized)
+    if (! client || ! resource)
     {
         return -1;
     }
-    *isauthorized = true;
-
 #if HTTP_SUPPORT_AUTH
+    client->is_authorized = true;
+
     // check resource authorization
     //
     if (client->resource->credentials.type != httpAuthNone)
@@ -607,31 +608,7 @@ int http_client_authorized(http_client_t *client, http_resource_t *resource, boo
                                     );
         if (result)
         {
-            *isauthorized = false;
-
-            if (client->auth_type != httpAuthNone && client->auth_creds[0])
-            {
-                // credentials were supplied, so really we just say NO
-                //
-                result = http_error_reply(client, 403, "Forbidden", false);
-            }
-            else
-            {
-                // inform client of auth needed
-                //
-                result = http_begin_reply(client, 401, "Unauthorized");
-                result |= http_append_reply(client, "WWW-Authenticate: %s realm=\"%s\"",
-                        http_auth_type_to_string(client->resource->credentials.type),
-                        client->resource->urlbase);
-                result |= http_append_connection_to_reply(client, false);
-                result |= http_append_reply(client, "Content-Length: 0");
-                result |= http_append_reply(client, "");
-                result |= http_send_out_data(client, httpSendReply, httpBodyDownload);
-            }
-            if (result)
-            {
-                return result;
-            }
+            client->is_authorized = false;
         }
     }
 #endif
@@ -896,14 +873,29 @@ static int http_process_header(http_client_t *client, char *header)
     #endif
     }
     #if HTTP_SUPPORT_WEBDAV
-    else if (! http_ncasecmp(header, "token:"))
+    else if (! http_ncasecmp(header, "lock-token:"))
     {
+        size_t tokenlen;
+        
         if (strlen(value) >= sizeof(client->dav_token))
         {
-            HTTP_ERROR("Token len");
+            HTTP_ERROR("DAV Token len");
             return -1;
         }
+        // remove the <> around the token if there
+        if (*value == '<')
+        {
+            value++;
+        }
         strcpy(client->dav_token, value);
+        tokenlen = strlen(client->dav_token);
+        if (tokenlen > 0)
+        {
+            if (client->dav_token[tokenlen - 1] == '>')
+            {
+                client->dav_token[tokenlen - 1] = '\0';
+            }
+        }    
     }
     else if (! http_ncasecmp(header, "destination:"))
     {
@@ -1137,7 +1129,6 @@ int http_client_slice(http_client_t *client)
     int i;
     int incount;
     size_t bodyCount;
-    bool isauthorized;
 
     if (client->prev_state != client->state)
     {
@@ -1758,20 +1749,32 @@ int http_client_slice(http_client_t *client)
                 client->resource_open = false;
                 client->next_state = httpBodyDownload;
             }
-            result = http_client_authorized(client, client->resource, &isauthorized);
+#if HTTP_SUPPORT_AUTH
+            // check credentials. if not-authorized, continue to download body but
+            // make sure there is no resource to affect, and recheck auth then
+            //
+            result = http_client_authorized(client, client->resource);
             if (result)
             {
                 return http_slice_fatal(client, result);
             }
-            if (! isauthorized)
+            if (! client->is_authorized)
             {
                 http_log(5, "cl:%u not authorized to %s\n", client->id, client->path);
 
-                // set next state to body to discard it so keep-alive is maintained properly
+                // set state to body to discard it so keep-alive is maintained properly
                 //
-                client->next_state = httpBodyDownload;
+                client->state = httpBodyDownload;
 
-                // ensure there is no resource to access
+                // form resource-specific portion of reply, the rest is done after
+                // body is downloaded
+                //
+                result = http_begin_reply(client, 401, "Unauthorized");
+                result |= http_append_reply(client, "WWW-Authenticate: %s realm=\"%s\"",
+                        http_auth_type_to_string(client->resource->credentials.type),
+                        client->resource->urlbase);
+
+                // ensure there is no resource to access for the rest of time
                 //
                 if (client->resource_open)
                 {
@@ -1783,6 +1786,7 @@ int http_client_slice(http_client_t *client)
                 client->resource_open = false;
                 break;
             }
+#endif
             // tell resource that we are starting a request
             //
             // NOTE: this callback has already gotten any headers ahead of this call
@@ -2014,8 +2018,8 @@ int http_client_slice(http_client_t *client)
             #if HTTP_SUPPORT_TLS
             if (client->tls_upgrade)
             {
-                // client requested a websocket upgrade, so now that we read the body
-                // of the http request if any, reply to the upgrade and start a websocket
+                // client requested a TLS upgrade, so now that we read the body
+                // of the http request if any, reply to the upgrade and start TLS
                 //
                 client->state = httpTLSsocketUpgrade;
                 break;
@@ -2069,6 +2073,35 @@ int http_client_slice(http_client_t *client)
                 client->state = httpKeepAlive;
                 break;
             }
+            #if HTTP_SUPPORT_AUTH
+            if (client->method != httpOptions && client->method != httpUnsupported)
+            {
+                // recheck authorization now. if not authorized we'll reply here and
+                // go directly to keepalive state, otherwize continue on
+                //
+                if (! client->is_authorized)
+                {
+                    if (client->auth_type != httpAuthNone && client->auth_creds[0])
+                    {
+                        // credentials were supplied, so really we just say NO
+                        //
+                        result = http_error_reply(client, 403, "Forbidden", false);
+                    }
+                    else
+                    {
+                        // inform client of auth needed, reply was formed already before
+                        // the resource was nulled (see ReadRequest handling) so just
+                        // finish the response and go
+                        //
+                        result  = http_append_connection_to_reply(client, false);
+                        result |= http_append_reply(client, "Content-Length: 0");
+                        result |= http_append_reply(client, "");
+                        result |= http_send_out_data(client, httpSendReply, httpKeepAlive);
+                    }
+                    break;
+                }
+            }
+            #endif
             #if HTTP_SUPPORT_WEBSOCKET
             if (client->ws_upgrade)
             {
@@ -2082,8 +2115,8 @@ int http_client_slice(http_client_t *client)
             #if HTTP_SUPPORT_TLS
             if (client->tls_upgrade)
             {
-                // client requested a websocket upgrade, so now that we read the body
-                // of the http request if any, reply to the upgrade and start a websocket
+                // client requested a TLS upgrade, so now that we read the body
+                // of the http request if any, reply to the upgrade and start TLS
                 //
                 client->state = httpTLSsocketUpgrade;
                 break;
@@ -2244,10 +2277,11 @@ int http_client_slice(http_client_t *client)
 
             case httpOptions:
                 result = http_begin_reply(client, 200, "OK");
-                result |= http_append_reply(client, "Allow: GET,HEAD,POST,DELETE,OPTIONS");
             #if HTTP_SUPPORT_WEBDAV
-                result |= http_append_reply(client, "Allow: PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK");
+                result |= http_append_reply(client, "Allow: GET,HEAD,PUT,POST,DELETE,OPTIONS,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK");
                 result |= http_append_reply(client, "DAV: 1, 2");
+            #else
+                result |= http_append_reply(client, "Allow: GET,HEAD,PUT,POST,DELETE,OPTIONS");
             #endif
                 result |= http_append_reply(client, "Content-Length: 0");
                 result |= http_append_connection_to_reply(client, false);
@@ -2520,7 +2554,7 @@ int http_client_slice(http_client_t *client)
         }
         else
         {
-            http_log(5, "Discard %d body of %d content remaining\n", i, client->in_content_length);
+            http_log(5, "Discard %d body of %d content remaining\n", bodyCount, client->in_content_length);
         }
         // take amount of data absorbed by callback away from input
         // (which is all avail data if no callback supplied)

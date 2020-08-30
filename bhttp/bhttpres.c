@@ -339,6 +339,10 @@ int http_file_callback(
         break;
 
     case httpDownloadData:
+        if (! *count)
+        {
+            return 0;
+        }
         if (stream)
         {
             #if HTTP_SUPPORT_COMPRESSION
@@ -358,6 +362,9 @@ int http_file_callback(
             }
             #endif
             result = stream->write(stream, *data, *count);
+            
+            //http_log(6, "Wrote %d of %d  tot=%d\n", result, *count);
+            
             *count = result;
             return (result >= 0) ? 0 : -1;
         }
@@ -665,6 +672,15 @@ int http_add_dav_resource(
         resource->callback  = http_file_callback;
         resource->priv      = NULL;
         resource->resource.file_data.root = root;
+        
+        result = http_add_resource(resources, schemeHTTP, httpDavLockResource, urlbase, credentials, &resource);
+        if (! result)
+        {
+            // and add another resource at same url for lock methods, to use buffering for body
+            resource->callback  = http_outbuffer_callback;
+            resource->priv      = NULL;
+            resource->resource.file_data.root = root;
+        }
     }
     return result;
 }
@@ -734,6 +750,7 @@ static char *http_restype_name(http_resource_type_t type)
     case httpFunctionResource:  return "func";
     case httpCannedResource:    return "cand";
     case httpDavResource:       return "wdav";
+    case httpDavLockResource:   return "wdavlock";
     default:                    return "????";
     }
 }
@@ -794,26 +811,18 @@ http_resource_t *http_find_resource(
     #if HTTP_SUPPORT_WEBDAV
     if (! resource && scheme == schemeHTTP)
     {
-        resource = http_match_resource(resources, scheme, path, httpDavResource);
-        if (resource)
+        if (
+                method == httpGet
+            ||  method == httpPut
+            ||  method == httpPost
+            ||  method == httpDelete
+        )
         {
-            // for DAV, use file callback for file operations and a
-            // buffering callback for others to put the body of
-            // dav requests into clients out buffer ring
-            //
-            if (
-                    method == httpGet
-                ||  method == httpPut
-                ||  method == httpPost
-                ||  method == httpDelete
-            )
-            {
-                resource->callback  = http_file_callback;
-            }
-            else
-            {
-                resource->callback  = http_outbuffer_callback;
-            }
+            resource = http_match_resource(resources, scheme, path, httpDavResource);
+        }
+        else
+        {
+            resource = http_match_resource(resources, scheme, path, httpDavLockResource);
         }
     }
     #endif

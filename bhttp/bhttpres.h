@@ -31,7 +31,8 @@ typedef enum {
     httpFileResource,
     httpFunctionResource,
     httpCannedResource,
-    httpDavResource
+    httpDavResource,
+    httpDavLockResource
 }
 http_resource_type_t;
 

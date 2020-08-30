@@ -2576,6 +2576,7 @@ int http_client_slice(http_client_t *client)
         {
             client->in_content_length = 0;
         }
+        //http_log(7, "Callback took %d of body, %d remain\n", bodyCount, client->in_content_length);
         break;
 
     case httpBodyUpload:

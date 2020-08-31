@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 #include "bhttp.h"
+#include "bxml.h"
 
 int usage(const char *prgname)
 {
-    printf("Usage %s [-l loglevel][-p port][-t] <root path>\n"
+    printf("Usage %s [-l loglevel][-p port][-c cred][-t] <root path>\n"
            "   -l   level   console log verbosity 0-10\n"
            "   -p   port    port to serve on\n"
+           "   -c   cred    XML file containing credentials such as:\n"
+           "                   <credentials><user>user</user><password>password</password></credentials>\n"
            "   -t           use TLS\n\n",
            prgname);
     return -1;
@@ -31,26 +34,32 @@ int error(const char *prgname, const char *msg)
     return -1;
 }
 
+char username[64];
+char password[64];
+
 int main(int argc, char **argv)
 {
     uint16_t port;
     char root[HTTP_MAX_PATH];
+    char credfile[HTTP_MAX_PATH];
     const char *progname, *arg;
     int loglevel = 5;
     bool secure;
+    int argdex;
     int result;
 
 #ifdef Windows
     WSADATA wsaData;
 
     result = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (result != 0) {
+    if (result != 0)
+    {
         return error(progname, "WSAStartup failed");
     }
 #else
     signal(SIGPIPE, SIG_IGN);
 #endif
-    http_set_log_level(loglevel);
+    butil_set_log_level(loglevel);
 
 #if HTTP_SUPPORT_TLS
     result = iostream_tls_prolog();
@@ -65,6 +74,7 @@ int main(int argc, char **argv)
 
     loglevel = 3;
 
+    credfile[0] = '\0';
     snprintf(root, sizeof(root), ".%c", HTTP_LOCAL_PATH_CHAR);
     port = 8080;
     secure = false;
@@ -74,39 +84,74 @@ int main(int argc, char **argv)
     {
         arg = *argv++;
         argc--;
+        
         if (arg[0] == '-')
         {
-            switch (arg[1])
+            argdex = 1;
+            
+            while (arg[argdex] != '\0')
             {
-            case 't':
-                secure = true;
-                break;
-            case 'p':
-                if (argc > 0)
+                switch (arg[argdex++])
                 {
-                    port = strtoul(*argv, NULL, 0);
-                    argc--;
-                    argv++;
-                }
-                else
-                {
+                case 't':
+                    secure = true;
+                    break;
+                case 'p':
+                    if (arg[argdex] >= '0' && arg[argdex] <= '9')
+                    {
+                        port = strtoul(arg + argdex, NULL, 0);
+                        while (arg[argdex] != '\0')
+                        {
+                            argdex++;
+                        }
+                    }
+                    else if (argc > 0)
+                    {
+                        port = strtoul(*argv, NULL, 0);
+                        argc--;
+                        argv++;
+                    }
+                    else
+                    {
+                        return usage(progname);
+                    }
+                    break;
+                case 'l':
+                    if (arg[argdex] >= '0' && arg[argdex] <= '9')
+                    {
+                        loglevel = strtoul(arg + argdex, NULL, 0);
+                        while (arg[argdex] != '\0')
+                        {
+                            argdex++;
+                        }
+                    }
+                    else if (argc > 0)
+                    {
+                        loglevel = strtoul(*argv, NULL, 0);
+                        argc--;
+                        argv++;
+                    }
+                    else
+                    {
+                        return usage(progname);
+                    }
+                    break;
+                case 'c':
+                    if (argc > 0)
+                    {
+                        strncpy(credfile, *argv, sizeof(credfile) - 1);
+                        root[sizeof(credfile) - 1] = '\0';
+                        argc--;
+                        argv++;
+                    }
+                    else
+                    {
+                        return usage(progname);
+                    }
+                    break;
+                default:
                     return usage(progname);
                 }
-                break;
-            case 'l':
-                if (argc > 0)
-                {
-                    loglevel = strtoul(*argv, NULL, 0);
-                    argc--;
-                    argv++;
-                }
-                else
-                {
-                    return usage(progname);
-                }
-                break;
-            default:
-                return usage(progname);
             }
         }
         else
@@ -123,15 +168,62 @@ int main(int argc, char **argv)
 
     // add dav root at doc root
     //
-#if 1
-    dav_creds.user = "";
-    dav_creds.pass = "";
+    username[0] = '\0';
+    password[0] = '\0';
+    dav_creds.user = username;
+    dav_creds.pass = password;
     dav_creds.type = httpAuthNone;
-#else
-    dav_creds.user = "aaa";
-    dav_creds.pass = "bbb";
-    dav_creds.type = httpAuthBasic;
-#endif
+
+    if (credfile[0])
+    {
+        char filebuffer[128];
+        int cf;
+        
+        cf = open(credfile, O_RDONLY);
+        if (cf < 0)
+        {
+            return error(progname, "Can't open credential file\n");
+        }
+        result = read(cf, filebuffer, sizeof(filebuffer) - 1);
+
+        close(cf);
+        
+        if (result < 0)
+        {
+            return error(progname, "Can't read credential file\n");
+        }
+        filebuffer[result] = '\0';
+        
+        result = bxml_find_and_copy_nth_element(
+                                filebuffer,
+                                "credentials$user",
+                                '$',
+                                0,
+                                username,
+                                sizeof(username),
+                                false,
+                                false
+                                );
+        if (result)
+        {
+            return error(progname, "No user element in credentials file\n");
+        }
+        result |= bxml_find_and_copy_nth_element(
+                                filebuffer,
+                                "credentials$password",
+                                '$',
+                                0,
+                                password,
+                                sizeof(password),
+                                false,
+                                false
+                                );
+        if (result)
+        {
+            return error(progname, "No password element in credentials file\n");
+        }
+        dav_creds.type = httpAuthBasic;
+    }
     result = http_add_dav_resource(&resources, "/", root, &dav_creds);
     if (result)
     {

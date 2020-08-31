@@ -79,6 +79,7 @@ typedef enum
     butil_mime_png,
     butil_mime_pdf,
     butil_mime_ppt,
+    butil_mime_qt,
     butil_mime_rar,
     butil_mime_rtf,
     butil_mime_sh,

@@ -266,6 +266,40 @@ static int webdav_file_move(const char *from, const char *to)
     return rename(from, to);
 }
 
+static int webdav_file_copy(const char *from, const char *to, char *buffer, int nbuffer)
+{
+    int sf;
+    int df;
+    int rcount;
+    int wcount;
+    
+    sf = open(from, O_RDONLY);
+    if (sf < 0)
+    {
+        return -1;
+    }
+    df = open(to, O_WRONLY | O_CREAT | O_TRUNC, HTTP_WEBDAV_PERMISSION_MASK);
+    if (df < 0)
+    {
+        close(sf);
+        return -1;
+    }
+    do
+    {
+        rcount = read(sf, buffer, nbuffer);
+        if (rcount > 0)
+        {
+            wcount = write(df, buffer, rcount);
+        }
+    }
+    while (rcount > 0 && wcount > 0);
+    
+    close(sf);
+    close(df);
+    
+    return (rcount >= 0 && wcount >= 0) ? 0 : -1;
+}
+
 static int webdav_file_mkdir(const char *path)
 {
     return mkdir(path
@@ -1018,7 +1052,21 @@ int http_webdav_request(http_client_t *client)
             {
                 return http_error_reply(client, 404, "Not found", false);
             }
-            return http_error_reply(client, 409, "No Copying", false);
+            // for destination path. destination header was stuffed into client findpath
+            result = http_join_path(destinfo.path, sizeof(destinfo.path),
+                        client->resource->resource.file_data.root,
+                        client->resource->urlbase, client->dav_findpath);
+            if (result)
+            {
+                return http_error_reply(client, 409, "No Copying to bad file", false);
+            }
+            // use clients outbuffer for the file copy buffer
+            result = webdav_file_copy(info.path, destinfo.path, client->out.data, client->out.size);
+            if (result)
+            {
+                return http_error_reply(client, 409, "Can't copy", false);
+            }
+            return http_quick_reply(client, 201, "Copied", false);
 
         case httpMove:
             if (result)

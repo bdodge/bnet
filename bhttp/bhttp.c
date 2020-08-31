@@ -418,7 +418,7 @@ int http_send_data(http_client_t *client, const uint8_t *data, int count)
             client->last_out_time = now;
         }
         wc = client->stream->write(client->stream, (uint8_t*)data, count);
-        if (wc <= 0)
+        if (wc < 0)
         {
             HTTP_ERROR("closed on send");
             return -1;

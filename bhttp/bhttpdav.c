@@ -61,7 +61,7 @@ static const char *s_file_entry =
     "    <d:prop>\n"
     "      <d:resourcetype/>\n"
     "      <d:displayname>%s</d:displayname>\n"             // friendly name of item
-    "      <d:getcontentlength>%d</d:getcontentlength>\n"   // size of item
+    "      <d:getcontentlength>%zu</d:getcontentlength>\n"  // size of item
     "      <d:getcontenttype>%s</d:getcontenttype>\n"       // mime type of item
     "      <d:creationdate>%s</d:creationdate>\n"           // creation date
     "      <d:getlastmodified>%s</d:getlastmodified>\n"     // last mod time

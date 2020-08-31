@@ -234,9 +234,11 @@ int http_file_callback(
             client->out_content_type = butil_content_type_for_file(path);
             client->out_content_length = fstat.st_size;
 
+            #if HTTP_USE_CHUNKED_XFER_FOR_FILES
             // optional: modify xfer encoding
             client->out_transfer_type = httpChunked;
-
+            #endif
+            
             http_log(3, "upload file %s (%u)\n", path, client->out_content_length);
 
             stream = iostream_create_reader_from_file(path);

@@ -640,16 +640,16 @@ int butil_parse_url(
     ps = pe;
     if (*scheme != schemeFILE)
     {
-        // extract hostname
-        pe = strchr(ps, ':');
+        // find the first instance of / or : or null to terminate host name
+        //
+        while (*pe && *pe != ':' && *pe != '/')
+        {
+            pe++;
+        }
         if (! pe)
         {
-            pe = strchr(ps, '/');
-            if (! pe)
-            {
-                // remainder of string is hostname
-                pe = ps + strlen(ps);
-            }
+            // remainder of string is hostname
+            pe = ps + strlen(ps);
         }
         len = pe - ps;
         if (len >= nhost && host)
@@ -675,6 +675,7 @@ int butil_parse_url(
             }
             ps = pe;
         }
+        
         if (port)
         {
             *port = portnum;

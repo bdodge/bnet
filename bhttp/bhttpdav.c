@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 #include "bhttp.h"
+
+#if HTTP_SUPPORT_WEBDAV
+
 #include "bxml.h"
 
 static const char *s_multistatus_header =
@@ -1107,3 +1110,4 @@ int http_webdav_request(http_client_t *client)
     return result;
 }
 
+#endif // HTTP_SUPPORT_DAV

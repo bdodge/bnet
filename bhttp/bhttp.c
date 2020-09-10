@@ -1330,7 +1330,11 @@ int http_client_slice(http_client_t *client)
         // to allow combining of request/headers with body to save
         // writes to the remote server
         //
-        if (client->use100 || client->ws_upgrade)
+        if (client->use100 
+            #if HTTP_SUPPORT_WEBSOCKET
+            || client->ws_upgrade
+            #endif
+        )
         {
             client->state = httpSendRequest;
         }
@@ -1470,8 +1474,10 @@ int http_client_slice(http_client_t *client)
         {
             client->resource = http_find_resource(
                                                 client->resources,
+                                    #if HTTP_SUPPORT_WEBSOCKET
                                                 client->ws_upgrade ?
                                                     (client->secure ? schemeWSS : schemeWS) :
+                                    #endif
                                                     http_scheme_base(client->scheme),
                                                 client->path,
                                                 client->method

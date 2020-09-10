@@ -97,6 +97,8 @@ typedef enum
 }
 http_auth_type_t;
 
+struct http_client;
+
 #include "bhttputil.h"
 #include "bhttpres.h"
 

@@ -55,7 +55,12 @@ LIBZ_PATH=$(SRCROOT)/zlib-1.2.11
 LIBZ_LIBS=z
 
 CC=gcc
-CFLAGS+=-g -fno-diagnostics-color
+ifdef DEBUG
+	CFLAGS+=-g
+else
+	CFLAGS+=-O
+endif
+#CFLAGS+=-fno-diagnostics-color
 
 AR=ar
 ARFLAGS=-r

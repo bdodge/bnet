@@ -2,6 +2,7 @@ bftp/bftptest
 bftp/fromremote.jpg
 bhttp/bhttp
 bdavserver/bdavserver
+bdavserver/.obj*
 bhttp/media/
 bhttp/.obj*
 bupnp/bdlnaserver

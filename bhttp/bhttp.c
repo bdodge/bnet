@@ -1233,33 +1233,36 @@ int http_client_slice(http_client_t *client)
             client->expect100 = true;
             result |= http_append_request(client, "Expect: 100-continue");
         }
-        // get content-type, etc. from resource if present (post/put)
-        //
-        if (client->resource && client->resource->callback)
+        if (client->method != httpGet) // httpHandleSendRequest does the callback for GETs 
         {
-            // tell resource the request is starting
+            // get content-type, etc. from resource if present (post/put)
             //
-            // NOTE: this callback can change client state, setup xfer state, etc.
-            //
-            result = client->resource->callback(
-                                        client,
-                                        client->resource,
-                                        httpRequest,
-                                        NULL,
-                                        NULL
-                                        );
-            if (result)
+            if (client->resource && client->resource->callback)
             {
-                HTTP_ERROR("Send request callback cancels");
-                return http_slice_fatal(client, -1);
-            }
-            client->resource_open = true;
-
-            // if client changed state on purpose, assume they don't want our headers
-            //
-            if (client->state != httpClientInit)
-            {
-                break;
+                // tell resource the request is starting
+                //
+                // NOTE: this callback can change client state, setup xfer state, etc.
+                //
+                result = client->resource->callback(
+                                            client,
+                                            client->resource,
+                                            httpRequest,
+                                            NULL,
+                                            NULL
+                                            );
+                if (result)
+                {
+                    HTTP_ERROR("Send request callback cancels");
+                    return http_slice_fatal(client, -1);
+                }
+                client->resource_open = true;
+    
+                // if client changed state on purpose, assume they don't want our headers
+                //
+                if (client->state != httpClientInit)
+                {
+                    break;
+                }
             }
         }
         #if HTTP_SUPPORT_WEBSOCKET

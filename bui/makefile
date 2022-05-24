@@ -34,8 +34,12 @@ CFLAGS += $(EXTRA_DEFINES:%=-D%) -Wno-format-truncation
 PROGSOURCES=$(SRCDIR)/buitest.c
 PROGOBJECTS=$(OBJDIR)/buitest.o
 
+ifeq ($(UNAME_S),Linux)
+	WINLIBS = -lX11
+endif
+
 buitest: $(PROGOBJECTS) $(UILIB) $(LIBS)
-	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS) -lX11
+	$(CC) $(CFLAGS) -o $@ $^ $(SYSLIBS) $(WINLIBS)
 
 library: $(UILIB)
 

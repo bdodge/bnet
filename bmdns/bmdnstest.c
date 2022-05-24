@@ -121,7 +121,7 @@ int main(int argc, char **argv)
     char hostname[MDNS_MAX_DNTEXT];
     bipv4addr_t myipv4addr;
     bipv6addr_t myipv6addr;
-    uint32_t iface_index;
+    int32_t iface_index;
     char *txtrecs;
     char *arg;
     char *program;

@@ -203,12 +203,12 @@ const char *bsnmp_var_string(bsnmp_var_t *var, char *buffer, int nBuffer)
 
     case SNMP_INTEGER64:
 
-        snprintf(buffer, room, "%"PRId64, var->val.llVal);
+        snprintf(buffer, room, "%"LIFS, var->val.llVal);
         break;
 
     case SNMP_COUNTER64:
 
-        snprintf(buffer, room, "%"PRIu64, var->val.ullVal);
+        snprintf(buffer, room, "%"LUFS, var->val.ullVal);
         break;
 
     case SNMP_FLOAT:

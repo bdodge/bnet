@@ -17,6 +17,7 @@
 
 static const char *http_state_name(http_state_t state)
 {
+#if HTTP_DEBUG_STRING
     switch (state)
     {
     case httpServeInit:         return "Init(server)";
@@ -41,6 +42,9 @@ static const char *http_state_name(http_state_t state)
     case httpDone:              return "Done";
     default:                    return "- bad state -";
     }
+#else
+    return "";
+#endif
 }
 
 http_client_t *http_client_create(http_resource_t *resources, bool isclient)
@@ -346,7 +350,7 @@ int http_client_input(http_client_t *client, int to_secs, int to_usecs)
             }
         }
     }
-    time(&now);
+    http_time(&now);
 
     if ((client->in.count == count) && (client->state == client->prev_state))
     {
@@ -397,7 +401,7 @@ int http_send_data(http_client_t *client, const uint8_t *data, int count)
             HTTP_ERROR("closed on send");
             return -1;
         }
-        time(&now);
+        http_time(&now);
 
         if (wc == 0)
         {
@@ -876,7 +880,7 @@ static int http_process_header(http_client_t *client, char *header)
     else if (! http_ncasecmp(header, "lock-token:"))
     {
         size_t tokenlen;
-        
+
         if (strlen(value) >= sizeof(client->dav_token))
         {
             HTTP_ERROR("DAV Token len");
@@ -895,7 +899,7 @@ static int http_process_header(http_client_t *client, char *header)
             {
                 client->dav_token[tokenlen - 1] = '\0';
             }
-        }    
+        }
     }
     else if (! http_ncasecmp(header, "destination:"))
     {
@@ -924,7 +928,7 @@ static int http_process_header(http_client_t *client, char *header)
             client->ws_upgrade = true;
         }
         #endif
-        #if HTTP_SUPPORT_WEBSOCKET
+        #if HTTP_SUPPORT_TLS
         if (! http_ncasecmp(value, "tls"))
         {
             if (! client->isclient)
@@ -1233,7 +1237,7 @@ int http_client_slice(http_client_t *client)
             client->expect100 = true;
             result |= http_append_request(client, "Expect: 100-continue");
         }
-        if (client->method != httpGet) // httpHandleSendRequest does the callback for GETs 
+        if (client->method != httpGet) // httpHandleSendRequest does the callback for GETs
         {
             // get content-type, etc. from resource if present (post/put)
             //
@@ -1256,7 +1260,7 @@ int http_client_slice(http_client_t *client)
                     return http_slice_fatal(client, -1);
                 }
                 client->resource_open = true;
-    
+
                 // if client changed state on purpose, assume they don't want our headers
                 //
                 if (client->state != httpClientInit)
@@ -1268,11 +1272,19 @@ int http_client_slice(http_client_t *client)
         #if HTTP_SUPPORT_WEBSOCKET
         if (client->ws_upgrade)
         {
-            result |= http_websocket_create_key(client->ws_key, sizeof(client->ws_key));
+            if (client->ws_key[0] == '\0' || client->ws_proto[0] == '\0')
+            {
+                http_client_set_websocket_key(client, NULL, NULL);
+            }
             result |= http_append_request(client, "Upgrade: websocket");
             result |= http_append_request(client, "Connection: Upgrade");
             result |= http_append_request(client, "Sec-WebSocket-Key: %s", client->ws_key);
-            result |= http_append_request(client, "Sec-WebSocket-Protocol: %s", client->ws_proto);
+            if (client->ws_proto[0])
+            {
+                // some websocket servers reject connection of proto header present
+                // and doesnt have what it likes even just "chat" so dont set proto in that case
+                result |= http_append_request(client, "Sec-WebSocket-Protocol: %s", client->ws_proto);
+            }
             result |= http_append_request(client, "Sec-WebSocket-Version: %u", client->ws_version);
         }
         else
@@ -1291,6 +1303,7 @@ int http_client_slice(http_client_t *client)
             {
                 result |= http_append_request(client, "Transfer-Encoding: chunked");
             }
+            #if HTTP_SUPPORT_MULTIPART
             if (client->out_content_type == butil_mime_multi)
             {
                 result |= http_append_request(client, "Content-Type: %s;boundary=%s",
@@ -1298,6 +1311,7 @@ int http_client_slice(http_client_t *client)
                             client->boundary);
             }
             else
+            #endif
             {
                 result |= http_append_request(client, "Content-Type: %s",
                             butil_mime_string_for_content_type(client->out_content_type));
@@ -1333,7 +1347,7 @@ int http_client_slice(http_client_t *client)
         // to allow combining of request/headers with body to save
         // writes to the remote server
         //
-        if (client->use100 
+        if (client->use100
             #if HTTP_SUPPORT_WEBSOCKET
             || client->ws_upgrade
             #endif
@@ -1686,6 +1700,7 @@ int http_client_slice(http_client_t *client)
         http_get_line(client, httpHeaders);
         break;
 
+    #if HTTP_SUPPORT_MULTIPART
     case httpMultipartHeaders:
         // multipart headers count against content length
         i = strlen((char*)client->line) + 2;
@@ -1725,7 +1740,7 @@ int http_client_slice(http_client_t *client)
         result = 0;
         http_get_line(client, httpMultipartHeaders);
         break;
-
+    #endif
     case httpHandleReadRequest:
         // server read a request
         if (client->expect100)
@@ -2751,7 +2766,11 @@ int http_client_slice(http_client_t *client)
                 if (count > 0 && client->out_transfer_type == httpChunked)
                 {
                     // back annotate chunk count
-                    snprintf((char *)content - 8, 8, "\r\n%04X\r", (uint32_t)bodyCount);
+                    if (bodyCount > 0xFFFF)
+                    {
+                        HTTP_ERROR("Chunk count exceeds 4 bytes");
+                    }
+                    snprintf((char *)content - 8, 8, "\r\n%04X\r", (uint16_t)bodyCount);
                     content[-1] = '\n';
                     bodyCount += 8;
                 }
@@ -2950,6 +2969,157 @@ int http_client_slice(http_client_t *client)
     return 0;
 }
 
+#if HTTP_SUPPORT_WEBSOCKET
+int http_client_set_websocket_key(
+                        http_client_t *client,
+                        const char *key,
+                        const char *protocol
+                        )
+{
+    char keybuf[64];
+
+    if (!client)
+    {
+        return -1;
+    }
+    if (!key)
+    {
+        http_websocket_create_key(keybuf, sizeof(keybuf));
+        key = keybuf;
+    }
+    if (strlen(key) != 24)
+    {
+        HTTP_ERROR("key must be base64 encoded 16 byte value");
+        return -1;
+    }
+    strncpy(client->ws_key, key, sizeof(client->ws_key) - 1);
+    client->ws_key[sizeof(client->ws_key) - 1] = '\0';
+
+    if (protocol)
+    {
+        strncpy(client->ws_proto, protocol, sizeof(client->ws_proto) - 1);
+        client->ws_proto[sizeof(client->ws_proto) - 1] = '\0';
+    }
+    else
+    {
+        client->ws_proto[0] = '\0';
+    }
+    client->ws_version = 13;
+    client->ws_upgrade = true;
+    return 0;
+}
+#endif
+
+int http_client_request(
+                        http_client_t *client,
+                        http_method_t method,
+                        const char *url,
+                        http_transport_t transport,
+                        bool use100,
+                        const char *localpath,
+                        http_resource_t *resource
+                       )
+{
+    http_resource_t *resources;
+    int result;
+
+    // assume 1.1
+    client->vmaj = 1;
+    client->vmin = 1;
+
+    result = butil_parse_url(url, &client->scheme,
+            client->host, sizeof(client->host), &client->port,
+            client->path, sizeof(client->path));
+    if (result)
+    {
+        HTTP_ERROR("Bad url");
+        return result;
+    }
+#if ! HTTP_SUPPORT_TLS
+    if (
+            client->scheme == schemeHTTPS
+#if HTTP_SUPPORT_WEBSOCKET
+        ||  client->scheme == schemeWSS
+#endif
+    )
+    {
+        HTTP_ERROR("TLS not supported");
+        return -1;
+    }
+#endif
+    if (localpath)
+    {
+#if HTTP_SUPPORT_FILE
+        resources = NULL;
+        result = http_add_file_resource(&resources, schemeHTTP, localpath, "./", NULL);
+        if (result)
+        {
+            HTTP_ERROR("Can't add resource");
+            return result;
+        }
+#else
+        HTTP_ERROR("Can't add a file resource");
+        return -1;
+#endif
+    }
+    else
+    {
+        resources = resource;
+    }
+    client->resource = resources;
+    client->method = method;
+    client->transport = transport;
+
+    if (use100)
+    {
+        client->use100 = true;
+    }
+    if (transport == httpTCP)
+    {
+        client->stream = iostream_create_from_tcp_connection(client->host, client->port);
+    }
+    else
+    {
+#if HTTP_SUPPORT_UDP
+        socket_t socket;
+
+        socket = iostream_create_udp_socket();
+        if (socket != INVALID_SOCKET)
+        {
+            client->stream = iostream_create_from_socket(socket);
+        }
+        else
+        {
+            client->stream = NULL;
+        }
+#else
+        HTTP_ERROR("Can't make stream");
+        http_resource_free(resources);
+        return -1;
+#endif
+    }
+#if HTTP_SUPPORT_WEBSOCKET
+    if (client->scheme == schemeWS || client->scheme == schemeWSS)
+    {
+        // key must be set first
+        if (!client->ws_upgrade || !client->ws_key[0])
+        {
+            http_log(3, "creating missing websocket key\n");
+            http_client_set_websocket_key(client, NULL, NULL);
+        }
+    }
+#endif
+    if (! client->stream)
+    {
+        HTTP_ERROR("Can't make stream");
+        http_resource_free(resources);
+        return -1;
+    }
+    // go wait for client socket to connect
+    client->state = httpClientInit;
+    return 0;
+}
+
 int http_wait_for_client_event(http_client_t *client_list, int to_secs, int to_usecs)
 {
     http_client_t *client;
@@ -2991,95 +3161,7 @@ int http_wait_for_client_event(http_client_t *client_list, int to_secs, int to_u
     return result;
 }
 
-int http_client_request(
-                        http_client_t *client,
-                        http_method_t method,
-                        const char *url,
-                        http_transport_t transport,
-                        bool use100,
-                        const char *localpath,
-                        http_resource_t *resource
-                       )
-{
-    http_resource_t *resources;
-    char scheme[HTTP_MAX_SCHEME];
-    int result;
-
-    // assume 1.1
-    client->vmaj = 1;
-    client->vmin = 1;
-
-    result = butil_parse_url(url, &client->scheme,
-            client->host, sizeof(client->host), &client->port,
-            client->path, sizeof(client->path));
-    if (result)
-    {
-        HTTP_ERROR("Bad url");
-        return result;
-    }
-#if ! HTTP_SUPPORT_TLS
-    if (
-            client->scheme == schemeHTTPS
-#if HTTP_SUPPORT_WEBSOCKET
-        ||  client->scheme == schemeWSS
-#endif
-    )
-    {
-        HTTP_ERROR("TLS not supported");
-        return -1;
-    }
-#endif
-    if (localpath)
-    {
-        resources = NULL;
-        result = http_add_file_resource(&resources, schemeHTTP, localpath, "./", NULL);
-        if (result)
-        {
-            HTTP_ERROR("Can't add resource");
-            return result;
-        }
-    }
-    else
-    {
-        resources = resource;
-    }
-    client->resource = resources;
-    client->method = method;
-    client->transport = transport;
-
-    if (use100)
-    {
-        client->use100 = true;
-    }
-    if (transport == httpTCP)
-    {
-        client->stream = iostream_create_from_tcp_connection(client->host, client->port);
-    }
-    else
-    {
-        socket_t socket;
-
-        socket = iostream_create_udp_socket();
-        if (socket != INVALID_SOCKET)
-        {
-            client->stream = iostream_create_from_socket(socket);
-        }
-        else
-        {
-            client->stream = NULL;
-        }
-    }
-    if (! client->stream)
-    {
-        HTTP_ERROR("Can't make stream");
-        http_resource_free(resources);
-        return -1;
-    }
-    // go wait for client socket to connect
-    client->state = httpClientInit;
-    return 0;
-}
-
+#if HTTP_SUPPORT_SERVER
 socket_t http_create_server_socket(http_transport_t transport, uint16_t port, uint32_t max_connections)
 {
     struct sockaddr_in serv_addr;
@@ -3632,4 +3714,5 @@ int http_serve(http_server_t *servers, http_idle_callback_t on_idle, void *priv)
     butil_log(4, "HTTP Server ends\n");
     return result;
 }
+#endif // HTTP_SUPPORT_SERVER
 

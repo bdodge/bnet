@@ -22,15 +22,33 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/types.h>
 #ifdef Windows
+#include <unistd.h>
+#include <sys/types.h>
+#include <time.h>
+#define HTTP_SUPPORT_POSIX (1)
 #include <windows.h>
 #include <winsock.h>
+#elif defined(EMBEDDED_ATCMD)
+#define HTTP_SUPPORT_POSIX (0)
+#include <errno.h>
+#include <strings.h>
+#include <net/net_ip.h>
+#include "attcp.h"
+#ifdef CONFIG_MBEDTLS
+#define HTTP_SUPPORT_TLS (1)
 #else
+#define HTTP_SUPPORT_TLS (0)
+#define HTTP_SUPPORT_WEBSOCKET (1)
+#endif
+//typedef uint32_t time_t;
+#else
+#include <unistd.h>
+#include <sys/types.h>
+#define HTTP_SUPPORT_POSIX (1)
 #include <errno.h>
 #include <dirent.h>
+#include <time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -43,6 +61,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#if (HTTP_SUPPORT_POSIX)
 #ifdef _WIN32
 typedef SOCKET socket_t;
 #define close_socket closesocket
@@ -52,6 +71,13 @@ typedef int socket_t;
 #define INVALID_SOCKET -1
 #define close_socket close
 #define ioctl_socket ioctl
+#define http_time(p) time(p)
+#endif
+#elif defined(EMBEDDED_ATCMD)
+typedef attcp_socket_t socket_t;
+#define close_socket(s) ATTCPclose(s)
+#define http_time(p) ATTCPwallTime(p)
+#else
 #endif
 
 typedef struct tag_ipv4addr { uint32_t addr;    } bipv4addr_t;
@@ -65,8 +91,8 @@ typedef struct tag_ipv6addr { uint16_t addr[8]; } bipv6addr_t;
 #define LIFS    PRId64
 #define LUFS    PRIu64
 #else
-#define LIFS    "ld"
-#define LUFS    "lu"
+#define LIFS    "lld"
+#define LUFS    "llu"
 #endif
 
 #define BERROR(m) \

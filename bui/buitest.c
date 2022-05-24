@@ -350,7 +350,7 @@ static int start_simulation(const char* cmdline, int x, int y, int w, int h)
     return 0;
 }
 
-#else /* WIN32 */
+#elif defined(Linux) /* WIN32 */
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -800,6 +800,17 @@ static int start_simulation(const char* cmdline, int x, int y, int w, int h)
     }
     XMapRaised(s_display, xWnd);
     return 0;
+}
+#else
+static int start_simulation(const char* cmdline, int x, int y, int w, int h)
+{
+    BERROR("Not implemented\n");
+    return -1;
+}
+static int run_simulation(int update_display)
+{
+    BERROR("Not implemented\n");
+    return -1;
 }
 #endif
 

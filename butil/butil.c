@@ -72,10 +72,7 @@ int butil_is_number(char ch)
 
 size_t butil_utf8_encode(uint32_t unicode, uint8_t utfbuf[5])
 {
-    unsigned short ca, cb, cc, cd;
-    wchar_t  uc, nc;
-    int  j, k;
-    size_t i, len;
+    int  j;
 
     j = 0;
 
@@ -106,11 +103,11 @@ size_t butil_utf8_decode(uint8_t *utfbuf, size_t nutf, uint32_t *unicode)
 {
     uint32_t b, c;
     int i;
-    
+
     i = 0;
     b = (uint32_t)utfbuf[i++];
     nutf--;
-    
+
     if(b & 0x80)
     {
         if(b & 0x20)
@@ -125,23 +122,23 @@ size_t butil_utf8_decode(uint8_t *utfbuf, size_t nutf, uint32_t *unicode)
                     return 0;
                 }
                 c = (uint32_t)utfbuf[i++];
-                nutf--;                    
+                nutf--;
                 b |= (c & 0x3f) << 12;
                 if (nutf < 1)
                 {
                     // dangling utf8?
                     return 0;
-                }                    
+                }
                 c = (uint32_t)utfbuf[i++];
-                nutf--;                    
+                nutf--;
                 b |= (c & 0x3f) << 6;
                 if (nutf < 1)
                 {
                     // dangling utf8?
                     return 0;
-                }                    
+                }
                 c = (uint32_t)utfbuf[i++];
-                nutf--;                    
+                nutf--;
                 b |= (c & 0x3f);
             }
             else
@@ -152,17 +149,17 @@ size_t butil_utf8_decode(uint8_t *utfbuf, size_t nutf, uint32_t *unicode)
                 {
                     // dangling utf8?
                     return 0;
-                }                    
+                }
                 c = (uint32_t)utfbuf[i++];
-                nutf--;                    
+                nutf--;
                 b |= (c & 0x3f) << 6;
                 if (nutf < 1)
                 {
                     // dangling utf8?
                     return 0;
-                }                    
+                }
                 c = (uint32_t)utfbuf[i++];
-                nutf--;                    
+                nutf--;
                 b |= (c & 0x3f);
             }
         }
@@ -174,9 +171,9 @@ size_t butil_utf8_decode(uint8_t *utfbuf, size_t nutf, uint32_t *unicode)
             {
                 // dangling utf8?
                 return -1;
-            }                    
+            }
             c = (uint32_t)utfbuf[i++];
-            nutf--;                    
+            nutf--;
             b |= c & 0x3f;
         }
     }
@@ -621,6 +618,7 @@ int butil_parse_url(
         portnum = 23;
         break;
     case schemeHTTPS:
+    case schemeWSS:
         portnum = 443;
         break;
     case schemeSIP:
@@ -633,6 +631,7 @@ int butil_parse_url(
         portnum = 25;
         break;
     case schemeHTTP:
+    case schemeWS:
     default:
         portnum = 80;
         break;
@@ -675,7 +674,7 @@ int butil_parse_url(
             }
             ps = pe;
         }
-        
+
         if (port)
         {
             *port = portnum;
@@ -1278,7 +1277,7 @@ int butil_get_host_info(char* myhost, int nhost, bipv4addr_t *myipv4addr, bipv6a
         BERROR("no IP addr");
         return -1;
     }
-#else
+#elif defined(Windows)
     struct hostent *phost;
 
     if (gethostname(myhost, nhost))

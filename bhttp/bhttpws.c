@@ -99,6 +99,9 @@ static int ws_stream_inject_input(http_client_t *client)
     case wssFrame:
         wsx->opcode = ws_next_client_byte(client);
         wsx->in_state = wssHeaderByte1;
+        wsx->got_ping = false;
+        wsx->got_pong = false;
+        wsx->sent_pong = false;
         break;
 
     case wssHeaderByte1:
@@ -175,10 +178,10 @@ static int ws_stream_inject_input(http_client_t *client)
             wsx->in_mask_key[2] = ws_next_client_byte(client);
             wsx->in_mask_key[3] = ws_next_client_byte(client);
         }
-        http_log(5, "Frame code=%02X fin=%c len=%llu\n",
+        http_log(5, "Frame code=%02X fin=%c len=%u\n",
                 wsx->opcode & WSBIT_OPC,
                 (wsx->opcode & WSBIT_FIN) ? 'Y' : 'N',
-                wsx->payload_length);
+                (uint32_t)wsx->payload_length);
 
         switch (wsx->opcode & WSBIT_OPC)
         {
@@ -189,15 +192,28 @@ static int ws_stream_inject_input(http_client_t *client)
             break;
         case WSOPCODE_CLOSE:
             http_log(4, "WebSocket Close request\n");
-            client->ws_stream->close(client->ws_stream);
-            client->ws_stream = NULL;
-            client->stream = NULL;
-            client->state = httpDone;
+            wsx->in_state = wssClosed;
             break;
         case WSOPCODE_PING:
+            http_log(5, "WebSocket Ping %d bytes\n", wsx->payload_length);
+            if (wsx->payload_length <= 125)
+            {
+                wsx->got_ping = true;
+                wsx->sent_pong = false;
+            }
+            else
+            {
+                http_log(0, "Payload too long for ping, discarding");
+            }
+            wsx->in_state = wssPayload;
+            break;
         case WSOPCODE_PONG:
+            http_log(3, "WebSocket Pong req?? (%d bytes)\n", wsx->payload_length);
+            wsx->got_pong = true;
+            wsx->in_state = wssPayload;
+            break;
         default:
-            HTTP_ERROR("Bad opcode");
+            http_log(0, "WebSocket Bad opcode %02X\n", wsx->opcode & WSBIT_OPC);
             return -1;
         }
         break;
@@ -215,60 +231,116 @@ static int ws_stream_inject_input(http_client_t *client)
         {
             chunk = (uint64_t)client->in.count;
         }
-        // into our stream buffer
-        room = (uint64_t)(wsx->in.size - wsx->in.count);
-        if (room < chunk)
+        // into our stream buffer unless in a ping
+        if (!wsx->got_ping && !wsx->got_pong)
         {
-            chunk = room; // chunk is now 32 bit safe
-        }
-        count = (uint32_t)chunk;
-
-        if (wsx->in_masked)
-        {
-            // unmask bytes
-            for (i = 0; i < count; i++)
+            room = (uint64_t)(wsx->in.size - wsx->in.count);
+            if (room < chunk)
             {
-                wsx->in.data[wsx->in.head + i] =
-                    client->in.data[client->in.tail + i] ^ wsx->in_mask_key[i & 0x3];
+                chunk = room; // chunk is now 32 bit safe
+            }
+            count = (uint32_t)chunk;
+
+            if (wsx->in_masked)
+            {
+                // unmask bytes
+                for (i = 0; i < count; i++)
+                {
+                    wsx->in.data[wsx->in.head + i] =
+                        client->in.data[client->in.tail + i] ^ wsx->in_mask_key[i & 0x3];
+                }
+            }
+            else
+            {
+                for (i = 0; i < count; i++)
+                {
+                    wsx->in.data[wsx->in.head + i] = client->in.data[client->in.tail + i];
+                }
+            }
+            wsx->in.count += count;
+            wsx->in.head += count;
+            if (wsx->in.head >= wsx->in.size)
+            {
+                wsx->in.head = 0;
+            }
+            client->in.count -= count;
+            client->in.tail += count;
+            if (client->in.tail >= client->in.size)
+            {
+                client->in.tail = 0;
+            }
+            if (1) // debug
+            {
+                if (wsx->in.head < wsx->in.size - 1)
+                    wsx->in.data[wsx->in.head] = '\n';
+                if (wsx->in.head < wsx->in.size)
+                    wsx->in.data[wsx->in.head + 1] = 0;
+
+                if (0) // more debug
+                {
+                    http_log(5, "%s", wsx->in.data + wsx->in.tail);
+                    wsx->in.tail = wsx->in.head;
+                    wsx->in.count = 0;
+                }
             }
         }
         else
         {
+            // in a ping, just copy as much as we can to output
+            room = (uint64_t)(client->out.size - client->out.count);
+            if (room < chunk)
+            {
+                chunk = room; // chunk is now 32 bit safe
+            }
+            count = (uint32_t)chunk;
+
+            if (count >= 2 && wsx->got_ping && !wsx->sent_pong)
+            {
+                // insert pong opcode and length byte
+                client->out.data[client->out.head] = WSOPCODE_PONG |
+                                        (wsx->in_masked ? WSBIT_MASK : 0);
+                client->out.head++;
+                if (client->out.head >= client->out.size)
+                {
+                    client->out.head = 0;
+                }
+                client->out.count++;
+
+                client->out.data[client->out.head] = wsx->payload_length;
+                client->out.head++;
+                if (client->out.head >= client->out.size)
+                {
+                    client->out.head = 0;
+                }
+                client->out.count++;
+                wsx->sent_pong = true;
+                count -= 2;
+            }
             for (i = 0; i < count; i++)
             {
-                wsx->in.data[wsx->in.head + i] = client->in.data[client->in.tail + i];
-            }
-        }
-        wsx->in.count += count;
-        wsx->in.head += count;
-        if (wsx->in.head >= wsx->in.size)
-        {
-            wsx->in.head = 0;
-        }
-        client->in.count -= count;
-        client->in.tail += count;
-        if (client->in.tail >= client->in.size)
-        {
-            client->in.tail = 0;
-        }
-        if (1) // debug
-        {
-            if (wsx->in.head < wsx->in.size - 1)
-                wsx->in.data[wsx->in.head] = '\n';
-            if (wsx->in.head < wsx->in.size)
-                wsx->in.data[wsx->in.head + 1] = 0;
-
-            if (0) // more debug
-            {
-                http_log(5, "%s", wsx->in.data + wsx->in.tail);
-
-                wsx->in.tail = wsx->in.head;
-                wsx->in.count = 0;
+                if (wsx->got_ping)
+                {
+                    client->out.data[client->out.head] = client->in.data[client->in.tail];
+                    client->out.head++;
+                    if (client->out.head >= client->out.size)
+                    {
+                        client->out.head = 0;
+                    }
+                    client->out.count++;
+                }
+                client->in.tail++;
+                if (client->in.tail >= client->in.size)
+                {
+                    client->in.tail = 0;
+                }
+                client->in.count--;
             }
         }
         wsx->payload_length -= (uint64_t)count;
         if (wsx->payload_length == 0)
         {
+            wsx->got_ping = false;
+            wsx->got_pong = false;
             wsx->in_state = wssFrame;
         }
         break;
@@ -366,7 +438,6 @@ static int ws_stream_write(iostream_t *stream, uint8_t *buffer, int count)
 static int ws_stream_poll(iostream_t *stream, polldir_t dir, int to_secs, int to_usecs)
 {
     ws_stream_ctx_t *wsx;
-    int result;
 
     if (! stream || ! stream->priv)
     {
@@ -396,8 +467,8 @@ static int ws_stream_close(iostream_t *stream)
 
     if (wsx->stream)
     {
-        // if we wrapped it, close it
-        //wsx->stream->close(wsx->stream);
+        // NOTE: wrapped stream is NOT closed here in case
+        // http client has other use for it, so don't close it
         wsx->stream = NULL;
     }
     if (wsx->in.data)
@@ -490,18 +561,25 @@ int http_websocket_check_key(char *theirkey, char *ourkey)
 
 int http_websocket_create_key(char *keybuf, size_t bufbytes)
 {
-    uint8_t b[8];
-    int i;
+    time_t now;
+    uint8_t nonce[18];
 
-    if (! keybuf || bufbytes < HTTP_MAX_WEBSOCKET_KEY)
+    if (!keybuf || (bufbytes <= HTTP_WEBSOCKET_KEY_SIZE))
     {
         return -1;
     }
-    for (i = 0; i < 8; i++)
-    {
-        b[i] = i + 1;
-    }
-    butil_base64_encode(keybuf, bufbytes, b, i, false, false);
+    http_time(&now);
+    now ^= 8732;
+    memcpy(nonce, (uint8_t*)&now, 4);
+    now ^= 0xA45B;
+    memcpy(nonce + 4, (uint8_t*)&now, 4);
+    http_time(&now);
+    now ^= 0xF432;
+    memcpy(nonce + 8, (uint8_t*)&now, 4);
+    now ^= 0x1367;
+    memcpy(nonce + 12, (uint8_t*)&now, 4);
+    nonce[16] = '\0';
+    butil_base64_encode(keybuf, bufbytes, nonce, 16, false, false);
     return 0;
 }
 
@@ -535,6 +613,15 @@ int http_websocket_slice(struct http_client *client)
     // decode the protocol and buffer any payload
     //
     result = ws_stream_inject_input(client);
+
+    if (wsx->in_state == wssClosed)
+    {
+        client->ws_stream->close(client->ws_stream);
+        client->ws_stream = NULL;
+        client->state = httpDone;
+
+        return result;
+    }
 
     // present any input data on stream to client resource
     //
@@ -803,10 +890,11 @@ int http_websocket_upgrade_reply(http_client_t *client)
         HTTP_ERROR("No room for keys");
         return -1;
     }
+#if HTTP_SUPPORT_TLS
     // get SHA1 hash of that string into the next buffer
     //
     result = iostream_sha1_hash(sha_buffer, key_buffer, key_len);
-
+#endif
     // base64 encode that 20 byte hash directly into the current output position
     result = butil_base64_encode((char *)client->out.data + client->out.head, 64, sha_buffer, 20, false, false);
     if (result <= 0)

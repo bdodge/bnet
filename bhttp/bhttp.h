@@ -22,16 +22,6 @@
 #include "butil.h"
 #include "bstreamio.h"
 
-#if HTTP_SUPPORT_WEBDAV
-#include "bhttpdav.h"
-#endif
-#if HTTP_SUPPORT_WEBSOCKET
-#include "bhttpws.h"
-#endif
-#if HTTP_SUPPORT_COMPRESSION
-#include "zlib.h"
-#endif
-
 #define HTTP_ERROR BERROR
 
 #define HTTP_SUPPORT_AUTH \
@@ -101,6 +91,16 @@ struct http_client;
 
 #include "bhttputil.h"
 #include "bhttpres.h"
+
+#if HTTP_SUPPORT_WEBDAV
+#include "bhttpdav.h"
+#endif
+#if HTTP_SUPPORT_WEBSOCKET
+#include "bhttpws.h"
+#endif
+#if HTTP_SUPPORT_COMPRESSION
+#include "zlib.h"
+#endif
 
 typedef enum
 {
@@ -205,8 +205,8 @@ typedef struct http_client
     bool                ws_upgrade;
     uint32_t            ws_version;
     uint32_t            ws_extensions;
-    char                ws_key[HTTP_MAX_WEBSOCKET_KEY];
-    char                ws_proto[HTTP_MAX_WEBSOCKET_PROTOCOL];
+    char                ws_key[HTTP_WEBSOCKET_KEY_SIZE + 1];
+    char                ws_proto[HTTP_MAX_WEBSOCKET_PROTOCOL_SIZE + 1];
     iostream_t         *ws_stream;
     #endif
     http_resource_t    *resource;
@@ -274,6 +274,13 @@ int http_client_slice(http_client_t *client);
 
 int http_client_blocked(http_client_t *client);
 int http_wait_for_client_event(http_client_t *client_list, int to_secs, int to_usecs);
+#if HTTP_SUPPORT_WEBSOCKET
+int http_client_set_websocket_key(
+                        http_client_t *client,
+                        const char *key,
+                        const char *protocol
+                       );
+#endif
 int http_client_request(
                         http_client_t *client,
                         http_method_t method,

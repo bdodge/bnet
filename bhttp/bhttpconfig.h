@@ -54,6 +54,19 @@
 #define HTTP_MAX_AUTH_STRING  (64)
 #endif
 
+/// Include support for running HTTP Server
+/// If all you need is a client, set this 0 to save code space
+//
+#ifndef HTTP_SUPPORT_SERVER
+#define HTTP_SUPPORT_SERVER (1)
+#endif
+
+/// Include support for files and filesystems
+//
+#ifndef HTTP_SUPPORT_FILE
+#define HTTP_SUPPORT_FILE (1)
+#endif
+
 /// How many clients, per server, can be connected
 //
 #ifndef HTTP_MAX_CLIENT_CONNECTIONS
@@ -196,6 +209,12 @@
 #ifndef HTTP_DEFAULT_MIME
 #define HTTP_DEFAULT_MIME       "text/html; charset=utf-8"
                                 /*"application/octet-stream"*/
+#endif
+
+/// Include extra debugging strings
+//
+#ifndef HTTP_DEBUG_STRINGS
+#define HTTP_DEBUG_STRINGS (1)
 #endif
 
 #endif

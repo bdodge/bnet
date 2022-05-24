@@ -103,6 +103,87 @@ int echo_callback(
     return 0;
 }
 
+int echo_client_callback(
+                        http_client_t       *client,
+                        http_resource_t     *resource,
+                        http_callback_type_t cbtype,
+                        uint8_t            **data,
+                        size_t              *count
+                     )
+{
+    size_t bytes;
+    static char *hellob = "Hello Websockets";
+    static bool sentping = false;
+    size_t echobytes;
+    int result;
+
+    switch (cbtype)
+    {
+    case httpRequestHeader:
+        http_log(5, "HDR: %s\n", (data && *data) ? (char*)*data : "<nil>");
+        break;
+
+    case httpRequest:
+
+        http_log(5, "ECB: %d\n", cbtype);
+        break;
+
+    case httpUploadData:
+        // write data to remote server
+        if (!sentping)
+        {
+            // set format to text, or wsdfBinary, and set mask perhaps
+            result = http_websocket_set_format(client, wsdfText, true, "mask");
+            if (result)
+            {
+                return -1;
+            }
+            bytes = *count;
+            echobytes = strlen(hellob);
+            if (bytes > echobytes)
+            {
+                bytes = echobytes;
+            }
+            if (*data)
+            {
+                if (bytes > 0)
+                {
+                    memcpy(*data, hellob, bytes);
+                }
+            }
+            else
+            {
+                *data = (uint8_t*)hellob;
+            }
+            *count = bytes;
+            sentping = true;
+        }
+        else
+        {
+            *count = 0;
+        }
+        break;
+
+    case httpDownloadData:
+        // getting data from remote server
+        http_log(5, "ECB: %d\n", cbtype);
+        http_log(4, "%s",*data);
+        bytes = *count;
+        *count = bytes;
+        break;
+
+    case httpDownloadDone:
+        break;
+
+    case httpComplete:
+        break;
+
+    default:
+        return -1;
+    }
+    return 0;
+}
+
 #endif
 
 int cgi_callback(
@@ -146,7 +227,7 @@ int cgi_callback(
     case httpUploadData:
         if (client->ctxpriv)
         {
-            strcpy(*data, (char*)client->ctxpriv);
+            strcpy((char*)*data, (char*)client->ctxpriv);
             client->ctxpriv = NULL;
             *count = strlen((char*)*data);
         }
@@ -216,6 +297,7 @@ int main(int argc, char **argv)
     const char *program, *arg;
     http_method_t method;
     int loglevel = 5;
+    bool websock;
     int result;
 
 #ifdef Windows
@@ -249,6 +331,7 @@ int main(int argc, char **argv)
     port = 8080;
     url[0] = '\0';
     method = httpGet;
+    websock = false;
     result = 0;
 
     while (argc > 0 && ! result)
@@ -276,11 +359,13 @@ int main(int argc, char **argv)
                     http_log(0, "Use: -X [method]");
                 }
                 break;
+            case 'w':
+                websock = true;
+                isserver = false;
+                break;
             case 'u':
             case 't':
                 isserver = false;
-                argc--;
-                argv--;
                 break;
             case 'p':
                 if (argc > 0)
@@ -451,6 +536,7 @@ int main(int argc, char **argv)
     }
     else
     {
+        http_resource_t *resource, *resources = NULL;
         uint16_t port;
         http_client_t *client;
         int to_secs, to_usecs;
@@ -468,9 +554,26 @@ int main(int argc, char **argv)
         client->keepalive = false;
         redirects = 0;
 
+#if HTTP_SUPPORT_WEBSOCKET
+        if (websock)
+        {
+            // set clients resource function
+            //
+            result = http_add_func_resource(&resources, schemeWS, "/", NULL, echo_client_callback, NULL);
+            http_client_set_websocket_key(client, NULL, NULL);
+        }
+#endif
         do
         {
-            result = http_client_request(client, method, url, httpTCP, false, "local.html", NULL);
+            result = http_client_request(
+                                        client,
+                                        method,
+                                        url,
+                                        httpTCP,
+                                        false,
+                                        websock ? NULL : "local.html",
+                                        resources
+                                        );
 
             while (! result)
             {

@@ -122,6 +122,7 @@ int http_add_resource(
     return 0;
 }
 
+#if HTTP_SUPPORT_FILE
 int http_file_callback(
                         http_client_t       *client,
                         http_resource_t     *resource,
@@ -238,7 +239,7 @@ int http_file_callback(
             // optional: modify xfer encoding
             client->out_transfer_type = httpChunked;
             #endif
-            
+
             http_log(3, "upload file %s (%u)\n", path, client->out_content_length);
 
             stream = iostream_create_reader_from_file(path);
@@ -305,7 +306,7 @@ int http_file_callback(
                 return 0;
             }
             #endif
-                    
+
             stream = iostream_create_writer_from_file(path);
             if (! stream)
             {
@@ -364,9 +365,9 @@ int http_file_callback(
             }
             #endif
             result = stream->write(stream, *data, *count);
-            
+
             //http_log(6, "Wrote %d of %d  tot=%d\n", result, *count);
-            
+
             *count = result;
             return (result >= 0) ? 0 : -1;
         }
@@ -454,6 +455,7 @@ int http_add_file_resource(
     }
     return result;
 }
+#endif // HTTP_SUPPORT_FILE
 
 int http_add_func_resource(
                         http_resource_t   **resources,
@@ -583,7 +585,7 @@ int http_outbuffer_callback(
                         size_t              *count
                      )
 {
-    size_t offset = (size_t)(intptr_t)client->ctxpriv;
+    //size_t offset = (size_t)(intptr_t)client->ctxpriv;
     size_t moved;
     size_t room;
 
@@ -674,7 +676,7 @@ int http_add_dav_resource(
         resource->callback  = http_file_callback;
         resource->priv      = NULL;
         resource->resource.file_data.root = root;
-        
+
         result = http_add_resource(resources, schemeHTTP, httpDavLockResource, urlbase, credentials, &resource);
         if (! result)
         {
@@ -778,7 +780,14 @@ http_resource_t *http_match_resource(
                 butil_scheme_name(scheme),
                 tnt,
                 urlpath);
-        if (resource->type == type && resource->scheme == scheme)
+        if (
+                resource->type == type
+             && (
+                    resource->scheme == scheme
+                ||  (resource->scheme == schemeWS && scheme == schemeHTTP)
+                ||  (resource->scheme == schemeWSS && scheme == schemeHTTPS)
+                )
+        )
         {
             if (! pattern_match(urlpath, resource->urlbase))
             {

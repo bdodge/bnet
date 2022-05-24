@@ -39,7 +39,7 @@ const char *http_scheme_base_name(const butil_url_scheme_t scheme)
 {
     static char scheme_name_buffer[HTTP_MAX_SCHEME];
     char *pn;
-    
+
     snprintf(scheme_name_buffer, sizeof(scheme_name_buffer), "%s",
             butil_scheme_name(http_scheme_base(scheme)));
     for (pn = scheme_name_buffer; *pn; pn++)
@@ -465,7 +465,7 @@ int http_generate_boundary(char *boundary, size_t nboundary)
     {
         return -1;
     }
-    time(&now);
+    http_time(&now);
     ctime_r(&now, stamp);
     butil_base64_encode(randbuf, sizeof(randbuf), (uint8_t*)stamp, strlen(stamp), false, false);
     randbuf[28] = '\0';

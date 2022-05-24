@@ -16,8 +16,8 @@
 #ifndef HTTPWS_H
 #define HTTPWS_H 1
 
-#define HTTP_MAX_WEBSOCKET_KEY  32
-#define HTTP_MAX_WEBSOCKET_PROTOCOL  32
+#define HTTP_WEBSOCKET_KEY_SIZE             (24)    /* base64 encoded 16 bytes is 24 bytes */
+#define HTTP_MAX_WEBSOCKET_PROTOCOL_SIZE    (32)
 #define HTTP_WEBSOCKET_KEY_UUID "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 typedef enum
@@ -27,7 +27,8 @@ typedef enum
     wssPayloadLen1,
     wssPayloadLen2,
     wssMaskingKey,
-    wssPayload
+    wssPayload,
+    wssClosed
 }
 http_ws_state_t;
 
@@ -46,6 +47,9 @@ typedef struct
     http_ws_state_t prev_out_state;
     uint8_t         opcode;
     bool            in_masked;
+    bool            got_ping;
+    bool            sent_pong;
+    bool            got_pong;
     uint64_t        payload_length;
     uint8_t         in_mask_key[4];
     uint8_t         out_fmt;

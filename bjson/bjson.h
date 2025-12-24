@@ -16,6 +16,10 @@
 #ifndef BJSON_H
 #define BJSON_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "bnetheaders.h"
 
 /// max depth of array/object nesting. parsing over values
@@ -74,6 +78,50 @@ typedef struct
 }
 bjson_parser_t;
 
+/// Unescape a json string value
+///
+/// @param psrc         [in] ptr to string source
+/// @param nsrc         [in] length of string in psrc (can be set large if psrc is null terminated)
+/// @param isquoted     [in] the source string has quotes "" around it
+/// @param keep_quotes  [in] any quotes on the source string will get copied to result string (and must be present if isquoted is true)
+/// @param used_src     [out] returns how many bytes of psrc were used to produce value, may be NULL
+/// @param value        [in/out] ptr to the resultant escaped string
+/// @param nvalue       [in] size of the result buffer
+///
+/// @returns non-0 on errors
+///
+int bjson_unescape_string(
+                                const char *psrc,
+                                size_t nsrc,
+                                bool isquoted,
+                                bool keep_quotes,
+                                size_t *used_src,
+                                char *value,
+                                size_t nvalue
+                                );
+
+/// Escape a string for inclusion into a json value
+///
+/// @param psrc         [in] ptr to string source
+/// @param nsrc         [in] length of string in psrc (can be set large if psrc is null terminated)
+/// @param isquoted     [in] the source string has quotes "" around it
+/// @param add_quotes   [in] will add quotes "" around the result string (or keep the ones around the source if isquoted)
+/// @param used_src     [out] returns how many bytes of psrc were used to produce value, may be NULL
+/// @param value        [in/out] ptr to the resultant escaped string
+/// @param nvalue       [in] size of the result buffer
+///
+/// @returns non-0 on errors
+///
+int bjson_escape_string(
+                                const char *psrc,
+                                size_t nsrc,
+                                bool isquoted,
+                                bool add_quotes,
+                                size_t *used_src,
+                                char *value,
+                                size_t nvalue
+                                );
+
 /// Return the json type of value pointed to
 ///
 /// @param pjx          [in] the json parser containing the json to parse
@@ -98,6 +146,7 @@ int bjson_value_type(
 /// @param keyval       [in] the value to copy
 /// @param value        [out] the buffer to copy the value into
 /// @param nvalue       [in] the size, in bytes, of value
+/// @param keep_quotes  [in] keep the quotes around strings in the returned value
 ///
 /// @returns non-0 on errors
 ///
@@ -105,7 +154,27 @@ int bjson_copy_key_value(
                                 bjson_parser_t *pjx,
                                 const char *keyval,
                                 char *value,
-                                size_t nvalue
+                                size_t nvalue,
+                                bool keep_quotes
+                                );
+
+/// Copy the key name of the current json key
+/// being pointed to into a buffer
+///
+/// The parser key pointer must be inside the
+/// json contained in the parser object.  Resets the
+/// parser to point to the end of the value parsed
+///
+/// @param pjx          [in] the json parser containing the json to parse
+/// @param keyname      [out] the buffer to copy the value into
+/// @param nkeyname     [in] the size, in bytes, of value
+///
+/// @returns non-0 on errors
+///
+int bjson_copy_key_name(
+                                bjson_parser_t *pjx,
+                                char *keyname,
+                                size_t nkeyname
                                 );
 
 /// Find (a sequence of) json objects by keys and point to the
@@ -199,6 +268,7 @@ int bjson_find_json_key_value(
 /// @param index        [in] which of a series of inner element to get (array type)
 /// @param value        [out] the value buffer to copy the inner keys value into
 /// @param nvalue       [in] the size, in bytes, of value
+/// @param keep_quotes  [in] keep the quotes around strings in the returned value
 ///
 /// Examples: for JSON of
 ///
@@ -226,7 +296,8 @@ int bjson_find_and_copy_json_key_value(
                                 const char pathdelim,
                                 size_t index,
                                 char *value,
-                                size_t nvalue
+                                size_t nvalue,
+                                bool keep_quotes
                                 );
 
 /// Create a JSON parser (reader)
@@ -248,6 +319,10 @@ bjson_parser_t *bjson_parser_create(
 int bjson_parser_destroy(
                                 bjson_parser_t *pjx
                                 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -298,10 +298,11 @@ static int bjson_copy_number_value(bjson_parser_t *pjx, char *value, size_t nval
     return bjson_ok;
 }
 
-static int bjson_unescape_string(
+int bjson_unescape_string(
                                 const char *psrc,
                                 size_t nsrc,
                                 bool isquoted,
+                                bool keep_quotes,
                                 size_t *used_src,
                                 char *value,
                                 size_t nvalue
@@ -332,9 +333,15 @@ static int bjson_unescape_string(
         {
             return bjson_syntax;
         }
+
+        if (!keep_quotes)
+        {
+            psrc++;
+        }
+
         if (value)
         {
-            if (nvalue < 3)
+            if (nvalue < (keep_quotes ? 3 : 1))
             {
                 return bjson_overflow;
             }
@@ -451,7 +458,7 @@ static int bjson_unescape_string(
                 return bjson_syntax;
             }
         }
-        else
+        else if (*psrc != '\"')
         {
             if (*psrc < ' ')
             {
@@ -470,17 +477,39 @@ static int bjson_unescape_string(
             {
                 if (value)
                 {
-                    value[i++] = '\"';
-                    value[i] = '\0';
+                    if (keep_quotes)
+                    {
+                        value[i++] = '\"';
+                    }
+                }
+
+                if (psrc > start_src)
+                {
+                    psrc++;
+
+                    if (value)
+                    {
+                        value[i] = '\0';
+                    }
+                    if (used_src)
+                    {
+                        *used_src = psrc - start_src;
+                    }
+                    return bjson_ok;
+                }
+                else
+                {
+                    psrc++;
+                }
+            }
+            else
+            {
+                if (value)
+                {
+                    value[i++] = *psrc;
                 }
                 psrc++;
-                if (used_src)
-                {
-                    *used_src = psrc - start_src;
-                }
-                return bjson_ok;
             }
-            return bjson_syntax;
         }
     }
     while (*psrc && ((psrc - start_src) < nsrc));
@@ -500,7 +529,173 @@ static int bjson_unescape_string(
     return bjson_ok;
 }
 
-static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nvalue)
+int bjson_escape_string(
+                                const char *psrc,
+                                size_t nsrc,
+                                bool isquoted,
+                                bool add_quotes,
+                                size_t *used_src,
+                                char *value,
+                                size_t nvalue
+                                )
+{
+    const char *start_src;
+    size_t i;
+    uint32_t uval;
+    uint8_t  xval;
+    char echar;
+    uint8_t utf8_buffer[5];
+    size_t utf8_len;
+    size_t j;
+
+    if (! psrc || ! nsrc)
+    {
+        return bjson_parameter;
+    }
+    if (used_src)
+    {
+        *used_src = 0;
+    }
+    start_src = psrc;
+
+    if (isquoted)
+    {
+        if (*psrc != '\"')
+        {
+            return bjson_syntax;
+        }
+
+        if (!add_quotes)
+        {
+            psrc++;
+        }
+
+        if (value)
+        {
+            if (nvalue < (add_quotes ? 3 : 1))
+            {
+                return bjson_overflow;
+            }
+            i = 0;
+        }
+    }
+    else if (value)
+    {
+        i = 0;
+        if (nvalue < (add_quotes ? 3 : 1))
+        {
+            return bjson_overflow;
+        }
+        if (add_quotes)
+        {
+            value[i++] = '\"';
+        }
+    }
+    do
+    {
+        if (value && (i >= (nvalue - 2)))
+        {
+            return bjson_overflow;
+        }
+        switch (*psrc)
+        {
+        case '"':
+            if (isquoted)
+            {
+                if (value)
+                {
+                    if (add_quotes)
+                    {
+                        value[i++] = '\"';
+                    }
+                    value[i] = '\0';
+                }
+                psrc++;
+                if (used_src)
+                {
+                    *used_src = psrc - start_src;
+                }
+                return bjson_ok;
+            }
+            return bjson_syntax;
+        case '\b':
+            if (value)
+            {
+                value[i++] = '\\';
+                value[i++] = 'b';
+            }
+            break;
+        case '\f':
+            if (value)
+            {
+                value[i++] = '\\';
+                value[i++] = 'f';
+            }
+            break;;
+        case '\n':
+            if (value)
+            {
+                value[i++] = '\\';
+                value[i++] = 'n';
+            }
+            break;
+        case '\r':
+            if (value)
+            {
+                value[i++] = '\\';
+                value[i++] = 'r';
+            }
+            break;
+        case '\t':
+            if (value)
+            {
+                value[i++] = '\\';
+                value[i++] = 't';
+            }
+            break;
+        case '\\':
+            if (value)
+            {
+                value[i++] = '\\';
+                value[i++] = '\\';
+            }
+            break;
+        default:
+            if (*psrc < ' ')
+            {
+                // no control chars
+                return bjson_syntax;
+            }
+            if (value)
+            {
+                value[i++] = *psrc;
+            }
+            break;
+        }
+        psrc++;
+    }
+    while (*psrc && ((psrc - start_src) < nsrc));
+
+    if (isquoted)
+    {
+        return bjson_syntax;
+    }
+    if (value)
+    {
+        if (used_src)
+        {
+            *used_src = psrc - start_src;
+        }
+        if (!isquoted && add_quotes)
+        {
+            value[i++] = '\"';
+        }
+        value[i] = '\0';
+    }
+    return bjson_ok;
+}
+
+static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nvalue, bool keep_quotes)
 {
     size_t nsrc;
     size_t used_src;
@@ -508,7 +703,7 @@ static int bjson_copy_string_value(bjson_parser_t *pjx, char *value, size_t nval
 
     nsrc = pjx->length - (pjx->psrc - pjx->json);
 
-    result = bjson_unescape_string(pjx->psrc, nsrc, true, &used_src, value, nvalue);
+    result = bjson_unescape_string(pjx->psrc, nsrc, true, keep_quotes, &used_src, value, nvalue);
     if (! result)
     {
         pjx->psrc += used_src;
@@ -602,7 +797,7 @@ static int bjson_copy_array_or_object_value(
             result = bjson_copy_number_value(pjx, copydest, nvalue - i);
             break;
         case '\"':
-            result = bjson_copy_string_value(pjx, copydest, nvalue - i);
+            result = bjson_copy_string_value(pjx, copydest, nvalue - i, true);
             if (! result)
             {
                 while (butil_is_white(*pjx->psrc))
@@ -721,7 +916,7 @@ static int bjson_copy_array_or_object_value(
     return bjson_syntax;
 }
 
-int bjson_copy_key_value(bjson_parser_t *pjx, const char *keyval, char *value, size_t nvalue)
+int bjson_copy_key_value(bjson_parser_t *pjx, const char *keyval, char *value, size_t nvalue, bool keep_quotes)
 {
     if (! pjx || ! keyval)
     {
@@ -750,7 +945,7 @@ int bjson_copy_key_value(bjson_parser_t *pjx, const char *keyval, char *value, s
         return bjson_copy_number_value(pjx, value, nvalue);
 
     case '\"':
-        return bjson_copy_string_value(pjx, value, nvalue);
+        return bjson_copy_string_value(pjx, value, nvalue, keep_quotes);
 
     case '[':
     case '{':
@@ -761,8 +956,44 @@ int bjson_copy_key_value(bjson_parser_t *pjx, const char *keyval, char *value, s
     }
 }
 
+int bjson_copy_key_name(
+                                bjson_parser_t *pjx,
+                                char *keyname,
+                                size_t nkeyname
+                                )
+{
+    size_t used_src;
+    size_t nsrc;
+    int result;
+
+    if (! pjx || ! keyname)
+    {
+        return bjson_parameter;
+    }
+    if (! pjx->pkey)
+    {
+        return bjson_off_key;
+    }
+    if (pjx->pkey <= pjx->json || pjx->pkey[-1] != '\"' || pjx->pkey > pjx->psrc + pjx->length)
+    {
+        return bjson_off_key;
+    }
+
+    nsrc = pjx->length - (pjx->pkey - pjx->json);
+
+    result = bjson_unescape_string(pjx->pkey - 1, nsrc, true, false, &used_src, keyname, nkeyname);
+    if (! result)
+    {
+        if (pjx->psrc < (pjx->pkey + used_src))
+        {
+            pjx->psrc = pjx->pkey + used_src + 1;
+        }
+    }
+    return result;
+}
+
 #define bjson_skip_value(pjx)   \
-    bjson_copy_key_value(pjx, pjx->psrc, NULL, 0)
+    bjson_copy_key_value(pjx, pjx->psrc, NULL, 0, true)
 
 static int bjson_find_element(bjson_parser_t *pjx, size_t index, const char **value)
 {
@@ -929,7 +1160,7 @@ static int bjson_find_key_component(
         }
         // unescape the component
         //
-        result = bjson_unescape_string(component, keylength, false, NULL, pjx->keybuf, keylength);
+        result = bjson_unescape_string(component, keylength, false, true, NULL, pjx->keybuf, keylength);
         if (result)
         {
             return result;
@@ -941,9 +1172,25 @@ static int bjson_find_key_component(
     }
     do
     {
-        // look for the text "<component>": from the current position
-        //
-        pkey = bjson_memmem(pjx->psrc, remlength, component, keylength);
+        if (component[0] == '*')
+        {
+            pkey = bjson_memmem(pjx->psrc, remlength, "\"", 1);
+            if (pkey)
+            {
+                pkey++;
+                keylength = 0;
+                while (pkey[keylength] && (pkey + keylength) < pjsonend && pkey[keylength] != '\"')
+                {
+                    keylength++;
+                }
+            }
+        }
+        else
+        {
+            // look for the text "<component>": from the current position
+            //
+            pkey = bjson_memmem(pjx->psrc, remlength, component, keylength);
+        }
         if (! pkey)
         {
             return bjson_not_found;
@@ -1277,7 +1524,8 @@ int bjson_find_and_copy_json_key_value(
                                 const char pathdelim,
                                 size_t index,
                                 char *value,
-                                size_t nvalue
+                                size_t nvalue,
+                                bool keep_quotes
                                 )
 {
     bjson_parser_t *pjx;
@@ -1295,7 +1543,7 @@ int bjson_find_and_copy_json_key_value(
         bjson_parser_destroy(pjx);
         return result;
     }
-    result = bjson_copy_key_value(pjx, keyval, value, nvalue);
+    result = bjson_copy_key_value(pjx, keyval, value, nvalue, keep_quotes);
     bjson_parser_destroy(pjx);
     return result;
 }

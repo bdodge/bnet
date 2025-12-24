@@ -498,6 +498,10 @@ json_test_entry_t s_tests_33[] =
     },
 };
 
+static const char s_json_35[] =
+    "\"parameters\":{\"on\": true, \"off\": false, \"level\": 20}";
+
+
 static int runtest(json_test_entry_t *entry, size_t numentries, const char *blurb, const char pathdelim)
 {
     char val[128]; // note, keep this size as overflow test depends on it
@@ -508,7 +512,7 @@ static int runtest(json_test_entry_t *entry, size_t numentries, const char *blur
     {
         printf("%s %zu\n", blurb ? blurb : "", i);
         result = bjson_find_and_copy_json_key_value(
-                    entry->json, entry->key, pathdelim, entry->index, val, sizeof(val));
+                    entry->json, entry->key, pathdelim, entry->index, val, sizeof(val), true);
         if (result != entry->exp_ret)
         {
             fprintf(stderr, "find error: %d, expected %d\n", result, entry->exp_ret);
@@ -600,7 +604,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "find error: %d\n", result);
         return -1;
     }
-    result = bjson_copy_key_value(pjx, value, val, sizeof(val));
+    result = bjson_copy_key_value(pjx, value, val, sizeof(val), true);
     if (result)
     {
         fprintf(stderr, "get error: %d\n", result);
@@ -626,6 +630,51 @@ int main(int argc, char **argv)
     {
         return result;
     }
+#endif
+#if 1
+    // wild-card key test
+    char parameters[256];
+    char keyname[128];
+    int parmdex = 0;
+
+    result = bjson_find_and_copy_json_key_value(s_json_35, "parameters", '/', 0, parameters, sizeof(parameters), false);
+    if (result)
+    {
+        fprintf(stderr, "can't find parameters in json\n");
+        return -1;
+    }
+    pjx = bjson_parser_create(parameters);
+    if (! pjx)
+    {
+        fprintf(stderr, "can't create parser\n");
+        return -1;
+    }
+    // check we can iterate through key-value pairs in an object
+    do
+    {
+        result = bjson_find_next_key(pjx, "*", '\0', 0, &value);
+        if (result)
+        {
+            fprintf(stderr, "find error: %d\n", result);
+            return -1;
+        }
+        result = bjson_copy_key_name(pjx, keyname, sizeof(keyname));
+        if (result)
+        {
+            fprintf(stderr, "can't copy key name\n");
+            return result;
+        }
+        result = bjson_copy_key_value(pjx, value, val, sizeof(val), false);
+        if (result)
+        {
+            fprintf(stderr, "can't copy key value\n");
+            return result;
+        }
+        printf("wild-card %d\n", parmdex);
+        printf("  key=%s=  val=%s=\n", keyname, val);
+        parmdex++;
+    }
+    while (parmdex < 3);
 #endif
     return 0;
 }
